@@ -1,0 +1,33 @@
+# ISHAS
+
+Integrated Safety and Health Assessment System adalah prototipe sistem penilaian K3L untuk pesantren. Tahap saat ini berfokus pada validasi tampilan dan fitur menggunakan data dummy. Backend dan formula ilmiah final belum diimplementasikan.
+
+## Struktur repository
+
+- `apps/web` — prototipe frontend React dan TypeScript.
+- `docs/source` — proposal asli sebagai sumber penelitian.
+- `docs/blueprint` — blueprint, spesifikasi, dan guardrail engineering.
+- `docs/planning` — checklist requirement dan rencana pengembangan.
+- `docs/decisions` — keputusan desain dan teknis yang sudah disetujui.
+
+## Menjalankan frontend
+
+```bash
+cd apps/web
+bun install
+bun run dev
+```
+
+## Status data
+
+Semua angka, skor, kategori, indikator, dan isi assessment di frontend saat ini adalah data dummy. Data tersebut tidak boleh dianggap sebagai hasil penelitian atau formula ISHAS final.
+
+## Aturan utama
+
+1. Instrumen ilmiah tidak di-hard-code sebagai kebenaran final.
+2. Versi instrumen Published tidak diubah langsung.
+3. Assessment final selalu terkait dengan versi instrumen dan konfigurasi scoring.
+4. Perubahan yang memengaruhi hasil historis harus memiliki versioning dan audit trail.
+5. Identitas commit mengikuti konfigurasi Git milik pemilik repository. Jangan menambahkan atribusi AI atau `Co-authored-by`.
+
+Lihat `CONTRIBUTING.md` dan `docs/FRONTEND_RULES.md` untuk ketentuan lebih rinci.

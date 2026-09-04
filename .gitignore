@@ -1,0 +1,19 @@
+# Dependencies and builds
+node_modules/
+dist/
+.vinext/
+.wrangler/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Editor and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Temporary files
+tmp/
+*.log
