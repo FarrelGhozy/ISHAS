@@ -141,17 +141,35 @@ body {
   .role-select {
     @apply h-9 max-w-[150px] rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium outline-none focus:ring-2 focus:ring-red-200 sm:max-w-none;
   }
+  .role-context {
+    @apply mb-6 grid items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm md:grid-cols-[1.1fr_1fr_auto];
+  }
+  .role-context > span {
+    @apply justify-self-start;
+  }
+  .role-context > div {
+    @apply flex min-w-0 flex-col;
+  }
+  .role-context span:not([class]) {
+    @apply text-[9px] font-bold uppercase tracking-[.14em] text-slate-400;
+  }
+  .role-context b {
+    @apply mt-1 truncate text-xs font-medium text-slate-700;
+  }
   .list-row {
     @apply flex items-center gap-3 rounded-xl border border-slate-100 p-3 transition hover:border-red-100 hover:bg-red-50/30;
   }
   .index-dot {
     @apply flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-500;
   }
-  .table-head {
+  .assessment-head {
     @apply hidden grid-cols-[1.6fr_.7fr_.45fr_36px] gap-4 border-b bg-slate-50/80 px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 md:grid;
   }
-  .table-row {
+  .assessment-row {
     @apply grid grid-cols-[1fr_auto] items-center gap-4 border-b border-slate-100 px-5 py-4 text-xs text-slate-500 last:border-0 md:grid-cols-[1.6fr_.7fr_.45fr_36px];
+  }
+  .assessment-row > span {
+    @apply justify-self-start;
   }
   .flow-step {
     @apply flex items-center gap-3 border-l border-slate-200 pb-4 pl-5 text-sm last:border-transparent;
@@ -176,6 +194,102 @@ body {
   }
   .config-row span {
     @apply text-[10px] text-slate-400;
+  }
+  .rule-principle {
+    @apply relative overflow-hidden;
+  }
+  .rule-principle::after {
+    content: '';
+    @apply absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-red-50;
+  }
+  .state-flow {
+    @apply flex flex-col items-stretch gap-3 lg:flex-row lg:items-center;
+  }
+  .state-flow > svg {
+    @apply mx-auto h-4 w-4 rotate-90 shrink-0 text-slate-300 lg:rotate-0;
+  }
+  .state-card {
+    @apply flex min-h-40 min-w-0 flex-1 flex-col rounded-2xl border p-4;
+  }
+  .state-card b {
+    @apply mt-4 text-sm;
+  }
+  .state-card span:last-child {
+    @apply mt-2 text-[11px] leading-5 text-slate-500;
+  }
+  .state-card.editable {
+    @apply border-amber-200 bg-amber-50/50;
+  }
+  .state-card.locked {
+    @apply border-emerald-200 bg-emerald-50/50;
+  }
+  .state-card.archived {
+    @apply border-slate-200 bg-slate-50;
+  }
+  .rule-branch {
+    @apply mt-4 flex gap-3 rounded-2xl border border-dashed border-red-200 bg-red-50/40 p-4;
+  }
+  .rule-branch > svg {
+    @apply h-5 w-5 shrink-0 text-red-700;
+  }
+  .rule-branch b {
+    @apply text-xs;
+  }
+  .rule-branch p {
+    @apply mt-1 text-[11px] leading-5 text-slate-500;
+  }
+  .assessment-state {
+    @apply flex gap-3 rounded-xl border border-slate-100 p-3;
+  }
+  .assessment-state > span {
+    @apply flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-xs font-bold text-red-700;
+  }
+  .assessment-state b {
+    @apply text-xs;
+  }
+  .assessment-state p {
+    @apply mt-0.5 text-[11px] text-slate-600;
+  }
+  .assessment-state small {
+    @apply mt-1 block text-[10px] text-slate-400;
+  }
+  .permission-grid {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.4fr) repeat(5, minmax(95px, 0.7fr));
+    min-width: 760px;
+  }
+  .permission-grid > * {
+    @apply border-b border-slate-100 px-3 py-3 text-xs;
+  }
+  .permission-grid > b {
+    @apply bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400;
+  }
+  .role-name {
+    @apply font-semibold text-slate-700;
+  }
+  .permission-cell {
+    @apply flex justify-center text-slate-300;
+  }
+  .permission-cell svg {
+    @apply h-4 w-4 rounded-full bg-emerald-50 p-0.5 text-emerald-600;
+  }
+  .source-rule {
+    @apply flex items-center gap-3;
+  }
+  .source-rule > span:last-child {
+    @apply text-xs leading-5 text-slate-500;
+  }
+  .open-decision {
+    @apply flex gap-3 rounded-xl border border-slate-100 p-3;
+  }
+  .open-decision > svg {
+    @apply h-4 w-4 shrink-0 text-amber-500;
+  }
+  .open-decision b {
+    @apply text-xs;
+  }
+  .open-decision p {
+    @apply mt-1 text-[11px] leading-4 text-slate-500;
   }
   .floorplan {
     @apply relative min-h-[460px] overflow-hidden rounded-2xl border-8 border-slate-200 bg-slate-100;

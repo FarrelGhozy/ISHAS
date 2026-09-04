@@ -7,11 +7,15 @@ import {
   AlertTriangle,
   Bell,
   BookOpenCheck,
+  Check,
   ChevronRight,
+  CircleHelp,
   ClipboardCheck,
   Download,
   FileText,
+  KeyRound,
   LayoutDashboard,
+  LockKeyhole,
   MapPinned,
   Menu,
   MoreHorizontal,
@@ -48,6 +52,7 @@ type View =
   | 'dashboard'
   | 'assessment'
   | 'instrument'
+  | 'rules'
   | 'risk'
   | 'users'
   | 'reports';
@@ -55,6 +60,7 @@ const nav: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
   { id: 'dashboard', label: 'Ringkasan', icon: LayoutDashboard },
   { id: 'assessment', label: 'Assessment', icon: ClipboardCheck },
   { id: 'instrument', label: 'Instrumen', icon: BookOpenCheck },
+  { id: 'rules', label: 'Aturan Sistem', icon: ShieldCheck },
   { id: 'risk', label: 'Peta Risiko', icon: MapPinned },
   { id: 'users', label: 'Pengguna & Peran', icon: Users },
   { id: 'reports', label: 'Laporan', icon: FileText },
@@ -96,12 +102,59 @@ function Head({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 flex items-end justify-between gap-4">
+    <div className="mb-5 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
       <div>
         <p className="eyebrow">{eyebrow}</p>
         <h1 className="page-title">{title}</h1>
       </div>
       {action}
+    </div>
+  );
+}
+
+function RoleContext({ role }: { role: string }) {
+  const context: Record<string, { focus: string; scope: string }> = {
+    'Admin Sistem': {
+      focus: 'Kelola konfigurasi, versi instrumen, pengguna, dan audit.',
+      scope: 'Seluruh pesantren · tetap tunduk pada published lock',
+    },
+    Asesor: {
+      focus: 'Selesaikan assessment yang ditugaskan dan lampirkan bukti.',
+      scope: 'Pesantren dan periode yang ditugaskan',
+    },
+    'Pengelola Pesantren': {
+      focus: 'Pantau kondisi K3L dan tindak lanjuti rekomendasi.',
+      scope: 'Pesantren sendiri',
+    },
+    'Tim K3 / Satgas': {
+      focus: 'Prioritaskan risiko dan verifikasi tindak lanjut lapangan.',
+      scope: 'Area kerja yang ditugaskan',
+    },
+    'Pimpinan Yayasan': {
+      focus: 'Bandingkan tren dan prioritas antarunit.',
+      scope: 'Pesantren dalam satu yayasan',
+    },
+    'Pemerintah / Kemenag': {
+      focus: 'Baca ringkasan agregat untuk pembinaan.',
+      scope: 'Wilayah yang diberikan · tanpa konfigurasi',
+    },
+    'Peneliti / Auditor': {
+      focus: 'Tinjau data, versi instrumen, ekspor, dan jejak perubahan.',
+      scope: 'Dataset dan periode yang disetujui',
+    },
+  };
+  const active = context[role];
+  return (
+    <div className="role-context">
+      <div>
+        <span>Fokus peran</span>
+        <b>{active.focus}</b>
+      </div>
+      <div>
+        <span>Lingkup data</span>
+        <b>{active.scope}</b>
+      </div>
+      <Pill tone="amber">Simulasi akses</Pill>
     </div>
   );
 }
@@ -327,14 +380,14 @@ function AssessmentView() {
       <div className="grid gap-5 lg:grid-cols-[1fr_310px]">
         <Card className="panel">
           <CardContent className="p-0">
-            <div className="table-head">
+            <div className="assessment-head">
               <span>Assessment</span>
               <span>Progres</span>
               <span>Status</span>
               <span />
             </div>
             {assessments.map((a) => (
-              <div className="table-row" key={a.id}>
+              <div className="assessment-row" key={a.id}>
                 <div>
                   <p className="font-semibold">{a.pesantren}</p>
                   <p>
@@ -462,6 +515,212 @@ function InstrumentView() {
               <div className="config-row" key={x}>
                 <b>{x}</b>
                 <span>{i < 3 ? 'Tersedia' : 'Menunggu riset'}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+function RuleCenter() {
+  const roles = [
+    ['Admin Sistem', true, true, true, true, true],
+    ['Asesor', true, false, true, false, false],
+    ['Pengelola Pesantren', true, false, true, true, false],
+    ['Tim K3 / Satgas', true, false, false, true, false],
+    ['Pimpinan Yayasan', true, false, false, false, false],
+    ['Pemerintah / Kemenag', true, false, false, false, false],
+    ['Peneliti / Auditor', true, false, false, false, true],
+  ];
+  return (
+    <>
+      <Head eyebrow="Pusat keputusan" title="Aturan sistem dan hak akses" />
+      <div className="mb-5 grid gap-4 md:grid-cols-3">
+        {[
+          [
+            LockKeyhole,
+            'Hasil final tidak berubah',
+            'Assessment final terikat pada versi instrumen dan konfigurasi scoring.',
+          ],
+          [
+            BookOpenCheck,
+            'Ilmu dikelola sebagai versi',
+            'Perubahan indikator, bobot, atau kategori dilakukan lewat versi baru.',
+          ],
+          [
+            KeyRound,
+            'Izin mengikuti kemampuan',
+            'Backend wajib memeriksa permission dan lingkup pesantren, bukan hanya menyembunyikan menu.',
+          ],
+        ].map(([Icon, title, copy]) => (
+          <Card className="panel rule-principle" key={String(title)}>
+            <CardContent>
+              <div className="metric-icon">
+                <Icon />
+              </div>
+              <h2 className="mt-4 font-semibold">{String(title)}</h2>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                {String(copy)}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
+        <Card className="panel">
+          <CardHeader>
+            <CardTitle>Lifecycle instrumen</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="state-flow">
+              <div className="state-card editable">
+                <Pill tone="amber">Draft</Pill>
+                <b>Dapat diedit</b>
+                <span>
+                  Lengkapi dimensi, indikator, jawaban, bobot, risiko, dan
+                  rekomendasi.
+                </span>
+              </div>
+              <ChevronRight />
+              <div className="state-card locked">
+                <Pill tone="green">Published</Pill>
+                <b>Terkunci</b>
+                <span>
+                  Digunakan assessment dan tidak boleh diubah langsung.
+                </span>
+              </div>
+              <ChevronRight />
+              <div className="state-card archived">
+                <Pill>Archived</Pill>
+                <b>Hanya dibaca</b>
+                <span>Tetap tersedia untuk hasil historis dan audit.</span>
+              </div>
+            </div>
+            <div className="rule-branch">
+              <Plus />
+              <div>
+                <b>Butuh perubahan setelah publish?</b>
+                <p>
+                  Clone versi Published menjadi Draft baru, catat alasan
+                  perubahan, lalu lakukan review dan publish ulang.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="panel">
+          <CardHeader>
+            <CardTitle>Lifecycle assessment</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              [
+                'Draft',
+                'Jawaban masih dapat dilengkapi',
+                'Edit oleh pembuat atau petugas berwenang',
+              ],
+              [
+                'Submitted',
+                'Menunggu pemeriksaan',
+                'Perubahan dibatasi atau dikembalikan',
+              ],
+              [
+                'Finalized',
+                'Jawaban dan skor terkunci',
+                'Koreksi harus beralasan dan diaudit',
+              ],
+            ].map((x, i) => (
+              <div className="assessment-state" key={x[0]}>
+                <span>{i + 1}</span>
+                <div>
+                  <b>{x[0]}</b>
+                  <p>{x[1]}</p>
+                  <small>{x[2]}</small>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="panel mt-5">
+        <CardHeader className="flex-row items-center justify-between">
+          <div>
+            <CardTitle>Matriks akses awal</CardTitle>
+            <p className="mt-1 text-xs text-slate-500">
+              Rancangan untuk diskusi · permission final masih memerlukan
+              persetujuan tim
+            </p>
+          </div>
+          <Pill tone="amber">Perlu approval</Pill>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <div className="permission-grid">
+            <b>Peran</b>
+            <b>Dashboard</b>
+            <b>Instrumen</b>
+            <b>Assessment</b>
+            <b>Tindak lanjut</b>
+            <b>Audit</b>
+            {roles.flatMap((r) =>
+              r.map((cell, i) =>
+                i === 0 ? (
+                  <span className="role-name" key={`${r[0]}-${i}`}>
+                    {String(cell)}
+                  </span>
+                ) : (
+                  <span className="permission-cell" key={`${r[0]}-${i}`}>
+                    {cell ? <Check /> : '—'}
+                  </span>
+                ),
+              ),
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
+        <Card className="panel">
+          <CardHeader>
+            <CardTitle>Arti label sumber</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              ['Proposal', 'Tertulis langsung pada proposal', 'green'],
+              ['Visual', 'Terlihat pada diagram atau mockup', 'green'],
+              ['Diskusi', 'Kesepakatan bersama pemilik proyek', 'amber'],
+              ['Rekomendasi', 'Usulan engineering yang belum final', 'amber'],
+              ['Open', 'Belum diputuskan dan tidak boleh diasumsikan', 'red'],
+            ].map((x) => (
+              <div className="source-rule" key={x[0]}>
+                <Pill tone={x[2] as 'red' | 'amber' | 'green'}>{x[0]}</Pill>
+                <span>{x[1]}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+        <Card className="panel">
+          <CardHeader>
+            <CardTitle>Keputusan yang masih terbuka</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            {[
+              ['Instrumen final', 'Dimensi, indikator, dan jenis jawaban'],
+              ['Scoring', 'Bobot, normalisasi, N/A, dan reverse scoring'],
+              ['Klasifikasi', 'Skala indeks dan threshold risiko'],
+              ['Workflow', 'Perlu reviewer sebelum finalisasi atau tidak'],
+              ['Peta risiko', 'Denah unggahan, lantai, dan relasi indikator'],
+              ['Notifikasi', 'Trigger dan kanal peringatan'],
+            ].map((x) => (
+              <div className="open-decision" key={x[0]}>
+                <CircleHelp />
+                <div>
+                  <b>{x[0]}</b>
+                  <p>{x[1]}</p>
+                </div>
               </div>
             ))}
           </CardContent>
@@ -733,7 +992,7 @@ export function IshasPrototype() {
               <Menu />
             </Button>
             <div>
-              <p className="text-[11px] text-slate-400">
+              <p className="hidden text-[11px] text-slate-400 sm:block">
                 Workspace / {nav.find((n) => n.id === view)?.label}
               </p>
               <p className="text-sm font-semibold">Pesantren Darussalam</p>
@@ -770,9 +1029,11 @@ export function IshasPrototype() {
               Tampilan sebagai {role}
             </span>
           </div>
+          <RoleContext role={role} />
           {view === 'dashboard' && <Dashboard />}
           {view === 'assessment' && <AssessmentView />}
           {view === 'instrument' && <InstrumentView />}
+          {view === 'rules' && <RuleCenter />}
           {view === 'risk' && <RiskMap />}
           {view === 'users' && <UsersView />}
           {view === 'reports' && <ReportsView />}
