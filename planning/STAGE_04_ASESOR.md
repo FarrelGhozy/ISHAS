@@ -1,6 +1,6 @@
 # Stage 04 — Ruang Kerja Asesor
 
-**Status:** REVIEW
+**Status:** DONE
 
 **Tujuan:** memvalidasi alur assessment lapangan yang terstruktur, ringan, dan dapat diaudit.
 

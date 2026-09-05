@@ -19,8 +19,8 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 
 - [x] Stage 02 — detail pengelolaan sistem oleh Admin. **DONE**
 - [x] Stage 03 — detail instrumen dan ilmu oleh Peneliti. **DONE**
-- [x] Stage 04 — detail assessment lapangan oleh Asesor. **REVIEW**
-- [ ] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren.
+- [x] Stage 04 — detail assessment lapangan oleh Asesor. **DONE**
+- [x] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren. **REVIEW**
 - [ ] Stage 06 — penyelarasan lintas peran dan kesiapan presentasi.
 
 ## Menunggu Keputusan Ilmiah
@@ -73,3 +73,18 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Lint dan production build.
 
 **Keputusan yang dibutuhkan:** tinjau alur persiapan, pengisian, bukti, dan finalisasi Asesor sebelum Stage 05 dimulai.
+
+**Keputusan:** permintaan melanjutkan stage berikutnya diperlakukan sebagai persetujuan Stage 04; Stage 05 Pengelola Pesantren dimulai.
+
+## Menunggu Review — Stage 05
+
+- [x] Ringkasan hasil hanya untuk pesantren yang terhubung dengan akun aktif.
+- [x] Hasil assessment per dimensi dan perbandingan antarperiode.
+- [x] Peta risiko berbasis denah area/lokasi dengan detail temuan.
+- [x] Rekomendasi prioritas dengan penanggung jawab dan tenggat.
+- [x] Rencana tindak lanjut, bukti penyelesaian, dan status verifikasi.
+- [x] Laporan ringkas yang siap dibaca pimpinan.
+- [x] Simulasi laporan PDF/Excel beserta metadata versi instrumen.
+- [x] Lint dan production build.
+
+**Keputusan yang dibutuhkan:** tinjau alur membaca hasil, peta risiko, rekomendasi, tindak lanjut, dan laporan sebelum Stage 06 dimulai.

@@ -57,6 +57,7 @@ import {
   AssessorDashboard as AssessorStageDashboard,
   AssessorSection,
 } from '@/components/assessor-workspace';
+import { ManagerSection } from '@/components/manager-workspace';
 
 type RoleId = 'admin' | 'peneliti' | 'asesor' | 'pengelola';
 
@@ -663,7 +664,11 @@ function ResearcherDashboard({
   );
 }
 
-function ManagerDashboard() {
+function ManagerDashboard({
+  onNavigate,
+}: {
+  onNavigate: (section: string) => void;
+}) {
   const priorityFindings = riskLocations
     .filter((item) => item.level !== 'Rendah')
     .slice(0, 3);
@@ -674,7 +679,10 @@ function ManagerDashboard() {
         title="Ringkasan K3L Pesantren"
         description="Pahami kondisi terkini, lokasi prioritas, dan tindak lanjut yang perlu diselesaikan."
         action={
-          <button className="secondary-button">
+          <button
+            className="secondary-button"
+            onClick={() => onNavigate('reports')}
+          >
             <FileText /> Unduh ringkasan
           </button>
         }
@@ -807,7 +815,10 @@ function ManagerDashboard() {
               geografis
             </p>
           </div>
-          <button className="text-button">
+          <button
+            className="text-button"
+            onClick={() => onNavigate('risk-map')}
+          >
             Buka peta risiko <ArrowRight />
           </button>
         </div>
@@ -824,7 +835,7 @@ function ManagerDashboard() {
               </div>
               <h3>{finding.name}</h3>
               <p>{finding.issue}</p>
-              <button>
+              <button onClick={() => onNavigate('follow-up')}>
                 Kelola tindak lanjut <ArrowRight />
               </button>
             </article>
@@ -913,6 +924,8 @@ function Workspace({
     content = <ResearcherSection section={section} />;
   else if (account.role === 'asesor' && section !== 'dashboard')
     content = <AssessorSection section={section} />;
+  else if (account.role === 'pengelola' && section !== 'dashboard')
+    content = <ManagerSection section={section} />;
   else if (section !== 'dashboard')
     content = <FeaturePreview account={account} section={section} />;
   else if (account.role === 'admin')
@@ -921,7 +934,7 @@ function Workspace({
     content = <ResearcherDashboard onNavigate={selectSection} />;
   else if (account.role === 'asesor')
     content = <AssessorStageDashboard onNavigate={selectSection} />;
-  else content = <ManagerDashboard />;
+  else content = <ManagerDashboard onNavigate={selectSection} />;
 
   return (
     <div className="workspace">
