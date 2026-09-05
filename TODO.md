@@ -17,7 +17,7 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 
 ## Antrean Berikutnya
 
-- [ ] Stage 02 — detail pengelolaan sistem oleh Admin.
+- [x] Stage 02 — detail pengelolaan sistem oleh Admin. **REVIEW**
 - [ ] Stage 03 — detail instrumen dan ilmu oleh Peneliti.
 - [ ] Stage 04 — detail assessment lapangan oleh Asesor.
 - [ ] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren.
@@ -29,3 +29,14 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - Ambang resmi kategori risiko.
 - Sumber standar wajib untuk tiap indikator.
 - Aturan siapa yang berwenang memverifikasi tindak lanjut.
+
+## Menunggu Review — Stage 02
+
+- [x] Pengguna: pencarian, filter, status, dan tambah akun dummy.
+- [x] Pesantren: direktori, pengelola utama, status onboarding, dan assessment.
+- [x] Hak Akses: matriks kewenangan empat peran.
+- [x] Audit Log: pencarian, filter kategori, dan catatan hanya-baca.
+- [x] Pengaturan: preferensi non-ilmiah dan konfirmasi tindakan berisiko.
+- [x] Lint dan production build.
+
+**Keputusan yang dibutuhkan:** setujui struktur dan cakupan ruang kerja Admin sebelum Stage 03 Peneliti dimulai.

@@ -52,6 +52,7 @@ import {
   YAxis,
 } from 'recharts';
 import { assessments, dimensions, riskLocations, trend } from '@/lib/mock-data';
+import { AdminSection } from '@/components/admin-workspace';
 
 type RoleId = 'admin' | 'peneliti' | 'asesor' | 'pengelola';
 
@@ -412,7 +413,11 @@ function PageHeading({
   );
 }
 
-function AdminDashboard() {
+function AdminDashboard({
+  onNavigate,
+}: {
+  onNavigate: (section: string) => void;
+}) {
   const activities = [
     [
       'Akun asesor baru menunggu aktivasi',
@@ -433,7 +438,10 @@ function AdminDashboard() {
         title="Dashboard Admin"
         description="Pantau kesehatan sistem, pengguna, lembaga, dan aktivitas yang membutuhkan perhatian."
         action={
-          <button className="primary-button">
+          <button
+            className="primary-button"
+            onClick={() => onNavigate('users')}
+          >
             <Plus /> Tambah pengguna
           </button>
         }
@@ -473,7 +481,7 @@ function AdminDashboard() {
               <h2>Aktivitas terbaru</h2>
               <p>Perubahan penting yang tercatat oleh sistem</p>
             </div>
-            <button className="text-button">
+            <button className="text-button" onClick={() => onNavigate('audit')}>
               Lihat audit log <ArrowRight />
             </button>
           </div>
@@ -984,9 +992,12 @@ function Workspace({
   }
 
   let content: ReactNode;
-  if (section !== 'dashboard')
+  if (account.role === 'admin' && section !== 'dashboard')
+    content = <AdminSection section={section} />;
+  else if (section !== 'dashboard')
     content = <FeaturePreview account={account} section={section} />;
-  else if (account.role === 'admin') content = <AdminDashboard />;
+  else if (account.role === 'admin')
+    content = <AdminDashboard onNavigate={selectSection} />;
   else if (account.role === 'peneliti') content = <ResearcherDashboard />;
   else if (account.role === 'asesor') content = <AssessorDashboard />;
   else content = <ManagerDashboard />;

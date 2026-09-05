@@ -16,7 +16,7 @@ Folder ini menggantikan GitHub Issues selama tahap eksplorasi frontend. Satu fil
 | Stage | Fokus | Status |
 | --- | --- | --- |
 | 01 | Fondasi produk, login dummy, dan pembagian empat ruang kerja | DONE |
-| 02 | Ruang kerja Admin | READY |
+| 02 | Ruang kerja Admin | REVIEW |
 | 03 | Ruang kerja Peneliti | READY |
 | 04 | Ruang kerja Asesor | READY |
 | 05 | Ruang kerja Pengelola Pesantren | READY |
