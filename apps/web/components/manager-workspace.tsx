@@ -15,12 +15,15 @@ import {
   Download,
   Eye,
   FileCheck2,
+  FileImage,
   FileSpreadsheet,
   FileText,
   Filter,
   Flag,
   History,
   ImagePlus,
+  Layers3,
+  List,
   ListChecks,
   LockKeyhole,
   MapPin,
@@ -29,6 +32,7 @@ import {
   ShieldCheck,
   Target,
   Upload,
+  UploadCloud,
   UserRound,
   X,
 } from 'lucide-react';
@@ -60,7 +64,13 @@ type PeriodResult = {
 
 type RiskFinding = {
   id: string;
+  areaId: string;
+  buildingId: string;
+  assessmentId: string;
+  instrumentVersion: string;
+  recommendationId: string;
   location: string;
+  building: string;
   zone: string;
   floor: string;
   x: number;
@@ -70,6 +80,44 @@ type RiskFinding = {
   indicator: string;
   recommendation: string;
   status: RecommendationStatus;
+  hazard: string;
+  impact: string;
+  likelihood: string;
+  severity: string;
+  exposedPeople: string;
+  existingControl: string;
+  evidence: string;
+  observedAt: string;
+  planVersion: string;
+  residualRisk: RiskLevel | 'Belum dinilai';
+};
+
+type FloorRecord = {
+  id: string;
+  name: string;
+  planFile: string;
+  planVersion: string;
+  uploadedBy: string;
+  uploadedAt: string;
+};
+
+type BuildingRecord = {
+  id: string;
+  code: string;
+  name: string;
+  floors: FloorRecord[];
+};
+
+type AreaRecord = {
+  id: string;
+  buildingId: string;
+  name: string;
+  floor: string;
+  zone: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 };
 
 type Recommendation = {
@@ -193,10 +241,193 @@ const periodResults: PeriodResult[] = [
   },
 ];
 
+const initialBuildings: BuildingRecord[] = [
+  {
+    id: 'BLD-001',
+    code: 'GD-ASR-P',
+    name: 'Gedung Asrama Putra',
+    floors: [
+      {
+        id: 'FLR-001',
+        name: 'Lantai 1',
+        planFile: 'denah-asrama-putra-lt1.png',
+        planVersion: 'DENAH-v2',
+        uploadedBy: 'Ust. M. Kamal · Pengelola',
+        uploadedAt: '02 Juni 2026',
+      },
+      {
+        id: 'FLR-002',
+        name: 'Lantai 2',
+        planFile: 'denah-asrama-putra-lt2.png',
+        planVersion: 'DENAH-v1',
+        uploadedBy: 'Ust. M. Kamal · Pengelola',
+        uploadedAt: '02 Juni 2026',
+      },
+    ],
+  },
+  {
+    id: 'BLD-002',
+    code: 'GD-PDK',
+    name: 'Gedung Pendidikan',
+    floors: [
+      {
+        id: 'FLR-003',
+        name: 'Lantai 1',
+        planFile: 'denah-gedung-pendidikan-lt1.pdf',
+        planVersion: 'DENAH-v1',
+        uploadedBy: 'Ust. M. Kamal · Pengelola',
+        uploadedAt: '04 Juni 2026',
+      },
+      {
+        id: 'FLR-004',
+        name: 'Lantai 2',
+        planFile: '',
+        planVersion: '',
+        uploadedBy: '',
+        uploadedAt: '',
+      },
+    ],
+  },
+  {
+    id: 'BLD-003',
+    code: 'GD-LAY',
+    name: 'Gedung Layanan',
+    floors: [
+      {
+        id: 'FLR-005',
+        name: 'Lantai 1',
+        planFile: '',
+        planVersion: '',
+        uploadedBy: '',
+        uploadedAt: '',
+      },
+    ],
+  },
+];
+
+const areaDirectory: AreaRecord[] = [
+  {
+    id: 'AREA-001',
+    buildingId: 'BLD-001',
+    name: 'Asrama Putra A',
+    floor: 'Lantai 1',
+    zone: 'Blok A',
+    x: 8,
+    y: 10,
+    width: 38,
+    height: 32,
+  },
+  {
+    id: 'AREA-002',
+    buildingId: 'BLD-001',
+    name: 'Kamar Mandi Asrama',
+    floor: 'Lantai 1',
+    zone: 'Blok A',
+    x: 8,
+    y: 62,
+    width: 30,
+    height: 24,
+  },
+  {
+    id: 'AREA-003',
+    buildingId: 'BLD-001',
+    name: 'Koridor Utama',
+    floor: 'Lantai 1',
+    zone: 'Sirkulasi',
+    x: 50,
+    y: 45,
+    width: 42,
+    height: 14,
+  },
+  {
+    id: 'AREA-004',
+    buildingId: 'BLD-001',
+    name: 'Asrama Putra A',
+    floor: 'Lantai 2',
+    zone: 'Blok A',
+    x: 8,
+    y: 12,
+    width: 42,
+    height: 32,
+  },
+  {
+    id: 'AREA-005',
+    buildingId: 'BLD-002',
+    name: 'Ruang Kelas Timur',
+    floor: 'Lantai 1',
+    zone: 'Blok B',
+    x: 9,
+    y: 12,
+    width: 42,
+    height: 34,
+  },
+  {
+    id: 'AREA-006',
+    buildingId: 'BLD-002',
+    name: 'Klinik',
+    floor: 'Lantai 1',
+    zone: 'Blok D',
+    x: 58,
+    y: 12,
+    width: 32,
+    height: 34,
+  },
+  {
+    id: 'AREA-007',
+    buildingId: 'BLD-002',
+    name: 'Ruang Kelas Barat',
+    floor: 'Lantai 2',
+    zone: 'Blok C',
+    x: 10,
+    y: 12,
+    width: 40,
+    height: 34,
+  },
+  {
+    id: 'AREA-008',
+    buildingId: 'BLD-003',
+    name: 'Dapur Utama',
+    floor: 'Lantai 1',
+    zone: 'Blok C',
+    x: 8,
+    y: 12,
+    width: 42,
+    height: 36,
+  },
+  {
+    id: 'AREA-009',
+    buildingId: 'BLD-003',
+    name: 'Gudang Bahan',
+    floor: 'Lantai 1',
+    zone: 'Blok C',
+    x: 58,
+    y: 12,
+    width: 32,
+    height: 36,
+  },
+  {
+    id: 'AREA-010',
+    buildingId: 'BLD-003',
+    name: 'Ruang Makan',
+    floor: 'Lantai 1',
+    zone: 'Blok C',
+    x: 18,
+    y: 58,
+    width: 64,
+    height: 27,
+  },
+];
+
 const riskFindings: RiskFinding[] = [
   {
     id: 'RSK-001',
+    areaId: 'AREA-001',
+    buildingId: 'BLD-001',
+    assessmentId: 'ASM-0254',
+    instrumentVersion: 'ISHAS v1.0',
+    recommendationId: 'REC-2026-001',
     location: 'Asrama Putra A',
+    building: 'Gedung Asrama Putra',
     zone: 'Blok A',
     floor: 'Lantai 1',
     x: 24,
@@ -206,10 +437,26 @@ const riskFindings: RiskFinding[] = [
     indicator: 'IND-SAR-001',
     recommendation: 'Bebaskan jalur dan pasang penanda evakuasi yang terlihat.',
     status: 'Berjalan',
+    hazard: 'Jalur keluar terhalang benda tetap dan barang penghuni.',
+    impact: 'Evakuasi melambat ketika terjadi kebakaran atau keadaan darurat.',
+    likelihood: 'Mungkin terjadi · ilustrasi',
+    severity: 'Serius · ilustrasi',
+    exposedPeople: '±120 santri penghuni blok',
+    existingControl: 'Papan arah tersedia, inspeksi koridor belum rutin.',
+    evidence: 'jalur-evakuasi-timur.jpg',
+    observedAt: '18 Juni 2026 · Ahmad Fauzan',
+    planVersion: 'DENAH-v2',
+    residualRisk: 'Belum dinilai',
   },
   {
     id: 'RSK-002',
+    areaId: 'AREA-008',
+    buildingId: 'BLD-003',
+    assessmentId: 'ASM-0254',
+    instrumentVersion: 'ISHAS v1.0',
+    recommendationId: 'REC-2026-002',
     location: 'Dapur Utama',
+    building: 'Gedung Layanan',
     zone: 'Blok C',
     floor: 'Lantai 1',
     x: 74,
@@ -219,23 +466,55 @@ const riskFindings: RiskFinding[] = [
     indicator: 'IND-SAR-008',
     recommendation: 'Lakukan pemeriksaan instalasi gas oleh tenaga kompeten.',
     status: 'Belum ditindaklanjuti',
+    hazard: 'Kondisi selang dan regulator gas belum diverifikasi berkala.',
+    impact: 'Kebocoran gas dapat memicu kebakaran atau ledakan.',
+    likelihood: 'Mungkin terjadi · ilustrasi',
+    severity: 'Sangat serius · ilustrasi',
+    exposedPeople: '12 petugas dapur dan pengguna sekitar',
+    existingControl: 'Katup utama tersedia; jadwal inspeksi belum tercatat.',
+    evidence: 'instalasi-gas-dapur.jpg',
+    observedAt: '18 Juni 2026 · Ahmad Fauzan',
+    planVersion: 'Belum ada denah',
+    residualRisk: 'Belum dinilai',
   },
   {
     id: 'RSK-003',
+    areaId: 'AREA-005',
+    buildingId: 'BLD-002',
+    assessmentId: 'ASM-0254',
+    instrumentVersion: 'ISHAS v1.0',
+    recommendationId: 'REC-2026-003',
     location: 'Ruang Kelas Timur',
+    building: 'Gedung Pendidikan',
     zone: 'Blok B',
     floor: 'Lantai 1',
-    x: 58,
+    x: 35,
     y: 27,
     level: 'Sedang',
     issue: 'Tanda keselamatan dan titik kumpul belum terlihat dari koridor.',
     indicator: 'IND-DAR-004',
     recommendation: 'Perbarui tanda arah dan lakukan pemeriksaan visibilitas.',
     status: 'Menunggu verifikasi',
+    hazard: 'Tanda arah evakuasi tidak terlihat dari seluruh koridor kelas.',
+    impact: 'Pengguna terlambat menemukan rute keluar saat keadaan darurat.',
+    likelihood: 'Jarang · ilustrasi',
+    severity: 'Serius · ilustrasi',
+    exposedPeople: '±80 santri dan guru',
+    existingControl: 'Tanda tersedia pada pintu utama, belum merata.',
+    evidence: 'tanda-koridor-kelas.jpg',
+    observedAt: '18 Juni 2026 · Ahmad Fauzan',
+    planVersion: 'DENAH-v1',
+    residualRisk: 'Rendah',
   },
   {
     id: 'RSK-004',
+    areaId: 'AREA-002',
+    buildingId: 'BLD-001',
+    assessmentId: 'ASM-0254',
+    instrumentVersion: 'ISHAS v1.0',
+    recommendationId: 'REC-2026-004',
     location: 'Kamar Mandi Asrama',
+    building: 'Gedung Asrama Putra',
     zone: 'Blok A',
     floor: 'Lantai 1',
     x: 34,
@@ -245,23 +524,26 @@ const riskFindings: RiskFinding[] = [
     indicator: 'IND-SAN-009',
     recommendation: 'Tetapkan petugas dan dokumentasikan checklist kebersihan.',
     status: 'Berjalan',
-  },
-  {
-    id: 'RSK-005',
-    location: 'Masjid',
-    zone: 'Area Tengah',
-    floor: 'Lantai 1',
-    x: 45,
-    y: 48,
-    level: 'Rendah',
-    issue: 'Kondisi akses dan jalur keluar terkendali.',
-    indicator: 'IND-SAR-003',
-    recommendation: 'Pertahankan pemeriksaan rutin.',
-    status: 'Terverifikasi',
+    hazard: 'Kontrol kebersihan tidak mempunyai penanggung jawab harian.',
+    impact: 'Kondisi sanitasi menurun dan meningkatkan paparan penyakit.',
+    likelihood: 'Mungkin terjadi · ilustrasi',
+    severity: 'Sedang · ilustrasi',
+    exposedPeople: '±120 santri penghuni blok',
+    existingControl: 'Jadwal tersedia tetapi belum memiliki PIC harian.',
+    evidence: 'jamban-asrama-a.jpg',
+    observedAt: '18 Juni 2026 · Ahmad Fauzan',
+    planVersion: 'DENAH-v2',
+    residualRisk: 'Belum dinilai',
   },
   {
     id: 'RSK-006',
+    areaId: 'AREA-004',
+    buildingId: 'BLD-001',
+    assessmentId: 'ASM-0254',
+    instrumentVersion: 'ISHAS v1.0',
+    recommendationId: 'REC-2026-006',
     location: 'Asrama Putra A',
+    building: 'Gedung Asrama Putra',
     zone: 'Blok A',
     floor: 'Lantai 2',
     x: 27,
@@ -271,6 +553,16 @@ const riskFindings: RiskFinding[] = [
     indicator: 'IND-DAR-006',
     recommendation: 'Uji fungsi lampu darurat dan simpan catatan pemeriksaan.',
     status: 'Belum ditindaklanjuti',
+    hazard: 'Lampu darurat tidak mempunyai rekaman uji fungsi terbaru.',
+    impact: 'Koridor dapat gelap ketika listrik utama terputus.',
+    likelihood: 'Jarang · ilustrasi',
+    severity: 'Serius · ilustrasi',
+    exposedPeople: '±110 santri penghuni lantai',
+    existingControl: 'Lampu terpasang; bukti pemeliharaan belum tersedia.',
+    evidence: 'lampu-darurat-koridor.jpg',
+    observedAt: '18 Juni 2026 · Ahmad Fauzan',
+    planVersion: 'DENAH-v1',
+    residualRisk: 'Belum dinilai',
   },
 ];
 
@@ -334,6 +626,18 @@ const initialRecommendations: Recommendation[] = [
     owner: 'Bagian Sarana',
     dueDate: '20 Agu 2026',
     progress: 100,
+  },
+  {
+    id: 'REC-2026-006',
+    priority: 'Sedang',
+    title: 'Uji fungsi lampu darurat lantai dua',
+    location: 'Asrama Putra A · Lantai 2',
+    source: 'IND-DAR-006 · ASM-0254',
+    action: 'Uji setiap lampu darurat dan arsipkan hasil pemeriksaannya.',
+    status: 'Belum ditindaklanjuti',
+    owner: 'Belum ditentukan',
+    dueDate: 'Belum ditentukan',
+    progress: 0,
   },
 ];
 
@@ -678,198 +982,1027 @@ function ResultsPage() {
   );
 }
 
-function RiskMapPage({
-  onNavigate,
-}: {
-  onNavigate: (section: string) => void;
-}) {
-  const [floor, setFloor] = useState('Lantai 1');
-  const visibleFindings = riskFindings.filter((item) => item.floor === floor);
-  const [selectedId, setSelectedId] = useState(visibleFindings[0]?.id ?? '');
-  const selected =
-    visibleFindings.find((item) => item.id === selectedId) ??
-    visibleFindings[0];
-  function chooseFloor(nextFloor: string) {
-    setFloor(nextFloor);
-    setSelectedId(
-      riskFindings.find((item) => item.floor === nextFloor)?.id ?? '',
+function LocationManagementPage() {
+  const [buildings, setBuildings] = useState(initialBuildings);
+  const [areas, setAreas] = useState(areaDirectory);
+  const [selectedBuildingId, setSelectedBuildingId] = useState(
+    initialBuildings[0].id,
+  );
+  const [createOpen, setCreateOpen] = useState(false);
+  const [floorOpen, setFloorOpen] = useState(false);
+  const [areaFloor, setAreaFloor] = useState<FloorRecord | null>(null);
+  const [buildingName, setBuildingName] = useState('');
+  const [buildingCode, setBuildingCode] = useState('');
+  const [floorName, setFloorName] = useState('');
+  const [areaName, setAreaName] = useState('');
+  const [areaZone, setAreaZone] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const selectedBuilding =
+    buildings.find((item) => item.id === selectedBuildingId) ?? buildings[0];
+  const totalFloors = buildings.reduce(
+    (total, building) => total + building.floors.length,
+    0,
+  );
+  const availablePlans = buildings.reduce(
+    (total, building) =>
+      total + building.floors.filter((floor) => floor.planFile).length,
+    0,
+  );
+
+  function uploadPlan(buildingId: string, floorId: string, fileName: string) {
+    if (!fileName) return;
+    setBuildings((current) =>
+      current.map((building) =>
+        building.id === buildingId
+          ? {
+              ...building,
+              floors: building.floors.map((floor) =>
+                floor.id === floorId
+                  ? {
+                      ...floor,
+                      planFile: fileName,
+                      planVersion: floor.planVersion
+                        ? `DENAH-v${Number(floor.planVersion.split('v')[1]) + 1}`
+                        : 'DENAH-v1',
+                      uploadedBy: 'Ust. M. Kamal · Pengelola',
+                      uploadedAt: 'Hari ini · data dummy',
+                    }
+                  : floor,
+              ),
+            }
+          : building,
+      ),
+    );
+    setFeedback(
+      `${fileName} tersimpan sebagai versi denah baru untuk simulasi lokal.`,
     );
   }
+
   return (
     <>
       <ManagerHeading
-        title="Peta Risiko"
-        description="Lihat lokasi temuan pada denah area internal dan buka tindakan yang disarankan."
+        title="Gedung & Denah"
+        description="Kelola struktur lokasi dan unggah denah milik pesantren sebelum Asesor mencatat titik temuan."
         action={
-          <div className="manager-floor-switch">
-            <button
-              className={floor === 'Lantai 1' ? 'active' : ''}
-              onClick={() => chooseFloor('Lantai 1')}
-            >
-              Lantai 1
-            </button>
-            <button
-              className={floor === 'Lantai 2' ? 'active' : ''}
-              onClick={() => chooseFloor('Lantai 2')}
-            >
-              Lantai 2
-            </button>
-          </div>
+          <button
+            className="primary-button"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus /> Tambah gedung
+          </button>
         }
       />
       <ManagerScope compact />
-      <div className="risk-map-legend">
-        <span>
-          <i className="high" /> Tinggi (
-          {visibleFindings.filter((item) => item.level === 'Tinggi').length})
-        </span>
-        <span>
-          <i className="medium" /> Sedang (
-          {visibleFindings.filter((item) => item.level === 'Sedang').length})
-        </span>
-        <span>
-          <i className="low" /> Rendah (
-          {visibleFindings.filter((item) => item.level === 'Rendah').length})
-        </span>
-        <p>
-          <MapPinned /> Denah konseptual · bukan peta geografis
-        </p>
+      <div className="location-source-banner">
+        <UploadCloud />
+        <div>
+          <b>Denah berasal dari Pengelola Pesantren</b>
+          <p>
+            Unggah satu JPG, PNG, atau PDF untuk setiap gedung dan lantai. Jika
+            belum tersedia, assessment tetap berjalan menggunakan Daftar Area.
+          </p>
+        </div>
+        <span className="status status-blue">Data dummy</span>
       </div>
-      <div className="manager-risk-layout">
-        <section className="surface manager-risk-map">
-          <div className="risk-floorplan" aria-label={`Denah risiko ${floor}`}>
-            <div className="floor-room room-dorm">
-              <span>Asrama Putra A</span>
-              <small>Blok A</small>
+      {feedback ? (
+        <div className="admin-feedback">
+          <CheckCircle2 /> {feedback}
+        </div>
+      ) : null}
+      <div className="location-stats">
+        <article>
+          <Building2 />
+          <span>
+            <b>{buildings.length} gedung</b>
+            <small>Master lokasi aktif</small>
+          </span>
+        </article>
+        <article>
+          <Layers3 />
+          <span>
+            <b>{totalFloors} lantai</b>
+            <small>{areas.length} area terdaftar</small>
+          </span>
+        </article>
+        <article>
+          <FileImage />
+          <span>
+            <b>{availablePlans} denah</b>
+            <small>
+              {totalFloors - availablePlans} lantai belum memiliki denah
+            </small>
+          </span>
+        </article>
+      </div>
+      <div className="location-management-layout">
+        <aside className="surface location-building-list">
+          <div className="surface-head">
+            <div>
+              <h2>Daftar gedung</h2>
+              <p>Pilih gedung untuk mengatur lantai dan denah</p>
             </div>
-            <div className="floor-room room-class">
-              <span>Ruang Kelas</span>
-              <small>Blok B</small>
-            </div>
-            <div className="floor-room room-clinic">
-              <span>Klinik</span>
-              <small>Blok D</small>
-            </div>
-            <div className="floor-room room-mosque">
-              <span>Masjid</span>
-              <small>Area Tengah</small>
-            </div>
-            <div className="floor-room room-bath">
-              <span>Kamar Mandi</span>
-              <small>Blok A</small>
-            </div>
-            <div className="floor-room room-kitchen">
-              <span>Dapur Utama</span>
-              <small>Blok C</small>
-            </div>
-            <div className="floor-corridor">KORIDOR UTAMA</div>
-            {visibleFindings.map((finding, index) => (
-              <button
-                className={`risk-marker risk-${finding.level.toLowerCase()} ${finding.id === selected?.id ? 'active' : ''}`}
-                style={{ left: `${finding.x}%`, top: `${finding.y}%` }}
-                key={finding.id}
-                onClick={() => setSelectedId(finding.id)}
-                aria-label={`${finding.level}: ${finding.location}`}
-              >
-                <span>{index + 1}</span>
-                <b>{finding.level}</b>
-              </button>
-            ))}
           </div>
-          <div className="risk-map-help">
-            <MapPin />
-            <p>
-              <b>Cara membaca peta</b>Pilih titik bernomor untuk melihat lokasi,
-              temuan, sumber indikator, dan tindak lanjutnya.
-            </p>
+          {buildings.map((building) => (
+            <button
+              key={building.id}
+              className={building.id === selectedBuilding.id ? 'active' : ''}
+              onClick={() => setSelectedBuildingId(building.id)}
+            >
+              <span>
+                <Building2 />
+              </span>
+              <div>
+                <b>{building.name}</b>
+                <small>
+                  {building.code} · {building.floors.length} lantai
+                </small>
+              </div>
+              <ChevronRight />
+            </button>
+          ))}
+        </aside>
+        <section className="surface location-floor-panel">
+          <div className="surface-head">
+            <div>
+              <p className="section-kicker">{selectedBuilding.code}</p>
+              <h2>{selectedBuilding.name}</h2>
+              <p>
+                Setiap pembaruan denah membuat versi baru agar temuan lama tetap
+                menunjuk gambar yang digunakan saat assessment.
+              </p>
+            </div>
+            <button
+              className="secondary-button"
+              onClick={() => setFloorOpen(true)}
+            >
+              <Plus /> Tambah lantai
+            </button>
+          </div>
+          <div className="location-floor-list">
+            {selectedBuilding.floors.map((floor) => {
+              const floorAreas = areas.filter(
+                (area) =>
+                  area.buildingId === selectedBuilding.id &&
+                  area.floor === floor.name,
+              );
+              return (
+                <article key={floor.id}>
+                  <div className="location-floor-head">
+                    <span>
+                      <Layers3 />
+                    </span>
+                    <div>
+                      <b>{floor.name}</b>
+                      <small>
+                        {floor.id} · {floorAreas.length} area terdaftar
+                      </small>
+                    </div>
+                    <span
+                      className={`status ${floor.planFile ? 'status-green' : 'status-amber'}`}
+                    >
+                      {floor.planFile ? <FileCheck2 /> : <AlertTriangle />}
+                      {floor.planFile ? 'Denah tersedia' : 'Belum ada denah'}
+                    </span>
+                  </div>
+                  {floor.planFile ? (
+                    <div className="location-plan-file">
+                      <FileImage />
+                      <span>
+                        <b>{floor.planFile}</b>
+                        <small>
+                          {floor.planVersion} · {floor.uploadedAt}
+                        </small>
+                        <small>{floor.uploadedBy}</small>
+                      </span>
+                    </div>
+                  ) : (
+                    <DataState
+                      variant="empty"
+                      title="Denah belum diunggah"
+                      description="Daftar Area tetap dapat digunakan oleh Asesor."
+                      compact
+                    />
+                  )}
+                  <div className="location-area-list">
+                    <div>
+                      <b>Area pada lantai ini</b>
+                      <button onClick={() => setAreaFloor(floor)}>
+                        <Plus /> Tambah area
+                      </button>
+                    </div>
+                    {floorAreas.length ? (
+                      <p>
+                        {floorAreas.map((area) => (
+                          <span key={area.id}>{area.name}</span>
+                        ))}
+                      </p>
+                    ) : (
+                      <small>
+                        Belum ada area. Asesor belum dapat memilih lokasi
+                        spesifik.
+                      </small>
+                    )}
+                  </div>
+                  <label className="assessment-upload-button location-upload-button">
+                    <Upload />{' '}
+                    {floor.planFile ? 'Unggah versi baru' : 'Unggah denah'}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,.pdf"
+                      onChange={(event) =>
+                        uploadPlan(
+                          selectedBuilding.id,
+                          floor.id,
+                          event.target.files?.[0]?.name ?? '',
+                        )
+                      }
+                    />
+                  </label>
+                </article>
+              );
+            })}
           </div>
         </section>
-        <aside className="surface manager-risk-detail">
-          {selected ? (
-            <>
-              <div className="manager-risk-detail-head">
-                <RiskBadge level={selected.level} />
-                <span>{selected.id}</span>
-              </div>
-              <p className="section-kicker">Lokasi temuan</p>
-              <h2>{selected.location}</h2>
-              <p className="manager-risk-zone">
-                <MapPin /> {selected.zone} · {selected.floor}
-              </p>
-              <dl>
-                <div>
-                  <dt>Indikator</dt>
-                  <dd>{selected.indicator}</dd>
-                </div>
-                <div>
-                  <dt>Status tindak lanjut</dt>
-                  <dd>
-                    <WorkflowBadge status={selected.status} />
-                  </dd>
-                </div>
-              </dl>
-              <div className="manager-risk-description">
-                <b>Temuan asesor</b>
-                <p>{selected.issue}</p>
-              </div>
-              <div className="manager-risk-recommendation">
-                <Target />
-                <span>
-                  <b>Rekomendasi</b>
-                  <p>{selected.recommendation}</p>
-                </span>
-              </div>
-              <button
-                className="primary-button"
-                onClick={() => onNavigate('follow-up')}
-              >
-                <ListChecks /> Buka tindak lanjut
-              </button>
-            </>
-          ) : (
-            <div className="manager-empty-state">
-              <MapPinned />
-              <b>Tidak ada titik risiko</b>
-              <p>Pilih lantai lain atau periode berbeda.</p>
-            </div>
-          )}
-        </aside>
       </div>
-      <section className="surface manager-risk-list">
+      <section className="surface location-data-flow">
         <div className="surface-head">
           <div>
-            <h2>Daftar titik pada {floor}</h2>
-            <p>Warna selalu disertai label tingkat risiko</p>
+            <h2>Alur sumber data</h2>
+            <p>Siapa membuat data dan kapan data dipakai</p>
           </div>
         </div>
-        {visibleFindings.map((finding, index) => (
-          <button
-            className={finding.id === selected?.id ? 'active' : ''}
-            key={finding.id}
-            onClick={() => setSelectedId(finding.id)}
-          >
-            <span>{index + 1}</span>
-            <RiskBadge level={finding.level} />
-            <div>
-              <b>{finding.location}</b>
-              <small>
-                {finding.zone} · {finding.indicator}
-              </small>
-            </div>
-            <p>{finding.issue}</p>
-            <ChevronRight />
-          </button>
-        ))}
+        <div>
+          {[
+            ['1', 'Pengelola', 'Mendaftarkan gedung, lantai, area, dan denah.'],
+            ['2', 'Asesor', 'Memilih area dan mencatat temuan serta bukti.'],
+            [
+              '3',
+              'Sistem',
+              'Menghitung kategori risiko dari konfigurasi Published.',
+            ],
+            [
+              '4',
+              'Pengelola',
+              'Menjalankan tindak lanjut dan mengunggah bukti.',
+            ],
+          ].map(([number, title, description]) => (
+            <article key={number}>
+              <span>{number}</span>
+              <div>
+                <b>{title}</b>
+                <p>{description}</p>
+              </div>
+              {number !== '4' ? <ArrowRight /> : <CheckCircle2 />}
+            </article>
+          ))}
+        </div>
       </section>
+
+      {createOpen ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal"
+            aria-labelledby="building-create-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">Master lokasi</p>
+                <h2 id="building-create-title">Tambah gedung pesantren</h2>
+                <p>Gedung baru dimulai dengan satu lantai tanpa denah.</p>
+              </div>
+              <button
+                onClick={() => setCreateOpen(false)}
+                aria-label="Tutup form gedung"
+              >
+                <X />
+              </button>
+            </div>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                const id = `BLD-${String(buildings.length + 1).padStart(3, '0')}`;
+                setBuildings((current) => [
+                  ...current,
+                  {
+                    id,
+                    code: buildingCode,
+                    name: buildingName,
+                    floors: [
+                      {
+                        id: `FLR-${String(totalFloors + 1).padStart(3, '0')}`,
+                        name: 'Lantai 1',
+                        planFile: '',
+                        planVersion: '',
+                        uploadedBy: '',
+                        uploadedAt: '',
+                      },
+                    ],
+                  },
+                ]);
+                setSelectedBuildingId(id);
+                setFeedback(`${buildingName} ditambahkan sebagai data dummy.`);
+                setBuildingName('');
+                setBuildingCode('');
+                setCreateOpen(false);
+              }}
+            >
+              <div className="admin-form-grid">
+                <label>
+                  Nama gedung
+                  <input
+                    required
+                    value={buildingName}
+                    onChange={(event) => setBuildingName(event.target.value)}
+                    placeholder="Contoh: Gedung Tahfidz"
+                  />
+                </label>
+                <label>
+                  Kode gedung
+                  <input
+                    required
+                    value={buildingCode}
+                    onChange={(event) => setBuildingCode(event.target.value)}
+                    placeholder="Contoh: GD-THF"
+                  />
+                </label>
+              </div>
+              <div className="admin-modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setCreateOpen(false)}
+                >
+                  Batal
+                </button>
+                <button type="submit" className="primary-button">
+                  <Plus /> Simpan gedung dummy
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+      ) : null}
+
+      {floorOpen ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal"
+            aria-labelledby="floor-create-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">{selectedBuilding.name}</p>
+                <h2 id="floor-create-title">Tambah lantai</h2>
+                <p>
+                  Denah dan area dapat ditambahkan setelah lantai tersimpan.
+                </p>
+              </div>
+              <button
+                onClick={() => setFloorOpen(false)}
+                aria-label="Tutup form lantai"
+              >
+                <X />
+              </button>
+            </div>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                const nextId = `FLR-${String(totalFloors + 1).padStart(3, '0')}`;
+                setBuildings((current) =>
+                  current.map((building) =>
+                    building.id === selectedBuilding.id
+                      ? {
+                          ...building,
+                          floors: [
+                            ...building.floors,
+                            {
+                              id: nextId,
+                              name: floorName,
+                              planFile: '',
+                              planVersion: '',
+                              uploadedBy: '',
+                              uploadedAt: '',
+                            },
+                          ],
+                        }
+                      : building,
+                  ),
+                );
+                setFeedback(
+                  `${floorName} ditambahkan pada ${selectedBuilding.name}.`,
+                );
+                setFloorName('');
+                setFloorOpen(false);
+              }}
+            >
+              <label className="manager-followup-note">
+                Nama lantai
+                <input
+                  required
+                  value={floorName}
+                  onChange={(event) => setFloorName(event.target.value)}
+                  placeholder="Contoh: Lantai 3"
+                />
+              </label>
+              <div className="admin-modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setFloorOpen(false)}
+                >
+                  Batal
+                </button>
+                <button type="submit" className="primary-button">
+                  <Plus /> Simpan lantai dummy
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+      ) : null}
+
+      {areaFloor ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal"
+            aria-labelledby="area-create-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">
+                  {selectedBuilding.name} · {areaFloor.name}
+                </p>
+                <h2 id="area-create-title">Tambah area</h2>
+                <p>
+                  Area menjadi pilihan lokasi utama ketika denah tidak tersedia.
+                </p>
+              </div>
+              <button
+                onClick={() => setAreaFloor(null)}
+                aria-label="Tutup form area"
+              >
+                <X />
+              </button>
+            </div>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setAreas((current) => [
+                  ...current,
+                  {
+                    id: `AREA-${String(current.length + 1).padStart(3, '0')}`,
+                    buildingId: selectedBuilding.id,
+                    name: areaName,
+                    floor: areaFloor.name,
+                    zone: areaZone,
+                    x: 12,
+                    y: 12,
+                    width: 32,
+                    height: 24,
+                  },
+                ]);
+                setFeedback(
+                  `${areaName} ditambahkan sebagai area observasi dummy.`,
+                );
+                setAreaName('');
+                setAreaZone('');
+                setAreaFloor(null);
+              }}
+            >
+              <div className="admin-form-grid">
+                <label>
+                  Nama area
+                  <input
+                    required
+                    value={areaName}
+                    onChange={(event) => setAreaName(event.target.value)}
+                    placeholder="Contoh: Tangga Timur"
+                  />
+                </label>
+                <label>
+                  Zona/blok
+                  <input
+                    required
+                    value={areaZone}
+                    onChange={(event) => setAreaZone(event.target.value)}
+                    placeholder="Contoh: Blok B"
+                  />
+                </label>
+              </div>
+              <div className="admin-modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setAreaFloor(null)}
+                >
+                  Batal
+                </button>
+                <button type="submit" className="primary-button">
+                  <MapPin /> Simpan area dummy
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+      ) : null}
     </>
   );
 }
 
-function RecommendationsPage() {
+function RiskFindingDetail({
+  finding,
+  onOpenAction,
+}: {
+  finding: RiskFinding | undefined;
+  onOpenAction: (section: string, recommendationId: string) => void;
+}) {
+  if (!finding)
+    return (
+      <aside className="surface manager-risk-detail">
+        <DataState
+          variant="empty"
+          title="Tidak ada temuan"
+          description="Ubah filter untuk melihat temuan bahaya lainnya."
+        />
+      </aside>
+    );
+  return (
+    <aside className="surface manager-risk-detail risk-detail-expanded">
+      <div className="manager-risk-detail-head">
+        <RiskBadge level={finding.level} />
+        <span>{finding.id}</span>
+      </div>
+      <p className="section-kicker">Temuan bahaya</p>
+      <h2>{finding.hazard}</h2>
+      <p className="manager-risk-zone">
+        <MapPin /> {finding.building} · {finding.floor} · {finding.location}
+      </p>
+      <div className="risk-separation-row">
+        <div>
+          <small>Tingkat risiko</small>
+          <RiskBadge level={finding.level} />
+        </div>
+        <div>
+          <small>Status pekerjaan</small>
+          <WorkflowBadge status={finding.status} />
+        </div>
+      </div>
+      <dl className="risk-detail-metadata">
+        <div>
+          <dt>Kemungkinan</dt>
+          <dd>{finding.likelihood}</dd>
+        </div>
+        <div>
+          <dt>Keparahan</dt>
+          <dd>{finding.severity}</dd>
+        </div>
+        <div>
+          <dt>Potensi terpapar</dt>
+          <dd>{finding.exposedPeople}</dd>
+        </div>
+        <div>
+          <dt>Risiko tersisa</dt>
+          <dd>{finding.residualRisk}</dd>
+        </div>
+      </dl>
+      <div className="manager-risk-description">
+        <b>Dampak yang mungkin terjadi</b>
+        <p>{finding.impact}</p>
+      </div>
+      <div className="manager-risk-description">
+        <b>Pengendalian yang sudah ada</b>
+        <p>{finding.existingControl}</p>
+      </div>
+      <div className="risk-traceability">
+        <FileCheck2 />
+        <div>
+          <b>Sumber dan keterlacakan</b>
+          <p>
+            {finding.assessmentId} · {finding.instrumentVersion}
+          </p>
+          <p>
+            {finding.indicator} · {finding.observedAt}
+          </p>
+          <p>
+            {finding.evidence} · {finding.planVersion}
+          </p>
+        </div>
+      </div>
+      <div className="manager-risk-recommendation">
+        <Target />
+        <span>
+          <b>Rekomendasi {finding.recommendationId}</b>
+          <p>{finding.recommendation}</p>
+        </span>
+      </div>
+      <button
+        className="primary-button"
+        onClick={() =>
+          onOpenAction(
+            finding.status === 'Belum ditindaklanjuti'
+              ? 'recommendations'
+              : 'follow-up',
+            finding.recommendationId,
+          )
+        }
+      >
+        <ListChecks />
+        {finding.status === 'Belum ditindaklanjuti'
+          ? `Buat tindak lanjut ${finding.recommendationId}`
+          : `Buka tindak lanjut ${finding.recommendationId}`}
+      </button>
+    </aside>
+  );
+}
+
+function RiskMapPage({
+  onNavigate,
+  onOpenAction,
+}: {
+  onNavigate: (section: string) => void;
+  onOpenAction: (section: string, recommendationId: string) => void;
+}) {
+  const [view, setView] = useState<'areas' | 'plan' | 'findings'>('areas');
+  const [buildingId, setBuildingId] = useState('Semua gedung');
+  const [floor, setFloor] = useState('Semua lantai');
+  const [riskLevel, setRiskLevel] = useState('Semua risiko');
+  const [workStatus, setWorkStatus] = useState('Semua status');
+  const [selectedId, setSelectedId] = useState(riskFindings[0].id);
+  const selectedBuilding = initialBuildings.find(
+    (building) => building.id === buildingId,
+  );
+  const floorOptions = selectedBuilding
+    ? selectedBuilding.floors.map((item) => item.name)
+    : [
+        ...new Set(
+          initialBuildings.flatMap((item) =>
+            item.floors.map((floorItem) => floorItem.name),
+          ),
+        ),
+      ];
+  const visibleFindings = riskFindings.filter(
+    (finding) =>
+      (buildingId === 'Semua gedung' || finding.buildingId === buildingId) &&
+      (floor === 'Semua lantai' || finding.floor === floor) &&
+      (riskLevel === 'Semua risiko' || finding.level === riskLevel) &&
+      (workStatus === 'Semua status' || finding.status === workStatus),
+  );
+  const visibleAreas = areaDirectory.filter(
+    (area) =>
+      (buildingId === 'Semua gedung' || area.buildingId === buildingId) &&
+      (floor === 'Semua lantai' || area.floor === floor),
+  );
+  const selected =
+    visibleFindings.find((finding) => finding.id === selectedId) ??
+    visibleFindings[0];
+  const activePlan = selectedBuilding?.floors.find(
+    (floorItem) => floorItem.name === floor,
+  );
+  const planAreas = areaDirectory.filter(
+    (area) => area.buildingId === buildingId && area.floor === floor,
+  );
+
+  function changeView(nextView: 'areas' | 'plan' | 'findings') {
+    setView(nextView);
+    if (nextView === 'plan' && buildingId === 'Semua gedung') {
+      setBuildingId('BLD-001');
+      setFloor('Lantai 1');
+      setSelectedId('RSK-001');
+    }
+  }
+
+  return (
+    <>
+      <ManagerHeading
+        title="Peta Bahaya & Risiko"
+        description="Telusuri temuan berdasarkan area, denah unggahan pesantren, dan assessment sumbernya."
+        action={
+          <button
+            className="secondary-button"
+            onClick={() => onNavigate('locations')}
+          >
+            <Building2 /> Kelola gedung & denah
+          </button>
+        }
+      />
+      <ManagerScope compact />
+      <div className="risk-source-banner">
+        <ShieldCheck />
+        <div>
+          <b>Pemisahan sumber data</b>
+          <p>
+            Lokasi dan denah berasal dari Pengelola; titik, catatan, dan bukti
+            berasal dari Asesor; kategori risiko dihitung oleh konfigurasi
+            instrumen Published.
+          </p>
+        </div>
+      </div>
+      <div
+        className="risk-view-tabs"
+        role="tablist"
+        aria-label="Tampilan peta bahaya"
+      >
+        <button
+          role="tab"
+          aria-selected={view === 'areas'}
+          className={view === 'areas' ? 'active' : ''}
+          onClick={() => changeView('areas')}
+        >
+          <List /> Daftar Area
+        </button>
+        <button
+          role="tab"
+          aria-selected={view === 'plan'}
+          className={view === 'plan' ? 'active' : ''}
+          onClick={() => changeView('plan')}
+        >
+          <MapPinned /> Denah Bangunan
+        </button>
+        <button
+          role="tab"
+          aria-selected={view === 'findings'}
+          className={view === 'findings' ? 'active' : ''}
+          onClick={() => changeView('findings')}
+        >
+          <AlertTriangle /> Daftar Temuan
+        </button>
+      </div>
+      <section className="surface risk-filter-surface">
+        <div className="risk-filter-grid">
+          <label>
+            Periode assessment
+            <select defaultValue="ASM-0254">
+              <option value="ASM-0254">Semester 1 2026 · ASM-0254</option>
+              <option value="ASM-0198">Semester 2 2025 · ASM-0198</option>
+            </select>
+          </label>
+          <label>
+            Gedung
+            <select
+              value={buildingId}
+              onChange={(event) => {
+                setBuildingId(event.target.value);
+                setFloor('Semua lantai');
+              }}
+            >
+              <option>Semua gedung</option>
+              {initialBuildings.map((building) => (
+                <option key={building.id} value={building.id}>
+                  {building.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Lantai
+            <select
+              value={floor}
+              onChange={(event) => setFloor(event.target.value)}
+            >
+              <option>Semua lantai</option>
+              {floorOptions.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Tingkat risiko
+            <select
+              value={riskLevel}
+              onChange={(event) => setRiskLevel(event.target.value)}
+            >
+              <option>Semua risiko</option>
+              <option>Tinggi</option>
+              <option>Sedang</option>
+              <option>Rendah</option>
+            </select>
+          </label>
+          <label>
+            Status pekerjaan
+            <select
+              value={workStatus}
+              onChange={(event) => setWorkStatus(event.target.value)}
+            >
+              <option>Semua status</option>
+              <option>Belum ditindaklanjuti</option>
+              <option>Berjalan</option>
+              <option>Menunggu verifikasi</option>
+              <option>Terverifikasi</option>
+            </select>
+          </label>
+        </div>
+      </section>
+      <div className="risk-summary-strip">
+        <span>
+          <b>{visibleAreas.length}</b> area ditampilkan
+        </span>
+        <span>
+          <b>{visibleFindings.length}</b> temuan aktif
+        </span>
+        <span className="high">
+          <b>
+            {visibleFindings.filter((item) => item.level === 'Tinggi').length}
+          </b>{' '}
+          risiko tinggi
+        </span>
+        <p>Risiko dan status pekerjaan ditampilkan terpisah.</p>
+      </div>
+
+      <div className="risk-workspace-layout">
+        <section className="surface risk-primary-surface">
+          {view === 'areas' ? (
+            <div className="risk-area-grid">
+              {visibleAreas.map((area) => {
+                const building = initialBuildings.find(
+                  (item) => item.id === area.buildingId,
+                );
+                const areaFindings = riskFindings.filter(
+                  (finding) => finding.areaId === area.id,
+                );
+                const highest = areaFindings.some(
+                  (item) => item.level === 'Tinggi',
+                )
+                  ? 'Tinggi'
+                  : areaFindings.some((item) => item.level === 'Sedang')
+                    ? 'Sedang'
+                    : undefined;
+                return (
+                  <article key={area.id}>
+                    <div className="risk-area-head">
+                      <span>
+                        <MapPin />
+                      </span>
+                      <div>
+                        <b>{area.name}</b>
+                        <small>
+                          {building?.name} · {area.floor} · {area.zone}
+                        </small>
+                      </div>
+                    </div>
+                    {highest ? (
+                      <RiskBadge level={highest} />
+                    ) : (
+                      <span className="status status-neutral">
+                        <CheckCircle2 /> Tidak ada temuan aktif
+                      </span>
+                    )}
+                    <p>
+                      {areaFindings.length
+                        ? `${areaFindings.length} temuan dari assessment aktif.`
+                        : 'Area tetap tersedia untuk observasi walaupun belum memiliki titik bahaya.'}
+                    </p>
+                    {areaFindings.map((finding) => (
+                      <button
+                        key={finding.id}
+                        onClick={() => setSelectedId(finding.id)}
+                        className={finding.id === selected?.id ? 'active' : ''}
+                      >
+                        <span>{finding.id}</span>
+                        <b>{finding.hazard}</b>
+                        <ChevronRight />
+                      </button>
+                    ))}
+                  </article>
+                );
+              })}
+              {visibleAreas.length === 0 ? (
+                <DataState
+                  variant="empty"
+                  title="Area tidak ditemukan"
+                  description="Ubah pilihan gedung atau lantai."
+                />
+              ) : null}
+            </div>
+          ) : null}
+
+          {view === 'plan' ? (
+            activePlan?.planFile ? (
+              <>
+                <div className="plan-source-head">
+                  <div>
+                    <p className="section-kicker">Denah unggahan pengelola</p>
+                    <h2>
+                      {selectedBuilding?.name} · {activePlan.name}
+                    </h2>
+                    <p>
+                      {activePlan.planFile} · {activePlan.planVersion} ·{' '}
+                      {activePlan.uploadedAt}
+                    </p>
+                  </div>
+                  <span className="status status-blue">
+                    <FileImage /> Pratinjau dummy
+                  </span>
+                </div>
+                <div
+                  className="risk-floorplan risk-floorplan-versioned"
+                  aria-label={`Denah ${selectedBuilding?.name} ${activePlan.name}`}
+                >
+                  {planAreas.map((area) => (
+                    <div
+                      className="floor-room dynamic-room"
+                      key={area.id}
+                      style={{
+                        left: `${area.x}%`,
+                        top: `${area.y}%`,
+                        width: `${area.width}%`,
+                        height: `${area.height}%`,
+                      }}
+                    >
+                      <span>{area.name}</span>
+                      <small>{area.zone}</small>
+                    </div>
+                  ))}
+                  {visibleFindings.map((finding, index) => (
+                    <button
+                      className={`risk-marker risk-${finding.level.toLowerCase()} ${finding.id === selected?.id ? 'active' : ''}`}
+                      style={{ left: `${finding.x}%`, top: `${finding.y}%` }}
+                      key={finding.id}
+                      onClick={() => setSelectedId(finding.id)}
+                      aria-label={`${finding.level}: ${finding.hazard} di ${finding.location}`}
+                    >
+                      <span>{index + 1}</span>
+                      <b>{finding.level}</b>
+                    </button>
+                  ))}
+                </div>
+                <div className="risk-map-help">
+                  <MapPin />
+                  <p>
+                    <b>Koordinat relatif</b>Titik disimpan pada skala 0–100 agar
+                    tetap tepat ketika denah ditampilkan di desktop atau HP.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <DataState
+                variant="empty"
+                title="Denah belum tersedia"
+                description="Pilih gedung dan lantai yang memiliki denah, atau gunakan Daftar Area."
+                action={
+                  <button
+                    className="secondary-button"
+                    onClick={() => onNavigate('locations')}
+                  >
+                    <Upload /> Kelola denah
+                  </button>
+                }
+              />
+            )
+          ) : null}
+
+          {view === 'findings' ? (
+            <div className="risk-finding-list">
+              {visibleFindings.map((finding, index) => (
+                <button
+                  className={finding.id === selected?.id ? 'active' : ''}
+                  key={finding.id}
+                  onClick={() => setSelectedId(finding.id)}
+                >
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <div>
+                    <small>
+                      {finding.id} · {finding.indicator}
+                    </small>
+                    <b>{finding.hazard}</b>
+                    <p>
+                      {finding.building} · {finding.floor} · {finding.location}
+                    </p>
+                  </div>
+                  <RiskBadge level={finding.level} />
+                  <WorkflowBadge status={finding.status} />
+                  <ChevronRight />
+                </button>
+              ))}
+              {visibleFindings.length === 0 ? (
+                <DataState
+                  variant="empty"
+                  title="Temuan tidak ditemukan"
+                  description="Ubah filter risiko atau status pekerjaan."
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </section>
+        <RiskFindingDetail finding={selected} onOpenAction={onOpenAction} />
+      </div>
+    </>
+  );
+}
+
+function RecommendationsPage({
+  initialSelectedId = null,
+}: {
+  initialSelectedId?: string | null;
+}) {
   const [items, setItems] = useState(initialRecommendations);
   const [priority, setPriority] = useState('Semua prioritas');
   const [status, setStatus] = useState('Semua status');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialSelectedId,
+  );
   const [feedback, setFeedback] = useState('');
   const selected = items.find((item) => item.id === selectedId);
   const visible = items.filter(
@@ -1117,13 +2250,19 @@ function RecommendationsPage() {
   );
 }
 
-function FollowUpPage() {
+function FollowUpPage({
+  initialSelectedId = null,
+}: {
+  initialSelectedId?: string | null;
+}) {
   const [items, setItems] = useState(
     initialRecommendations.filter(
       (item) => item.status !== 'Belum ditindaklanjuti',
     ),
   );
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialSelectedId,
+  );
   const [evidenceName, setEvidenceName] = useState('');
   const [note, setNote] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -1640,10 +2779,23 @@ export function ManagerSection({
   section: string;
   onNavigate: (section: string) => void;
 }) {
+  const [focusedRecommendationId, setFocusedRecommendationId] = useState<
+    string | null
+  >(null);
+  function openRelatedAction(nextSection: string, recommendationId: string) {
+    setFocusedRecommendationId(recommendationId);
+    onNavigate(nextSection);
+  }
   if (section === 'results') return <ResultsPage />;
-  if (section === 'risk-map') return <RiskMapPage onNavigate={onNavigate} />;
-  if (section === 'recommendations') return <RecommendationsPage />;
-  if (section === 'follow-up') return <FollowUpPage />;
+  if (section === 'locations') return <LocationManagementPage />;
+  if (section === 'risk-map')
+    return (
+      <RiskMapPage onNavigate={onNavigate} onOpenAction={openRelatedAction} />
+    );
+  if (section === 'recommendations')
+    return <RecommendationsPage initialSelectedId={focusedRecommendationId} />;
+  if (section === 'follow-up')
+    return <FollowUpPage initialSelectedId={focusedRecommendationId} />;
   if (section === 'reports') return <ReportsPage />;
   return null;
 }

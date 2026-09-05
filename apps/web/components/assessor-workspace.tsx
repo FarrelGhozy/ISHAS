@@ -20,6 +20,7 @@ import {
   ImagePlus,
   LockKeyhole,
   MapPin,
+  MapPinned,
   Plus,
   Save,
   Search,
@@ -51,6 +52,8 @@ type AnswerState = {
   value: string;
   note: string;
   evidenceName: string;
+  areaId: string;
+  planPoint: { x: number; y: number } | null;
 };
 
 type AssessmentIndicator = {
@@ -62,6 +65,7 @@ type AssessmentIndicator = {
   answerType: 'likert' | 'boolean';
   required: boolean;
   evidenceRequired: boolean;
+  locationRequired: boolean;
   reference: string;
   options: Array<{ value: string; label: string; description: string }>;
 };
@@ -128,6 +132,7 @@ const indicators: AssessmentIndicator[] = [
     answerType: 'likert',
     required: true,
     evidenceRequired: true,
+    locationRequired: true,
     reference: 'Standar bangunan terkait · contoh belum disahkan',
     options: [
       {
@@ -161,6 +166,7 @@ const indicators: AssessmentIndicator[] = [
     answerType: 'likert',
     required: true,
     evidenceRequired: true,
+    locationRequired: true,
     reference: 'Rujukan teknis menunggu validasi tim penelitian',
     options: [
       {
@@ -194,6 +200,7 @@ const indicators: AssessmentIndicator[] = [
     answerType: 'likert',
     required: true,
     evidenceRequired: true,
+    locationRequired: true,
     reference: 'Standar kesehatan lingkungan · contoh prototipe',
     options: [
       {
@@ -223,6 +230,7 @@ const indicators: AssessmentIndicator[] = [
     answerType: 'boolean',
     required: true,
     evidenceRequired: false,
+    locationRequired: true,
     reference: 'Rujukan kesehatan lingkungan · menunggu konfirmasi',
     options: [
       {
@@ -251,6 +259,7 @@ const indicators: AssessmentIndicator[] = [
     answerType: 'boolean',
     required: true,
     evidenceRequired: false,
+    locationRequired: false,
     reference: 'Konstruk budaya keselamatan · menunggu validasi',
     options: [
       {
@@ -279,6 +288,7 @@ const indicators: AssessmentIndicator[] = [
     answerType: 'boolean',
     required: true,
     evidenceRequired: true,
+    locationRequired: false,
     reference: 'Prosedur tanggap darurat · menunggu konfirmasi',
     options: [
       {
@@ -305,25 +315,70 @@ const continuedAnswers: Record<string, AnswerState> = {
     value: '3',
     note: 'Jalur sisi timur sudah jelas, penanda malam perlu diperiksa.',
     evidenceName: 'jalur-evakuasi-timur.jpg',
+    areaId: 'AREA-001',
+    planPoint: { x: 24, y: 28 },
   },
   'electric-installation': {
     value: '2',
     note: 'Ditemukan sambungan terbuka di lantai dua.',
     evidenceName: '',
+    areaId: 'AREA-004',
+    planPoint: { x: 27, y: 35 },
   },
   'healthy-toilet': {
     value: '3',
     note: 'Jumlah cukup, jadwal kebersihan perlu diperbarui.',
     evidenceName: 'jamban-asrama-a.jpg',
+    areaId: 'AREA-002',
+    planPoint: { x: 34, y: 70 },
   },
-  'clean-water': { value: 'Ya', note: '', evidenceName: '' },
+  'clean-water': {
+    value: 'Ya',
+    note: '',
+    evidenceName: '',
+    areaId: 'AREA-009',
+    planPoint: null,
+  },
 };
+
+const assessmentLocations = [
+  {
+    id: 'AREA-001',
+    label: 'Gedung Asrama Putra · Lantai 1 · Asrama Putra A',
+    plan: 'DENAH-v2',
+  },
+  {
+    id: 'AREA-002',
+    label: 'Gedung Asrama Putra · Lantai 1 · Kamar Mandi Asrama',
+    plan: 'DENAH-v2',
+  },
+  {
+    id: 'AREA-004',
+    label: 'Gedung Asrama Putra · Lantai 2 · Asrama Putra A',
+    plan: 'DENAH-v1',
+  },
+  {
+    id: 'AREA-005',
+    label: 'Gedung Pendidikan · Lantai 1 · Ruang Kelas Timur',
+    plan: 'DENAH-v1',
+  },
+  {
+    id: 'AREA-008',
+    label: 'Gedung Layanan · Lantai 1 · Dapur Utama',
+    plan: '',
+  },
+  {
+    id: 'AREA-009',
+    label: 'Gedung Layanan · Lantai 1 · Gudang Bahan',
+    plan: '',
+  },
+];
 
 function emptyAnswers() {
   return Object.fromEntries(
     indicators.map((indicator) => [
       indicator.id,
-      { value: '', note: '', evidenceName: '' },
+      { value: '', note: '', evidenceName: '', areaId: '', planPoint: null },
     ]),
   ) as Record<string, AnswerState>;
 }
@@ -417,6 +472,7 @@ function AssessmentFlow({
   const [saved, setSaved] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [confirmFinal, setConfirmFinal] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
   const [finalized, setFinalized] = useState(assignment.status === 'Final');
   const activeIndicator = indicators[activeIndex];
   const activeAnswer = answers[activeIndicator.id];
@@ -435,10 +491,19 @@ function AssessmentFlow({
       answers[indicator.id]?.value === 'N/A' &&
       !answers[indicator.id]?.note.trim(),
   );
+  const missingLocations = indicators.filter(
+    (indicator) => indicator.locationRequired && !answers[indicator.id]?.areaId,
+  );
   const totalMissing =
-    missingAnswers.length + missingEvidence.length + missingNaNotes.length;
+    missingAnswers.length +
+    missingEvidence.length +
+    missingNaNotes.length +
+    missingLocations.length;
   const progress = Math.round((answeredCount / indicators.length) * 100);
   const dimensions = [...new Set(indicators.map((item) => item.dimension))];
+  const selectedLocation = assessmentLocations.find(
+    (location) => location.id === activeAnswer.areaId,
+  );
 
   function updateAnswer(patch: Partial<AnswerState>) {
     setAnswers((current) => ({
@@ -605,6 +670,72 @@ function AssessmentFlow({
           </div>
           <h1>{activeIndicator.title}</h1>
           <p className="assessment-prompt">{activeIndicator.prompt}</p>
+          {activeIndicator.locationRequired ? (
+            <div className="assessor-location-field">
+              <div>
+                <MapPin />
+                <span>
+                  <b>Lokasi observasi</b>
+                  <small>
+                    Dipilih dari master gedung dan area milik pesantren
+                  </small>
+                </span>
+                <span className="status status-red">Wajib</span>
+              </div>
+              <label>
+                Gedung, lantai, dan area
+                <select
+                  value={activeAnswer.areaId}
+                  onChange={(event) =>
+                    updateAnswer({
+                      areaId: event.target.value,
+                      planPoint: null,
+                    })
+                  }
+                  required
+                >
+                  <option value="">Pilih lokasi observasi</option>
+                  {assessmentLocations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.label}
+                      {location.plan ? '' : ' · tanpa denah'}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="assessor-location-actions">
+                <div>
+                  {selectedLocation ? (
+                    <>
+                      <b>{selectedLocation.id}</b>
+                      <small>
+                        {selectedLocation.plan
+                          ? `Denah tersedia · ${selectedLocation.plan}`
+                          : 'Denah belum tersedia · lokasi tetap tercatat sebagai area'}
+                      </small>
+                    </>
+                  ) : (
+                    <small>Pilih area sebelum mencatat titik.</small>
+                  )}
+                </div>
+                <button
+                  className="secondary-button"
+                  disabled={!selectedLocation?.plan}
+                  onClick={() => setPinOpen(true)}
+                >
+                  <MapPinned />
+                  {activeAnswer.planPoint
+                    ? `Titik ${activeAnswer.planPoint.x}, ${activeAnswer.planPoint.y}`
+                    : 'Tandai pada denah'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="assessment-location-not-required">
+              <MapPin /> Indikator ini berlaku pada tingkat pesantren dan tidak
+              membutuhkan satu titik lokasi.
+            </div>
+          )}
           <div
             className="assessment-options"
             role="radiogroup"
@@ -763,6 +894,23 @@ function AssessmentFlow({
               </small>
             </div>
           </div>
+          <div className="assessment-check-stat">
+            <span className={missingLocations.length === 0 ? 'done' : ''}>
+              {missingLocations.length === 0 ? (
+                <Check />
+              ) : (
+                missingLocations.length
+              )}
+            </span>
+            <div>
+              <b>Lokasi observasi</b>
+              <small>
+                {missingLocations.length === 0
+                  ? 'Sudah terhubung ke area'
+                  : 'Belum dipilih'}
+              </small>
+            </div>
+          </div>
           <button
             className="secondary-button assessment-review-button"
             onClick={() => setReviewOpen(true)}
@@ -778,6 +926,88 @@ function AssessmentFlow({
           </div>
         </aside>
       </div>
+
+      {pinOpen && selectedLocation?.plan ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal assessor-pin-dialog"
+            aria-labelledby="assessor-pin-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">Lokasi pada denah</p>
+                <h2 id="assessor-pin-title">Tandai titik observasi</h2>
+                <p>
+                  {selectedLocation.label} · {selectedLocation.plan}
+                </p>
+              </div>
+              <button
+                onClick={() => setPinOpen(false)}
+                aria-label="Tutup pemilihan titik"
+              >
+                <X />
+              </button>
+            </div>
+            <button
+              className="assessor-pin-canvas"
+              type="button"
+              aria-label="Pilih posisi pada denah dummy"
+              onClick={(event) => {
+                const bounds = event.currentTarget.getBoundingClientRect();
+                const x = Math.round(
+                  ((event.clientX - bounds.left) / bounds.width) * 100,
+                );
+                const y = Math.round(
+                  ((event.clientY - bounds.top) / bounds.height) * 100,
+                );
+                updateAnswer({ planPoint: { x, y } });
+              }}
+            >
+              <span className="pin-room pin-room-main">Area utama</span>
+              <span className="pin-room pin-room-support">Area pendukung</span>
+              <span className="pin-corridor">Koridor / sirkulasi</span>
+              {activeAnswer.planPoint ? (
+                <i
+                  style={{
+                    left: `${activeAnswer.planPoint.x}%`,
+                    top: `${activeAnswer.planPoint.y}%`,
+                  }}
+                >
+                  <MapPin />
+                </i>
+              ) : null}
+            </button>
+            <div className="context-note context-note-wide">
+              <MapPin />
+              <p>
+                <b>Koordinat relatif</b>
+                {activeAnswer.planPoint
+                  ? `Titik tersimpan pada X ${activeAnswer.planPoint.x}% dan Y ${activeAnswer.planPoint.y}%.`
+                  : 'Sentuh posisi temuan pada denah untuk menyimpan koordinat 0–100.'}
+              </p>
+            </div>
+            <div className="admin-modal-actions">
+              <button
+                className="secondary-button"
+                onClick={() => {
+                  updateAnswer({ planPoint: null });
+                  setPinOpen(false);
+                }}
+              >
+                Simpan tanpa titik
+              </button>
+              <button
+                className="primary-button"
+                disabled={!activeAnswer.planPoint}
+                onClick={() => setPinOpen(false)}
+              >
+                <Check /> Gunakan titik ini
+              </button>
+            </div>
+          </dialog>
+        </div>
+      ) : null}
 
       {reviewOpen ? (
         <div className="admin-modal-backdrop" role="presentation">
@@ -821,6 +1051,7 @@ function AssessmentFlow({
                   Boolean(answer.value) &&
                   (!indicator.evidenceRequired ||
                     Boolean(answer.evidenceName)) &&
+                  (!indicator.locationRequired || Boolean(answer.areaId)) &&
                   (answer.value !== 'N/A' || Boolean(answer.note.trim()));
                 return (
                   <button

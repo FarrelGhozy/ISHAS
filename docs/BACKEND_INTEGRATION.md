@@ -142,7 +142,12 @@ Finalisasi harus atomik: validasi jawaban/bukti, kunci assessment, jalankan scor
 | Hasil assessment | `GET /assessments/{id}/result` |
 | Perbandingan periode | `GET /institutions/{id}/result-history` |
 | Peta risiko | `GET /assessments/{id}/risk-observations` |
-| Area/denah | `GET /institutions/{id}/areas`, `GET /floor-plans/{id}` |
+| Master gedung | `GET/POST /institutions/{id}/buildings` |
+| Master lantai | `GET/POST /buildings/{id}/floors` |
+| Master area | `GET/POST /floors/{id}/areas` |
+| Daftar denah | `GET /institutions/{id}/floor-plans` |
+| Unggah versi denah | `POST /floors/{id}/floor-plans` |
+| Verifikasi denah | `POST /floor-plans/{id}/verify` |
 | Rekomendasi | `GET /assessment-results/{id}/recommendations` |
 | Buat tindak lanjut | `POST /recommendations/{id}/follow-ups` |
 | Perbarui progress | `PATCH /follow-ups/{id}` |
@@ -150,7 +155,27 @@ Finalisasi harus atomik: validasi jawaban/bukti, kunci assessment, jalankan scor
 | Ajukan verifikasi | `POST /follow-ups/{id}/submit-verification` |
 | Laporan | `POST /assessments/{id}/reports`, `GET /reports/{id}` |
 
-Risk observation menyimpan `areaId`, koordinat relatif opsional, assessment, indikator opsional, level/category, catatan, dan evidence. Frontend tidak mengasumsikan GIS. Denah awal dapat berupa gambar per lantai dengan koordinat relatif 0–100.
+Risk observation menyimpan `areaId`, `floorPlanId/floorPlanVersion`, koordinat relatif opsional, assessment, indikator opsional, bahaya, dampak, kemungkinan, keparahan, paparan, pengendalian yang sudah ada, level/category hasil engine, catatan, dan evidence. Frontend tidak mengasumsikan GIS. Denah awal berupa gambar per gedung/lantai dengan koordinat relatif 0–100.
+
+### Alur lokasi, denah, dan temuan
+
+1. Admin membuat lembaga dan menghubungkan akun Pengelola.
+2. Pengelola membuat master gedung, lantai, dan area milik lembaganya.
+3. Pengelola dapat mengunggah JPG/PNG/PDF untuk satu lantai. Setiap unggahan baru membuat `FloorPlan.version` baru; versi lama tidak ditimpa.
+4. Asesor yang memiliki penugasan memilih `areaId`. Bila denah tersedia, Asesor dapat menyimpan `floorPlanId`, versinya, serta `relativeX/relativeY` 0–100.
+5. Setelah assessment divalidasi/finalisasi, backend membuat atau memperbarui `RiskObservation` dan menghitung kategori menggunakan konfigurasi ilmiah dari versi instrumen terkait.
+6. Recommendation rule menghasilkan rekomendasi yang menyimpan `riskObservationId`.
+7. Pengelola membuat tindak lanjut, memperbarui progres, mengunggah bukti, dan mengajukan verifikasi.
+8. Setelah kontrol diterapkan, residual risk dapat dinilai tanpa menimpa penilaian awal.
+
+Pondok tanpa denah tidak boleh diblokir. `areaId` tetap menjadi referensi utama; koordinat dan `floorPlanId` boleh `null`. Denah hanya membantu visualisasi dan tidak menjadi sumber kategori risiko.
+
+Hak akses minimum:
+
+- Admin dapat melihat struktur seluruh lembaga untuk dukungan operasional dan audit.
+- Pengelola hanya dapat mengubah gedung/lantai/area/denah milik lembaga yang terhubung.
+- Asesor hanya dapat membaca lokasi lembaga pada penugasannya dan menambahkan temuan pada assessment aktif.
+- Peneliti mengelola kebutuhan lokasi pada indikator dan konfigurasi risiko, bukan denah operasional pondok.
 
 ## File dan bukti
 
@@ -193,7 +218,7 @@ Pola visual bersama tersedia pada `components/ui/data-state.tsx`.
 - Workflow assessment setelah Submit: langsung Final atau melalui reviewer.
 - Pihak yang berhak memverifikasi tindak lanjut.
 - Kebijakan retensi, ukuran, format, dan akses bukti.
-- Apakah denah diunggah per pesantren/lantai dan siapa yang menentukan titik koordinat.
+- Kebijakan pihak yang memverifikasi denah serta format/ukuran file final; Pengelola mengunggah dan Asesor menentukan titik pada prototipe.
 - Format laporan final dan pihak yang boleh mengunduh data mentah.
 - Target hosting, SSO/email invitation, backup, observability, dan SLA.
 

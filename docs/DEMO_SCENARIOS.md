@@ -42,12 +42,18 @@ Hasil yang diharapkan: progress berasal dari kelengkapan field; finalisasi diblo
 1. Masuk sebagai Pengelola Pesantren.
 2. Pastikan semua halaman hanya menampilkan PP Al-Hikmah Malang.
 3. Bandingkan Hasil Assessment antarperiode dan buka detail dimensi.
-4. Buka Peta Risiko, pindah lantai, dan pilih marker temuan.
-5. Filter Rekomendasi dan buat rencana tindakan.
-6. Perbarui Tindak Lanjut, tambahkan bukti, dan ajukan verifikasi.
-7. Buka Laporan dan pratinjau ringkasan pimpinan.
+4. Buka Gedung & Denah, periksa sumber unggahan dan versi setiap lantai.
+5. Pilih gedung tanpa denah dan pastikan Daftar Area tetap tersedia.
+6. Buka Peta Bahaya & Risiko; bandingkan Daftar Area, Denah Bangunan, dan Daftar Temuan.
+7. Pilih temuan dan bedakan Tingkat Risiko dari Status Pekerjaan.
+8. Periksa assessment, indikator, asesor, bukti, serta versi denah sumber.
+9. Buka rekomendasi/tindak lanjut terkait langsung dari detail temuan.
+10. Perbarui Tindak Lanjut, tambahkan bukti, dan ajukan verifikasi.
+11. Buka Laporan dan pratinjau ringkasan pimpinan.
 
 Hasil yang diharapkan: temuan dapat ditelusuri dari lokasi dan indikator hingga rekomendasi, tindakan, bukti, serta laporan.
+
+Untuk menunjukkan sumber titik bahaya, login kembali sebagai Asesor, buka assessment Draft, pilih indikator fisik, tentukan lokasi observasi, lalu simulasikan penempatan titik pada denah. Pilih area tanpa denah untuk menunjukkan bahwa koordinat bersifat opsional.
 
 ## 5. State dan akses
 

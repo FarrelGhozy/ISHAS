@@ -176,12 +176,18 @@ const roleNavigation: Record<RoleId, NavigationItem[]> = {
   pengelola: [
     { id: 'dashboard', label: 'Ringkasan K3L', Icon: LayoutDashboard },
     { id: 'results', label: 'Hasil Assessment', Icon: BarChart3 },
-    { id: 'risk-map', label: 'Peta Risiko', Icon: MapPinned, badge: '2' },
+    { id: 'locations', label: 'Gedung & Denah', Icon: Building2 },
+    {
+      id: 'risk-map',
+      label: 'Peta Bahaya & Risiko',
+      Icon: MapPinned,
+      badge: '2',
+    },
     {
       id: 'recommendations',
       label: 'Rekomendasi',
       Icon: ListChecks,
-      badge: '5',
+      badge: '6',
     },
     { id: 'follow-up', label: 'Tindak Lanjut', Icon: Activity },
     { id: 'reports', label: 'Laporan', Icon: FileText },
@@ -268,10 +274,10 @@ const roleNotifications: Record<
       tone: 'red',
     },
     {
-      title: '1 pekerjaan menunggu verifikasi',
-      detail: 'Bukti telah diajukan',
-      target: 'follow-up',
-      tone: 'blue',
+      title: '2 lantai belum memiliki denah',
+      detail: 'Daftar Area tetap dapat digunakan',
+      target: 'locations',
+      tone: 'amber',
     },
   ],
 };
@@ -907,7 +913,7 @@ function ManagerDashboard({
             className="text-button"
             onClick={() => onNavigate('risk-map')}
           >
-            Buka peta risiko <ArrowRight />
+            Buka peta bahaya <ArrowRight />
           </button>
         </div>
         <div className="findings-grid">

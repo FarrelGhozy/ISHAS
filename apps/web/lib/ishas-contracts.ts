@@ -27,6 +27,11 @@ export type AssessmentInputSourceType =
   | 'supporting_document'
   | 'incident_record'
   | 'sensor';
+export type LocationRequirement =
+  | 'none'
+  | 'area_required'
+  | 'point_optional'
+  | 'point_required';
 
 export type ApiErrorCode =
   | 'UNAUTHENTICATED'
@@ -193,7 +198,7 @@ export type Indicator = {
   scoringRule: Record<string, unknown> | null;
   evidenceRequirement: EvidenceRequirement;
   reference: string | null;
-  locationBinding: string | null;
+  locationRequirement: LocationRequirement;
   recommendationRules: RecommendationRule[];
   order: number;
 };
@@ -261,6 +266,11 @@ export type AssessmentAnswer = {
   score: number | null;
   notApplicable: boolean;
   note: string | null;
+  areaId: EntityId | null;
+  floorPlanId: EntityId | null;
+  floorPlanVersion: number | null;
+  relativeX: number | null;
+  relativeY: number | null;
   evidenceFiles: EvidenceFile[];
   answeredAt: IsoDateTime | null;
   answeredBy: EntityId | null;
@@ -335,25 +345,58 @@ export type AssessmentResult = {
   calculatedAt: IsoDateTime | null;
 };
 
+export type InstitutionBuilding = {
+  id: EntityId;
+  institutionId: EntityId;
+  code: string;
+  name: string;
+  description: string | null;
+  status: 'active' | 'inactive';
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
+};
+
+export type InstitutionFloor = {
+  id: EntityId;
+  buildingId: EntityId;
+  name: string;
+  order: number;
+  activeFloorPlanId: EntityId | null;
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
+};
+
 export type InstitutionArea = {
   id: EntityId;
   institutionId: EntityId;
+  buildingId: EntityId;
+  floorId: EntityId;
   name: string;
   zone: string;
-  floor: string | null;
   floorPlanId: EntityId | null;
   relativeX: number | null;
   relativeY: number | null;
+  relativeWidth: number | null;
+  relativeHeight: number | null;
+  status: 'active' | 'inactive';
 };
 
 export type FloorPlan = {
   id: EntityId;
   institutionId: EntityId;
+  buildingId: EntityId;
+  floorId: EntityId;
   name: string;
-  floor: string | null;
+  version: number;
+  fileName: string;
   imageUrl: string;
   width: number;
   height: number;
+  status: 'processing' | 'ready' | 'archived' | 'failed';
+  uploadedBy: EntityId;
+  uploadedAt: IsoDateTime;
+  verifiedBy: EntityId | null;
+  verifiedAt: IsoDateTime | null;
   updatedAt: IsoDateTime;
 };
 
@@ -362,10 +405,23 @@ export type RiskObservation = {
   assessmentId: EntityId;
   indicatorId: EntityId | null;
   areaId: EntityId;
+  floorPlanId: EntityId | null;
+  floorPlanVersion: number | null;
+  relativeX: number | null;
+  relativeY: number | null;
   riskCategoryId: EntityId | null;
   level: RiskLevel | null;
-  note: string;
+  hazard: string;
+  possibleImpact: string;
+  likelihoodValue: number | null;
+  severityValue: number | null;
+  exposureNote: string | null;
+  existingControl: string | null;
+  residualRiskCategoryId: EntityId | null;
+  note: string | null;
   evidenceFileIds: EntityId[];
+  observedBy: EntityId;
+  observedAt: IsoDateTime;
 };
 
 export type Recommendation = {
@@ -582,10 +638,78 @@ export interface IshasApi {
   listRiskObservations(
     assessmentId: EntityId,
   ): Promise<ApiResult<RiskObservation[]>>;
+  createRiskObservation(
+    assessmentId: EntityId,
+    input: Omit<
+      RiskObservation,
+      | 'id'
+      | 'assessmentId'
+      | 'riskCategoryId'
+      | 'level'
+      | 'residualRiskCategoryId'
+      | 'observedBy'
+      | 'observedAt'
+    >,
+  ): Promise<ApiResult<RiskObservation>>;
   listInstitutionAreas(
     institutionId: EntityId,
   ): Promise<ApiResult<InstitutionArea[]>>;
+  listInstitutionBuildings(
+    institutionId: EntityId,
+  ): Promise<ApiResult<InstitutionBuilding[]>>;
+  createInstitutionBuilding(
+    institutionId: EntityId,
+    input: Pick<InstitutionBuilding, 'code' | 'name' | 'description'>,
+  ): Promise<ApiResult<InstitutionBuilding>>;
+  updateInstitutionBuilding(
+    id: EntityId,
+    input: Partial<
+      Pick<InstitutionBuilding, 'code' | 'name' | 'description' | 'status'>
+    >,
+  ): Promise<ApiResult<InstitutionBuilding>>;
+  listBuildingFloors(
+    buildingId: EntityId,
+  ): Promise<ApiResult<InstitutionFloor[]>>;
+  createBuildingFloor(
+    buildingId: EntityId,
+    input: Pick<InstitutionFloor, 'name' | 'order'>,
+  ): Promise<ApiResult<InstitutionFloor>>;
+  updateBuildingFloor(
+    id: EntityId,
+    input: Partial<Pick<InstitutionFloor, 'name' | 'order'>>,
+  ): Promise<ApiResult<InstitutionFloor>>;
+  listFloorAreas(floorId: EntityId): Promise<ApiResult<InstitutionArea[]>>;
+  createInstitutionArea(
+    floorId: EntityId,
+    input: Pick<
+      InstitutionArea,
+      | 'name'
+      | 'zone'
+      | 'relativeX'
+      | 'relativeY'
+      | 'relativeWidth'
+      | 'relativeHeight'
+    >,
+  ): Promise<ApiResult<InstitutionArea>>;
+  updateInstitutionArea(
+    id: EntityId,
+    input: Partial<
+      Pick<
+        InstitutionArea,
+        | 'name'
+        | 'zone'
+        | 'relativeX'
+        | 'relativeY'
+        | 'relativeWidth'
+        | 'relativeHeight'
+        | 'status'
+      >
+    >,
+  ): Promise<ApiResult<InstitutionArea>>;
   listFloorPlans(institutionId: EntityId): Promise<ApiResult<FloorPlan[]>>;
+  getFloorPlan(id: EntityId): Promise<ApiResult<FloorPlan>>;
+  uploadFloorPlan(floorId: EntityId, file: File): Promise<ApiResult<FloorPlan>>;
+  verifyFloorPlan(id: EntityId): Promise<ApiResult<FloorPlan>>;
   listRecommendations(
     assessmentResultId: EntityId,
   ): Promise<ApiResult<Recommendation[]>>;

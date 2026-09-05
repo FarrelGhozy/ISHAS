@@ -22,6 +22,7 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Stage 04 — detail assessment lapangan oleh Asesor. **DONE**
 - [x] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren. **DONE**
 - [x] Stage 06 — penyelarasan lintas peran dan kesiapan presentasi. **REVIEW**
+- [x] Stage 07 — manajemen lokasi, denah, dan peta bahaya. **REVIEW**
 
 ## Menunggu Keputusan Ilmiah
 
@@ -103,3 +104,17 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Formatter, lint, TypeScript, dan production build.
 
 **Keputusan yang dibutuhkan:** review seluruh alur lintas peran dan ajukan prototipe ke dosen. Perubahan setelah review dicatat sebagai stage baru agar ruang lingkupnya jelas.
+
+## Menunggu Review — Stage 07
+
+- [x] Master gedung, lantai, area, dan sumber denah per pondok.
+- [x] Simulasi tambah gedung dan unggah denah per lantai.
+- [x] Daftar Area sebagai tampilan utama yang tidak bergantung pada denah.
+- [x] Denah Bangunan dengan temuan bahaya dan metadata versi.
+- [x] Daftar Temuan dengan filter dan detail penilaian risiko.
+- [x] Pemilihan lokasi observasi pada form Asesor.
+- [x] Hubungan temuan, rekomendasi, dan tindak lanjut terkait.
+- [x] Kontrak backend serta dokumentasi alur data.
+- [x] Lint, TypeScript, production build, dan respons server lokal.
+
+**Keputusan yang dibutuhkan:** tinjau sumber denah, fallback tanpa denah, pengambilan lokasi oleh Asesor, dan keterhubungan temuan dengan tindak lanjut. Rumus risiko resmi serta pihak yang memverifikasi denah belum ditetapkan.

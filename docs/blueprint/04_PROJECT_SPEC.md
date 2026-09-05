@@ -498,6 +498,16 @@ Sebelum tim ilmiah menyerahkan formula final, implementasikan hanya **engine con
 ### 11.3 Rekomendasi schema fleksibel
 Tambahkan konsep `locations/areas` dan `risk_observations` secara opsional, sehingga risk map dapat dikembangkan tanpa mengubah model assessment inti.
 
+### 11.4 Keputusan prototipe Stage 07
+
+- Denah tidak dibuat otomatis dan tidak dibagi antarpondok. Pengelola mengunggah denah untuk pondok, gedung, dan lantai miliknya.
+- Master `building -> floor -> area` wajib tersedia sebagai sumber lokasi; denah dan koordinat bersifat opsional.
+- Asesor memilih area ketika indikator memerlukan lokasi. Bila denah tersedia, titik disimpan sebagai koordinat relatif 0–100.
+- Setiap versi denah dipertahankan. Temuan menyimpan referensi versi denah yang digunakan saat assessment.
+- Peta hanya menampilkan temuan bahaya. Area tanpa temuan ditampilkan netral pada Daftar Area, bukan sebagai marker risiko rendah.
+- Tingkat risiko, status tindak lanjut, dan residual risk adalah atribut terpisah.
+- Kategori risiko tetap berasal dari konfigurasi ilmiah yang terkait dengan versi instrumen Published.
+
 ## 12. Rancangan halaman/UI awal [REKOMENDASI]
 
 ### 12.1 Admin Sistem
@@ -642,7 +652,7 @@ Setelah formula ilmiah final tersedia, buat sekumpulan kasus contoh yang dihitun
 | Q-008 | Scoring | Bagaimana perlakuan indikator N/A, data kosong, reverse scoring, atau nilai tidak valid? | Blocker scoring |
 | Q-009 | Risk | Kategori risiko dan threshold final? Apakah skala 0-100 pada mockup benar atau hanya ilustrasi? | Blocker classification |
 | Q-010 | Recommendation | Daftar recommendation rule dan prioritas tindakan resmi dari tim K3? | Blocker recommendation |
-| Q-011 | Risk Mapping | Apakah risk mapping menggunakan denah/floorplan bangunan, lokasi area, GIS, atau heatmap indikator? | High |
+| Q-011 | Risk Mapping | **Diputuskan untuk prototipe:** master area wajib, denah per gedung/lantai bersifat opsional, koordinat relatif 0–100, tanpa ketergantungan GIS. | Closed for prototype |
 | Q-012 | Workflow | Apakah assessment langsung final setelah submit atau perlu verifikasi/approval peneliti/Tim K3? | High |
 | Q-013 | Roles | Hak akses final untuk semua pengguna pada mockup; apakah Admin Sistem disetujui sebagai role terpisah? | High |
 | Q-014 | Pesantren Data | Field profil pesantren apa saja yang wajib disimpan? | Medium |

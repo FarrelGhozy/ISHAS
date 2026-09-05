@@ -43,6 +43,7 @@ type ResearchIndicator = {
   required: boolean;
   allowNa: boolean;
   evidenceRequired: boolean;
+  locationRequired: boolean;
   reference: string;
   recommendationCondition: string;
   recommendationText: string;
@@ -179,6 +180,7 @@ const initialBuilderDimensions: BuilderDimension[] = [
         required: true,
         allowNa: false,
         evidenceRequired: true,
+        locationRequired: true,
         reference: 'Contoh rujukan: standar proteksi kebakaran bangunan',
         recommendationCondition: 'Skor jawaban ≤ 2',
         recommendationText:
@@ -196,6 +198,7 @@ const initialBuilderDimensions: BuilderDimension[] = [
         required: true,
         allowNa: false,
         evidenceRequired: true,
+        locationRequired: true,
         reference: 'Rujukan teknis belum dikonfirmasi tim penelitian',
         recommendationCondition: 'Skor jawaban = 1',
         recommendationText:
@@ -222,6 +225,7 @@ const initialBuilderDimensions: BuilderDimension[] = [
         required: true,
         allowNa: false,
         evidenceRequired: true,
+        locationRequired: true,
         reference: 'Contoh standar kesehatan lingkungan; perlu verifikasi',
         recommendationCondition: 'Skor jawaban ≤ 2',
         recommendationText:
@@ -239,6 +243,7 @@ const initialBuilderDimensions: BuilderDimension[] = [
         required: true,
         allowNa: true,
         evidenceRequired: false,
+        locationRequired: true,
         reference: '',
         recommendationCondition: 'Jawaban = Tidak',
         recommendationText:
@@ -266,6 +271,7 @@ const initialBuilderDimensions: BuilderDimension[] = [
         required: true,
         allowNa: false,
         evidenceRequired: false,
+        locationRequired: false,
         reference: 'Konstruk budaya keselamatan; menunggu validasi',
         recommendationCondition: 'Skor jawaban ≤ 2',
         recommendationText:
@@ -292,6 +298,7 @@ const initialBuilderDimensions: BuilderDimension[] = [
         required: true,
         allowNa: false,
         evidenceRequired: true,
+        locationRequired: false,
         reference: 'Prosedur tanggap darurat; menunggu konfirmasi',
         recommendationCondition: 'Jawaban = Tidak',
         recommendationText:
@@ -497,6 +504,7 @@ function ResearchInstrumentsPage() {
       required: true,
       allowNa: false,
       evidenceRequired: false,
+      locationRequired: false,
       reference: '',
       recommendationCondition: '',
       recommendationText: '',
@@ -862,6 +870,22 @@ function ResearchInstrumentsPage() {
                     <span>
                       <b>Bukti lapangan wajib</b>
                       <small>Foto atau dokumen pendukung</small>
+                    </span>
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      aria-label="Lokasi observasi wajib"
+                      checked={selectedIndicator.locationRequired}
+                      onChange={(event) =>
+                        updateIndicator({
+                          locationRequired: event.target.checked,
+                        })
+                      }
+                    />
+                    <span>
+                      <b>Lokasi observasi wajib</b>
+                      <small>Asesor memilih gedung, lantai, dan area</small>
                     </span>
                   </label>
                 </div>

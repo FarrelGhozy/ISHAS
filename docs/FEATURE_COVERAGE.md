@@ -10,7 +10,7 @@ Dokumen ini mencocokkan proposal/blueprint dengan halaman prototipe, aksi dummy,
 | Otorisasi | Menu dan ruang kerja berbeda untuk setiap akun; fallback akses terlarang | Pemeriksaan role dan scope pada setiap query/mutation |
 | Notifikasi | Dua notifikasi kontekstual per peran yang membuka halaman terkait | Daftar notifikasi dan tandai dibaca |
 | State data | Loading, empty, error, forbidden, success, locked, dan conflict sudah dipetakan | Envelope sukses/gagal, kode error, field error, dan request ID |
-| Responsivitas | Sidebar mobile, form, tabel/kartu, builder, assessment, hasil, dan risk map adaptif | Tidak mengubah kontrak data |
+| Responsivitas | Sidebar mobile, form, tabel/kartu, builder, assessment, hasil, dan peta bahaya adaptif | Tidak mengubah kontrak data |
 
 ## Admin — mengelola sistem
 
@@ -49,6 +49,8 @@ Instrumen ilmiah ditempatkan pada ruang Peneliti sesuai keputusan pembagian pera
 | Bukti Lapangan | Filter bukti, unggah file, sumber kuesioner/observasi/dokumen/insiden, form catatan insiden | Evidence dan assessment input source |
 | Riwayat | Cari dan lihat assessment final beserta versi dan bukti secara hanya-baca | List/detail assessment berdasarkan asesor |
 
+Pada indikator yang membutuhkan lokasi, Asesor memilih gedung/lantai/area dari master pondok. Titik koordinat hanya ditambahkan bila denah tersedia; assessment tidak diblokir ketika pondok belum mengunggah denah.
+
 Sensor/IoT tercatat pada kontrak sebagai sumber opsional tahap lanjut. Ia sengaja tidak dibuat sebagai alur utama prototipe 2026.
 
 ## Pengelola Pesantren — menggunakan hasil assessment
@@ -57,7 +59,8 @@ Sensor/IoT tercatat pada kontrak sebagai sumber opsional tahap lanjut. Ia sengaj
 | --- | --- | --- |
 | Ringkasan K3L | Indeks ilustratif, tren, temuan prioritas, progress tindak lanjut, scope pesantren/periode | Dashboard agregat lembaga dan periode |
 | Hasil Assessment | Skor total/dimensi, kategori, perbandingan periode, metadata versi dan status final | Assessment result, dimension result, history |
-| Peta Risiko | Denah area, marker tinggi/sedang/rendah, filter lantai/level, detail temuan | Institution area, floor plan, risk observation |
+| Gedung & Denah | Master gedung/lantai/area, sumber denah, status ketersediaan, tambah gedung, unggah versi denah | Building, floor, area, versioned floor plan |
+| Peta Bahaya & Risiko | Daftar Area utama, denah opsional, daftar temuan, filter, keterlacakan, pemisahan risiko/status pekerjaan | Assessment, indicator, area, floor-plan version, risk observation |
 | Rekomendasi | Prioritas, penyebab, saran, status, penanggung jawab, konversi ke tindak lanjut | Recommendation hasil rule dan create follow-up |
 | Tindak Lanjut | Board status, PIC, tenggat, progress, catatan, bukti, submit/verifikasi | Follow-up lifecycle, evidence, verification |
 | Laporan | Ringkasan pimpinan, isi laporan, versi instrumen, PDF/Excel, status generate | Create/get report dan signed download URL |

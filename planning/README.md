@@ -21,6 +21,7 @@ Folder ini menggantikan GitHub Issues selama tahap eksplorasi frontend. Satu fil
 | 04 | Ruang kerja Asesor | DONE |
 | 05 | Ruang kerja Pengelola Pesantren | DONE |
 | 06 | Penyelarasan lintas peran, aksesibilitas, dan presentasi | REVIEW |
+| 07 | Manajemen lokasi, denah, dan peta bahaya | REVIEW |
 
 ## Cara Menggunakan
 
