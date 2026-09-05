@@ -23,6 +23,7 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren. **DONE**
 - [x] Stage 06 — penyelarasan lintas peran dan kesiapan presentasi. **REVIEW**
 - [x] Stage 07 — manajemen lokasi, denah, dan peta bahaya. **REVIEW**
+- [x] Stage 08 — dokumentasi dan audit flow penggunaan. **REVIEW**
 
 ## Menunggu Keputusan Ilmiah
 
@@ -118,3 +119,14 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Lint, TypeScript, production build, dan respons server lokal.
 
 **Keputusan yang dibutuhkan:** tinjau sumber denah, fallback tanpa denah, pengambilan lokasi oleh Asesor, dan keterhubungan temuan dengan tindak lanjut. Rumus risiko resmi serta pihak yang memverifikasi denah belum ditetapkan.
+
+## Menunggu Review — Stage 08
+
+- [x] Dokumentasikan flow utama lintas empat peran.
+- [x] Dokumentasikan pembuatan akun Asesor dan Pengelola.
+- [x] Dokumentasikan sumber lokasi, denah, titik temuan, dan data risiko.
+- [x] Kelompokkan flow pendukung per peran.
+- [x] Tulis ulang flow utama sebagai checklist operasional.
+- [x] Audit celah flow dan kelompokkan berdasarkan prioritas.
+
+**Keputusan yang dibutuhkan:** tentukan pemilik Manajemen Penugasan, pemeriksa tindak lanjut/denah, dan apakah assessment melewati reviewer sebelum Final.

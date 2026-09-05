@@ -10,6 +10,7 @@ Integrated Safety and Health Assessment System adalah prototipe sistem penilaian
 - `docs/planning` — checklist requirement dan rencana pengembangan.
 - `docs/decisions` — keputusan desain dan teknis yang sudah disetujui.
 - `planning` — local issue management dan stage implementasi frontend.
+- `flow.md` — flow penggunaan utama, flow per peran, serta audit celah antarfitur.
 - `TODO.md` — kontrol pekerjaan yang sedang aktif.
 - `AGENTS.md` — aturan tetap untuk pekerjaan di repository.
 
