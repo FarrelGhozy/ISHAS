@@ -48,6 +48,13 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Scoring: bobot, rubric, bukti wajib, dan pemicu rekomendasi dummy.
 - [x] Validasi & Publikasi: checklist kesiapan dan konfirmasi penguncian versi.
 - [x] Data Penelitian: pencarian, filter, verifikasi, metadata versi, dan ekspor dummy.
-- [x] Lint dan production build.
+- [x] Instrument Builder: tambah dimensi dan indikator dalam versi Draft.
+- [x] Form indikator: pertanyaan, jenis jawaban, bobot, bukti, referensi, rubric, dan rekomendasi.
+- [x] Status perubahan Draft, simpan perubahan, serta validasi kelengkapan.
+- [x] Kunci editor untuk versi Published dan arahkan perubahan melalui versi baru.
+- [x] Versioning: form pembuatan draft baru dari snapshot versi induk.
+- [x] Scoring: rubric dan aturan rekomendasi dapat diedit sebagai dummy.
+- [x] Data Penelitian: detail metadata dan alur ekspor dummy.
+- [x] Lint dan production build ulang.
 
-**Keputusan yang dibutuhkan:** setujui struktur dan aturan ruang kerja Peneliti sebelum Stage 04 Asesor dimulai.
+**Keputusan yang dibutuhkan:** tinjau ulang alur input instrumen dan fitur Peneliti sebelum Stage 04 Asesor dimulai.
