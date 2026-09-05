@@ -54,8 +54,8 @@ Keempat peran memiliki bobot produk yang sama. Pemisahan dilakukan sejak login d
 
 ## Visual
 
-- Teal dan navy adalah warna identitas utama untuk membangun kesan akademis, tenang, dan dapat dipercaya.
-- Merah hanya digunakan untuk bahaya tinggi, kesalahan, atau tindakan destruktif; bukan warna latar utama aplikasi.
+- Merah dan marun adalah warna identitas utama ISHAS, dipadukan dengan putih serta slate agar tetap akademis dan mudah dibaca.
+- Status bahaya tinggi, kesalahan, atau tindakan destruktif harus tetap disertai label dan ikon sehingga tidak bergantung pada warna merah saja.
 - Permukaan utama memakai putih dan netral agar data mudah dibaca.
 - Komponen menggunakan radius, jarak, tipografi, dan ikon yang konsisten.
 - Tampilan harus berfungsi pada desktop, tablet, dan ponsel.

@@ -2,18 +2,18 @@
 
 Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dalam `planning/`.
 
-## Menunggu Review — Stage 01
+## Selesai — Stage 01
 
 - [x] Tetapkan empat peran utama dan tanggung jawabnya.
 - [x] Buat aturan repository dan sistem planning per stage.
 - [x] Buat halaman login dummy untuk empat peran.
 - [x] Pisahkan navigasi dan ringkasan berdasarkan akun yang login.
 - [x] Tampilkan akun aktif di kanan atas dan sediakan logout.
-- [x] Terapkan sistem visual teal/navy dan sederhanakan penyajian aturan.
+- [x] Terapkan sistem visual merah-marun dan sederhanakan penyajian aturan.
 - [x] Periksa desktop, mobile, lint, dan production build.
 - [x] Pindahkan Stage 01 ke `REVIEW`.
 
-**Keputusan yang dibutuhkan:** setujui fondasi login, struktur empat ruang kerja, dan arah visual sebelum Stage 02–05 diperdalam.
+**Keputusan:** fondasi login, struktur empat ruang kerja, branding merah, dan logo sementara telah disetujui.
 
 ## Antrean Berikutnya
 

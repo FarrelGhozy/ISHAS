@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ReactNode, type SyntheticEvent } from 'react';
+import Image from 'next/image';
 import {
   Activity,
   AlertTriangle,
@@ -181,11 +182,20 @@ const roleMeta: Record<
 function IshasMark({ inverse = false }: { inverse?: boolean }) {
   return (
     <div className="brand-lockup">
-      <span className="brand-mark" aria-hidden="true">
-        <ShieldCheck />
+      <span
+        className={`brand-logo-shell ${inverse ? 'brand-logo-inverse' : ''}`}
+      >
+        <Image
+          className="brand-logo"
+          src="/brand/ishas-mark.png"
+          alt=""
+          width={42}
+          height={42}
+          priority
+        />
       </span>
       <span>
-        <b className={inverse ? 'text-white' : 'text-[#0a3644]'}>ISHAS</b>
+        <b className={inverse ? 'text-white' : 'text-[#4a0710]'}>ISHAS</b>
         <small className={inverse ? 'text-white/55' : 'text-slate-500'}>
           K3L Pesantren
         </small>
@@ -779,8 +789,8 @@ function ManagerDashboard() {
               >
                 <defs>
                   <linearGradient id="ishasTrend" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0d5c75" stopOpacity={0.24} />
-                    <stop offset="95%" stopColor="#0d5c75" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#be123c" stopOpacity={0.24} />
+                    <stop offset="95%" stopColor="#be123c" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -810,7 +820,7 @@ function ManagerDashboard() {
                 <Area
                   type="monotone"
                   dataKey="score"
-                  stroke="#0d5c75"
+                  stroke="#be123c"
                   strokeWidth={3}
                   fill="url(#ishasTrend)"
                 />

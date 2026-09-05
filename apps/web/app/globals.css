@@ -22,10 +22,10 @@
 :root {
   --background: #f5f7fb;
   --foreground: #102a35;
-  --primary: #0d5c75;
+  --primary: #9f1239;
   --primary-foreground: #ffffff;
   --border: #e2e8f0;
-  --ring: #0891b2;
+  --ring: #e11d48;
 }
 
 * {
@@ -87,19 +87,25 @@ button {
   text-transform: uppercase;
 }
 
-.brand-mark {
+.brand-logo-shell {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   place-items: center;
   border-radius: 8px;
-  background: linear-gradient(145deg, #0f7891, #0d5c75);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 14%);
+  background: white;
+  box-shadow: 0 2px 12px rgb(76 5 25 / 12%);
 }
 
-.brand-mark svg {
-  width: 22px;
-  color: white;
+.brand-logo-inverse {
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 16%);
+}
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 
 .login-page {
@@ -115,9 +121,9 @@ button {
   min-height: 100vh;
   color: white;
   background:
-    radial-gradient(circle at 88% 18%, rgb(34 211 238 / 14%), transparent 28%),
-    radial-gradient(circle at 12% 92%, rgb(15 118 110 / 28%), transparent 36%),
-    linear-gradient(145deg, #062c38 0%, #0a4658 54%, #0d5c75 100%);
+    radial-gradient(circle at 88% 18%, rgb(251 113 133 / 15%), transparent 28%),
+    radial-gradient(circle at 12% 92%, rgb(190 18 60 / 28%), transparent 36%),
+    linear-gradient(145deg, #3f0710 0%, #6d0c18 54%, #9f1239 100%);
 }
 
 .login-story::before {
@@ -150,11 +156,11 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid rgb(165 243 252 / 24%);
+  border: 1px solid rgb(254 205 211 / 24%);
   border-radius: 999px;
-  background: rgb(8 145 178 / 18%);
+  background: rgb(225 29 72 / 18%);
   padding: 7px 11px;
-  color: #cffafe;
+  color: #ffe4e6;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -176,7 +182,7 @@ button {
 .login-copy p {
   max-width: 570px;
   margin: 0;
-  color: rgb(236 254 255 / 70%);
+  color: rgb(255 241 242 / 74%);
   font-size: 15px;
   line-height: 1.75;
 }
@@ -195,7 +201,7 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgb(6 44 56 / 72%);
+  background: rgb(63 7 16 / 72%);
   padding: 16px;
 }
 
@@ -207,7 +213,7 @@ button {
   place-items: center;
   border-radius: 7px;
   background: rgb(255 255 255 / 10%);
-  color: #67e8f9;
+  color: #fda4af;
 }
 
 .role-flow-item svg {
@@ -230,7 +236,7 @@ button {
 .role-flow-item b {
   overflow: hidden;
   margin-top: 3px;
-  color: #ecfeff;
+  color: #fff1f2;
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -261,7 +267,7 @@ button {
 
 .section-kicker {
   margin: 0 0 7px;
-  color: #0d718c;
+  color: #be123c;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.15em;
@@ -303,7 +309,7 @@ button {
 }
 
 .label-row span {
-  color: #0d718c;
+  color: #be123c;
   font-size: 10px;
   font-weight: 600;
 }
@@ -322,8 +328,8 @@ button {
 }
 
 .input-shell:focus-within {
-  border-color: #0891b2;
-  box-shadow: 0 0 0 3px rgb(8 145 178 / 12%);
+  border-color: #e11d48;
+  box-shadow: 0 0 0 3px rgb(225 29 72 / 12%);
 }
 
 .input-shell svg {
@@ -365,8 +371,8 @@ button {
 
 .primary-button {
   min-height: 39px;
-  border: 1px solid #0d5c75;
-  background: #0d5c75;
+  border: 1px solid #9f1239;
+  background: #9f1239;
   padding: 0 15px;
   color: white;
   font-size: 11px;
@@ -374,7 +380,7 @@ button {
 }
 
 .primary-button:hover {
-  background: #09475b;
+  background: #881337;
 }
 
 .primary-button svg,
@@ -437,8 +443,8 @@ button {
 
 .demo-account:hover {
   transform: translateY(-1px);
-  border-color: #67b8ca;
-  background: #f7fcfd;
+  border-color: #fda4af;
+  background: #fff7f8;
 }
 
 .demo-account > span:nth-child(2) {
@@ -473,8 +479,8 @@ button {
   height: 34px;
   place-items: center;
   border-radius: 7px;
-  background: #e8f6f9;
-  color: #0d718c;
+  background: #fff1f2;
+  color: #be123c;
 }
 
 .demo-icon svg {
@@ -493,7 +499,7 @@ button {
   display: flex;
   width: 258px;
   flex-direction: column;
-  background: linear-gradient(180deg, #0a3644 0%, #072a35 100%);
+  background: linear-gradient(180deg, #4a0710 0%, #29050a 100%);
   color: white;
 }
 
@@ -594,15 +600,15 @@ button {
   height: 18px;
   place-items: center;
   border-radius: 9px;
-  background: #0d7891;
+  background: #e11d48;
   color: white;
   font-size: 8px;
   font-style: normal;
 }
 
 .nav-link-active {
-  border-color: rgb(103 232 249 / 15%);
-  background: #0d5c75;
+  border-color: rgb(254 205 211 / 17%);
+  background: #9f1239;
   color: white;
   box-shadow: 0 6px 20px rgb(0 0 0 / 12%);
 }
@@ -618,7 +624,7 @@ button {
 
 .sidebar-footer > svg {
   width: 20px;
-  color: #67e8f9;
+  color: #fda4af;
 }
 
 .sidebar-footer div {
@@ -747,8 +753,8 @@ button {
   height: 34px;
   place-items: center;
   border-radius: 6px;
-  background: #dff3f7;
-  color: #0d5c75;
+  background: #fff1f2;
+  color: #9f1239;
   font-size: 10px;
   font-weight: 800;
 }
@@ -826,7 +832,7 @@ button {
 
 .access-copy svg {
   width: 13px;
-  color: #0d718c;
+  color: #be123c;
 }
 
 .account-popover > button {
@@ -891,9 +897,9 @@ button {
 }
 
 .secondary-button:hover {
-  border-color: #80b9c6;
-  background: #f7fcfd;
-  color: #0d5c75;
+  border-color: #fda4af;
+  background: #fff7f8;
+  color: #9f1239;
 }
 
 .stats-grid {
@@ -915,7 +921,7 @@ button {
   position: relative;
   overflow: hidden;
   min-height: 142px;
-  border-top: 3px solid #0d5c75;
+  border-top: 3px solid #9f1239;
   padding: 17px;
 }
 
@@ -945,8 +951,8 @@ button {
   height: 31px;
   place-items: center;
   border-radius: 6px;
-  background: #e5f5f7;
-  color: #0d718c;
+  background: #fff1f2;
+  color: #be123c;
 }
 
 .stat-amber .stat-head i {
@@ -1024,7 +1030,7 @@ button {
   border: 0;
   background: transparent;
   padding: 3px;
-  color: #0d718c;
+  color: #be123c;
   font-size: 9px;
   white-space: nowrap;
 }
@@ -1126,8 +1132,8 @@ button {
   flex: none;
   place-items: center;
   border-radius: 6px;
-  background: #eff8fa;
-  color: #0d718c;
+  background: #fff1f2;
+  color: #be123c;
 }
 
 .permission-item svg {
@@ -1146,9 +1152,9 @@ button {
 }
 
 .version-card {
-  border: 1px solid #dbe8ee;
+  border: 1px solid #fecdd3;
   border-radius: 7px;
-  background: #f8fcfd;
+  background: #fffafb;
   padding: 14px;
 }
 
@@ -1168,7 +1174,7 @@ button {
 }
 
 .version-top > span {
-  color: #0d718c;
+  color: #be123c;
   font:
     700 9px ui-monospace,
     monospace;
@@ -1191,7 +1197,7 @@ button {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #0d718c;
+  background: #be123c;
 }
 
 .version-meta {
@@ -1218,7 +1224,7 @@ button {
 }
 
 .dimension-row > span:first-child {
-  color: #0d718c;
+  color: #be123c;
   font:
     700 9px ui-monospace,
     monospace;
@@ -1256,8 +1262,8 @@ button {
   margin-left: -35px;
   border: 3px solid white;
   border-radius: 50%;
-  background: #dff3f7;
-  color: #0d5c75;
+  background: #fff1f2;
+  color: #9f1239;
   font-size: 8px;
   font-weight: 800;
 }
@@ -1277,17 +1283,17 @@ button {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  border: 1px solid #bfe3ea;
+  border: 1px solid #fecdd3;
   border-radius: 7px;
-  background: #effafd;
+  background: #fff7f8;
   padding: 11px;
-  color: #315c68;
+  color: #71313f;
 }
 
 .context-note > svg {
   width: 16px;
   flex: none;
-  color: #0d718c;
+  color: #be123c;
 }
 
 .context-note p {
@@ -1299,7 +1305,7 @@ button {
 .context-note b {
   display: block;
   margin-bottom: 2px;
-  color: #0a4658;
+  color: #881337;
   font-size: 9px;
 }
 
@@ -1382,8 +1388,8 @@ button {
 }
 
 .row-action-primary {
-  border-color: #0d5c75;
-  background: #0d5c75;
+  border-color: #9f1239;
+  background: #9f1239;
   color: white;
 }
 
@@ -1391,9 +1397,9 @@ button {
   display: flex;
   align-items: center;
   gap: 30px;
-  border: 1px solid #cee5eb;
+  border: 1px solid #fecdd3;
   border-radius: 8px;
-  background: #effafd;
+  background: #fff7f8;
   margin-bottom: 14px;
   padding: 12px 15px;
 }
@@ -1411,7 +1417,7 @@ button {
 
 .scope-banner svg {
   width: 18px;
-  color: #0d718c;
+  color: #be123c;
 }
 
 .scope-banner span:not(.status) {
@@ -1480,7 +1486,7 @@ button {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #0d718c;
+  background: #be123c;
 }
 
 .findings-grid {
@@ -1530,7 +1536,7 @@ button {
   background: transparent;
   margin-top: 12px;
   padding: 0;
-  color: #0d718c;
+  color: #be123c;
   font-size: 8px;
   font-weight: 800;
 }
@@ -1554,8 +1560,8 @@ button {
   height: 60px;
   place-items: center;
   border-radius: 10px;
-  background: #e8f6f9;
-  color: #0d718c;
+  background: #fff1f2;
+  color: #be123c;
 }
 
 .feature-preview > span svg {
@@ -1591,9 +1597,9 @@ button {
   display: flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid #dbe8ee;
+  border: 1px solid #fecdd3;
   border-radius: 5px;
-  background: #f8fcfd;
+  background: #fffafb;
   padding: 7px 9px;
   color: #526473;
   font-size: 8px;

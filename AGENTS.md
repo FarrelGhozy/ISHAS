@@ -38,7 +38,7 @@ Jika sumber ilmiah belum menetapkan rumus, ambang, atau klasifikasi, tandai seba
 - Akun aktif harus tampil di kanan atas pada seluruh halaman setelah login.
 - Aturan sistem yang panjang tidak dijadikan menu utama. Tampilkan penjelasan singkat dan kontekstual pada langkah yang memerlukannya.
 - Gunakan bahasa Indonesia yang ringkas dan konsisten.
-- Arah visual: modern, akademis, tenang, mudah diaudit; teal/navy sebagai warna utama dan merah hanya untuk bahaya atau kesalahan.
+- Arah visual: modern, akademis, tenang, dan mudah diaudit; merah-marun adalah identitas utama ISHAS. Status bahaya tetap harus dibedakan dengan label dan ikon, bukan warna saja.
 - Instrumen yang sudah dipublikasikan tidak boleh diubah langsung; perubahan dibuat sebagai versi baru.
 - Assessment yang sudah final harus tetap dapat ditelusuri ke versi instrumen dan bukti yang digunakan.
 

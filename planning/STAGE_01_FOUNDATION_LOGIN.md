@@ -1,6 +1,6 @@
 # Stage 01 — Fondasi dan Login
 
-**Status:** REVIEW
+**Status:** DONE
 
 **Tujuan:** membentuk pintu masuk dan struktur produk yang memperlihatkan empat peran secara jelas tanpa backend.
 
@@ -10,7 +10,7 @@
 - Validasi login dummy dan akses cepat untuk kebutuhan presentasi.
 - Navigasi, judul, metrik, dan fokus kerja yang berbeda per peran.
 - Identitas akun aktif di kanan atas serta aksi keluar.
-- Tata visual teal/navy yang konsisten dengan karakter akademis dan K3L.
+- Tata visual merah-marun yang konsisten dengan branding ISHAS serta karakter akademis dan K3L.
 - Tampilan desktop dan mobile.
 
 ## Acceptance Criteria
@@ -30,3 +30,5 @@
 - Semua akun demo menggunakan kata sandi `demo1234` agar mudah dipresentasikan.
 - Data, skor, jumlah lembaga, dan status pada stage ini adalah data ilustrasi.
 - Pendalaman CRUD dan alur kompleks dilakukan pada stage masing-masing peran.
+- Pemilik proyek menyetujui struktur login dan susunan peran; branding menggunakan tema merah serta logo sementara yang sudah tersedia.
+- Stage 01 disetujui pada 5 September 2026 dan ditutup setelah penyesuaian branding merah.
