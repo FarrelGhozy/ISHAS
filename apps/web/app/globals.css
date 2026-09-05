@@ -2132,8 +2132,8 @@ button {
 
 .permission-table {
   display: grid;
-  min-width: 850px;
-  grid-template-columns: 1.5fr repeat(5, 0.72fr);
+  min-width: 720px;
+  grid-template-columns: minmax(180px, 1.4fr) repeat(5, minmax(88px, 0.72fr));
   align-items: center;
   text-align: center;
 }
@@ -2145,6 +2145,10 @@ button {
   justify-content: center;
   border-top: 1px solid #eef2f6;
   padding: 10px;
+}
+
+.permission-table > * + * {
+  border-left: 1px solid #f1f5f9;
 }
 
 .permission-table > :first-child {
@@ -2172,8 +2176,10 @@ button {
 
 .permission-yes {
   display: grid;
-  width: 21px;
-  height: 21px;
+  width: 23px;
+  height: 23px;
+  min-height: 23px;
+  flex: none;
   place-items: center;
   border-radius: 50%;
   background: #dcfce7;
@@ -2186,6 +2192,7 @@ button {
 
 .permission-no {
   color: #cbd5e1;
+  font-size: 12px;
 }
 
 .admin-policy-grid {

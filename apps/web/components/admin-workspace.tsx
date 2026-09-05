@@ -586,12 +586,21 @@ function AdminInstitutionsPage() {
 }
 
 function PermissionMark({ allowed }: { allowed: boolean }) {
-  return allowed ? (
-    <span className="permission-yes">
-      <Check />
+  return (
+    <span
+      className="permission-cell"
+      aria-label={allowed ? 'Diizinkan' : 'Tidak diizinkan'}
+    >
+      {allowed ? (
+        <span className="permission-yes" aria-hidden="true">
+          <Check />
+        </span>
+      ) : (
+        <span className="permission-no" aria-hidden="true">
+          —
+        </span>
+      )}
     </span>
-  ) : (
-    <span className="permission-no">—</span>
   );
 }
 
