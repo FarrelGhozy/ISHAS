@@ -18,6 +18,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { DataState } from '@/components/ui/data-state';
 
 const users = [
   {
@@ -237,6 +238,9 @@ function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState('Semua peran');
   const [showCreate, setShowCreate] = useState(false);
   const [feedback, setFeedback] = useState('');
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(
+    null,
+  );
   const normalizedQuery = query.trim().toLowerCase();
   const filteredUsers = users.filter(
     (user) =>
@@ -246,6 +250,7 @@ function AdminUsersPage() {
         user.email.toLowerCase().includes(normalizedQuery) ||
         user.institution.toLowerCase().includes(normalizedQuery)),
   );
+  const selectedUser = users.find((user) => user.email === selectedUserEmail);
 
   function createUser(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -363,6 +368,7 @@ function AdminUsersPage() {
               <button
                 className="admin-row-button"
                 aria-label={`Buka detail ${user.name}`}
+                onClick={() => setSelectedUserEmail(user.email)}
               >
                 <ArrowRight />
               </button>
@@ -459,6 +465,64 @@ function AdminUsersPage() {
           </dialog>
         </div>
       ) : null}
+
+      {selectedUser ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal"
+            aria-labelledby="user-detail-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">Detail pengguna</p>
+                <h2 id="user-detail-title">{selectedUser.name}</h2>
+                <p>{selectedUser.email}</p>
+              </div>
+              <button
+                onClick={() => setSelectedUserEmail(null)}
+                aria-label="Tutup detail pengguna"
+              >
+                <X />
+              </button>
+            </div>
+            <dl className="dataset-detail-grid">
+              <div>
+                <dt>Peran</dt>
+                <dd>{selectedUser.role}</dd>
+              </div>
+              <div>
+                <dt>Status akun</dt>
+                <dd>{selectedUser.status}</dd>
+              </div>
+              <div>
+                <dt>Lingkup</dt>
+                <dd>{selectedUser.institution}</dd>
+              </div>
+              <div>
+                <dt>Aktivitas terakhir</dt>
+                <dd>{selectedUser.lastActive}</dd>
+              </div>
+            </dl>
+            <div className="admin-modal-note">
+              <ShieldCheck />
+              <p>
+                <b>Perubahan akses wajib teraudit</b>Backend harus memvalidasi
+                peran dan lingkup pada setiap permintaan, bukan hanya
+                menyembunyikan menu.
+              </p>
+            </div>
+            <div className="admin-modal-actions">
+              <button
+                className="secondary-button"
+                onClick={() => setSelectedUserEmail(null)}
+              >
+                Tutup
+              </button>
+            </div>
+          </dialog>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -466,6 +530,9 @@ function AdminUsersPage() {
 function AdminInstitutionsPage() {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Semua status');
+  const [showCreate, setShowCreate] = useState(false);
+  const [selectedCode, setSelectedCode] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
   const normalizedQuery = query.trim().toLowerCase();
   const filteredInstitutions = institutions.filter(
     (institution) =>
@@ -476,17 +543,34 @@ function AdminInstitutionsPage() {
         institution.location.toLowerCase().includes(normalizedQuery) ||
         institution.code.toLowerCase().includes(normalizedQuery)),
   );
+  const selectedInstitution = institutions.find(
+    (institution) => institution.code === selectedCode,
+  );
+
+  function createInstitution(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setShowCreate(false);
+    setFeedback('Data pesantren dummy berhasil disiapkan untuk verifikasi.');
+  }
   return (
     <>
       <AdminHeading
         title="Direktori Pesantren"
         description="Kelola identitas lembaga, pengelola utama, status onboarding, dan aktivitas assessment."
         action={
-          <button className="primary-button">
+          <button
+            className="primary-button"
+            onClick={() => setShowCreate(true)}
+          >
             <Plus /> Tambah pesantren
           </button>
         }
       />
+      {feedback ? (
+        <div className="admin-feedback">
+          <CheckCircle2 /> {feedback}
+        </div>
+      ) : null}
       <div className="admin-highlight-grid">
         <article>
           <Building2 />
@@ -574,13 +658,158 @@ function AdminInstitutionsPage() {
               <button
                 className="admin-row-button"
                 aria-label={`Buka detail ${institution.name}`}
+                onClick={() => setSelectedCode(institution.code)}
               >
                 <ArrowRight />
               </button>
             </div>
           ))}
+          {filteredInstitutions.length === 0 ? (
+            <DataState
+              variant="empty"
+              title="Pesantren tidak ditemukan"
+              description="Coba ubah kata kunci atau filter status lembaga."
+              compact
+            />
+          ) : null}
         </div>
       </section>
+
+      {showCreate ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal"
+            aria-labelledby="create-institution-title"
+          >
+            <form onSubmit={createInstitution}>
+              <div className="admin-modal-head">
+                <div>
+                  <p className="section-kicker">Lembaga baru</p>
+                  <h2 id="create-institution-title">Tambah pesantren</h2>
+                  <p>
+                    Data baru berstatus Persiapan sampai diverifikasi Admin.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                  aria-label="Tutup formulir pesantren"
+                >
+                  <X />
+                </button>
+              </div>
+              <div className="admin-form-grid">
+                <label>
+                  Nama pesantren
+                  <input required placeholder="Nama resmi lembaga" />
+                </label>
+                <label>
+                  Kode internal
+                  <input required placeholder="Contoh: PSN-0051" />
+                </label>
+                <label>
+                  Kota / kabupaten
+                  <input required placeholder="Kabupaten, provinsi" />
+                </label>
+                <label>
+                  Pengelola utama
+                  <input required placeholder="Nama penanggung jawab" />
+                </label>
+                <label className="admin-form-full">
+                  Alamat lengkap
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="Alamat lembaga untuk kebutuhan penugasan lapangan"
+                  />
+                </label>
+              </div>
+              <div className="admin-modal-note">
+                <ShieldCheck />
+                <p>
+                  <b>Belum mengubah hasil historis</b>Profil lembaga dapat
+                  diperbarui tanpa mengganti identitas assessment yang sudah
+                  final.
+                </p>
+              </div>
+              <div className="admin-modal-actions">
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setShowCreate(false)}
+                >
+                  Batal
+                </button>
+                <button className="primary-button" type="submit">
+                  Simpan sebagai Persiapan
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+      ) : null}
+
+      {selectedInstitution ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal"
+            aria-labelledby="institution-detail-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">Detail lembaga</p>
+                <h2 id="institution-detail-title">
+                  {selectedInstitution.name}
+                </h2>
+                <p>
+                  {selectedInstitution.code} · {selectedInstitution.location}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedCode(null)}
+                aria-label="Tutup detail lembaga"
+              >
+                <X />
+              </button>
+            </div>
+            <dl className="dataset-detail-grid">
+              <div>
+                <dt>Pengelola utama</dt>
+                <dd>{selectedInstitution.manager}</dd>
+              </div>
+              <div>
+                <dt>Jumlah akun</dt>
+                <dd>{selectedInstitution.users}</dd>
+              </div>
+              <div>
+                <dt>Status assessment</dt>
+                <dd>{selectedInstitution.assessment}</dd>
+              </div>
+              <div>
+                <dt>Status onboarding</dt>
+                <dd>{selectedInstitution.status}</dd>
+              </div>
+            </dl>
+            <div className="admin-modal-note">
+              <Building2 />
+              <p>
+                <b>Relasi backend</b>Pengguna, penugasan, assessment, dan hasil
+                harus mengacu pada ID lembaga yang sama.
+              </p>
+            </div>
+            <div className="admin-modal-actions">
+              <button
+                className="secondary-button"
+                onClick={() => setSelectedCode(null)}
+              >
+                Tutup
+              </button>
+            </div>
+          </dialog>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -699,6 +928,7 @@ function AdminPermissionsPage() {
 function AdminAuditPage() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Semua aktivitas');
+  const [exported, setExported] = useState(false);
   const normalizedQuery = query.trim().toLowerCase();
   const filteredAudit = auditRecords.filter(
     (record) =>
@@ -715,11 +945,19 @@ function AdminAuditPage() {
         title="Audit Log"
         description="Telusuri perubahan penting, pelaku, objek, dan waktu kejadian di seluruh sistem."
         action={
-          <button className="secondary-button">
+          <button
+            className="secondary-button"
+            onClick={() => setExported(true)}
+          >
             <FileText /> Ekspor log
           </button>
         }
       />
+      {exported ? (
+        <div className="admin-feedback">
+          <CheckCircle2 /> Ekspor audit log dummy disiapkan dengan filter aktif.
+        </div>
+      ) : null}
       <div className="admin-audit-notice">
         <LockKeyhole />
         <p>
@@ -771,6 +1009,14 @@ function AdminAuditPage() {
               <time>{record.time}</time>
             </article>
           ))}
+          {filteredAudit.length === 0 ? (
+            <DataState
+              variant="empty"
+              title="Aktivitas tidak ditemukan"
+              description="Tidak ada audit log yang cocok dengan pencarian dan kategori aktif."
+              compact
+            />
+          ) : null}
         </div>
       </section>
     </>

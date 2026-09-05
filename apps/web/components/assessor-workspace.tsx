@@ -30,6 +30,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
+import { DataState } from '@/components/ui/data-state';
 
 type AssignmentStatus = 'Draft' | 'Terjadwal' | 'Final';
 
@@ -1210,6 +1211,13 @@ function AssignmentsPage() {
               </button>
             </article>
           ))}
+          {filtered.length === 0 ? (
+            <DataState
+              variant="empty"
+              title="Penugasan tidak ditemukan"
+              description="Ubah kata kunci atau filter status. Asesor hanya melihat penugasannya sendiri."
+            />
+          ) : null}
         </div>
       </section>
     </>
@@ -1436,6 +1444,8 @@ const initialEvidence = [
 function EvidencePage() {
   const [evidence, setEvidence] = useState(initialEvidence);
   const [filter, setFilter] = useState('Semua bukti');
+  const [incidentOpen, setIncidentOpen] = useState(false);
+  const [incidentSaved, setIncidentSaved] = useState(false);
   const visible = evidence.filter(
     (item) =>
       filter === 'Semua bukti' ||
@@ -1470,6 +1480,66 @@ function EvidencePage() {
           </span>
         </article>
       </div>
+      {incidentSaved ? (
+        <div className="admin-feedback">
+          <CheckCircle2 /> Catatan insiden dummy tersimpan dan siap dikaitkan
+          dengan indikator assessment.
+        </div>
+      ) : null}
+      <section className="surface assessment-source-panel">
+        <div className="surface-head">
+          <div>
+            <h2>Sumber data assessment</h2>
+            <p>Jenis input yang dipetakan dari kebutuhan proposal ISHAS</p>
+          </div>
+          <button
+            className="secondary-button"
+            onClick={() => setIncidentOpen(true)}
+          >
+            <Plus /> Catat insiden
+          </button>
+        </div>
+        <div className="assessment-source-grid">
+          {[
+            [
+              'Kuesioner',
+              'Jawaban terstandar pada form indikator.',
+              ClipboardList,
+            ],
+            [
+              'Observasi lapangan',
+              'Catatan kondisi dan lokasi temuan.',
+              MapPin,
+            ],
+            [
+              'Dokumen/kebijakan',
+              'Foto atau PDF sebagai bukti pendukung.',
+              FileText,
+            ],
+            [
+              'Catatan insiden',
+              'Kejadian, waktu, area, dan ringkasan dampak.',
+              AlertTriangle,
+            ],
+          ].map(([title, description, Icon]) => {
+            const SourceIcon = Icon as LucideIcon;
+            return (
+              <article key={title as string}>
+                <SourceIcon />
+                <span>
+                  <b>{title as string}</b>
+                  <small>{description as string}</small>
+                </span>
+                <CheckCircle2 />
+              </article>
+            );
+          })}
+        </div>
+        <p className="assessment-source-note">
+          Sensor/IoT tetap dicatat sebagai integrasi opsional tahap lanjut,
+          bukan syarat prototipe 2026.
+        </p>
+      </section>
       <section className="surface admin-data-surface">
         <div className="admin-toolbar">
           <select
@@ -1536,6 +1606,13 @@ function EvidencePage() {
               </div>
             </article>
           ))}
+          {visible.length === 0 ? (
+            <DataState
+              variant="empty"
+              title="Bukti tidak ditemukan"
+              description="Tidak ada bukti yang cocok dengan filter kelengkapan saat ini."
+            />
+          ) : null}
         </div>
       </section>
       <div className="context-note context-note-wide">
@@ -1546,6 +1623,100 @@ function EvidencePage() {
           tautan publik.
         </p>
       </div>
+      {incidentOpen ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal"
+            aria-labelledby="incident-form-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">Sumber data pendukung</p>
+                <h2 id="incident-form-title">Catat insiden lapangan</h2>
+                <p>Form dummy untuk memperjelas kebutuhan data insiden.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIncidentOpen(false)}
+                aria-label="Tutup form insiden"
+              >
+                <X />
+              </button>
+            </div>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setIncidentSaved(true);
+                setIncidentOpen(false);
+              }}
+            >
+              <div className="admin-form-grid">
+                <label>
+                  Tanggal dan waktu kejadian
+                  <input type="datetime-local" required />
+                </label>
+                <label>
+                  Area kejadian
+                  <select defaultValue="" required>
+                    <option value="" disabled>
+                      Pilih area
+                    </option>
+                    <option>Asrama Putra A</option>
+                    <option>Dapur Utama</option>
+                    <option>Gedung Kelas</option>
+                  </select>
+                </label>
+                <label>
+                  Tingkat awal
+                  <select defaultValue="Belum diklasifikasi">
+                    <option>Belum diklasifikasi</option>
+                    <option>Rendah (ilustrasi)</option>
+                    <option>Sedang (ilustrasi)</option>
+                    <option>Tinggi (ilustrasi)</option>
+                  </select>
+                </label>
+                <label>
+                  Indikator terkait
+                  <select defaultValue="Belum dipetakan">
+                    <option>Belum dipetakan</option>
+                    <option>IND-SAR-001</option>
+                    <option>IND-SAR-002</option>
+                    <option>IND-DAR-001</option>
+                  </select>
+                </label>
+                <label className="admin-form-wide">
+                  Ringkasan kejadian
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="Jelaskan kejadian, kondisi, dan tindakan awal..."
+                  />
+                </label>
+              </div>
+              <div className="context-note context-note-wide">
+                <ShieldCheck />
+                <p>
+                  <b>Klasifikasi final oleh konfigurasi</b>Level risiko di atas
+                  hanya ilustrasi dan tidak menggantikan parameter ilmiah.
+                </p>
+              </div>
+              <div className="admin-modal-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={() => setIncidentOpen(false)}
+                >
+                  Batal
+                </button>
+                <button type="submit" className="primary-button">
+                  <Save /> Simpan catatan dummy
+                </button>
+              </div>
+            </form>
+          </dialog>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -1618,6 +1789,13 @@ function HistoryPage() {
               </button>
             </article>
           ))}
+          {visible.length === 0 ? (
+            <DataState
+              variant="empty"
+              title="Riwayat tidak ditemukan"
+              description="Tidak ada assessment final yang cocok dengan pencarian."
+            />
+          ) : null}
         </div>
       </section>
       {selected ? (

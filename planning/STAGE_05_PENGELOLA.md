@@ -1,6 +1,6 @@
 # Stage 05 — Ruang Kerja Pengelola Pesantren
 
-**Status:** REVIEW
+**Status:** DONE
 
 **Tujuan:** membuat hasil assessment mudah dipahami dan ditindaklanjuti oleh pesantren.
 

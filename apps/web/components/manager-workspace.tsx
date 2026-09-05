@@ -33,6 +33,7 @@ import {
   X,
 } from 'lucide-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
+import { DataState } from '@/components/ui/data-state';
 
 type RiskLevel = 'Tinggi' | 'Sedang' | 'Rendah';
 type RecommendationStatus =
@@ -677,7 +678,11 @@ function ResultsPage() {
   );
 }
 
-function RiskMapPage() {
+function RiskMapPage({
+  onNavigate,
+}: {
+  onNavigate: (section: string) => void;
+}) {
   const [floor, setFloor] = useState('Lantai 1');
   const visibleFindings = riskFindings.filter((item) => item.floor === floor);
   const [selectedId, setSelectedId] = useState(visibleFindings[0]?.id ?? '');
@@ -814,7 +819,10 @@ function RiskMapPage() {
                   <p>{selected.recommendation}</p>
                 </span>
               </div>
-              <button className="primary-button">
+              <button
+                className="primary-button"
+                onClick={() => onNavigate('follow-up')}
+              >
                 <ListChecks /> Buka tindak lanjut
               </button>
             </>
@@ -1022,6 +1030,13 @@ function RecommendationsPage() {
               </button>
             </article>
           ))}
+          {visible.length === 0 ? (
+            <DataState
+              variant="empty"
+              title="Rekomendasi tidak ditemukan"
+              description="Ubah filter prioritas atau status untuk menampilkan rekomendasi lain."
+            />
+          ) : null}
         </div>
       </section>
       {selected ? (
@@ -1618,9 +1633,15 @@ function ReportsPage() {
   );
 }
 
-export function ManagerSection({ section }: { section: string }) {
+export function ManagerSection({
+  section,
+  onNavigate,
+}: {
+  section: string;
+  onNavigate: (section: string) => void;
+}) {
   if (section === 'results') return <ResultsPage />;
-  if (section === 'risk-map') return <RiskMapPage />;
+  if (section === 'risk-map') return <RiskMapPage onNavigate={onNavigate} />;
   if (section === 'recommendations') return <RecommendationsPage />;
   if (section === 'follow-up') return <FollowUpPage />;
   if (section === 'reports') return <ReportsPage />;

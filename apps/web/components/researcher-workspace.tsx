@@ -20,8 +20,10 @@ import {
   Search,
   ShieldCheck,
   SlidersHorizontal,
+  Upload,
   X,
 } from 'lucide-react';
+import { DataState } from '@/components/ui/data-state';
 
 type InstrumentStatus = 'Draft' | 'Published' | 'Archived';
 
@@ -1772,6 +1774,9 @@ function ResearchDataPage() {
   const [query, setQuery] = useState('');
   const [period, setPeriod] = useState('Semua periode');
   const [exported, setExported] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [imported, setImported] = useState(false);
+  const [importFile, setImportFile] = useState('');
   const [selectedDatasetId, setSelectedDatasetId] = useState<string | null>(
     null,
   );
@@ -1797,12 +1802,20 @@ function ResearchDataPage() {
         title="Data Penelitian"
         description="Kelola dataset assessment teragregasi dengan jejak versi instrumen dan status verifikasi."
         action={
-          <button
-            className="secondary-button"
-            onClick={() => setExported(true)}
-          >
-            <Download /> Ekspor dataset
-          </button>
+          <div className="page-heading-actions">
+            <button
+              className="secondary-button"
+              onClick={() => setImportOpen(true)}
+            >
+              <Upload /> Import Excel/CSV
+            </button>
+            <button
+              className="secondary-button"
+              onClick={() => setExported(true)}
+            >
+              <Download /> Ekspor dataset
+            </button>
+          </div>
         }
       />
       <div className="research-data-guardrail">
@@ -1819,6 +1832,13 @@ function ResearchDataPage() {
         <div className="admin-feedback">
           <CheckCircle2 />
           Simulasi ekspor berhasil disiapkan dengan metadata versi instrumen.
+        </div>
+      ) : null}
+      {imported ? (
+        <div className="admin-feedback">
+          <CheckCircle2 />
+          Simulasi import selesai divalidasi. Baris bermasalah akan ditolak
+          sebelum data masuk ke dataset.
         </div>
       ) : null}
       <div className="research-data-stats">
@@ -1911,6 +1931,14 @@ function ResearchDataPage() {
               </button>
             </div>
           ))}
+          {filteredDatasets.length === 0 ? (
+            <DataState
+              variant="empty"
+              title="Dataset tidak ditemukan"
+              description="Ubah kata kunci atau filter periode untuk melihat dataset lain."
+              compact
+            />
+          ) : null}
         </div>
       </section>
 
@@ -1985,6 +2013,78 @@ function ResearchDataPage() {
                 }}
               >
                 <Download /> Ekspor data dummy
+              </button>
+            </div>
+          </dialog>
+        </div>
+      ) : null}
+
+      {importOpen ? (
+        <div className="admin-modal-backdrop" role="presentation">
+          <dialog
+            open
+            className="admin-modal dataset-dialog"
+            aria-labelledby="dataset-import-title"
+          >
+            <div className="admin-modal-head">
+              <div>
+                <p className="section-kicker">Import data terkontrol</p>
+                <h2 id="dataset-import-title">Validasi file Excel/CSV</h2>
+                <p>File diperiksa sebelum data dapat dimasukkan ke dataset.</p>
+              </div>
+              <button
+                onClick={() => setImportOpen(false)}
+                aria-label="Tutup import dataset"
+              >
+                <X />
+              </button>
+            </div>
+            <label className="assessment-upload-button dataset-import-upload">
+              <Upload /> Pilih file .xlsx atau .csv
+              <input
+                type="file"
+                accept=".xlsx,.csv"
+                onChange={(event) =>
+                  setImportFile(event.target.files?.[0]?.name ?? '')
+                }
+              />
+            </label>
+            {importFile ? (
+              <div className="research-data-guardrail dataset-guardrail">
+                <FileCheck2 />
+                <div>
+                  <b>{importFile}</b>
+                  <p>
+                    Simulasi validasi: kolom identitas, versi instrumen, kode
+                    indikator, tipe nilai, dan duplikasi akan diperiksa.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <DataState
+                variant="empty"
+                title="Belum ada file dipilih"
+                description="Gunakan template sesuai versi instrumen agar kode indikator dapat dipetakan."
+                compact
+              />
+            )}
+            <div className="admin-modal-actions">
+              <button
+                className="secondary-button"
+                onClick={() => setImportOpen(false)}
+              >
+                Batal
+              </button>
+              <button
+                className="primary-button"
+                disabled={!importFile}
+                onClick={() => {
+                  setImported(true);
+                  setImportOpen(false);
+                  setImportFile('');
+                }}
+              >
+                <ShieldCheck /> Validasi file dummy
               </button>
             </div>
           </dialog>

@@ -1,6 +1,12 @@
 'use client';
 
-import { useState, type ReactNode, type SyntheticEvent } from 'react';
+import {
+  lazy,
+  Suspense,
+  useState,
+  type ReactNode,
+  type SyntheticEvent,
+} from 'react';
 import Image from 'next/image';
 import {
   Activity,
@@ -51,13 +57,33 @@ import {
   YAxis,
 } from 'recharts';
 import { dimensions, riskLocations, trend } from '@/lib/mock-data';
-import { AdminSection } from '@/components/admin-workspace';
-import { ResearcherSection } from '@/components/researcher-workspace';
-import {
-  AssessorDashboard as AssessorStageDashboard,
-  AssessorSection,
-} from '@/components/assessor-workspace';
-import { ManagerSection } from '@/components/manager-workspace';
+import { DataState } from '@/components/ui/data-state';
+
+const AdminSection = lazy(() =>
+  import('@/components/admin-workspace').then((module) => ({
+    default: module.AdminSection,
+  })),
+);
+const ResearcherSection = lazy(() =>
+  import('@/components/researcher-workspace').then((module) => ({
+    default: module.ResearcherSection,
+  })),
+);
+const AssessorStageDashboard = lazy(() =>
+  import('@/components/assessor-workspace').then((module) => ({
+    default: module.AssessorDashboard,
+  })),
+);
+const AssessorSection = lazy(() =>
+  import('@/components/assessor-workspace').then((module) => ({
+    default: module.AssessorSection,
+  })),
+);
+const ManagerSection = lazy(() =>
+  import('@/components/manager-workspace').then((module) => ({
+    default: module.ManagerSection,
+  })),
+);
 
 type RoleId = 'admin' | 'peneliti' | 'asesor' | 'pengelola';
 
@@ -186,6 +212,68 @@ const roleMeta: Record<
     scope: 'PP Al-Hikmah Malang',
     eyebrow: 'Pemanfaatan hasil',
   },
+};
+
+const roleNotifications: Record<
+  RoleId,
+  Array<{ title: string; detail: string; target: string; tone: string }>
+> = {
+  admin: [
+    {
+      title: '3 akun menunggu aktivasi',
+      detail: 'Perlu verifikasi Admin',
+      target: 'users',
+      tone: 'amber',
+    },
+    {
+      title: 'Perubahan hak akses tercatat',
+      detail: 'Hari ini, 09.42',
+      target: 'audit',
+      tone: 'blue',
+    },
+  ],
+  peneliti: [
+    {
+      title: '2 sumber rujukan belum lengkap',
+      detail: 'Draft ISHAS v1.1',
+      target: 'instruments',
+      tone: 'red',
+    },
+    {
+      title: 'Draft siap diperiksa ulang',
+      detail: 'Validasi 71% selesai',
+      target: 'validation',
+      tone: 'amber',
+    },
+  ],
+  asesor: [
+    {
+      title: '2 bukti wajib belum lengkap',
+      detail: 'Pesantren Darussalam',
+      target: 'evidence',
+      tone: 'red',
+    },
+    {
+      title: 'Penugasan lapangan mendatang',
+      detail: 'PP Al-Falah · 12 Sep 2026',
+      target: 'assignments',
+      tone: 'blue',
+    },
+  ],
+  pengelola: [
+    {
+      title: '1 rekomendasi prioritas tinggi',
+      detail: 'Belum memiliki rencana tindakan',
+      target: 'recommendations',
+      tone: 'red',
+    },
+    {
+      title: '1 pekerjaan menunggu verifikasi',
+      detail: 'Bukti telah diajukan',
+      target: 'follow-up',
+      tone: 'blue',
+    },
+  ],
 };
 
 function IshasMark({ inverse = false }: { inverse?: boolean }) {
@@ -856,43 +944,19 @@ function FeaturePreview({
   const item = roleNavigation[account.role].find(
     (navigation) => navigation.id === section,
   );
-  const descriptions: Record<RoleId, string> = {
-    admin: 'Halaman pengelolaan sistem ini akan diperdalam pada Stage 02.',
-    peneliti:
-      'Halaman tata kelola instrumen ini akan diperdalam pada Stage 03.',
-    asesor: 'Alur assessment lapangan ini akan diperdalam pada Stage 04.',
-    pengelola: 'Halaman pemanfaatan hasil ini akan diperdalam pada Stage 05.',
-  };
-  const Icon = item?.Icon ?? LayoutDashboard;
   return (
     <>
       <PageHeading
         kicker={roleMeta[account.role].eyebrow}
         title={item?.label ?? 'Fitur'}
-        description={descriptions[account.role]}
+        description="Halaman tidak tersedia pada lingkup akses atau navigasi akun aktif."
       />
       <section className="surface feature-preview">
-        <span>
-          <Icon />
-        </span>
-        <p className="section-kicker">Peta fitur</p>
-        <h2>{item?.label}</h2>
-        <p>
-          Struktur navigasi dan batas aksesnya sudah disiapkan pada fondasi.
-          Detail form, tabel, filter, dan aksi akan dikerjakan pada stage peran
-          terkait agar dapat diperiksa satu per satu.
-        </p>
-        <div className="preview-checks">
-          <span>
-            <Check /> Hanya tersedia untuk {account.roleLabel}
-          </span>
-          <span>
-            <Check /> Menggunakan data dummy
-          </span>
-          <span>
-            <Check /> Belum terhubung backend
-          </span>
-        </div>
+        <DataState
+          variant="forbidden"
+          title="Akses halaman tidak tersedia"
+          description={`Akun ${account.roleLabel} hanya dapat membuka menu yang berada dalam ruang kerjanya.`}
+        />
       </section>
     </>
   );
@@ -908,6 +972,7 @@ function Workspace({
   const [section, setSection] = useState('dashboard');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const navigation = roleNavigation[account.role];
   const currentLabel =
     navigation.find((item) => item.id === section)?.label ?? 'Dashboard';
@@ -925,7 +990,7 @@ function Workspace({
   else if (account.role === 'asesor' && section !== 'dashboard')
     content = <AssessorSection section={section} />;
   else if (account.role === 'pengelola' && section !== 'dashboard')
-    content = <ManagerSection section={section} />;
+    content = <ManagerSection section={section} onNavigate={selectSection} />;
   else if (section !== 'dashboard')
     content = <FeaturePreview account={account} section={section} />;
   else if (account.role === 'admin')
@@ -938,6 +1003,9 @@ function Workspace({
 
   return (
     <div className="workspace">
+      <a className="skip-link" href="#main-content">
+        Lewati ke konten utama
+      </a>
       {mobileOpen ? (
         <button
           className="sidebar-overlay"
@@ -1000,14 +1068,57 @@ function Workspace({
             </div>
           </div>
           <div className="topbar-actions">
-            <button className="icon-button" aria-label="Notifikasi">
-              <Bell />
-              <i />
-            </button>
+            <div className="notification-menu">
+              <button
+                className="icon-button"
+                aria-label="Notifikasi"
+                aria-expanded={notificationsOpen}
+                onClick={() => {
+                  setNotificationsOpen((current) => !current);
+                  setAccountOpen(false);
+                }}
+              >
+                <Bell />
+                <i />
+              </button>
+              {notificationsOpen ? (
+                <div className="notification-popover">
+                  <div className="notification-popover-head">
+                    <span>
+                      <b>Notifikasi</b>
+                      <small>{account.roleLabel}</small>
+                    </span>
+                    <span className="status status-blue">2 baru</span>
+                  </div>
+                  {roleNotifications[account.role].map((notification) => (
+                    <button
+                      key={notification.title}
+                      onClick={() => {
+                        selectSection(notification.target);
+                        setNotificationsOpen(false);
+                      }}
+                    >
+                      <i
+                        className={`notification-dot notification-dot-${notification.tone}`}
+                      />
+                      <span>
+                        <b>{notification.title}</b>
+                        <small>{notification.detail}</small>
+                      </span>
+                      <ArrowRight />
+                    </button>
+                  ))}
+                  <p>Data notifikasi masih berupa simulasi lokal.</p>
+                </div>
+              ) : null}
+            </div>
             <div className="account-menu">
               <button
                 className="account-trigger"
-                onClick={() => setAccountOpen(!accountOpen)}
+                onClick={() => {
+                  setAccountOpen(!accountOpen);
+                  setNotificationsOpen(false);
+                }}
                 aria-expanded={accountOpen}
               >
                 <span>{account.initials}</span>
@@ -1037,7 +1148,19 @@ function Workspace({
             </div>
           </div>
         </header>
-        <main className="page-content">{content}</main>
+        <main className="page-content" id="main-content" tabIndex={-1}>
+          <Suspense
+            fallback={
+              <DataState
+                variant="loading"
+                title="Memuat ruang kerja"
+                description="Menyiapkan halaman sesuai akses akun Anda."
+              />
+            }
+          >
+            {content}
+          </Suspense>
+        </main>
       </div>
     </div>
   );

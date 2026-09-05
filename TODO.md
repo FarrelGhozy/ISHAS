@@ -20,8 +20,8 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Stage 02 — detail pengelolaan sistem oleh Admin. **DONE**
 - [x] Stage 03 — detail instrumen dan ilmu oleh Peneliti. **DONE**
 - [x] Stage 04 — detail assessment lapangan oleh Asesor. **DONE**
-- [x] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren. **REVIEW**
-- [ ] Stage 06 — penyelarasan lintas peran dan kesiapan presentasi.
+- [x] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren. **DONE**
+- [x] Stage 06 — penyelarasan lintas peran dan kesiapan presentasi. **REVIEW**
 
 ## Menunggu Keputusan Ilmiah
 
@@ -88,3 +88,18 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Lint dan production build.
 
 **Keputusan yang dibutuhkan:** tinjau alur membaca hasil, peta risiko, rekomendasi, tindak lanjut, dan laporan sebelum Stage 06 dimulai.
+
+**Keputusan:** permintaan melanjutkan stage berikutnya diperlakukan sebagai persetujuan Stage 05; Stage 06 dimulai.
+
+## Menunggu Review — Stage 06
+
+- [x] Audit seluruh menu dan aksi utama pada empat peran.
+- [x] Pola bersama untuk loading, empty, error, forbidden, dan success state.
+- [x] Notifikasi kontekstual per peran.
+- [x] Penyelarasan label form, validasi, fokus keyboard, dan responsivitas.
+- [x] Kontrak data TypeScript untuk autentikasi, instrumen, assessment, hasil, risiko, rekomendasi, tindak lanjut, laporan, dan audit.
+- [x] Import Excel/CSV dan sumber data assessment dari proposal dipetakan.
+- [x] Dokumen matriks fitur, skenario demo, endpoint, dan keputusan backend yang belum final.
+- [x] Formatter, lint, TypeScript, dan production build.
+
+**Keputusan yang dibutuhkan:** review seluruh alur lintas peran dan ajukan prototipe ke dosen. Perubahan setelah review dicatat sebagai stage baru agar ruang lingkupnya jelas.
