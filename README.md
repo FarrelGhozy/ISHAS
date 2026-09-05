@@ -9,6 +9,9 @@ Integrated Safety and Health Assessment System adalah prototipe sistem penilaian
 - `docs/blueprint` — blueprint, spesifikasi, dan guardrail engineering.
 - `docs/planning` — checklist requirement dan rencana pengembangan.
 - `docs/decisions` — keputusan desain dan teknis yang sudah disetujui.
+- `planning` — local issue management dan stage implementasi frontend.
+- `TODO.md` — kontrol pekerjaan yang sedang aktif.
+- `AGENTS.md` — aturan tetap untuk pekerjaan di repository.
 
 ## Menjalankan frontend
 
@@ -17,6 +20,17 @@ cd apps/web
 bun install
 bun run dev
 ```
+
+## Akun demo frontend
+
+Semua akun menggunakan kata sandi `demo1234`.
+
+| Peran | Email | Fokus |
+| --- | --- | --- |
+| Admin | `admin@ishas.demo` | Sistem, akun, lembaga, akses, dan audit |
+| Peneliti | `peneliti@ishas.demo` | Ilmu, instrumen, versi, dan scoring |
+| Asesor | `asesor@ishas.demo` | Assessment dan bukti lapangan |
+| Pengelola Pesantren | `pengelola@ishas.demo` | Hasil, rekomendasi, dan tindak lanjut |
 
 ## Status data
 

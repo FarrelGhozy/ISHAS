@@ -11,17 +11,14 @@ Frontend digunakan untuk menyepakati navigasi, hierarki informasi, hak akses, fo
 - Model UI harus mudah dipindahkan dari mock data ke API.
 - Kondisi loading, kosong, gagal, tidak berwenang, draft, submitted, dan finalized harus dirancang sebelum integrasi backend.
 
-## Peran
+## Peran utama
 
-- Admin Sistem: konfigurasi teknis, pengguna, pesantren, draft instrumen, versi, dan audit.
-- Asesor: assessment yang ditugaskan.
-- Pengelola Pesantren: data dan hasil pesantrennya.
-- Tim K3 atau Satgas: risiko, rekomendasi, dan tindak lanjut.
-- Pimpinan Yayasan: ringkasan lintas pesantren.
-- Pemerintah atau Kemenag: ringkasan agregat sesuai izin.
-- Peneliti atau Auditor: data penelitian, versi instrumen, ekspor, dan audit.
+- Admin: sistem, pengguna, pesantren, hak akses, audit, dan pengaturan non-ilmiah.
+- Peneliti: ilmu, instrumen, versi, konfigurasi scoring, validasi, dan data penelitian.
+- Asesor: penugasan assessment, jawaban indikator, bukti lapangan, serta finalisasi.
+- Pengelola Pesantren: hasil pesantrennya, peta risiko, rekomendasi, tindak lanjut, dan laporan.
 
-Pemilih peran pada prototipe hanya mensimulasikan konteks. Penyaringan menu dan otorisasi nyata harus dilakukan bersama backend.
+Keempat peran memiliki bobot produk yang sama. Pemisahan dilakukan sejak login dan pengguna tidak dapat mengganti peran dari dalam dashboard. Otorisasi nyata nantinya wajib ditegakkan kembali oleh backend.
 
 ## Instrumen
 
@@ -57,7 +54,8 @@ Pemilih peran pada prototipe hanya mensimulasikan konteks. Penyaringan menu dan 
 
 ## Visual
 
-- Merah adalah aksen prioritas dan keselamatan, bukan warna latar seluruh aplikasi.
+- Teal dan navy adalah warna identitas utama untuk membangun kesan akademis, tenang, dan dapat dipercaya.
+- Merah hanya digunakan untuk bahaya tinggi, kesalahan, atau tindakan destruktif; bukan warna latar utama aplikasi.
 - Permukaan utama memakai putih dan netral agar data mudah dibaca.
 - Komponen menggunakan radius, jarak, tipografi, dan ikon yang konsisten.
 - Tampilan harus berfungsi pada desktop, tablet, dan ponsel.
