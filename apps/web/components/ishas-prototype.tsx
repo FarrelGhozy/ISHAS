@@ -20,12 +20,15 @@ import {
   FileText,
   FlaskConical,
   History,
+  Eye,
+  EyeOff,
   KeyRound,
   LayoutDashboard,
   ListChecks,
   LockKeyhole,
   LogOut,
   MapPinned,
+  Mail,
   Menu,
   Microscope,
   Plus,
@@ -197,7 +200,9 @@ function IshasMark({ inverse = false }: { inverse?: boolean }) {
       <span>
         <b className={inverse ? 'text-white' : 'text-[#4a0710]'}>ISHAS</b>
         <small className={inverse ? 'text-white/55' : 'text-slate-500'}>
-          K3L Pesantren
+          Integrated Safety &amp; Health
+          <br />
+          Assessment System
         </small>
       </span>
     </div>
@@ -207,6 +212,7 @@ function IshasMark({ inverse = false }: { inverse?: boolean }) {
 function LoginScreen({ onLogin }: { onLogin: (account: DemoAccount) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   function submit(event: SyntheticEvent<HTMLFormElement>) {
@@ -231,11 +237,13 @@ function LoginScreen({ onLogin }: { onLogin: (account: DemoAccount) => void }) {
             <span className="stage-chip">
               <Sparkles /> Prototipe validasi fitur
             </span>
-            <h1>Satu sistem, empat ruang kerja yang saling terhubung.</h1>
+            <h1>
+              Assessment K3L pesantren yang terstruktur dan dapat ditelusuri.
+            </h1>
             <p>
-              ISHAS membantu pesantren mengelola assessment K3L dari penyusunan
-              instrumen hingga tindak lanjut hasil secara terstruktur dan dapat
-              ditelusuri.
+              Dari penyusunan instrumen ilmiah, assessment lapangan, hingga
+              rekomendasi tindak lanjut dalam satu alur kerja yang dapat
+              diaudit.
             </p>
           </div>
           <div className="role-flow" aria-label="Alur empat peran ISHAS">
@@ -272,7 +280,7 @@ function LoginScreen({ onLogin }: { onLogin: (account: DemoAccount) => void }) {
           <form className="login-form" onSubmit={submit}>
             <label htmlFor="email">Email</label>
             <div className="input-shell">
-              <Users />
+              <Mail />
               <input
                 id="email"
                 type="email"
@@ -290,12 +298,24 @@ function LoginScreen({ onLogin }: { onLogin: (account: DemoAccount) => void }) {
               <LockKeyhole />
               <input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Masukkan kata sandi"
                 autoComplete="current-password"
               />
+              <button
+                className="password-toggle"
+                type="button"
+                aria-label={
+                  showPassword
+                    ? 'Sembunyikan kata sandi'
+                    : 'Tampilkan kata sandi'
+                }
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff /> : <Eye />}
+              </button>
             </div>
             {error ? (
               <p className="form-error" role="alert">
@@ -322,7 +342,7 @@ function LoginScreen({ onLogin }: { onLogin: (account: DemoAccount) => void }) {
                   <account.Icon />
                 </span>
                 <span>
-                  <b>{account.roleLabel}</b>
+                  <b>Masuk sebagai {account.roleLabel}</b>
                   <small>{account.responsibility}</small>
                 </span>
                 <ArrowRight />
@@ -330,6 +350,13 @@ function LoginScreen({ onLogin }: { onLogin: (account: DemoAccount) => void }) {
             ))}
           </div>
         </div>
+        <footer className="login-footer">
+          <span>ISHAS Prototype v0.1</span>
+          <i aria-hidden="true" />
+          <span>Data dummy</span>
+          <i aria-hidden="true" />
+          <span>Akses berbasis peran</span>
+        </footer>
       </section>
     </main>
   );
