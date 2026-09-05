@@ -53,6 +53,7 @@ import {
 } from 'recharts';
 import { assessments, dimensions, riskLocations, trend } from '@/lib/mock-data';
 import { AdminSection } from '@/components/admin-workspace';
+import { ResearcherSection } from '@/components/researcher-workspace';
 
 type RoleId = 'admin' | 'peneliti' | 'asesor' | 'pengelola';
 
@@ -528,7 +529,11 @@ function AdminDashboard({
   );
 }
 
-function ResearcherDashboard() {
+function ResearcherDashboard({
+  onNavigate,
+}: {
+  onNavigate: (section: string) => void;
+}) {
   return (
     <>
       <PageHeading
@@ -536,7 +541,10 @@ function ResearcherDashboard() {
         title="Dashboard Peneliti"
         description="Kelola instrumen, versi, rubric, dan proses validasi sebelum digunakan di lapangan."
         action={
-          <button className="primary-button">
+          <button
+            className="primary-button"
+            onClick={() => onNavigate('versions')}
+          >
             <Plus /> Buat versi baru
           </button>
         }
@@ -577,7 +585,10 @@ function ResearcherDashboard() {
               <h2>Instrumen dalam pengembangan</h2>
               <p>Draft dapat diubah; versi published selalu terkunci</p>
             </div>
-            <button className="text-button">
+            <button
+              className="text-button"
+              onClick={() => onNavigate('instruments')}
+            >
               Kelola instrumen <ArrowRight />
             </button>
           </div>
@@ -994,11 +1005,14 @@ function Workspace({
   let content: ReactNode;
   if (account.role === 'admin' && section !== 'dashboard')
     content = <AdminSection section={section} />;
+  else if (account.role === 'peneliti' && section !== 'dashboard')
+    content = <ResearcherSection section={section} />;
   else if (section !== 'dashboard')
     content = <FeaturePreview account={account} section={section} />;
   else if (account.role === 'admin')
     content = <AdminDashboard onNavigate={selectSection} />;
-  else if (account.role === 'peneliti') content = <ResearcherDashboard />;
+  else if (account.role === 'peneliti')
+    content = <ResearcherDashboard onNavigate={selectSection} />;
   else if (account.role === 'asesor') content = <AssessorDashboard />;
   else content = <ManagerDashboard />;
 

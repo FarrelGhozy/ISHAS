@@ -17,8 +17,8 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 
 ## Antrean Berikutnya
 
-- [x] Stage 02 — detail pengelolaan sistem oleh Admin. **REVIEW**
-- [ ] Stage 03 — detail instrumen dan ilmu oleh Peneliti.
+- [x] Stage 02 — detail pengelolaan sistem oleh Admin. **DONE**
+- [x] Stage 03 — detail instrumen dan ilmu oleh Peneliti. **REVIEW**
 - [ ] Stage 04 — detail assessment lapangan oleh Asesor.
 - [ ] Stage 05 — detail hasil dan tindak lanjut oleh Pengelola Pesantren.
 - [ ] Stage 06 — penyelarasan lintas peran dan kesiapan presentasi.
@@ -39,4 +39,15 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Pengaturan: preferensi non-ilmiah dan konfirmasi tindakan berisiko.
 - [x] Lint dan production build.
 
-**Keputusan yang dibutuhkan:** setujui struktur dan cakupan ruang kerja Admin sebelum Stage 03 Peneliti dimulai.
+**Keputusan:** struktur dan cakupan ruang kerja Admin telah disetujui; Stage 03 Peneliti dimulai.
+
+## Menunggu Review — Stage 03
+
+- [x] Instrumen: versi, dimensi, indikator, bobot dummy, sumber, dan kelengkapan.
+- [x] Versioning: draft, published, arsip, jejak induk, dan snapshot historis.
+- [x] Scoring: bobot, rubric, bukti wajib, dan pemicu rekomendasi dummy.
+- [x] Validasi & Publikasi: checklist kesiapan dan konfirmasi penguncian versi.
+- [x] Data Penelitian: pencarian, filter, verifikasi, metadata versi, dan ekspor dummy.
+- [x] Lint dan production build.
+
+**Keputusan yang dibutuhkan:** setujui struktur dan aturan ruang kerja Peneliti sebelum Stage 04 Asesor dimulai.
