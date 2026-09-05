@@ -1,6 +1,6 @@
 # Stage 03 — Ruang Kerja Peneliti
 
-**Status:** REVIEW
+**Status:** DONE
 
 **Tujuan:** memvalidasi pengelolaan ilmu, instrumen, versi, scoring, dan proses publikasi.
 

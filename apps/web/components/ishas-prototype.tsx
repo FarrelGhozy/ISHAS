@@ -32,7 +32,6 @@ import {
   Menu,
   Microscope,
   Plus,
-  Search,
   Settings,
   ShieldCheck,
   SlidersHorizontal,
@@ -51,9 +50,13 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { assessments, dimensions, riskLocations, trend } from '@/lib/mock-data';
+import { dimensions, riskLocations, trend } from '@/lib/mock-data';
 import { AdminSection } from '@/components/admin-workspace';
 import { ResearcherSection } from '@/components/researcher-workspace';
+import {
+  AssessorDashboard as AssessorStageDashboard,
+  AssessorSection,
+} from '@/components/assessor-workspace';
 
 type RoleId = 'admin' | 'peneliti' | 'asesor' | 'pengelola';
 
@@ -660,105 +663,6 @@ function ResearcherDashboard({
   );
 }
 
-function AssessorDashboard() {
-  return (
-    <>
-      <PageHeading
-        kicker="Pelaksanaan lapangan"
-        title="Dashboard Asesor"
-        description="Lanjutkan penugasan, lengkapi bukti, dan finalisasi assessment yang menjadi tanggung jawab Anda."
-        action={
-          <button className="primary-button">
-            <Plus /> Assessment baru
-          </button>
-        }
-      />
-      <div className="stats-grid">
-        <StatCard
-          label="Penugasan aktif"
-          value="3"
-          note="2 pesantren · 1 review"
-          Icon={ClipboardList}
-        />
-        <StatCard
-          label="Progress hari ini"
-          value="43%"
-          note="21 dari 48 indikator"
-          Icon={Activity}
-          tone="blue"
-        />
-        <StatCard
-          label="Bukti belum lengkap"
-          value="5"
-          note="Wajib sebelum finalisasi"
-          Icon={AlertTriangle}
-          tone="red"
-        />
-        <StatCard
-          label="Selesai bulan ini"
-          value="8"
-          note="Seluruhnya tersinkron"
-          Icon={CheckCircle2}
-        />
-      </div>
-      <section className="surface">
-        <div className="surface-head">
-          <div>
-            <h2>Assessment saya</h2>
-            <p>Urut berdasarkan pekerjaan yang paling perlu dilanjutkan</p>
-          </div>
-          <button className="secondary-button">
-            <Search /> Cari penugasan
-          </button>
-        </div>
-        <div className="assessment-table">
-          <div className="table-head">
-            <span>Pesantren</span>
-            <span>Periode</span>
-            <span>Progress</span>
-            <span>Status</span>
-            <span />
-          </div>
-          {assessments.map((assessment, index) => (
-            <div className="table-row" key={assessment.id}>
-              <div>
-                <b>{assessment.pesantren}</b>
-                <small>{assessment.id}</small>
-              </div>
-              <span>{assessment.period}</span>
-              <div className="row-progress">
-                <div>
-                  <i style={{ width: `${assessment.progress}%` }} />
-                </div>
-                <b>{assessment.progress}%</b>
-              </div>
-              <span
-                className={`status ${assessment.status === 'Draft' ? 'status-amber' : 'status-green'}`}
-              >
-                {assessment.status}
-              </span>
-              <button
-                className={
-                  index === 0 ? 'row-action row-action-primary' : 'row-action'
-                }
-              >
-                {index === 0 ? 'Lanjutkan' : 'Lihat'} <ArrowRight />
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
-      <div className="context-note context-note-wide">
-        <FileCheck2 />
-        <p>
-          <b>Sebelum finalisasi</b>Semua indikator wajib terisi, bukti wajib
-          tersedia, dan assessment akan dikunci bersama versi instrumennya.
-        </p>
-      </div>
-    </>
-  );
-}
-
 function ManagerDashboard() {
   const priorityFindings = riskLocations
     .filter((item) => item.level !== 'Rendah')
@@ -1007,13 +911,16 @@ function Workspace({
     content = <AdminSection section={section} />;
   else if (account.role === 'peneliti' && section !== 'dashboard')
     content = <ResearcherSection section={section} />;
+  else if (account.role === 'asesor' && section !== 'dashboard')
+    content = <AssessorSection section={section} />;
   else if (section !== 'dashboard')
     content = <FeaturePreview account={account} section={section} />;
   else if (account.role === 'admin')
     content = <AdminDashboard onNavigate={selectSection} />;
   else if (account.role === 'peneliti')
     content = <ResearcherDashboard onNavigate={selectSection} />;
-  else if (account.role === 'asesor') content = <AssessorDashboard />;
+  else if (account.role === 'asesor')
+    content = <AssessorStageDashboard onNavigate={selectSection} />;
   else content = <ManagerDashboard />;
 
   return (
