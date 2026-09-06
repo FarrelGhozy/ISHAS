@@ -322,6 +322,7 @@ button {
   gap: 10px;
   border: 1px solid #cbd5e1;
   border-radius: 7px;
+  background: #fff;
   padding: 0 13px;
   transition:
     border-color 160ms,
@@ -329,13 +330,18 @@ button {
 }
 
 .input-shell:focus-within {
-  border-color: #e11d48;
-  box-shadow: 0 0 0 3px rgb(225 29 72 / 12%);
+  border-color: #be123c;
+  box-shadow: 0 0 0 3px rgb(190 18 60 / 10%);
 }
 
 .input-shell svg {
   width: 16px;
   color: #94a3b8;
+  transition: color 160ms;
+}
+
+.input-shell:focus-within > svg {
+  color: #be123c;
 }
 
 .input-shell input {
@@ -345,6 +351,10 @@ button {
   outline: 0;
   color: #102a35;
   font-size: 13px;
+}
+
+.input-shell input:focus-visible {
+  outline: none;
 }
 
 .password-toggle {
@@ -4798,6 +4808,15 @@ textarea:focus-visible,
   padding: 11px;
   color: #334155;
   text-align: left;
+  transition:
+    border-color 160ms,
+    background-color 160ms,
+    box-shadow 160ms;
+}
+
+.scheduled-assignment-grid > button:hover:not(.selected) {
+  border-color: #fda4af;
+  background: #fffafb;
 }
 
 .scheduled-assignment-grid > button.selected {
@@ -4832,6 +4851,13 @@ textarea:focus-visible,
 .scheduled-assignment-grid button > i {
   width: 20px;
   height: 20px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: transparent;
+}
+
+.scheduled-assignment-grid button.selected > i {
+  border-color: #be123c;
   background: #be123c;
   color: #fff;
 }
@@ -4866,14 +4892,28 @@ textarea:focus-visible,
 }
 
 .assessment-verification-list > label {
+  position: relative;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 18px 22px;
+  grid-template-columns: 34px minmax(0, 1fr) 22px;
   align-items: center;
   gap: 9px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 10px;
   cursor: pointer;
+  transition:
+    border-color 160ms,
+    background-color 160ms,
+    box-shadow 160ms;
+}
+
+.assessment-verification-list > label:hover:not(.checked) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.assessment-verification-list > label:has(input:focus-visible) {
+  box-shadow: 0 0 0 3px rgb(190 18 60 / 10%);
 }
 
 .assessment-verification-list > label.checked {
@@ -4916,14 +4956,23 @@ textarea:focus-visible,
 }
 
 .assessment-verification-list input {
-  width: 15px;
-  height: 15px;
-  accent-color: #be123c;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
 }
 
 .assessment-verification-list label > i {
   width: 20px;
   height: 20px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: transparent;
+}
+
+.assessment-verification-list label.checked > i {
+  border-color: #059669;
   background: #059669;
   color: #fff;
 }

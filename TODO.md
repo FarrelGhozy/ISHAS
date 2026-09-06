@@ -25,7 +25,7 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Stage 07 — manajemen lokasi, denah, dan peta bahaya. **REVIEW**
 - [x] Stage 08 — dokumentasi dan audit flow penggunaan. **REVIEW**
 - [x] Stage 09 — URL routing, shared shell, sesi login dummy, dan guard akses. **DONE**
-- [ ] Stage 10 — modularisasi fitur dan shared mock data lintas peran. **IN PROGRESS**
+- [x] Stage 10 — modularisasi fitur dan shared mock data lintas peran. **REVIEW**
 
 ## Selesai — Stage 09
 
@@ -47,7 +47,7 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 
 **Hasil akhir 6 September 2026:** 24 route menu pada empat role unik dan merespons HTTP 200; mapping menu serta target notifikasi valid; login/logout, refresh, Back/Forward, fallback, direct URL, guard lintas role, shared shell, dan tampilan desktop/tablet/ponsel lulus pemeriksaan. Lint, TypeScript, pemeriksaan diff, dan production build juga lulus.
 
-## Sedang Dikerjakan — Stage 10
+## Menunggu Review — Stage 10
 
 - [x] Bentuk struktur `features`, `shared`, dan `mocks` di dalam `apps/web`.
 - [x] Pecah workspace besar menjadi halaman serta komponen per role/fitur.
@@ -59,9 +59,9 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Tambahkan test untuk store, selector, guard, serta flow lintas role kritis.
 - [x] Sinkronkan checklist requirement, NFR, open question, dan development plan dengan hasil refactor.
 - [x] Jalankan lint, TypeScript, test, formatter, production build, dan pemeriksaan respons seluruh route.
-- [ ] Periksa parity visual desktop, tablet, dan ponsel secara manual sebelum Stage 10 dipindahkan ke `REVIEW`.
+- [x] Periksa parity visual desktop, tablet, dan ponsel secara manual sebelum Stage 10 dipindahkan ke `REVIEW`.
 
-**Hasil sementara 6 September 2026:** source data dummy sudah terpusat dan berversi, 24 halaman role sudah modular, perubahan penting bertahan lintas route/refresh, dan flow Pengelola–Asesor–Peneliti telah tersambung melalui ID stabil. Sebelas test otomatis dan 27 pemeriksaan route lulus. Satu pekerjaan tersisa adalah review visual manual pada tiga ukuran layar.
+**Hasil akhir 6 September 2026:** source data dummy sudah terpusat dan berversi, 24 halaman role sudah modular, perubahan penting bertahan lintas route/refresh, dan flow Pengelola–Asesor–Peneliti telah tersambung melalui ID stabil. Sebelas test otomatis dan 27 pemeriksaan route lulus. Pemeriksaan visual manual pada desktop 1440×900, tablet 834×1112, dan ponsel 390×844 juga lulus tanpa regresi visual atau luapan horizontal halaman. Stage 10 dipindahkan ke `REVIEW` dan menunggu persetujuan pemilik proyek/dosen.
 
 **Dependency:** terpenuhi. Permintaan melanjutkan pekerjaan dan memecah halaman besar diperlakukan sebagai persetujuan Stage 09 sekaligus aktivasi Stage 10.
 

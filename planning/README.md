@@ -24,7 +24,7 @@ Folder ini menggantikan GitHub Issues selama tahap eksplorasi frontend. Satu fil
 | 07 | Manajemen lokasi, denah, dan peta bahaya | REVIEW |
 | 08 | Dokumentasi dan audit flow penggunaan | REVIEW |
 | 09 | URL routing, shared shell, sesi login dummy, dan guard akses | DONE |
-| 10 | Modularisasi fitur dan shared mock data lintas peran | IN PROGRESS |
+| 10 | Modularisasi fitur dan shared mock data lintas peran | REVIEW |
 
 ## Cara Menggunakan
 

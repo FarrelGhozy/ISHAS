@@ -101,6 +101,7 @@ export function NewAssessmentPage() {
                 <button
                   className={selectedId === assignment.id ? 'selected' : ''}
                   key={assignment.id}
+                  aria-pressed={selectedId === assignment.id}
                   onClick={() => {
                     setSelectedId(assignment.id);
                     setChecks({
@@ -121,7 +122,9 @@ export function NewAssessmentPage() {
                     <b>{assignment.institution}</b>
                     <p>{assignment.city}</p>
                   </div>
-                  <i>{selectedId === assignment.id ? <Check /> : null}</i>
+                  <i aria-hidden="true">
+                    {selectedId === assignment.id ? <Check /> : null}
+                  </i>
                 </button>
               ))}
           </div>
@@ -155,7 +158,7 @@ export function NewAssessmentPage() {
                       }))
                     }
                   />
-                  <i>{checked ? <Check /> : null}</i>
+                  <i aria-hidden="true">{checked ? <Check /> : null}</i>
                 </label>
               );
             })}
