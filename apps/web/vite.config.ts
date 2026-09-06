@@ -48,6 +48,8 @@ export default defineConfig(async () => {
     css: { postcss: { plugins: [tailwindcss()] } },
     server: {
       host: '0.0.0.0',
+      port: 3003,
+      allowedHosts: ['ishas.utc.web.id', '.ishas.utc.web.id', 'localhost', '127.0.0.1'],
       ...(isCodexSeatbeltSandbox
         ? { watch: { useFsEvents: false, usePolling: true } }
         : {}),
