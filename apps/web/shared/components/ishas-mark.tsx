@@ -1,8 +1,16 @@
 import Image from 'next/image';
 
-export function IshasMark({ inverse = false }: { inverse?: boolean }) {
+type IshasMarkProps = {
+  inverse?: boolean;
+  variant?: 'default' | 'login' | 'compact';
+};
+
+export function IshasMark({
+  inverse = false,
+  variant = 'default',
+}: IshasMarkProps) {
   return (
-    <div className="brand-lockup">
+    <div className={`brand-lockup brand-lockup-${variant}`}>
       <span
         className={`brand-logo-shell ${inverse ? 'brand-logo-inverse' : ''}`}
       >

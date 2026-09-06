@@ -44,7 +44,7 @@ export function LoginScreen() {
     <main className="login-page">
       <section className="login-story">
         <div className="login-story-inner">
-          <IshasMark inverse />
+          <IshasMark inverse variant="login" />
           <div className="login-copy">
             <span className="stage-chip">
               <Sparkles /> Prototipe validasi fitur
@@ -80,7 +80,7 @@ export function LoginScreen() {
       <section className="login-panel">
         <div className="login-form-wrap">
           <div className="mobile-logo">
-            <IshasMark />
+            <IshasMark variant="login" />
           </div>
           <p className="section-kicker">Selamat datang</p>
           <h2>Masuk ke ISHAS</h2>

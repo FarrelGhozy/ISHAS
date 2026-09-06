@@ -92,6 +92,7 @@ button {
   display: grid;
   width: 42px;
   height: 42px;
+  overflow: hidden;
   place-items: center;
   border-radius: 8px;
   background: white;
@@ -100,13 +101,56 @@ button {
 
 .brand-logo-inverse {
   background: rgb(255 255 255 / 94%);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 16%);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 14%);
 }
 
 .brand-logo {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
+  transform: translateX(-4%);
+}
+
+.brand-lockup-login {
+  gap: 12px;
+}
+
+.brand-lockup-login .brand-logo-shell {
+  width: 50px;
+  height: 50px;
+  border-radius: 9px;
+}
+
+.brand-lockup-login .brand-logo {
+  width: 52px;
+  height: 52px;
+}
+
+.brand-lockup-login b {
+  font-size: 21px;
+}
+
+.brand-lockup-login small {
+  margin-top: 6px;
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.brand-lockup-compact {
+  gap: 9px;
+}
+
+.brand-lockup-compact .brand-logo-shell {
+  border-radius: 7px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+}
+
+.brand-lockup-compact b {
+  font-size: 19px;
+}
+
+.brand-lockup-compact small {
+  display: none;
 }
 
 .login-page {

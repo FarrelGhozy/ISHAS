@@ -78,7 +78,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       ) : null}
       <aside className={`app-sidebar ${mobileOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-head">
-          <IshasMark inverse />
+          <IshasMark inverse variant="compact" />
           <button
             className="sidebar-close"
             onClick={() => setMobileOpen(false)}
