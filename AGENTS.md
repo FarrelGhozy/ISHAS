@@ -42,6 +42,21 @@ Jika sumber ilmiah belum menetapkan rumus, ambang, atau klasifikasi, tandai seba
 - Instrumen yang sudah dipublikasikan tidak boleh diubah langsung; perubahan dibuat sebagai versi baru.
 - Assessment yang sudah final harus tetap dapat ditelusuri ke versi instrumen dan bukti yang digunakan.
 
+## Arsitektur Frontend Selama Refactor
+
+- Gunakan route URL sebagai sumber kebenaran halaman aktif; jangan membuat router kedua melalui state komponen.
+- Gunakan satu shared workspace shell untuk sidebar, header, akun aktif, notifikasi, menu mobile, dan area konten.
+- Sesi login dummy dipusatkan pada shared store. Penyimpanan browser hanya untuk kebutuhan prototipe dan tidak boleh menyimpan kata sandi atau token produksi.
+- Guard frontend harus memeriksa direct URL berdasarkan role aktif, tetapi tidak boleh dianggap sebagai pengganti otorisasi backend.
+- Data domain dummy tidak boleh didefinisikan ulang di komponen halaman. Simpan seed, mock adapter, mutation, dan processor ilustratif di `apps/web/mocks/`.
+- Semua hubungan user, lembaga, instrumen, penugasan, assessment, lokasi, hasil, risiko, rekomendasi, dan tindak lanjut memakai ID stabil.
+- Perubahan lintas halaman/role harus melalui shared store atau repository; state lokal hanya untuk interaksi sementara yang belum disimpan.
+- Data dummy yang dipersistenkan harus mempunyai versi schema dan mekanisme reset agar demo dapat kembali ke kondisi awal.
+- Pecah komponen berdasarkan role dan fitur tanpa mengubah desain, copy, atau behavior di luar ruang lingkup stage aktif.
+- Pertahankan `apps/web/app/` sebagai root App Router. Jangan memindahkan project ke `src/` hanya untuk mengikuti contoh struktur.
+- Gunakan komponen yang sudah tersedia di `apps/web/components/ui/` sebelum membuat primitive interaktif baru.
+- Lakukan migrasi bertahap per route dan hapus implementasi lama hanya setelah parity serta pemeriksaan teknis berhasil.
+
 ## Git dan Identitas
 
 - Gunakan identitas Git milik pemilik repository yang sudah dikonfigurasi.

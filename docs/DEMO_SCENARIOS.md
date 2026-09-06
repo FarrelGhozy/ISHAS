@@ -37,6 +37,8 @@ Hasil yang diharapkan: versi Draft dapat diubah; versi Published terkunci dan pe
 
 Hasil yang diharapkan: progress berasal dari kelengkapan field; finalisasi diblokir jika jawaban/bukti belum lengkap dan hasil final menjadi hanya-baca.
 
+Untuk demo lintas peran, buat area baru sebagai Pengelola lebih dahulu, lalu masuk sebagai Asesor dan pastikan area tersebut tersedia pada penugasan dengan pesantren yang sama. Setelah finalisasi, masuk kembali sebagai Pengelola untuk membuka hasil, temuan, dan rekomendasi baru dari ID assessment tersebut.
+
 ## 4. Pengelola menggunakan hasil
 
 1. Masuk sebagai Pengelola Pesantren.
@@ -62,3 +64,5 @@ Untuk menunjukkan sumber titik bahaya, login kembali sebagai Asesor, buka assess
 3. Periksa label Data Dummy/Ilustrasi pada konfigurasi dan skor.
 4. Periksa keyboard Tab, fokus tombol/form, tampilan tablet, dan tampilan ponsel.
 5. Saat backend dipasang, uji Loading, Error, Forbidden, Conflict, Locked, dan Success menggunakan respons API terkontrol.
+6. Ubah satu data, pindah route, lakukan refresh, dan pastikan perubahan dummy tetap tersedia.
+7. Gunakan aksi Reset Data Demo pada Pengaturan Admin setelah presentasi untuk mengembalikan seed awal.

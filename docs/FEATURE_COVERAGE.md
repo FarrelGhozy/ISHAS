@@ -8,8 +8,8 @@ Dokumen ini mencocokkan proposal/blueprint dengan halaman prototipe, aksi dummy,
 | --- | --- | --- |
 | Autentikasi | Login dummy, pilihan empat akun, tampil/sembunyikan sandi, logout | Sesi, sign-in, sign-out, user, role, permission, dan scope lembaga/wilayah |
 | Otorisasi | Menu dan ruang kerja berbeda untuk setiap akun; fallback akses terlarang | Pemeriksaan role dan scope pada setiap query/mutation |
-| Notifikasi | Dua notifikasi kontekstual per peran yang membuka halaman terkait | Daftar notifikasi dan tandai dibaca |
-| State data | Loading, empty, error, forbidden, success, locked, dan conflict sudah dipetakan | Envelope sukses/gagal, kode error, field error, dan request ID |
+| Notifikasi | Notifikasi awal dan notifikasi hasil mutation per peran membuka route terkait serta dapat ditandai dibaca | Daftar notifikasi dan tandai dibaca |
+| State data | Seed dan mutation dummy memakai shared repository/store berversi, bertahan setelah refresh, dan dapat di-reset; loading, empty, error, forbidden, success, locked, dan conflict sudah dipetakan | Envelope sukses/gagal, kode error, field error, dan request ID |
 | Responsivitas | Sidebar mobile, form, tabel/kartu, builder, assessment, hasil, dan peta bahaya adaptif | Tidak mengubah kontrak data |
 
 ## Admin — mengelola sistem

@@ -427,14 +427,14 @@ Peta hanya menampilkan **temuan bahaya**. Area tanpa temuan aktif ditampilkan ne
    - Kontrak `IshasApi` juga baru memiliki daftar dan mulai penugasan, belum memiliki operasi membuat/mengubah penugasan.
    - **Rekomendasi:** tambahkan modul Penugasan pada Admin atau role Koordinator Assessment setelah kewenangannya disetujui.
 
-2. **Data antarperan pada prototipe belum menjadi satu sumber.**
-   - Gedung/area yang dibuat Pengelola tidak otomatis muncul pada form Asesor.
-   - Akun dan pesantren baru juga belum masuk ke daftar setelah form disimpan.
-   - **Rekomendasi:** buat satu mock repository/store bersama sebelum API backend agar flow ujung-ke-ujung bisa diuji sekarang.
+2. **Data antarperan sudah memakai satu sumber dummy pada Stage 10.**
+   - Gedung/area yang dibuat Pengelola tersedia pada form Asesor untuk `institutionCode` penugasan yang sama.
+   - Akun, pesantren, instrumen, penugasan, assessment, hasil, risiko, rekomendasi, audit, dan notifikasi berada pada shared mock store berversi.
+   - **Batas prototipe:** relasi ini masih disimpan di browser dan akan diganti oleh repository/API backend.
 
-3. **Finalisasi assessment belum mengubah hasil Pengelola.**
-   - Hasil, temuan peta, dan rekomendasi masih kumpulan data dummy terpisah.
-   - **Rekomendasi:** buat simulasi processing state setelah finalisasi dan hasilkan data mock yang bisa dibuka Pengelola.
+3. **Finalisasi assessment sudah membentuk output dummy Pengelola pada Stage 10.**
+   - Finalisasi mengunci assessment, membuat hasil ilustratif, serta membentuk temuan dan rekomendasi dari indikator bernilai rendah.
+   - **Batas prototipe:** rumus skor, kategori, dan recommendation rule belum ilmiah/final.
 
 ### Prioritas tinggi — diperlukan agar flow tidak membingungkan
 
@@ -445,8 +445,9 @@ Peta hanya menampilkan **temuan bahaya**. Area tanpa temuan aktif ditampilkan ne
    - Prototipe menyimpan nama dan versi file, tetapi tampilan denah masih berupa ilustrasi antarmuka.
    - Area baru juga belum dapat digambar/diposisikan di atas file denah yang diunggah.
 
-6. **Hubungan instrumen Published ke penugasan belum terlihat.**
-   - Peneliti dapat publish dan Asesor melihat versi pada tugas, tetapi tidak ada langkah UI yang menghubungkan keduanya.
+6. **Instrumen Published sudah menjadi sumber assessment, tetapi Manajemen Penugasan belum tersedia.**
+   - Publikasi mengunci konfigurasi indikator dan memasangkannya ke penugasan Terjadwal pada simulasi Stage 10.
+   - Belum ada langkah UI berwenang untuk membuat atau mengubah relasi penugasan tersebut.
 
 7. **Lifecycle Submit dan Final belum diputuskan.**
    - Prototipe langsung melakukan finalisasi.
@@ -460,13 +461,12 @@ Peta hanya menampilkan **temuan bahaya**. Area tanpa temuan aktif ditampilkan ne
 
 ### Prioritas menengah — meningkatkan kesiapan implementasi
 
-10. **Navigasi belum berbasis URL per halaman.**
-    - Menu saat ini berpindah melalui state antarmuka.
-    - Refresh, tombol Back browser, bookmark, dan tautan langsung ke detail belum menjadi flow nyata.
-    - **Rekomendasi:** sebelum integrasi backend, tetapkan struktur route untuk setiap role dan detail entity.
+10. **Navigasi utama sudah berbasis URL sejak Stage 09.**
+    - Setiap menu role memiliki route stabil, guard role, pemulihan sesi dummy, dan fallback akses.
+    - Detail entity masih dapat dikembangkan menjadi nested route ketika backend dan pola deep-link disepakati.
 
-11. **Audit Log dan notifikasi belum mengikuti aksi dummy.**
-    - Pesan sukses menyebut audit, tetapi daftar audit/notifikasi tidak berubah secara langsung.
+11. **Audit Log dan notifikasi sudah mengikuti mutation penting pada Stage 10.**
+    - Pembuatan akun/lembaga, publikasi, lokasi, finalisasi, tindak lanjut, dan pengaturan menambah jejak dummy terkait.
 
 12. **Belum ada pengelolaan penuh master lokasi.**
     - Tambah gedung/lantai/area tersedia, tetapi edit, arsip, penggabungan area, validasi duplikasi, dan dampak perubahan terhadap riwayat belum tersedia.
@@ -481,7 +481,7 @@ Peta hanya menampilkan **temuan bahaya**. Area tanpa temuan aktif ditampilkan ne
 
 ### Hal yang wajar belum final pada fase prototipe
 
-- Data belum persisten dan unggahan belum masuk object storage.
+- Data dummy sudah persisten di browser dan dapat di-reset; berkas unggahan masih hanya menyimpan nama, belum masuk object storage.
 - Email undangan belum dikirim.
 - PDF/Excel belum benar-benar dihasilkan.
 - Scoring dan kategori risiko masih ilustratif.
@@ -492,14 +492,20 @@ Peta hanya menampilkan **temuan bahaya**. Area tanpa temuan aktif ditampilkan ne
 
 ## 11. Urutan Perbaikan yang Disarankan
 
-1. Tetapkan pemilik **Manajemen Penugasan**.
-2. Buat flow onboarding pesantren sampai akun Pengelola aktif.
-3. Satukan seluruh data dummy lintas peran dalam satu mock repository.
-4. Hubungkan lokasi Pengelola ke assessment Asesor.
-5. Hubungkan finalisasi Asesor ke hasil, peta bahaya, dan rekomendasi Pengelola.
-6. Render file denah sebenarnya dan sediakan penempatan area di atas denah.
-7. Tetapkan workflow Submit/Review/Final dan pemeriksa tindak lanjut.
-8. Tetapkan route URL sebelum mengganti mock adapter dengan backend.
+Urutan berikut diperbarui berdasarkan keputusan refactor dua tahap sebelum backend:
+
+1. **Stage 09:** tetapkan route URL, shared workspace shell, sesi login dummy, dan guard akses.
+2. **Stage 10:** satukan seluruh data dummy lintas peran dalam satu mock repository/store.
+3. Tetapkan pemilik **Manajemen Penugasan** sebelum mengaktifkan UI create/update/cancel assignment.
+4. Lengkapi flow onboarding pesantren sampai akun Pengelola aktif.
+5. Lokasi Pengelola sudah terhubung ke assessment Asesor melalui shared store Stage 10.
+6. Instrumen Published sudah menjadi sumber konfigurasi form assessment Asesor pada Stage 10.
+7. Finalisasi Asesor sudah terhubung ke hasil, peta bahaya, rekomendasi, audit, dan notifikasi dummy Pengelola.
+8. Rekomendasi, tindak lanjut, catatan, nama bukti, serta status pekerjaan sudah memakai entity bersama; kewenangan verifikasi tetap menunggu keputusan.
+9. Render file denah sebenarnya dan sediakan penempatan area di atas denah.
+10. Tetapkan workflow Submit/Review/Final dan pemeriksa tindak lanjut.
+
+Routing didahulukan agar pemecahan halaman dan shared store pada Stage 10 dibangun di atas alamat halaman yang stabil, bukan pada navigasi state yang akan dibuang.
 
 ---
 
@@ -509,16 +515,16 @@ Bagian ini sengaja menulis ulang flow utama sebagai checklist singkat untuk demo
 
 - [ ] **Admin:** daftarkan dan aktifkan pesantren.
 - [ ] **Admin:** buat akun Pengelola dan Asesor dengan lingkup yang benar.
-- [ ] **Peneliti:** susun, validasi, dan publish versi instrumen.
-- [ ] **Pengelola:** tambahkan gedung, lantai, dan area.
-- [ ] **Pengelola:** unggah denah jika tersedia; jika tidak, gunakan Daftar Area.
+- [x] **Peneliti:** susun, validasi, dan publish versi instrumen pada simulasi dummy.
+- [x] **Pengelola:** tambahkan gedung, lantai, dan area pada simulasi dummy.
+- [x] **Pengelola:** unggah nama berkas denah jika tersedia; jika tidak, gunakan Daftar Area.
 - [ ] **Koordinator/Admin:** buat penugasan yang menghubungkan pesantren, Asesor, periode, dan instrumen Published.
-- [ ] **Asesor:** verifikasi penugasan dan mulai assessment.
-- [ ] **Asesor:** isi jawaban, lokasi, titik opsional, catatan, dan bukti.
-- [ ] **Asesor:** tinjau kelengkapan dan finalisasi.
-- [ ] **Sistem:** validasi, scoring, bentuk hasil, temuan risiko, dan rekomendasi.
-- [ ] **Pengelola:** baca hasil serta telusuri Peta Bahaya & Risiko.
-- [ ] **Pengelola:** buat tindakan, tentukan PIC/tenggat, perbarui progres, dan unggah bukti.
+- [x] **Asesor:** verifikasi penugasan dan mulai assessment pada simulasi dummy.
+- [x] **Asesor:** isi jawaban, lokasi, titik opsional, catatan, dan nama berkas bukti.
+- [x] **Asesor:** tinjau kelengkapan dan finalisasi.
+- [x] **Sistem:** validasi dan bentuk hasil, temuan risiko, serta rekomendasi ilustratif.
+- [x] **Pengelola:** baca hasil serta telusuri Peta Bahaya & Risiko.
+- [x] **Pengelola:** buat tindakan, tentukan PIC/tenggat, perbarui progres, serta simpan catatan dan nama bukti dummy.
 - [ ] **Pemeriksa:** verifikasi penyelesaian dan residual risk bila diperlukan.
 - [ ] **Sistem/Pengelola:** hasilkan laporan dan pertahankan riwayat serta audit trail.
 

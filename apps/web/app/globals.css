@@ -387,6 +387,35 @@ button {
   transform: translateY(0);
 }
 
+.route-loading-state {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: #f8fafc;
+}
+
+.route-loading-state .data-state {
+  width: min(100%, 520px);
+}
+
+.standalone-state-page {
+  display: grid;
+  min-height: 100vh;
+  align-content: center;
+  justify-items: center;
+  gap: 24px;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at top left, rgb(225 29 72 / 8%), transparent 34%),
+    #f8fafc;
+}
+
+.standalone-state-card {
+  width: min(100%, 620px);
+  padding: 24px;
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -432,6 +461,7 @@ textarea:focus-visible,
   gap: 8px;
   border-radius: 7px;
   font-weight: 700;
+  text-decoration: none;
   transition: 160ms ease;
 }
 
@@ -666,6 +696,7 @@ textarea:focus-visible,
   font-size: 11px;
   font-weight: 600;
   text-align: left;
+  text-decoration: none;
   transition: 150ms ease;
 }
 

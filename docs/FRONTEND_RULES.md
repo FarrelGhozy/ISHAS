@@ -6,10 +6,26 @@ Frontend digunakan untuk menyepakati navigasi, hierarki informasi, hak akses, fo
 
 ## Data dan integrasi
 
-- Semua data prototipe disimpan di `apps/web/lib/mock-data.ts`.
+- Selama migrasi Stage 09, data lama boleh tetap berada di lokasi asal agar routing tidak mengubah behavior fitur.
+- Setelah Stage 10, seluruh seed, mock adapter, mutation, dan processor data prototipe disimpan di `apps/web/mocks/`; komponen halaman tidak menyimpan ulang data domain yang sama.
 - Komponen tidak boleh menganggap data dummy sebagai formula ilmiah final.
 - Model UI harus mudah dipindahkan dari mock data ke API.
 - Kondisi loading, kosong, gagal, tidak berwenang, draft, submitted, dan finalized harus dirancang sebelum integrasi backend.
+- Seluruh relasi antarentitas memakai ID stabil. Label tampilan tidak digunakan sebagai penghubung data.
+- Perubahan lintas halaman dan lintas role harus melalui shared store/repository.
+- Persistence browser untuk data dummy harus berversi dan menyediakan reset ke seed awal.
+
+## Routing dan arsitektur
+
+- Setiap menu utama memiliki route URL yang stabil.
+- URL menjadi sumber kebenaran halaman aktif agar refresh, Back/Forward, bookmark, dan direct link bekerja.
+- Route publik, workspace role, akses ditolak, dan fallback route dipisahkan dengan jelas.
+- Sidebar, header, akun aktif, notifikasi, menu mobile, dan area konten menggunakan shared workspace shell.
+- Autentikasi dummy berada pada shared session store dan dipulihkan saat refresh selama sesi browser berlaku.
+- Pengguna tanpa sesi tidak dapat membuka route workspace; role aktif tidak dapat membuka route role lain.
+- Guard frontend hanya mensimulasikan UX otorisasi. Backend tetap wajib memeriksa role, permission, dan scope.
+- Komponen dipecah berdasarkan fitur/halaman. State lokal hanya digunakan untuk filter, modal, atau input sementara yang belum disimpan.
+- Refactor arsitektur mempertahankan arah visual serta cakupan produk dan tidak menjadi alasan untuk redesign di luar stage aktif.
 
 ## Peran utama
 

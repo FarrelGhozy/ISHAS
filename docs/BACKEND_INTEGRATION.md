@@ -204,9 +204,11 @@ Pola visual bersama tersedia pada `components/ui/data-state.tsx`.
 
 ## Strategi penggantian mock ke API
 
+Status frontend Stage 10: entity dan mutation dummy sudah dipusatkan pada `apps/web/mocks/`, dibatasi oleh interface `MockRepository`, dan digunakan lintas fitur. Langkah berikut tetap mengganti implementasi ini dengan adapter HTTP tanpa memindahkan logika data kembali ke komponen halaman.
+
 1. Implementasikan `IshasApi` dari `apps/web/lib/ishas-contracts.ts` menggunakan fetch client.
 2. Buat satu provider/query layer untuk session dan request state.
-3. Pindahkan data dummy dari komponen ke mock adapter yang juga mengimplementasikan `IshasApi`.
+3. Pertahankan boundary repository saat `MockRepository` diganti oleh adapter yang mengimplementasikan `IshasApi`.
 4. Ganti mock adapter dengan HTTP adapter tanpa mengubah props komponen halaman.
 5. Tambahkan cache invalidation setelah mutation, optimistic update hanya untuk aksi yang aman, dan idempotency key untuk finalisasi/publish/report.
 6. Uji role/scope pada backend dan frontend; pengujian backend tetap menjadi kontrol utama.

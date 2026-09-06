@@ -1,5 +1,5 @@
-import { IshasPrototype } from '@/components/ishas-prototype';
+import { LandingRedirect } from '@/features/routing/route-state';
 
 export default function Home() {
-  return <IshasPrototype />;
+  return <LandingRedirect />;
 }

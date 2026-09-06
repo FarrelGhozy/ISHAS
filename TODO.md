@@ -24,6 +24,46 @@ Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dala
 - [x] Stage 06 — penyelarasan lintas peran dan kesiapan presentasi. **REVIEW**
 - [x] Stage 07 — manajemen lokasi, denah, dan peta bahaya. **REVIEW**
 - [x] Stage 08 — dokumentasi dan audit flow penggunaan. **REVIEW**
+- [x] Stage 09 — URL routing, shared shell, sesi login dummy, dan guard akses. **DONE**
+- [ ] Stage 10 — modularisasi fitur dan shared mock data lintas peran. **IN PROGRESS**
+
+## Selesai — Stage 09
+
+- [x] Petakan setiap menu lama ke route URL yang stabil.
+- [x] Buat route `/login`, `/akses-ditolak`, dan redirect awal dari `/`.
+- [x] Pusatkan sesi autentikasi dummy dan pulihkan akun aktif setelah refresh.
+- [x] Buat shared workspace shell untuk sidebar, topbar, akun aktif, notifikasi, menu mobile, dan area konten.
+- [x] Migrasikan seluruh halaman Admin ke route role.
+- [x] Migrasikan seluruh halaman Peneliti ke route role.
+- [x] Migrasikan seluruh halaman Asesor ke route role.
+- [x] Migrasikan seluruh halaman Pengelola ke route role.
+- [x] Terapkan guard direct URL untuk pengguna tanpa sesi dan role yang salah.
+- [x] Pastikan menu aktif berasal dari URL dan hapus state navigasi lama setelah migrasi selesai.
+- [x] Periksa refresh, Back/Forward, direct URL, logout, desktop, tablet, dan ponsel.
+- [x] Jalankan lint, TypeScript, dan production build.
+- [x] Pindahkan Stage 09 ke `REVIEW` setelah seluruh acceptance criteria lulus.
+
+**Keputusan:** refactor dilakukan sebelum backend dalam dua tahap. Stage 09 menjaga risiko tetap kecil dengan memindahkan routing, shell, login, dan akses lebih dahulu tanpa memecah seluruh fitur atau mengubah data domain.
+
+**Hasil akhir 6 September 2026:** 24 route menu pada empat role unik dan merespons HTTP 200; mapping menu serta target notifikasi valid; login/logout, refresh, Back/Forward, fallback, direct URL, guard lintas role, shared shell, dan tampilan desktop/tablet/ponsel lulus pemeriksaan. Lint, TypeScript, pemeriksaan diff, dan production build juga lulus.
+
+## Sedang Dikerjakan — Stage 10
+
+- [x] Bentuk struktur `features`, `shared`, dan `mocks` di dalam `apps/web`.
+- [x] Pecah workspace besar menjadi halaman serta komponen per role/fitur.
+- [x] Pusatkan seluruh seed dan mutation dummy dalam shared mock repository/store.
+- [x] Gunakan kontrak data bersama sebagai boundary antara halaman dan mock adapter.
+- [x] Pertahankan data dummy saat berpindah route dan refresh, serta sediakan reset seed.
+- [x] Sambungkan user/pesantren, instrumen, penugasan, lokasi, assessment, hasil, risiko, rekomendasi, tindak lanjut, audit, dan notifikasi.
+- [x] Perbaiki progress assessment, filter peta risiko, dan input tindak lanjut berdasarkan data sumber yang sama.
+- [x] Tambahkan test untuk store, selector, guard, serta flow lintas role kritis.
+- [x] Sinkronkan checklist requirement, NFR, open question, dan development plan dengan hasil refactor.
+- [x] Jalankan lint, TypeScript, test, formatter, production build, dan pemeriksaan respons seluruh route.
+- [ ] Periksa parity visual desktop, tablet, dan ponsel secara manual sebelum Stage 10 dipindahkan ke `REVIEW`.
+
+**Hasil sementara 6 September 2026:** source data dummy sudah terpusat dan berversi, 24 halaman role sudah modular, perubahan penting bertahan lintas route/refresh, dan flow Pengelola–Asesor–Peneliti telah tersambung melalui ID stabil. Sebelas test otomatis dan 27 pemeriksaan route lulus. Satu pekerjaan tersisa adalah review visual manual pada tiga ukuran layar.
+
+**Dependency:** terpenuhi. Permintaan melanjutkan pekerjaan dan memecah halaman besar diperlakukan sebagai persetujuan Stage 09 sekaligus aktivasi Stage 10.
 
 ## Menunggu Keputusan Ilmiah
 

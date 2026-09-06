@@ -35,3 +35,10 @@
 ## Permintaan Review
 
 Tinjau `flow.md`, khususnya penetapan pihak pembuat penugasan, pihak pemeriksa tindak lanjut/denah, serta urutan perbaikan sebelum tahap implementasi berikutnya dimulai.
+
+## Tindak Lanjut Audit
+
+- Stage 09 menangani URL routing, shared workspace shell, sesi login dummy, dan guard akses tanpa mengubah data domain.
+- Stage 10 menangani pemecahan komponen besar, shared mock repository/store, persistence data dummy, dan sambungan data lintas role.
+- Manajemen Penugasan tetap memerlukan keputusan pemilik role, tetapi model datanya harus tersedia pada shared store agar alur dapat disambungkan setelah keputusan dibuat.
+- Formula ilmiah, reviewer assessment, pemeriksa tindak lanjut, dan koreksi data final tetap berstatus keputusan terbuka.
