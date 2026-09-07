@@ -27,18 +27,6 @@ function LoadingState({ title = 'Memulihkan sesi' }: { title?: string }) {
   );
 }
 
-export function LandingRedirect() {
-  const router = useRouter();
-  const { account, ready } = useAuthStore();
-
-  useEffect(() => {
-    if (!ready) return;
-    router.replace(account ? getWorkspacePath(account.role) : '/login');
-  }, [account, ready, router]);
-
-  return <LoadingState />;
-}
-
 export function RoleIndexRedirect() {
   const router = useRouter();
   const params = useParams<{ role: string }>();

@@ -2,6 +2,16 @@
 
 Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dalam `planning/`.
 
+## Menunggu Review — Stage 11
+
+- [x] Buat landing page publik di `/` dengan pengenalan, manfaat, empat peran, dan alur penggunaan.
+- [x] Hubungkan landing page ke login serta tampilkan akun dan akses workspace untuk sesi aktif.
+- [x] Tambahkan tautan kembali ke beranda dari login.
+- [x] Periksa desktop, tablet, ponsel, aksesibilitas, alur utama, lint, TypeScript, test, dan build.
+- [x] Perbarui dokumentasi dan pindahkan Stage 11 ke `REVIEW`.
+
+**Keputusan:** permintaan landing page mengaktifkan Stage 11. Status review stage sebelumnya tidak berubah. Publikasi/push tidak termasuk permintaan ini.
+
 ## Selesai — Stage 01
 
 - [x] Tetapkan empat peran utama dan tanggung jawabnya.

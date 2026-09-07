@@ -25,6 +25,7 @@ Folder ini menggantikan GitHub Issues selama tahap eksplorasi frontend. Satu fil
 | 08 | Dokumentasi dan audit flow penggunaan | REVIEW |
 | 09 | URL routing, shared shell, sesi login dummy, dan guard akses | DONE |
 | 10 | Modularisasi fitur dan shared mock data lintas peran | REVIEW |
+| 11 | Landing page publik dan pengenalan ISHAS sebelum login | REVIEW |
 
 ## Cara Menggunakan
 

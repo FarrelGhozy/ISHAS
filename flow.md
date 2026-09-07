@@ -13,6 +13,13 @@ Dokumen ini menjelaskan urutan penggunaan prototipe ISHAS dari persiapan sistem 
 
 ## 1. Flow Utama — Siklus Assessment K3L
 
+### Akses awal
+
+1. Buka alamat utama `/` untuk membaca landing page pengenalan ISHAS, manfaat, empat peran, dan alur penggunaan.
+2. Pilih **Masuk** atau **Masuk ke ISHAS** untuk membuka `/login`, lalu gunakan akun demo sesuai peran.
+3. Setelah login, pengguna diarahkan ke ruang kerja perannya. Jika kembali membuka `/`, beranda tetap tampil dengan identitas akun aktif dan tombol **Ruang kerja**.
+4. Tautan **Kembali ke beranda** tersedia di halaman login. Logout tetap membersihkan sesi dan kembali ke `/login`.
+
 Flow ini adalah gambaran paling penting dari penggunaan ISHAS.
 
 ```mermaid

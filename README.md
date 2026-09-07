@@ -26,6 +26,8 @@ bun run dev
 
 Pemeriksaan teknis frontend dapat dijalankan dengan `bun run lint`, `bun run test`, dan `bun run build`. Data dummy tersimpan di browser selama demo dan dapat dikembalikan ke seed awal melalui Pengaturan Admin.
 
+Alamat utama `/` membuka landing page publik berisi pengenalan ISHAS, manfaat, empat peran, dan alur penggunaan. Tombol **Masuk** mengarah ke `/login`. Pengguna yang sudah masuk tetap dapat membaca beranda dan membuka ruang kerja melalui tombol sesuai akun aktif di kanan atas.
+
 ## Akun demo frontend
 
 Semua akun menggunakan kata sandi `demo1234`.

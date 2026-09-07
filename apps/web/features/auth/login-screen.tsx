@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type SyntheticEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
+  ArrowLeft,
   ArrowRight,
   Eye,
   EyeOff,
@@ -14,6 +16,7 @@ import { useAuthStore } from '@/shared/auth/auth-store';
 import { demoAccounts } from '@/shared/auth/demo-accounts';
 import { IshasMark } from '@/shared/components/ishas-mark';
 import { getWorkspacePath } from '@/shared/navigation/workspace-config';
+import landingStyles from '@/features/landing/landing-page.module.css';
 
 export function LoginScreen() {
   const router = useRouter();
@@ -79,6 +82,9 @@ export function LoginScreen() {
 
       <section className="login-panel">
         <div className="login-form-wrap">
+          <Link className={landingStyles.loginBack} href="/">
+            <ArrowLeft aria-hidden="true" /> Kembali ke beranda
+          </Link>
           <div className="mobile-logo">
             <IshasMark variant="login" />
           </div>
