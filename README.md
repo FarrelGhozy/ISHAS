@@ -2,21 +2,22 @@
 
 Integrated Safety and Health Assessment System adalah prototipe sistem penilaian K3L untuk pesantren. Tahap saat ini berfokus pada validasi tampilan dan fitur menggunakan data dummy. Backend dan formula ilmiah final belum diimplementasikan.
 
-Refactor frontend sebelum backend dibagi menjadi dua tahap: Stage 09 untuk URL routing, shared shell, sesi login dummy, dan guard akses; kemudian Stage 10 untuk modularisasi fitur serta penyatuan data dummy lintas role. Status rinci tersedia di `planning/README.md` dan `TODO.md`.
+> Catatan branch `v2`: core aktif adalah aplikasi ISHAS baru (React Router + bun) di `apps/web/` dengan sumber kebenaran `docs/v2/`. Core lama (Next.js/vinext, empat peran + Asesor) diarsipkan di `apps/_archived/web-v1/` dan tidak dipakai di branch ini. Branch `main`/`v1` menyimpan core lama apa adanya.
 
 ## Struktur repository
 
-- `apps/web` — prototipe frontend React dan TypeScript.
+- `apps/web` — core aktif branch `v2`: aplikasi ISHAS (React Router + TypeScript + bun).
+- `apps/_archived/web-v1` — arsip core lama (Next.js/vinext), hanya di branch `v2`; tidak dipakai dan tidak di-build.
 - `docs/source` — proposal asli sebagai sumber penelitian.
-- `docs/blueprint` — blueprint, spesifikasi, dan guardrail engineering.
-- `docs/planning` — checklist requirement dan rencana pengembangan.
-- `docs/decisions` — keputusan desain dan teknis yang sudah disetujui.
-- `planning` — local issue management dan stage implementasi frontend.
-- `flow.md` — flow penggunaan utama, flow per peran, serta audit celah antarfitur.
+- `docs/blueprint` — blueprint dan spesifikasi lama (konteks V1).
+- `docs/v2` — sumber kebenaran branch `v2`: visi, peran, route, alur, model data, dan stage V2-00…V2-09 di `docs/v2/planning/`.
+- `docs/FRONTEND_RULES.md`, `docs/BACKEND_INTEGRATION.md`, `docs/DEMO_SCENARIOS.md`, `docs/FEATURE_COVERAGE.md` — catatan lintas versi (konteks V1 kecuali dinyatakan lain).
+- `planning` — local issue management stage V1 (Stage 01…12).
+- `flow.md` — flow penggunaan utama versi lama (konteks V1).
 - `TODO.md` — kontrol pekerjaan yang sedang aktif.
 - `AGENTS.md` — aturan tetap untuk pekerjaan di repository.
 
-## Menjalankan frontend
+## Menjalankan frontend (core V2)
 
 ```bash
 cd apps/web
@@ -24,20 +25,19 @@ bun install
 bun run dev
 ```
 
-Pemeriksaan teknis frontend dapat dijalankan dengan `bun run lint`, `bun run test`, dan `bun run build`. Data dummy tersimpan di browser selama demo dan dapat dikembalikan ke seed awal melalui Pengaturan Admin.
+Dev server berjalan di port `3003` dan dapat diakses dari jaringan (`host 0.0.0.0`). Pemeriksaan teknis dapat dijalankan dengan `bun run lint`, `bun run typecheck`, `bun test`, dan `bun run build`. Data dummy tersimpan di browser selama demo (kunci `ishas-mock-v4`) dan dapat dikembalikan ke seed awal melalui Pengaturan Admin (Reset data demo).
 
-Alamat utama `/` membuka landing page publik berisi pengenalan ISHAS, manfaat, empat peran, dan alur penggunaan. Tombol **Masuk** mengarah ke `/login`. Pengguna yang sudah masuk tetap dapat membaca beranda dan membuka ruang kerja melalui tombol sesuai akun aktif di kanan atas.
+Alamat utama `/` membuka dashboard publik tanpa login: agregat semua pesantren terdaftar plus pemilih pesantren. Tidak ada landing page dan tidak ada redirect. Tombol **Masuk** mengarah ke `/login`. Laporan dapat dikirim publik tanpa login (`/lapor`) atau oleh Pengelola Pesantren; semua laporan wajib validasi pengelola sebelum tampil di dashboard.
 
-## Akun demo frontend
+## Akun demo frontend (core V2)
 
-Semua akun menggunakan kata sandi `demo1234`.
+Login demo memakai kartu akun, tanpa kata sandi. Tidak ada peran Asesor.
 
 | Peran | Email | Fokus |
 | --- | --- | --- |
-| Admin | `admin@ishas.demo` | Sistem, akun, lembaga, akses, dan audit |
-| Peneliti | `peneliti@ishas.demo` | Ilmu, instrumen, versi, dan scoring |
-| Asesor | `asesor@ishas.demo` | Assessment dan bukti lapangan |
-| Pengelola Pesantren | `pengelola@ishas.demo` | Hasil, rekomendasi, dan tindak lanjut |
+| Super Admin | `admin@ishas.demo` | Pesantren, akun pengelola, audit |
+| Peneliti | `peneliti@ishas.demo` | Instrumen, versi, dan konfigurasi penilaian |
+| Pengelola Pesantren | `pengelola@ishas.demo` | Validasi laporan, lokasi, dan tindak lanjut |
 
 ## Status data
 
@@ -51,4 +51,4 @@ Semua angka, skor, kategori, indikator, dan isi assessment di frontend saat ini 
 4. Perubahan yang memengaruhi hasil historis harus memiliki versioning dan audit trail.
 5. Identitas commit mengikuti konfigurasi Git milik pemilik repository. Jangan menambahkan atribusi AI atau `Co-authored-by`.
 
-Lihat `CONTRIBUTING.md` dan `docs/FRONTEND_RULES.md` untuk ketentuan lebih rinci.
+Lihat `CONTRIBUTING.md` untuk ketentuan kontribusi, `AGENTS.md` (dan `docs/v2/AGENTS.md` untuk branch `v2`) untuk aturan kerja, serta `docs/v2/` untuk spesifikasi produk V2 yang berlaku.
