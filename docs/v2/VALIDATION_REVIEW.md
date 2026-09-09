@@ -1,6 +1,6 @@
 # V2 — Hasil Validasi Rencana
 
-**Tanggal:** 8 September 2026. **Status:** pemeriksaan dokumentasi; menunggu pembahasan pemilik.
+**Tanggal:** 8 September 2026. **Status:** pemeriksaan dokumentasi; D-01–D-03 telah dijawab pemilik pada 8 September 2026, D-04–D-12 masih terbuka.
 
 Rencana mempunyai arah utama yang dapat diikuti: laporan publik masuk ke pengelola,
 moderasi wajib, instrumen berversi, dan hasil memakai data dummy. Namun, rencana **belum siap

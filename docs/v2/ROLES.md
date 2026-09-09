@@ -1,8 +1,9 @@
 # V2 — Peran dan Hak Akses (Definisi Rinci)
 
-> Status: rancangan untuk diskusi. D-02 (data publik), D-03 (hak kirim), D-06 (pemeriksa),
-> dan D-09 (akun) di `DECISIONS.md` belum diputuskan. Matriks berikut menyimpan arah awal;
-> jangan menerapkan bagian yang berkonflik sebelum dijawab. Tidak ada akses kelola implisit.
+> Status: rancangan untuk diskusi. D-02 (data publik) dan D-03 (hak kirim) telah **dijawab pemilik
+> 8 September 2026** (lihat `DECISIONS.md`); D-06 (pemeriksa) dan D-09 (akun) masih menunggu.
+> Matriks berikut sudah menyertakan jawaban tersebut; bagian yang menunggu D-06/D-09 tetap ditandai.
+> Tidak ada akses kelola implisit.
 
 ## 1. Publik / Pelapor (tanpa login — bukan role login)
 
@@ -45,7 +46,7 @@
 
 **Kemampuan dalam rancangan awal:**
 
-- Membaca data publik seperti pengunjung lain. Hak melapor di luar pesantren yang dikelola masih menunggu D-03. Saat melapor sebagai pengelola, field nama **terisi otomatis** dari akun aktif + label `Pengelola Pesantren`; tetap dapat diubah manual per laporan.
+- Membaca data publik seperti pengunjung lain. Boleh melapor ke pesantren lain sebagai pelapor umum (D-03): laporannya divalidasi oleh pengelola pesantren sasaran; hak kelola tetap terbatas satu pesantren. Saat melapor, field nama **terisi otomatis** dari akun aktif + label `Pengelola Pesantren`; tetap dapat diubah manual per laporan.
 - Membuka antrean **Validasi Laporan** (hanya laporan dengan `institutionCode` miliknya).
 - **Menerima** laporan: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
 - **Menolak** laporan: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
@@ -55,7 +56,7 @@
 
 **TIDAK BOLEH:**
 
-- Melihat antrean/detail internal atau memvalidasi laporan pesantren lain. Data yang memang ditetapkan publik mengikuti akses baca publik; cakupan bidangnya menunggu D-02.
+- Melihat antrean/detail internal atau memvalidasi laporan pesantren lain. Data yang memang ditetapkan publik mengikuti akses baca publik; cakupan bidangnya mengikuti D-02 (ringkasan saja + nama validator/PIC).
 - Mendaftarkan pesantren baru, membuat akun (termasuk akun pengelola lain), mengubah hak akses, membuka audit log global, pengaturan sistem, atau area peneliti.
 - Menentukan rumus/skor/ambang ilmiah; skor tetap dihitung sistem (ilustratif).
 
@@ -80,6 +81,7 @@
 
 **TIDAK BOLEH:**
 
+- Mengirim laporan/penilaian saat login (D-03); harus keluar dari akun untuk melapor sebagai publik. Halaman publik tetap dapat dibaca dengan isi yang sama.
 - Memvalidasi/menolak laporan, mengisi severity/priority/status, mengisi penilaian, mengelola lokasi/tindak lanjut pesantren tertentu.
 - Menyentuh instrumen, scoring, atau publikasi ilmiah.
 
@@ -89,7 +91,7 @@
 
 **BOLEH:** instrumen (builder dimensi/indikator), versioning Draft/Published/Archived, konfigurasi scoring, validasi & publikasi, data penelitian. Versi Published aktif otomatis menjadi sumber soal penilaian mandiri.
 
-**TIDAK BOLEH:** melihat antrean validasi, memvalidasi laporan, mengelola pesantren/akun, mengisi laporan sebagai peneliti (jika ingin melapor, gunakan mode publik tanpa login).
+**TIDAK BOLEH:** melihat antrean validasi, memvalidasi laporan, mengelola pesantren/akun, mengirim laporan/penilaian saat login (D-03); jika ingin melapor, keluar dari akun dan gunakan mode publik.
 
 ## 5. Dihapus: Asesor
 
@@ -101,12 +103,12 @@ Daftar hapus eksplisit (agar tidak ada sisa tafsir "asesor masih ada di balik la
 - Istilah "penugasan", "verifikasi 4 data penugasan", "Assessment Saya".
 - Atribusi karya ke asesor ("dibuat/diverifikasi Asesor") diganti "dilaporkan oleh [nama]" / "divalidasi oleh [nama pengelola]".
 
-## 6. Matriks akses rancangan awal — bagian konflik menunggu D-03
+## 6. Matriks akses — D-02/D-03 telah dijawab; D-06/D-09 masih terbuka
 
 | Kemampuan | Publik | Pengelola | Super Admin | Peneliti |
 |---|---|---|---|---|
 | Dashboard agregat + filter pesantren | ✅ | ✅ | ✅ baca | ✅ baca |
-| Lapor cepat + penilaian mandiri | ✅ | ✅ | ❌ | ❌ |
+| Lapor cepat + penilaian mandiri | ✅ | ✅ (termasuk ke pesantren lain sebagai pelapor umum, D-03) | ❌ harus keluar dahulu | ❌ harus keluar dahulu |
 | Antrean validasi + terima/tolak | ❌ | ✅ miliknya | ❌ | ❌ |
 | Isi severity/priority | ❌ | ✅ miliknya | ❌ | ❌ |
 | Status Pending/Proses/Completed + hapus Completed | ❌ | ✅ miliknya | ❌ | ❌ |

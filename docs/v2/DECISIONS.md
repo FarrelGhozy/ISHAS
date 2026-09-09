@@ -15,34 +15,55 @@ dashboard publik menggantikan landing sementara, peran Asesor dihentikan, tiga p
 dua kanal pelaporan, nama pelapor dicatat, moderasi pengelola wajib, dan frontend memakai dummy.
 Audit ini tidak menganggap setiap rincian turunannya telah disetujui kembali.
 
-## Pertanyaan yang telah diajukan — menunggu jawaban
+## Keputusan yang telah dijawab pemilik
 
-### D-01 — Cara pembangunan V2
+### D-01 — Cara pembangunan V2 — DIJAWAB 8 September 2026
 
-- **Konflik:** README menyebut “dari nol”, tetapi tabel migrasi memerintahkan perubahan langsung pada aplikasi V1 dan pemindahan komponen.
-- **Pertanyaan:** bangun aplikasi V2 terpisah, rombak aplikasi sekarang bertahap, atau tunda keputusan sampai kebutuhan matang?
-- **Dampak:** lokasi proyek, pemakaian komponen lama, penyimpanan demo, arsip landing, URL lama, dan dokumen di luar V2.
-- **Status:** MENUNGGU JAWABAN. Lokasi aplikasi baru dan penghapusan kode lama belum ditentukan.
-- **Batas selama menunggu:** tabel migrasi adalah inventaris dampak; tidak ada pemindahan, penghapusan, atau perubahan aplikasi.
+- **Keputusan (kata-kata pemilik):** V2 adalah **aplikasi terpisah bernama ISHAS**; rancangan V2
+  dijadikan proyek yang sebenarnya (bukan sekadar prototipe). Frontend dibangun dengan
+  **React Router**, file **dipecah per folder per area/per bagian** agar tidak ada file raksasa,
+  dan dijalankan dengan **bun 1.4** yang ada di laptop (terpasang: bun 1.4.2). Bila perlu
+  meniru pola, rujuk proyek `~/Documents/02_Projek/HIBAH_INTERNAL`.
+- **Konsekuensi:**
+  - V1 (aplikasi lama) **tidak diubah sama sekali**. `MIGRATION_FROM_V1.md` dibaca sebagai
+    inventaris kebutuhan/bahan salin-adaptasi untuk aplikasi baru, bukan perintah edit V1.
+  - Landing tidak diarsip di aplikasi baru; landing tetap hidup di V1 saja. Bila kelak diminta,
+    halaman perkenalan dibuat baru di aplikasi ISHAS (masih menunggu keputusan).
+  - Penyimpanan browser aplikasi baru murni V2; tidak ada data V1 pada origin baru, jadi
+    kekhawatiran hidup berdampingan gugur. Key tetap `ishas-mock-v4` + key sesi/draft baru
+    (usulan SUGGESTIONS §7).
+- **Konfirmasi lanjutan (8 September 2026):** lokasi aplikasi baru = `~/Documents/02_Projek/ishasV2/ishas`
+  (subfolder di dalam folder dokumen); styling **Tailwind v4** mengikuti pola HIBAH_INTERNAL,
+  dengan token `DESIGN_SYSTEM.md` §1 sebagai theme. Pemilik meminta pembangunan frontend dimulai
+  pada sesi yang sama (aktivasi V2-01).
+- **Status:** DISETUJUI penuh (inti + lokasi + stack pendukung).
 
-### D-02 — Batas informasi publik
+### D-02 — Batas informasi publik — DIJAWAB 8 September 2026
 
-- **Konflik:** semua laporan diterima disebut tampil publik, tetapi belum ada pemisahan antara ringkasan dan isi internal. Wireframe juga mencantumkan pelapor, validator, bukti, PIC, dan denah.
-- **Pertanyaan:** publik cukup membaca ringkasan hasil/progres, atau juga detail temuan, bukti, dan denah? Bidang apa saja yang tetap khusus pengelola?
-- **Usulan untuk ditinjau:** ringkasan hasil/progres publik; nama pelapor, kontak, bukti mentah, serta denah rinci terbatas. Ini belum menjadi keputusan.
-- **Status:** MENUNGGU JAWABAN.
-- **Dampak:** `/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`, profil pesantren, ekspor, dan data penelitian.
-- **Rincian lanjutan:** apakah jumlah antrean yang belum divalidasi boleh publik; apakah opsi “tampil anonim” masih diperlukan; apakah nama validator/PIC boleh terlihat; apakah alamat lengkap termasuk profil publik?
-- **Batas selama menunggu:** `Diterima` merupakan syarat kelayakan data, belum merupakan izin menampilkan seluruh isinya.
+- **Keputusan:** **"Ringkasan saja"** + **nama validator/PIC publik**.
+  - Publik melihat ringkasan hasil/progres: angka, kategori ilustratif, tren, temuan
+    (judul, lokasi/area, severity, status penanganan), rekomendasi, progres tindak lanjut,
+    **nama PIC**, **nama validator**, pesantren, periode, versi instrumen, label data dummy.
+  - TIDAK publik: nama/kontak pelapor, identitas akun pelapor, bukti/foto, denah rinci + titik
+    koordinat, jawaban mentah per indikator, alasan penolakan, catatan internal, audit log.
+- **Rincian yang dijawab lewat pilihan (yang tidak dipilih = tidak boleh):**
+  - Count antrean TIDAK publik → panel "N laporan menunggu validasi" **dihapus** dari `/`.
+  - Opsi "tampil anonim" TIDAK dibangun → nama pelapor selalu tampil apa adanya pada tampilan
+    internal; publik tidak menampilkan nama pelapor sama sekali.
+  - Alamat lengkap TIDAK di profil publik (hanya kota/kabupaten).
+- **Konsekuensi:** `/peta-risiko` publik = Daftar Area + Daftar Temuan (tanpa tab Denah);
+  `/tindak-lanjut` publik tanpa bukti; matriks bidang lengkap di `DATA_REQUIREMENTS.md` §6.
+- **Status:** DISETUJUI.
 
-### D-03 — Hak melapor saat login
+### D-03 — Hak melapor saat login — DIJAWAB 8 September 2026
 
-- **Konflik:** README menyebut hak lapor sama; ROLES melarang Super Admin/Peneliti; ROUTES menyatakan formulir publik selalu dapat dibuka semua sesi.
-- **Pertanyaan:** semua sesi boleh mengirim laporan/penilaian, atau Super Admin/Peneliti harus keluar dahulu?
-- **Status:** MENUNGGU JAWABAN.
-- **Rincian lanjutan:** apakah pengelola boleh melapor ke pesantren lain sebagai pelapor umum, sambil tetap hanya mengelola pesantrennya sendiri? Apakah hak laporan cepat dan instrumen penuh memang sama?
-- **Dampak:** matriks akses, tombol pada dashboard, guard tindakan, isian nama otomatis, audit pengirim, dan pengujian lintas peran.
-- **Batas selama menunggu:** jangan menambah atau menghapus hak suatu peran berdasarkan pilihan teknis router.
+- **Keputusan:** **"Harus keluar dahulu"** — hanya Publik (tanpa login) dan Pengelola Pesantren
+  yang boleh mengirim laporan/penilaian. Super Admin/Peneliti tidak dapat mengirim saat login;
+  halaman publik tetap dapat dibaca dengan isi yang sama, dan pada `/lapor`/`/penilaian-mandiri`
+  aksi kirim dinonaktifkan dengan pesan ajakan keluar dari akun untuk melapor sebagai publik.
+- **Rincian:** Pengelola **BOLEH** melapor ke pesantren lain sebagai pelapor umum; laporannya
+  divalidasi oleh pengelola pesantren sasaran; hak kelola tetap terbatas satu pesantren.
+- **Status:** DISETUJUI.
 
 ## Bahan diskusi berikutnya — belum diajukan satu per satu
 
@@ -61,6 +82,37 @@ Jumlah laporan cepat tidak mempunyai jawaban instrumen sehingga belum menjadi su
 Contoh “jawaban 1/2/Tidak menghasilkan temuan” harus berlabel asumsi seed, bukan aturan semua indikator.
 
 **Terkait:** dashboard, hasil, laporan pimpinan, DATA_MODEL, Peneliti. Rumus ilmiah tetap menunggu tim penelitian.
+
+### D-04 — Makna hasil dan agregat penilaian
+
+**Pertanyaan:** jika beberapa orang mengisi instrumen untuk pesantren dan periode yang sama,
+apakah semua kiriman menjadi data responden, atau pengelola memilih satu hasil yang mewakili pesantren?
+Siapa menetapkan periode observasi, dan apakah penilaian individu memang mewakili seluruh lembaga?
+
+**Mengapa perlu:** rata-rata semua kiriman akan memberi bobot lebih besar pada pesantren yang
+memiliki lebih banyak pelapor. Memilih kiriman terakhir juga merupakan keputusan produk, bukan default teknis.
+
+**Rincian yang dibutuhkan:** unit hitung kartu statistik, sumber periode, pemilihan hasil per pesantren,
+kesetaraan versi, penanganan N/A, data kosong, arah tren, dan data yang masuk dataset Peneliti.
+Jumlah laporan cepat tidak mempunyai jawaban instrumen sehingga belum menjadi sumber skor indeks.
+Contoh “jawaban 1/2/Tidak menghasilkan temuan” harus berlabel asumsi seed, bukan aturan semua indikator.
+
+**Terkait:** dashboard, hasil, laporan pimpinan, DATA_MODEL, Peneliti. Rumus ilmiah tetap menunggu tim penelitian.
+
+**Usulan untuk pembangunan V2-02 — DISETUJUI SEBAGAI ATURAN ILUSTRASI (bukan rumus final),
+8 September 2026:** pemilik memilih "bangun dengan aturan ilustrasi" dan meminta dashboard
+"penuh dengan data" untuk V2-02. Aturan yang dipakai sementara (semua angka berlabel
+`Data ilustrasi · asumsi seed`):
+- Sumber skor indeks HANYA snapshot penilaian mandiri dengan laporan `Diterima`; laporan cepat
+  bukan sumber skor (konsisten dengan catatan di atas).
+- Per pesantren dipakai **satu** snapshot `Diterima` terbaru (yang lain tidak menggandakan bobot).
+- Nilai jawaban dinormalisasi: likert 1–5 → 20–100; `Ya` = 100, `Tidak` = 20; jawaban kosong/N/A
+  dilewati dari rata-rata (tidak dihitung nol).
+- Indeks "Semua terdaftar" = rata-rata sederhana indeks tiap pesantren (bobot sama per lembaga,
+  bukan per kiriman).
+- Tren 6 periode memakai deret riwayat ilustratif di seed (`indexHistory`), bukan hasil hitung ulang.
+- Semua ini **menunggu D-04 final**; perubahan aturan final wajib mengubah processor + label,
+  bukan dianggap rumus resmi (aturan §1: rumus resmi dari sumber ilmiah/tim penelitian).
 
 ### D-05 — Satu laporan, banyak temuan, dan tanpa temuan
 
@@ -155,3 +207,37 @@ tidak otomatis menjawab seluruh D-ID. Tandai `DISETUJUI` hanya pada keputusan ya
 
 Sebelum tahap kode: keputusan penghambat stage tersebut telah dijawab, rancangan yang bertentangan
 telah diselaraskan, acceptance criteria dapat diperiksa, dan pemilik meminta pembangunan dimulai.
+
+## Review frontend stage 1–3 — arahan pemilik 8 September 2026
+
+Pemilik meminta validasi dan perbaikan coding stage 1–3, fokus UI/UX, keluwesan di semua layar, dan alur data frontend. Backend ditunda sampai frontend disepakati. Review perbaikan V2-01 → V2-02 → V2-03 diaktifkan berurutan; stage BACKLOG tidak diaktifkan. Arahan ini mengizinkan perbaikan keterbacaan, ukuran kontrol, navigasi responsif, dan konsistensi draft/filter; identitas warna serta keputusan ilmiah/hak peran tetap mengikuti ketentuan yang sudah disetujui. D-04–D-11 final tetap terbuka; kebijakan interim V2-03 tetap berlaku. Status akhir menunggu review pemilik, bukan DONE.
+
+## Keputusan lanjutan pemilik — 9 September 2026
+
+### D-06 — Pengelola memoderasi laporannya sendiri — DISETUJUI
+
+Pengelola Pesantren boleh mengirim laporan dan menerima laporan yang ia kirim sendiri. Audit mencatat akun pengirim dan validator secara terpisah, walaupun keduanya sama.
+
+### D-07 — Completed menjadi arsip — DISETUJUI
+
+Laporan `Completed` diarsipkan, bukan dihapus permanen. Data tetap berada di sistem dan dapat dibaca Pengelola Pesantren pemilik scope, tetapi tidak tampil pada dashboard publik. Audit tetap tersimpan.
+
+### D-08 — Pesantren tidak terdaftar — DISETUJUI
+
+Pesantren `Nonaktif` atau yang kehilangan pengelola aktif terakhir tidak lagi `Pesantren terdaftar`; tidak tampil publik, tidak dapat dipilih di form, dan tidak dapat menerima laporan baru. Hasil lama juga tidak tampil publik. Data tetap disimpan untuk pembacaan internal sesuai scope yang masih tersedia.
+
+### D-10 — Draft instrumen versi lama — DISETUJUI
+
+Ketika versi Published baru terbit, draft yang terikat versi lama tidak boleh dikirim. Draft lama boleh tetap terlihat sebagai referensi lokal, tetapi aksi kirim dikunci dan pelapor harus memulai penilaian baru dengan versi Published terbaru. Hasil terkirim tetap memakai snapshot versi asalnya dan tidak dihitung ulang.
+
+### D-11 — Lokasi pelaporan — DISETUJUI
+
+Pengelola Pesantren memasukkan daftar lokasi/area. Pelapor memilih area yang tersedia; jika lokasi tidak tertera, pelapor wajib mengisi deskripsi lokasi manual. Lokasi tidak boleh kosong. Pesantren tanpa pengelola aktif tidak terdaftar dan tidak dapat dipilih atau dilaporkan.
+
+### D-05 — Penyelesaian laporan dengan banyak temuan — DISETUJUI
+
+Satu laporan dianggap `Completed` hanya jika seluruh temuannya telah selesai. Selama masih ada temuan yang belum selesai, status laporan tetap `Proses`.
+
+### D-09 — Kewenangan pembuatan akun — DISETUJUI
+
+Super Admin dapat membuat akun Super Admin lain, Peneliti, dan Pengelola Pesantren. Pengelola tetap harus dihubungkan ke pesantren yang ditentukan; hanya pengelola aktif yang membuat pesantren menjadi `Pesantren terdaftar`.

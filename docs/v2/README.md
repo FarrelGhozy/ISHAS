@@ -1,18 +1,19 @@
 # ISHAS V2 — Dokumentasi Proyek Baru (Frontend-Only)
 
-**Status saat ini: DISKUSI DAN VALIDASI RENCANA — belum pembangunan kode.**
+**Status saat ini: rencana tervalidasi sebagian — D-01–D-03 dijawab, D-04–D-12 masih terbuka.**
 
 V2 direncanakan sebagai perubahan besar berdasarkan evaluasi dosen (September 2026).
-Permintaan pemilik pada 8 September 2026 hanya mengizinkan validasi dan penyempurnaan
-dokumen di `docs/v2/`. Aplikasi sekarang dan dokumen di luar folder ini tidak diubah.
-Cara pembangunan ulang masih perlu dikonfirmasi; tabel migrasi belum menjadi perintah eksekusi.
-Saat nanti disetujui untuk dibangun, tahap frontend memakai data dummy.
+Keputusan pemilik 8 September 2026: **V2 dibangun sebagai aplikasi terpisah bernama ISHAS**
+(React Router, file dipecah per folder, dijalankan dengan bun 1.4; lihat D-01 di `DECISIONS.md`).
+Aplikasi lama V1 tidak diubah sama sekali; dokumen di luar folder ini tidak disentuh.
+Data publik mengikuti D-02 (ringkasan saja + nama validator/PIC) dan hak melapor mengikuti
+D-03 (publik + pengelola; Super Admin/Peneliti harus keluar dahulu).
 Backend, rumus ilmiah final, upload file nyata, dan PDF/Excel nyata belum termasuk.
 
 ## Cara membaca hasil validasi
 
 1. Baca [hasil pemeriksaan](VALIDATION_REVIEW.md) untuk melihat kekurangan dan konflik yang ditemukan.
-2. Jawab [keputusan terbuka](DECISIONS.md); pertanyaan pertama membahas cara pembangunan, keterbukaan data, dan hak melapor.
+2. Keputusan D-01–D-03 telah dijawab pemilik (8 September 2026, lihat `DECISIONS.md`); pertanyaan lanjutan D-04–D-12 masih terbuka dan dibahas sebelum spesifikasi terkait dikatakan siap.
 3. Tinjau [kebutuhan data tambahan](DATA_REQUIREMENTS.md) sebelum memfinalkan model data dan alur.
 4. Stage aktif adalah [V2-00 — Validasi rencana](planning/STAGE_V2_00_PLAN_REVIEW.md). V2-01–V2-09 tetap `BACKLOG`.
 
@@ -29,12 +30,12 @@ Perubahan arah produk V2 tidak mengesahkan rumus, skala, atau kategori ilmiah.
 
 ## Perubahan arah utama (arahan tercatat; rincian terbuka ditandai)
 
-1. Landing page **dinonaktifkan sementara, bukan dihapus**. `/` langsung menjadi dashboard pesantren publik. Kode landing diarsip di `features/_archived-landing/` dan dapat dihidupkan kembali sebagai `/perkenalan` (lihat `MIGRATION_FROM_V1.md`).
-2. Peran **Asesor dihapus dari kemampuan operasional produk V2**. Tidak ada akun, menu, hak akses, atau data penugasan untuk peran itu. URL lama hanya mempunyai penanganan penghentian, bukan workspace aktif. Penggantinya dalam arahan tercatat adalah **penilaian mandiri (self-assessment)**: publik tanpa login dapat mengisi indikator instrumen Published untuk pesantren terdaftar; rincian kewenangannya masih dibahas pada D-03.
+1. Aplikasi ISHAS baru **tidak mempunyai landing page**; `/` langsung menjadi dashboard pesantren publik. Aplikasi V1 dibiarkan utuh (landing tetap ada di sana); keputusan halaman perkenalan di aplikasi baru masih menunggu (lihat `MIGRATION_FROM_V1.md` sebagai inventaris, D-01).
+2. Peran **Asesor dihapus dari kemampuan operasional produk V2**. Tidak ada akun, menu, hak akses, atau data penugasan untuk peran itu. Penggantinya adalah **penilaian mandiri (self-assessment)**: dapat diisi publik tanpa login dan pengelola (D-03); Super Admin/Peneliti tidak dapat mengirim saat login.
 3. Dashboard pesantren bersifat **publik tanpa login**: menampilkan **agregat semua pesantren terdaftar** (bukan satu pesantren hard-code) plus **pemilih pesantren** untuk memfilter ke satu lembaga.
 4. `/login` hanya untuk **tiga peran**: Super Admin, Peneliti, Pengelola Pesantren. Demo asesor tidak ada.
-5. **Semua laporan — baik dari pelapor anonim maupun yang login — wajib validasi pengelola** sebelum tampil di dashboard. Tidak ada jalur pintas tampil langsung.
-6. **Nama pelapor selalu dicatat** pada setiap laporan. Jika pelapor login sebagai pengelola, field nama terisi otomatis dari akun dan tetap dapat diubah manual per laporan. Hak melapor saat login sebagai Super Admin/Peneliti masih bertentangan dengan matriks peran; lihat **D-03** di `DECISIONS.md`. Mencatat nama secara internal tidak otomatis berarti menampilkannya ke publik (**D-02**).
+5. **Semua laporan — baik dari pelapor tanpa login maupun yang login — wajib validasi pengelola** sebelum tampil di dashboard. Tidak ada jalur pintas tampil langsung.
+6. **Nama pelapor selalu dicatat** pada setiap laporan. Jika pelapor login sebagai pengelola, field nama terisi otomatis dari akun dan tetap dapat diubah manual per laporan. Opsi "tampil anonim" tidak dibangun (D-02). Hak melapor: hanya publik tanpa login dan pengelola (D-03); pengelola boleh melapor ke pesantren lain sebagai pelapor umum. Nama pelapor tidak tampil publik (D-02); nama validator/PIC boleh tampil (D-02).
 
 ## Istilah baku (wajib dipakai persis di UI dan dokumen)
 
@@ -42,7 +43,7 @@ Perubahan arah produk V2 tidak mengesahkan rumus, skala, atau kategori ilmiah.
 - **Pengelola Pesantren (mitra)** — admin lokal pondok; validasi laporan, menentukan severity/priority, mengelola status penanganan, lokasi, dan tindak lanjut. Label singkat di UI: `Pengelola Pesantren`.
 - **Peneliti** — pengelola instrumen dan konfigurasi penilaian. Tidak berubah dari V1.
 - **Publik / Pelapor** — pengguna tanpa login; melihat dashboard dan melapor dengan mengisi nama. Bukan sebuah "role login".
-- **Tanpa login** menjelaskan keadaan sesi. **Tampil anonim** menjelaskan penyamaran nama pada tampilan. Keduanya berbeda; opsi penyamaran dan bidang publik masih dibahas pada **D-02**.
+- **Tanpa login** menjelaskan keadaan sesi. **Tampil anonim** tidak lagi relevan: opsi penyamaran tidak dibangun (D-02, 8 September 2026) — nama pelapor selalu tampil apa adanya secara internal, dan publik tidak menampilkan nama pelapor sama sekali.
 - **Pesantren terdaftar** — pesantren berstatus `Aktif` DAN memiliki minimal satu akun pengelola aktif. Hanya pesantren terdaftar yang muncul di pemilih publik dan dapat dilaporkan. Definisi ini menggantikan anggapan "semua data di tabel institutions".
 - **Laporan** — satu kiriman dari pelapor, terdiri dari dua kanal: `lapor-cepat` (form ringan) dan `penilaian-mandiri` (instrumen penuh). Keduanya memakai lifecycle status yang sama.
 - **Tervalidasi / tampil di dashboard** — artinya `validationStatus: Diterima`. Laporan `Menunggu validasi` atau `Ditolak` tidak pernah tampil di dashboard, hasil, peta, rekomendasi, maupun laporan pimpinan.
@@ -74,7 +75,7 @@ Perubahan arah produk V2 tidak mengesahkan rumus, skala, atau kategori ilmiah.
 - Semua angka, skor, kategori, severity, priority, dan rekomendasi adalah **data dummy** berlabel jelas (`Data ilustrasi` / `data dummy` / `Simulasi prototipe`). Dilarang menyajikannya sebagai ketentuan ilmiah final.
 - Instrumen Published dikunci; perubahan lewat versi baru (clone snapshot).
 - Laporan yang tampil di dashboard selalu tertelusur ke: versi instrumen (untuk penilaian mandiri), bukti, area/lokasi, pelapor, validator, dan audit event.
-- Ketertelusuran internal berbeda dari keterbukaan publik. Daftar bidang yang tampil publik menunggu **D-02**; status `Diterima` saja belum menentukan izin membuka semua bidang.
+- Ketertelusuran internal berbeda dari keterbukaan publik. Batas bidang publik sudah diputuskan (D-02, 8 September 2026): ringkasan saja + nama validator/PIC; matriks bidang di `DATA_REQUIREMENTS.md` §6.
 - `Diterima` berarti diterima pengelola melalui moderasi, bukan sertifikasi keselamatan atau validasi ilmiah instrumen. `Completed` adalah status penanganan, bukan skor K3L baru.
 - Guard frontend hanya simulasi UX; otorisasi nyata wajib di backend nanti.
 - Bahasa Indonesia yang ringkas dan konsisten; istilah memakai daftar baku di atas.

@@ -3,7 +3,7 @@
 Konvensi penulisan tiap langkah: **Aktor → aksi UI → hasil sistem → jejak (audit/notifikasi)**.
 Jika suatu field disebut "wajib", form MENOLAK submit dan menampilkan pesan error inline bila kosong — bukan sekadar himbauan.
 Status alur: rancangan untuk review, bukan instruksi kode. Keputusan terbuka ada di `DECISIONS.md`.
-§1 bergantung D-08/D-09; §2–3 pada D-02/D-03/D-10/D-11; §4–6 pada D-04–D-07.
+§1 bergantung D-08/D-09; §2–3 pada D-10/D-11 (D-02/D-03 telah dijawab 8 September 2026); §4–6 pada D-04–D-07.
 
 ## 1. Onboarding pesantren (Aktor: Super Admin)
 
@@ -27,12 +27,11 @@ setelah pesantren/akun nonaktif juga perlu keputusan; jangan menghapusnya otomat
 
 **Prasyarat:** minimal satu pesantren terdaftar. Jika nol → tombol lapor nonaktif + penjelasan (lihat ROUTES §1).
 
-1. Buka `/` → pastikan pesantren benar di pemilih (atau buka `/lapor?pesantren=PSN-0018`) → **Laporkan temuan**.
+1. Buka `/` → pastikan pesantren benar di pemilih (atau buka `/lapor?pesantren=PSN-0018`) → **Laporkan temuan**. Saat login sebagai Super Admin/Peneliti: halaman dapat dibaca tetapi kirim dinonaktifkan dengan pesan keluar dari akun (D-03).
 2. Isi form (satu langkah, tanpa wizard):
    | Field | Aturan |
    |---|---|
-   | Nama pelapor | Wajib, 2–100 karakter. Boleh nama asli atau nama kelompok ("Santri Blok A"). Bukan email, bukan username. |
-   | Tampilkan sebagai anonim | Opsional (checkbox). Jika dicentang, dashboard menampilkan "Pelapor anonim"; nama asli tetap tersimpan untuk audit dummy. Default: tidak dicentang. |
+   | Nama pelapor | Wajib, 2–100 karakter. Boleh nama asli atau nama kelompok ("Santri Blok A"). Bukan email, bukan username. Nama selalu tampil apa adanya secara internal; tidak ada opsi anonim (D-02). Publik tidak menampilkan nama pelapor. |
    | Pesantren | Wajib, dropdown HANYA pesantren terdaftar (`kode — nama`). Tidak ada opsi isi manual. |
    | Lokasi/area | Wajib, dropdown area milik pesantren terpilih (format "Gedung · Lantai · Area"). Jika area belum ada → pesan "Belum ada area terdaftar; hubungi pengelola pondok." |
    | Judul temuan | Wajib, 10–140 karakter. Contoh: "Kabel terbuka di koridor lantai 2". |
@@ -47,7 +46,7 @@ setelah pesantren/akun nonaktif juga perlu keputusan; jangan menghapusnya otomat
 
 **Prasyarat:** sama seperti §2 + ada versi instrumen `Published` aktif. Jika tidak ada Published → halaman menampilkan pesan "Belum ada instrumen yang dipublikasikan" dan form terkunci (bukan form kosong).
 
-1. Buka `/penilaian-mandiri` → pilih pesantren terdaftar (wajib, dropdown sama seperti §2) → isi nama pelapor (aturan sama seperti §2).
+1. Buka `/penilaian-mandiri` → pilih pesantren terdaftar (wajib, dropdown sama seperti §2) → isi nama pelapor (aturan sama seperti §2, tanpa opsi anonim — D-02).
 2. Sistem mengikat sesi pengisian ke **versi Published aktif** dan menampilkannya sebagai banner terkunci: "Menggunakan ISHAS vX.Y · terkunci selama pengisian". Pelapor TIDAK dapat memilih versi lain.
 3. Isi per indikator (navigasi dimensi di kiri, pertanyaan di tengah, kelengkapan di kanan — meniru AssessmentFlow V1 tanpa panel penugasan):
    - Jawaban (wajib semua indikator `required`).
@@ -66,9 +65,9 @@ seluruh jawaban N/A dan arti periode penilaian (D-04), serta penilaian lengkap t
 
 **Prasyarat:** login pengelola; antrean hanya berisi laporan `institutionCode` miliknya, diurutkan terbaru dulu.
 
-1. Buka `/pengelola/validasi-laporan` → pilih item `Menunggu validasi` → baca: pelapor (nama + label anonim/login), pesantren, lokasi/area (+ titik denah bila ada), judul, deskripsi, bukti, waktu kirim, versi instrumen (untuk penilaian mandiri: seluruh jawaban per indikator, hanya-baca).
+1. Buka `/pengelola/validasi-laporan` → pilih item `Menunggu validasi` → baca: pelapor (nama; label `Publik` bila tanpa login atau label akun bila login), pesantren, lokasi/area (+ titik denah bila ada), judul, deskripsi, bukti, waktu kirim, versi instrumen (untuk penilaian mandiri: seluruh jawaban per indikator, hanya-baca).
 2. Keputusan A — **Terima**: wajib pilih `severity` (`Tinggi/Sedang/Rendah`, tanpa default) + wajib pilih `priority` (`Tinggi/Sedang/Rendah`, tanpa default) + opsional catatan validasi → konfirmasi.
-   → Sistem: `validationStatus: Diterima`, `handlingStatus: Pending`, simpan validator/waktu; data masuk sumber tervalidasi dengan bidang publik sesuai keputusan D-02. Untuk penilaian mandiri, hasil memakai snapshot dan konfigurasi ilustratif; lapor cepat tidak mempunyai skor instrumen. Audit `Memvalidasi laporan` + notifikasi internal. Notifikasi status ke pelapor login masih usulan `SUGGESTIONS.md` §5, bukan fitur yang otomatis disetujui.
+   → Sistem: `validationStatus: Diterima`, `handlingStatus: Pending`, simpan validator/waktu; data masuk sumber tervalidasi dengan bidang publik sesuai D-02 (ringkasan saja; nama validator publik). Untuk penilaian mandiri, hasil memakai snapshot dan konfigurasi ilustratif; lapor cepat tidak mempunyai skor instrumen. Audit `Memvalidasi laporan` + notifikasi internal. Notifikasi status ke pelapor login masih usulan `SUGGESTIONS.md` §5, bukan fitur yang otomatis disetujui.
 3. Keputusan B — **Tolak**: wajib isi alasan min 10 karakter → konfirmasi.
    → Sistem: `validationStatus: Ditolak`, `handlingStatus: Ditolak` (terminal pada rancangan awal, tidak tampil publik); simpan validator, waktu, dan alasan; audit `Menolak laporan`. Arsip dapat dibuka pengelola pemilik scope melalui filter "Ditolak".
 4. Larangan: pengelola DILARANG mengubah isi deskripsi/bukti/jawaban pelapor. Yang boleh diisi hanya: severity, priority, catatan validasi, alasan tolak, dan status penanganan. Koreksi faktual dilakukan lewat laporan baru.
@@ -113,7 +112,7 @@ tidak boleh disamakan tanpa aturan penghubung tersebut.
 
 1. Dari rekomendasi `Belum ditindaklanjuti` → **Buat rencana tindakan** (PIC + tenggat + catatan) → status rekomendasi `Berjalan`, laporan induk `Proses`.
 2. Perbarui progres + catatan + bukti penyelesaian dummy → ajukan selesai → pengelola memverifikasi → `Completed`/`Terverifikasi`.
-3. `/pengelola/laporan`: pratinjau ringkasan pimpinan dalam scope pengelola + dimensi + status tindak lanjut + metadata (periode, versi instrumen, waktu buat, pembuat) + simulasi unduh PDF/Excel berlabel dummy. `/laporan` adalah versi baca publik; bidangnya menunggu D-02 dan tidak otomatis sama dengan versi internal.
+3. `/pengelola/laporan`: pratinjau ringkasan pimpinan dalam scope pengelola + dimensi + status tindak lanjut + metadata (periode, versi instrumen, waktu buat, pembuat) + simulasi unduh PDF/Excel berlabel dummy. `/laporan` adalah versi baca publik dengan bidang sesuai D-02 (ringkasan + nama validator/PIC; tanpa nama pelapor, bukti, jawaban mentah) dan tidak otomatis sama dengan versi internal.
 
 ## 7. Siklus instrumen (Aktor: Peneliti — tujuan peran dipertahankan)
 

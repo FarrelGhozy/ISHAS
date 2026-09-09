@@ -40,3 +40,9 @@ sudah terjamin oleh form pencarian nomor. Kanal klarifikasi/notifikasi nyata tet
 - Komentar/diskusi publik per laporan (risiko moderasi ganda; cukup kanal validasi pengelola).
 - Skor reputasi pelapor (tidak relevan untuk K3L pesantren dan sensitif secara sosial).
 - Mengubah warna identitas (marun `#9f1239` + rose `#be123c` sudah menjadi identitas ISHAS; perubahan hanya mengulang kerja branding).
+
+## 7. Penamaan key penyimpanan demo V2 (disarankan)
+
+- Sesi login dummy: `ishas-session-v2`, isinya menunjuk **ID akun** (bukan role saja) — prasyarat isolasi scope dua pengelola (ROLES §7.6).
+- Draft lapor cepat/penilaian mandiri: key draft terpisah dari domain, mis. `ishas-draft-v2`.
+- Alasan: memisahkan namespace dari key V1 (`ishas-demo-session-v1`, `ishas-domain-v3`) agar hidup berdampingan aman. Kebijakan akhir (reset/hapus key lama) tetap mengikuti D-01.

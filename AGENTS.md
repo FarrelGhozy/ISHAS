@@ -2,6 +2,12 @@
 
 Dokumen ini adalah aturan tetap untuk setiap pekerjaan pada repository ISHAS.
 
+> Catatan branch `v2`: core aktif adalah ISHAS (React Router + bun) di `apps/web/`
+> dengan sumber kebenaran `docs/v2/` dan `docs/v2/AGENTS.md`.
+> Core lama (Next.js/vinext) diarsipkan di `apps/_archived/web-v1/` dan tidak dipakai.
+> Aturan App Router, empat peran, dan Asesor di bawah ini hanya berlaku
+> untuk arsip serta branch `main`/`v1`. Stage V2 ada di `docs/v2/planning/`.
+
 ## Arah Produk
 
 - ISHAS adalah prototipe platform assessment K3L pesantren.

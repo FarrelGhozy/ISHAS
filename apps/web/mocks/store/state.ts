@@ -1,163 +1,54 @@
-import {
-  auditRecords,
-  institutions,
-  permissionRows,
-  users,
-} from '@/mocks/seed/admin';
-import {
-  assignments,
-  continuedAnswers,
-  indicators,
-  initialEvidence,
-  type AnswerState,
-} from '@/mocks/seed/asesor';
-import {
-  defaultRubrics,
-  initialBuilderDimensions,
-  initialValidationItems,
-  instrumentDimensions,
-  instrumentVersions,
-  researchDatasets,
-} from '@/mocks/seed/peneliti';
-import {
-  areaDirectory,
-  initialBuildings,
-  initialRecommendations,
-  periodResults,
-  reports,
-  riskFindings,
-} from '@/mocks/seed/pengelola';
+// Persistensi browser berversi — docs DATA_MODEL.md §0 dan DATA_REQUIREMENTS §7.
+// Aplikasi terpisah (D-01): tidak ada data V1 pada origin baru; key ini murni milik ISHAS.
+// Dilarang menyimpan kata sandi/token.
 
-export const MOCK_SCHEMA_VERSION = 3;
-export const MOCK_STORAGE_KEY = `ishas-domain-v${MOCK_SCHEMA_VERSION}`;
+import { SEED } from "../seed/seed";
+import type { IshasState } from "../types";
 
-export type DemoUser = (typeof users)[number];
-export type DemoInstitution = (typeof institutions)[number];
-export type DemoAuditRecord = (typeof auditRecords)[number];
-export type DemoInstrumentVersion = (typeof instrumentVersions)[number];
-export type DemoEvidence = (typeof initialEvidence)[number];
+export const MOCK_SCHEMA_VERSION = 4;
+export const MOCK_STORAGE_KEY = "ishas-mock-v4";
 
-export type DemoNotification = {
-  id: string;
-  role: 'admin' | 'peneliti' | 'asesor' | 'pengelola';
-  title: string;
-  message: string;
-  targetPath: string;
-  read: boolean;
-  createdAt: string;
-};
-
-export type MockDomainState = {
-  schemaVersion: number;
-  revision: number;
-  users: typeof users;
-  institutions: typeof institutions;
-  auditRecords: typeof auditRecords;
-  permissionRows: typeof permissionRows;
-  instrumentVersions: typeof instrumentVersions;
-  instrumentDimensions: typeof instrumentDimensions;
-  defaultRubrics: typeof defaultRubrics;
-  builderDimensions: typeof initialBuilderDimensions;
-  validationItems: typeof initialValidationItems;
-  researchDatasets: typeof researchDatasets;
-  assignments: typeof assignments;
-  indicators: typeof indicators;
-  indicatorsByVersion: Record<string, typeof indicators>;
-  assessmentAnswers: Record<string, Record<string, AnswerState>>;
-  assessmentActiveIndex: Record<string, number>;
-  evidence: typeof initialEvidence;
-  buildings: typeof initialBuildings;
-  areas: typeof areaDirectory;
-  periodResults: typeof periodResults;
-  riskFindings: typeof riskFindings;
-  recommendations: typeof initialRecommendations;
-  reports: typeof reports;
-  notifications: DemoNotification[];
-  settings: {
-    emailNotification: boolean;
-    maintenanceNotice: boolean;
-  };
-};
-
-function clone<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
+function isValidState(value: unknown): value is IshasState {
+  if (typeof value !== "object" || value === null) return false;
+  const state = value as IshasState;
+  const arrays = [state.institutions, state.users, state.reports, state.selfAssessmentSnapshots,
+    state.findings, state.recommendations, state.buildings, state.areas,
+    state.instrumentVersions, state.auditEvents, state.notifications];
+  return state.schemaVersion === MOCK_SCHEMA_VERSION && arrays.every(Array.isArray)
+    && state.users.every((u) => u && typeof u.id === "string" && Array.isArray(u.institutionCodes))
+    && state.instrumentVersions.every((v) => v && Array.isArray(v.dimensions) && v.dimensions.every((d) => Array.isArray(d.indicators)))
+    && state.selfAssessmentSnapshots.every((s) => s && s.answers && typeof s.answers === "object")
+    && !!state.selfAssessmentDrafts && typeof state.selfAssessmentDrafts === "object"
+    && !!state.indexHistory && typeof state.indexHistory === "object"
+    && Object.values(state.indexHistory).every(Array.isArray)
+    && !!state.counters && Number.isSafeInteger(state.counters.report) && state.counters.report > 0;
 }
 
-export function createInitialMockState(): MockDomainState {
-  return {
-    schemaVersion: MOCK_SCHEMA_VERSION,
-    revision: 0,
-    users: clone(users),
-    institutions: clone(institutions),
-    auditRecords: clone(auditRecords),
-    permissionRows: clone(permissionRows),
-    instrumentVersions: clone(instrumentVersions),
-    instrumentDimensions: clone(instrumentDimensions),
-    defaultRubrics: clone(defaultRubrics),
-    builderDimensions: clone(initialBuilderDimensions),
-    validationItems: clone(initialValidationItems),
-    researchDatasets: clone(researchDatasets),
-    assignments: clone(assignments),
-    indicators: clone(indicators),
-    indicatorsByVersion: {
-      'INS-v1.0': clone(indicators),
-      'INS-v0.9': clone(indicators),
-      'INS-v1.1-RC2': clone(indicators),
-    },
-    assessmentAnswers: {
-      'ASM-0261': clone(continuedAnswers),
-    },
-    assessmentActiveIndex: {
-      'ASM-0261': 0,
-    },
-    evidence: clone(initialEvidence),
-    buildings: clone(initialBuildings),
-    areas: clone(areaDirectory),
-    periodResults: clone(periodResults),
-    riskFindings: clone(riskFindings),
-    recommendations: clone(initialRecommendations),
-    reports: clone(reports),
-    notifications: [
-      {
-        id: 'NOT-001',
-        role: 'admin',
-        title: 'Akun menunggu aktivasi',
-        message: 'Satu akun Asesor perlu diperiksa.',
-        targetPath: '/admin/pengguna',
-        read: false,
-        createdAt: '06 Sep 2026, 08.00',
-      },
-      {
-        id: 'NOT-002',
-        role: 'peneliti',
-        title: 'Draft perlu validasi',
-        message: 'ISHAS v1.1 masih memiliki item validasi terbuka.',
-        targetPath: '/peneliti/validasi-publikasi',
-        read: false,
-        createdAt: '06 Sep 2026, 08.05',
-      },
-      {
-        id: 'NOT-003',
-        role: 'asesor',
-        title: 'Bukti belum lengkap',
-        message: 'Assessment ASM-0261 masih memiliki bukti wajib.',
-        targetPath: '/asesor/assessment-baru',
-        read: false,
-        createdAt: '06 Sep 2026, 08.10',
-      },
-      {
-        id: 'NOT-004',
-        role: 'pengelola',
-        title: 'Tindak lanjut prioritas',
-        message: 'Dua rekomendasi prioritas tinggi perlu ditangani.',
-        targetPath: '/pengelola/rekomendasi',
-        read: false,
-        createdAt: '06 Sep 2026, 08.15',
-      },
-    ],
-    settings: {
-      emailNotification: true,
-      maintenanceNotice: false,
-    },
-  };
+export function loadState(): IshasState {
+  if (typeof localStorage === "undefined") return structuredClone(SEED);
+  try {
+    const raw = localStorage.getItem(MOCK_STORAGE_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (isValidState(parsed)) return parsed;
+    }
+  } catch {
+    // penyimpanan rusak → pulihkan seed, jangan crash
+  }
+  return structuredClone(SEED);
+}
+
+export function saveState(state: IshasState): void {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    throw new Error("Data tidak dapat disimpan. Periksa ruang dan izin penyimpanan browser, lalu coba lagi.");
+  }
+}
+
+export function resetState(): IshasState {
+  const fresh = structuredClone(SEED);
+  saveState(fresh);
+  return fresh;
 }

@@ -1,8 +1,9 @@
 # V2 — Peta Route dan Guard (Definisi Rinci)
 
-Tech stack tetap: Next.js App Router, root di `apps/web/app/`. URL adalah sumber kebenaran halaman aktif.
-Lokasi aplikasi V2 belum diputuskan (D-01). Path di atas adalah acuan rancangan sebelumnya,
-bukan izin mengubah proyek sekarang. Hak pengiriman form menunggu D-03; isi publik menunggu D-02.
+Aplikasi V2 terpisah bernama **ISHAS** (D-01, dijawab 8 September 2026): frontend React Router,
+file dipecah per folder fitur, dijalankan dengan bun 1.4. URL adalah sumber kebenaran halaman aktif.
+Tabel di bawah adalah peta route aplikasi baru. Isi publik mengikuti D-02 (ringkasan saja +
+nama validator/PIC); hak kirim mengikuti D-03 (publik + pengelola).
 
 ## 1. Calon route publik — akses baca dan hak mengirim dibedakan
 
@@ -12,9 +13,9 @@ bukan izin mengubah proyek sekarang. Hak pengiriman form menunggu D-03; isi publ
 | `/lapor` | Laporan cepat | Form ringan satu langkah | Bisa juga dibuka sebagai dialog dari `/`, tapi URL kanonis tetap `/lapor` |
 | `/penilaian-mandiri` | Penilaian mandiri | Instrumen Published penuh + draft lokal + kirim validasi | Satu-satunya tempat isi indikator |
 | `/hasil` | Hasil assessment | Per dimensi + antarperiode, mengikuti filter pesantren | Hanya data `Diterima` |
-| `/peta-risiko` | Peta bahaya & risiko | Daftar Area (default) + Denah Bangunan + Daftar Temuan | Filter: pesantren, gedung, lantai, severity, status |
+| `/peta-risiko` | Peta bahaya & risiko | Daftar Area (default) + Daftar Temuan; tampilan Denah Bangunan khusus pengelola (denah rinci tidak publik, D-02) | Filter: pesantren, gedung, lantai, severity, status |
 | `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId` |
-| `/tindak-lanjut` | Tindak lanjut (baca) | Progres + bukti penyelesaian | Tombol kelola hanya muncul bila login pengelola pemilik scope |
+| `/tindak-lanjut` | Tindak lanjut (baca) | Progres + status + nama PIC; bukti penyelesaian tidak publik (D-02) | Tombol kelola hanya muncul bila login pengelola pemilik scope |
 | `/laporan` | Laporan pimpinan | Ringkasan + dimensi + status + metadata versi instrumen | Simulasi unduh PDF/Excel (label dummy) |
 | `/pesantren/[kode]` | Profil ringkas lembaga | Sama seperti `/` dengan filter terkunci ke `[kode]` | `[kode]` = `institutionCode` mis. `PSN-0018`; kode tak dikenal → empty state, bukan crash |
 | `/login` | Masuk | 3 kartu akun: Super Admin, Peneliti, Pengelola Pesantren | Tanpa kartu asesor; tanpa link "kembali ke beranda" (beranda = `/` itu sendiri) |
@@ -64,7 +65,7 @@ bukan izin mengubah proyek sekarang. Hak pengiriman form menunggu D-03; isi publ
 |---|---|
 | Route publik + tanpa sesi | `allowed` |
 | Route baca publik + sesi apa pun | `allowed` (dataset publik sama; header mengikuti akun) |
-| `/lapor` atau `/penilaian-mandiri` + sesi Super Admin/Peneliti | Hak buka/kirim perlu diselaraskan setelah D-03 dijawab; belum ada aturan guard final |
+| `/lapor` atau `/penilaian-mandiri` + sesi Super Admin/Peneliti | `allowed` membaca; aksi kirim dinonaktifkan + pesan "Keluar dari akun untuk melapor sebagai publik." (D-03, 8 Sep 2026). Pengelola boleh kirim, termasuk ke pesantren lain sebagai pelapor umum |
 | Route workspace + tanpa sesi | redirect `/login` (setelah login kembali ke URL tujuan semula) |
 | Route workspace + role cocok | `allowed`, scope difilter (`pengelola` hanya `institutionCode` miliknya) |
 | Route workspace + role salah | `/akses-ditolak` dengan pesan "Akun [label] hanya dapat membuka ruang kerjanya" + tombol kembali ke ruang kerja yang benar |

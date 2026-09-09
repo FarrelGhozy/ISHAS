@@ -5,12 +5,13 @@ Dibaca BERSAMA `README.md` (visi + istilah baku) sebelum menyentuh file apa pun.
 
 ## 0. Batas kerja saat ini — arahan pemilik 8 September 2026
 
-- Hanya validasi, diskusi, dan penyempurnaan rencana di `docs/v2/`.
-- Jangan membuat/mengubah kode, menghapus fitur V1, menjalankan migrasi, atau menyinkronkan dokumen di luar `docs/v2/` pada tahap ini.
-- V2-00 adalah stage dokumentasi aktif; seluruh stage pembangunan tetap `BACKLOG`.
+- Keputusan D-01–D-03 telah dijawab (lihat `DECISIONS.md`): V2 dibangun sebagai **aplikasi terpisah
+  bernama ISHAS** (React Router, folder per fitur, bun 1.4); **V1 tidak diubah sama sekali**.
+- Dokumen di folder ini tetap satu-satunya tempat spesifikasi; setiap perubahan arah produk dicatat
+  di `DECISIONS.md` sebelum masuk kode.
+- Stage pembangunan diaktifkan satu per satu sesuai §3; jangan mengerjakan checklist stage `BACKLOG`.
 - Jika menemukan keputusan produk yang ambigu, tanyakan langsung kepada pemilik. Tunggu jawabannya sebelum melanjutkan bagian yang bergantung pada keputusan itu; jangan memilih default diam-diam.
-- Boleh melanjutkan pemeriksaan referensi dan koreksi dokumentasi yang tidak bergantung pada jawaban. Catat usulan sebagai usulan di `DECISIONS.md` atau `SUGGESTIONS.md`.
-- Persetujuan revisi dokumen tidak otomatis mengaktifkan pekerjaan kode.
+- Catat usulan sebagai usulan di `DECISIONS.md` atau `SUGGESTIONS.md`.
 
 ## 1. Sumber kebenaran (urutan prioritas bila bertentangan)
 
@@ -48,14 +49,16 @@ komentar transisi, pengujian route lama, dan pesan penghentian `/asesor/*` diper
 - `/` publik tanpa login; tanpa redirect; sesi login tidak mengubah isi `/`.
 - Laporan `Menunggu validasi`/`Ditolak` TIDAK PERNAH tampil di dashboard/hasil/peta/rekomendasi/laporan.
 - Severity/priority hanya diisi pengelola saat Terima (tanpa default). Tolak wajib alasan min 10 karakter.
-- Nama pelapor selalu dicatat; otomatis bila login sebagai pengelola, manual bila tanpa login. Hak akun lain mengikuti keputusan D-03, keterbukaan nama mengikuti D-02.
+- Nama pelapor selalu dicatat; otomatis bila login sebagai pengelola, manual bila tanpa login. Hak melapor (D-03, dijawab): hanya publik tanpa login dan pengelola — pengelola boleh lapor ke pesantren lain sebagai pelapor umum; Super Admin/Peneliti harus keluar dahulu. Keterbukaan nama (D-02, dijawab): ringkasan saja + nama validator/PIC; nama pelapor/bukti/denah/jawaban mentah tidak publik; tanpa opsi anonim.
 - Semua angka/skor memakai label kategori + periode + versi instrumen + status data.
 - Status selalu label teks + ikon (lihat `DESIGN_SYSTEM.md` §2). Dilarang mengandalkan warna saja.
 - Bahasa Indonesia ringkas; copy `WIREFRAMES.md` masih bahan review. Jangan menganggap kata FINAL pada rancangan lama sebagai larangan mendiskusikan perbaikan.
 - Warna memakai hex persis `DESIGN_SYSTEM.md` §1. Dilarang menambah warna merek baru.
 
-## 5. Aturan arsitektur frontend
+## 5. Aturan arsitektur frontend (aplikasi ISHAS terpisah — D-01)
 
+- Aplikasi baru bernama ISHAS: **React Router** (framework mode + Vite), TypeScript, dijalankan dengan **bun 1.4** (`bun install`, `bun run dev`, `bun run build`).
+- File dipecah per folder per area/per bagian — dilarang file raksasa: `app/routes/` untuk route, `features/<area>/` untuk halaman/fitur (publik, validasi, admin, peneliti, auth), `shared/` (layout, components, auth, navigation), `mocks/` (seed, store, adapters, processors). Struktur meniru pola `~/Documents/02_Projek/HIBAH_INTERNAL`.
 - Route URL adalah sumber kebenaran halaman aktif; satu shared shell workspace + satu shell publik ringan.
 - Sesi login dummy di shared store (sessionStorage); draft laporan di localStorage terpisah; keduanya dipulihkan diam-diam saat refresh.
 - Guard memeriksa direct URL per matriks `ROUTES.md` §3; bukan pengganti otorisasi backend.
@@ -63,8 +66,7 @@ komentar transisi, pengujian route lama, dan pesan penghentian `/asesor/*` diper
 - Semua relasi memakai ID stabil (`DATA_MODEL.md` §2). Label tampilan bukan kunci.
 - State lokal hanya untuk interaksi sementara (modal, filter, input belum disimpan).
 - Mock store berversi (`ishas-mock-v4` / version `4`); data versi lama di-reset, bukan dimigrasi parsial.
-- Gunakan komponen `components/ui/` yang ada sebelum membuat primitive baru.
-- Pertahankan `app/` sebagai root App Router. Dilarang pindah ke `src/`.
+- Gunakan komponen `shared/components/` (atau `components/ui/`) yang ada sebelum membuat primitive baru.
 
 ## 6. Git dan identitas
 

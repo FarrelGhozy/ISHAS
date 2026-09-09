@@ -1,8 +1,10 @@
 # Planning Pembangunan V2 — Local Issue Management
 
-Cakupan aktif: diskusi dan validasi rencana di `docs/v2/`, tanpa pembuatan kode.
-V2-01–V2-09 adalah calon tahap pembangunan dan belum boleh dieksekusi.
-Aturan kerja: `docs/v2/AGENTS.md`. Status harian: `docs/v2/TODO.md`. Verifikasi: `docs/v2/TEST_PLAN.md`.
+Cakupan: rencana lengkap ada di folder dokumen ini; V2 dibangun sebagai **aplikasi terpisah bernama
+ISHAS** (React Router, folder per fitur, bun 1.4 — D-01, dijawab 8 September 2026); V1 tidak diubah.
+V2-00 (dokumen) masih menunggu review pemilik; V2-01–V2-09 diaktifkan satu per satu sesuai aturan
+`AGENTS.md` §3 setelah arahan mulai kode diberikan.
+Aturan kerja: `AGENTS.md`. Status harian: `../TODO.md`. Verifikasi: `../TEST_PLAN.md`.
 
 ## Status
 
@@ -18,19 +20,19 @@ Aturan kerja: `docs/v2/AGENTS.md`. Status harian: `docs/v2/TODO.md`. Verifikasi:
 | Stage | Fokus | Status |
 |---|---|---|
 | V2-00 | Validasi rencana, konflik dokumen, dan keputusan terbuka | IN PROGRESS |
-| V2-01 | Fondasi data (schema v4 + seed), hapus asesor, arsip landing, `/` publik | BACKLOG |
-| V2-02 | Shell publik + dashboard agregat + pemilih pesantren | BACKLOG |
-| V2-03 | Laporan cepat `/lapor` (anonim + login) | BACKLOG |
-| V2-04 | Halaman baca publik (hasil, peta, rekomendasi, tindak lanjut, laporan) | BACKLOG |
-| V2-05 | Antrean validasi pengelola (terima/tolak + severity/priority) | BACKLOG |
-| V2-06 | Lifecycle Pending/Proses/Completed + hapus completed + audit | BACKLOG |
-| V2-07 | Lokasi (gedung/area/denah) + tindak lanjut kelola + laporan pengelola | BACKLOG |
+| V2-01 | Fondasi aplikasi ISHAS: scaffold, schema v4, login 3 peran, `/` publik | REVIEW |
+| V2-02 | Shell publik + dashboard agregat + pemilih pesantren | REVIEW |
+| V2-03 | Laporan cepat `/lapor` (tanpa login + login pengelola) | REVIEW |
+| V2-04 | Halaman baca publik (hasil, peta, rekomendasi, tindak lanjut, laporan) | REVIEW |
+| V2-05 | Antrean validasi pengelola (terima/tolak + severity/priority) | REVIEW |
+| V2-06 | Lifecycle Pending/Proses/Completed + arsip completed + audit | REVIEW |
+| V2-07 | Lokasi (gedung/area/denah) + tindak lanjut kelola + laporan pengelola | IN PROGRESS |
 | V2-08 | Penilaian mandiri (pindahan AssessmentFlow + kirim validasi) | BACKLOG |
 | V2-09 | Admin (pesantren + akun pengelola) + sinkron dokumen + rilis REVIEW | BACKLOG |
 
 ## Cara menggunakan
 
-1. Selesaikan pembahasan V2-00 terlebih dahulu. Jangan mengaktifkan V2-01 hanya karena dokumen sudah dibaca atau direvisi; perlu arahan pemilik untuk mulai kode.
+1. Selesaikan pembahasan V2-00 terlebih dahulu. Aktifkan V2-01 hanya dengan arahan eksplisit pemilik untuk mulai kode (arahan "buat frontend" 8 September 2026 memenuhi syarat ini setelah lokasi folder aplikasi dikonfirmasi).
 2. Kerjakan hanya checklist stage itu; catat keputusan yang memengaruhi fitur/data di file stage.
 3. Sinkronkan ke `docs/v2/TODO.md` setiap ada progres.
 4. Jalankan `TEST_PLAN.md` yang relevan; isi `Hasil Pemeriksaan`; pindahkan ke `REVIEW`.

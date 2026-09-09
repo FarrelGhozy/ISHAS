@@ -5,13 +5,14 @@ Persistensi browser berversi + reset seed. Dilarang menyimpan kata sandi/token.
 
 **Status: sketsa awal, belum kontrak yang siap dibuat menjadi kode.** Audit menemukan jawaban
 terkirim, hasil/periode, akun sesi, audit/notifikasi, dan riwayat denah belum lengkap. Baca
-`DATA_REQUIREMENTS.md` sebelum memakai skema di bawah. Keputusan D-02–D-11 masih memengaruhi isinya.
+`DATA_REQUIREMENTS.md` sebelum memakai skema di bawah. D-01–D-03 telah dijawab (8 September 2026);
+keputusan D-04–D-11 masih memengaruhi isinya.
 
 ## 0. Versi schema V2
 
-- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v4`. Key V1 yang ditemukan adalah `ishas-domain-v3`; berpindah key tidak otomatis membaca/menghapus data lama. Kebijakan pemisahan/reset mengikuti D-01.
+- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v4`. Aplikasi ISHAS baru terpisah dari V1 (D-01), jadi tidak ada data V1 pada origin baru; key ini murni milik aplikasi baru. Key sesi/draft terpisah — usulan di SUGGESTIONS §7.
 - `MOCK_SCHEMA_VERSION`: `4`.
-- Rancangan pemeriksaan state yang benar-benar dibaca dari key V2: jika `schemaVersion !== 4`, pulihkan seed V2. Penghapusan namespace V1 tidak termasuk aturan ini dan belum diizinkan.
+- Rancangan pemeriksaan state yang benar-benar dibaca dari key V2: jika `schemaVersion !== 4`, pulihkan seed V2.
 
 ## 1. Enum (nilai persis, case-sensitive)
 
@@ -25,6 +26,8 @@ type Severity = 'Belum ditentukan' | 'Tinggi' | 'Sedang' | 'Rendah';
 type Priority = 'Belum ditentukan' | 'Tinggi' | 'Sedang' | 'Rendah';
 type HandlingStatus =
   | 'Menunggu validasi' | 'Pending' | 'Proses' | 'Completed' | 'Ditolak';
+// 'Dihapus' (FLOWS §5) bukan nilai tersimpan: record dihapus beserta temuan + audit tetap ada;
+// alternatif arsip alih-alih hapus menunggu D-07.
 type InstrumentStatus = 'Draft' | 'Published' | 'Archived';
 type RecommendationStatus =
   | 'Belum ditindaklanjuti' | 'Berjalan' | 'Menunggu verifikasi' | 'Terverifikasi';
@@ -39,7 +42,7 @@ type Institution = {
   location: string;        // 'Kota Malang'
   manager: string;         // nama pengelola utama (teks)
   users: number;           // count turunan, bukan input
-  assessment: 'Belum dimulai' | 'Berjalan' | 'Draft' | 'Selesai';
+  assessment: 'Belum dimulai' | 'Berjalan' | 'Draft' | 'Selesai'; // warisan V1; hubungan dengan hasil/periode V2 belum dipetakan (D-04)
   status: InstitutionStatus;
 };
 // TERDAFTAR = status 'Aktif' DAN ada user roleId pengelola + institutionCodes
@@ -59,11 +62,10 @@ type Report = {
   id: string;              // 'RPT-0001', berurutan
   channel: ReportChannel;
   institutionCode: string; // FK Institution.code
-  reporterName: string;    // 2-100 karakter, wajib
-  reporterAnonymous: boolean; // default false
-  reporterAccountEmail?: string; // terisi bila dikirim saat login
+  reporterName: string;    // 2-100 karakter, wajib; selalu tampil apa adanya secara internal (tanpa opsi anonim, D-02)
+  reporterAccountEmail?: string; // terisi bila dikirim saat login (pengelola)
   title: string;           // 10-140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
-  description: string;     // min 20 (lapor-cepat) / ringkasan jawaban rendah
+  description: string;     // min 20 (lapor-cepat) / ringkasan otomatis dari jawaban terkirim (penilaian-mandiri; aturan penyusunannya belum ditetapkan, D-04/D-05)
   areaId?: string;         // FK Area.id; kebijakan tanpa area menunggu D-11
   planPoint?: { x: number; y: number } | null; // 0-100
   evidenceName?: string;   // nama file dummy
@@ -81,7 +83,7 @@ type Report = {
 
 type SelfAssessmentDraft = { // belum dikirim; per perangkat (localStorage)
   id: string;              // 'SELF-0001'
-  institutionCode: string; reporterName: string; reporterAnonymous: boolean;
+  institutionCode: string; reporterName: string;
   instrumentVersionId: string; // terkunci ke Published aktif
   answers: Record<string, { value: string; note: string; evidenceName: string;
     areaId: string; planPoint: { x: number; y: number } | null }>;
@@ -122,14 +124,14 @@ type Area = { id: string; institutionCode: string; buildingId: string;
 // AUD-DEMO-001, NOT-001 — semuanya stabil, tidak memakai nama sebagai kunci.
 ```
 
-## 3. Aturan tampil rancangan awal — batas bidang dan arsip belum final
+## 3. Aturan tampil — bidang publik mengikuti D-02 (dijawab 8 September 2026)
 
-Status `Diterima` adalah syarat data tervalidasi, bukan izin menampilkan setiap bidang.
-Daftar bidang publik dan count antrean menunggu D-02; arsip pesantren nonaktif menunggu D-08.
-Pernyataan di bawah adalah rancangan awal dengan dua keputusan tersebut masih terbuka.
+D-02: publik melihat **ringkasan saja** + **nama validator/PIC**. Nama/kontak pelapor, bukti,
+denah rinci + titik, jawaban mentah, alasan penolakan, dan audit tidak publik. Arsip pesantren
+nonaktif menunggu D-08.
 
-- Dashboard/hasil/peta/rekomendasi/laporan pimpinan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (+ temuan/rekomendasi turunannya).
-- `Menunggu validasi` hanya terlihat di: layar konfirmasi pelapor + antrean `/pengelola/validasi-laporan` pemilik scope (sebagai count di dashboard publik tanpa detail: "N laporan menunggu validasi" — tanpa nama/isi).
+- Dashboard/hasil/peta/rekomendasi/laporan pimpinan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (+ temuan/rekomendasi turunannya), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
+- `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor + antrean `/pengelola/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02).
 - `Ditolak` hanya terlihat di arsip antrean pengelola pemilik scope.
 - Agregat `/` dihitung dari himpunan `Diterima` lintas pesantren terdaftar; filter pesantren mempersempit ke satu `institutionCode`.
 

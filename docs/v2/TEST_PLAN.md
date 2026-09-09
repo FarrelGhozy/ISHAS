@@ -24,7 +24,7 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 | # | URL | Kondisi | Harapan |
 |---|---|---|---|
 | 1 | `/` | tanpa login | dashboard agregat + pemilih pesantren |
-| 2 | `/` | login tiap peran | isi SAMA seperti anonim + tombol ruang kerja |
+| 2 | `/` | login tiap peran | isi SAMA seperti tanpa login + tombol ruang kerja |
 | 3 | `/lapor` | tanpa login | form aktif bila ada pesantren terdaftar |
 | 4 | `/penilaian-mandiri` | tanpa login | form aktif bila ada Published |
 | 5 | `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan` | tanpa login | hanya data `Diterima` |
@@ -42,16 +42,16 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 - Back/Forward browser: halaman mengikuti URL tanpa state basi.
 - Logout: sesi bersih, mendarat di `/`, route workspace mengarah ke `/login`.
 - Sesi lama berisi role `asesor` (data browser usang): dibersihkan saat baca, tidak crash.
-- State tidak kompatibel yang dibaca dari key V2: pemulihan mengikuti aturan versi; tombol reset V2 mengembalikan seed V2. Penanganan key V1 menunggu D-01.
+- State tidak kompatibel yang dibaca dari key V2: pemulihan mengikuti aturan versi; tombol reset V2 mengembalikan seed V2.
 
-Catatan key/reset: V1 memakai `ishas-domain-v3`. Pengujian key lama dan hidup berdampingan
-harus mengikuti D-01; perubahan key saja bukan migrasi atau penghapusan. Uji dua akun pengelola
+Catatan key/reset: aplikasi ISHAS terpisah (D-01) sehingga tidak ada data browser V1 pada origin baru;
+key V2 (`ishas-mock-v4` + sesi/draft) murni baru. Uji dua akun pengelola
 dengan role sama untuk memastikan sesi menunjuk ID akun, bukan role saja.
 
 ## 3. Alur kritis ujung-ke-ujung (skenario wajib)
 
-1. **Lapor anonim:** isi form → kirim → nomor `RPT-XXXX` + `Menunggu validasi` → TIDAK tampil di dashboard → muncul di antrean pengelola pemilik scope (tidak di scope lain).
-2. **Lapor saat login pengelola:** nama terisi otomatis + dapat diubah → perilaku tampil sama seperti anonim.
+1. **Lapor tanpa login:** isi form → kirim → nomor `RPT-XXXX` + `Menunggu validasi` → TIDAK tampil di dashboard → muncul di antrean pengelola pemilik scope (tidak di scope lain).
+2. **Lapor saat login pengelola:** nama terisi otomatis + dapat diubah → perilaku tampil sama seperti tanpa login.
 3. **Terima:** tanpa severity/priority DITOLAK sistem → lengkap → tampil di dashboard/hasil/peta + audit + notifikasi.
 4. **Tolak:** tanpa alasan DITOLAK sistem → lengkap → arsip pengelola pemilik, tidak tampil publik; validator/waktu/alasan tersimpan.
 5. **Lifecycle:** Pending→Proses tanpa PIC/tenggat DITOLAK → lengkap → Proses→Completed tanpa bukti DITOLAK → lengkap → hapus/arsip hanya sesuai D-07. Audit tidak ikut penghapusan laporan biasa; reset demo adalah tindakan berbeda.
@@ -114,7 +114,7 @@ Skenario berikut menjadi calon acceptance test setelah keputusan terkait disetuj
 | U-13 | Buka detail publik, ekspor dummy, dan data penelitian | Daftar bidang yang boleh terlihat sesuai D-02, termasuk nama/kontak/bukti/denah/alasan penolakan |
 | U-14 | Ganti akun pada perangkat sama atau penyimpanan penuh/rusak | Kepemilikan draft mengikuti D-10, kegagalan simpan tidak ditampilkan sebagai sukses |
 | U-15 | Masukkan pesantren tak dikenal melalui URL form | Tidak terkirim diam-diam ke pesantren default atau memakai area pilihan lama |
-| U-16 | Reset V2 ketika V1 masih tersimpan | Namespace/data yang disentuh persis sesuai D-01; seluruh relasi seed V2 konsisten |
+| U-16 | Reset ISHAS ketika data demo lama pernah ada di perangkat | Namespace/data yang disentuh persis data V2; seluruh relasi seed V2 konsisten (origin terpisah dari V1, D-01) |
 
 ## 8. Kapan pengujian lintas tahap dilakukan
 

@@ -1,11 +1,11 @@
-# V2 — Migrasi dari V1 (Tabel File-per-File)
+# V2 — Inventaris Kebutuhan dari V1 (Tabel File-per-File)
 
-**Status: inventaris dampak bersyarat, bukan pekerjaan yang sedang diizinkan.**
-Cara membangun V2 menunggu D-01 di `DECISIONS.md`. Semua path fitur/shared/mocks di tabel
-relatif terhadap `apps/web/` V1, kecuali yang sudah diawali `apps/web/`.
-Sesi sekarang hanya mengubah dokumen `docs/v2/`; tidak ada file aplikasi yang dipindah/dihapus.
-Jika V2 dibangun terpisah, label UBAH/PINDAH/HAPUS perlu ditafsir ulang sebagai kebutuhan
-pada aplikasi baru, bukan menghilangkan V1. Urutan arsip/pakai ulang juga belum diputuskan.
+**Status: inventaris bahan salin-adaptasi untuk aplikasi ISHAS yang terpisah (D-01 dijawab 8 September 2026).**
+Cara membangun sudah diputuskan: **aplikasi terpisah bernama ISHAS** (React Router, folder per fitur,
+bun 1.4); **V1 tidak diubah sama sekali**. Semua path fitur/shared/mocks di tabel relatif terhadap
+`apps/web/` V1 dan dibaca sebagai **kebutuhan pada aplikasi baru**, bukan perintah edit/pindah/hapus di V1.
+Label `HAPUS` berarti "tidak dibangun ulang di ISHAS", `PINDAH` berarti "salin lalu adaptasi di ISHAS",
+`UBAH` berarti "bangun versi baru mengikuti detail kolom V2", `ARSIP` tidak relevan (V1 tetap utuh).
 
 Legenda calon aksi: `HAPUS` (buang total) · `ARSIP` (pindah ke `_archived`, tidak diimpor) · `PINDAH` (pindah + adaptasi) · `UBAH` (edit di tempat) · `TETAP` (tidak disentuh) · `TINJAU` (pemetaan belum cukup untuk menentukan tindakan).
 
@@ -27,7 +27,7 @@ Legenda calon aksi: `HAPUS` (buang total) · `ARSIP` (pindah ke `_archived`, tid
 
 | File V1 | Aksi | Detail V2 |
 |---|---|---|
-| `features/landing/*` | `ARSIP` | Calon pindah ke `features/_archived-landing/` bila migrasi di tempat dipilih; tidak diimpor aktif oleh V2; cara hidupkan kembali lihat §4. |
+| `features/landing/*` | `TIDAK DIMIGRASI` | Landing tidak dibawa ke aplikasi ISHAS; V1 tetap utuh memilikinya. Halaman perkenalan di ISHAS dibuat baru bila kelak diminta (lihat §4). |
 | `features/asesor/components/assessment-flow.tsx` | `PINDAH` | → `features/pengelola/components/self-assessment-flow.tsx`; props baru `{ institutionCode, reporterName, onSubmitForValidation }`; hapus panel penugasan + nama asesor hard-code. |
 | `features/asesor/pages/*` (5 file) | `HAPUS` | Diganti `lapor-page.tsx`, `penilaian-mandiri-page.tsx`, `validasi-page.tsx` di `features/pengelola/pages/`. |
 | `features/asesor/assessor-section.tsx`, `components/assessor-components.tsx`, `model.ts` | `HAPUS` | Setelah pindahan selesai dan tidak ada impor tersisa (cek via grep). |
@@ -49,22 +49,17 @@ Legenda calon aksi: `HAPUS` (buang total) · `ARSIP` (pindah ke `_archived`, tid
 | `mocks/processors/assessment.ts` | `UBAH` | Input dari draft self-assessment (bukan assignment); output kandidat temuan per `reportId`. |
 | `mocks/seed/pengelola.ts` | `UBAH` | Tambah seed antrean + arsip ditolak; temuan menunjuk `reportId`. |
 
-## 4. Cara menghidupkan landing kembali (bila dosen meminta lagi)
+## 4. Halaman perkenalan di ISHAS (bila dosen meminta lagi)
 
-1. Kembalikan folder arsip ke `features/landing/` (git memadai: `git mv` balik).
-2. Buat route BARU `/perkenalan` yang merender `LandingPage` (jangan kembalikan ke `/`).
-3. Tambah tombol `Perkenalan ISHAS` di header publik. Selesai — tanpa redirect otomatis.
+Dengan aplikasi terpisah, tidak ada "arsip landing" yang dihidupkan; bila diminta, buat halaman
+baru `/perkenalan` di ISHAS yang meniru landing V1, plus tombol `Perkenalan ISHAS` di header publik.
+Pengaktifan tetap menunggu permintaan pemilik/dosen.
 
-Cara di atas adalah skenario lama jika arsip dipindahkan dalam proyek yang sama. D-01 menentukan
-apakah skenario ini relevan. Pengaktifan `/perkenalan` tetap menunggu permintaan pemilik.
+## 5. Catatan salin-adaptasi
 
-## 5. Pemeriksaan tambahan sebelum memilih migrasi
-
-- Pertahankan bukti referensi V1 dan kemampuan membandingkan alur; jangan menghapus komponen
-  form sebelum kebutuhan penilaian mandiri serta sumber indikator barunya dipetakan.
-- Inventaris route lama beserta link/notifikasi menuju route itu. Pesan penghentian route Asesor
-  memang menyebut nama peran lama; pemeriksaan “bersih” harus mengecualikan konteks tersebut.
-- Pisahkan sesi, draft, domain dummy, dan reset V2 dari data V1 jika keduanya berjalan pada origin yang sama.
-- Kaji dependensi komponen arsip terhadap model lama; label “tidak diimpor” saja belum memastikan
-  arsip tidak mengganggu pemeriksaan teknis pada strategi pembangunan yang nanti dipilih.
-- Daftar perubahan dokumen root/blueprint/frontend hanyalah dampak masa depan, di luar izin sesi ini.
+- Pertahankan bukti referensi V1 dan kemampuan membandingkan alur; komponen form V1 dibaca sebagai
+  rujukan sebelum kebutuhan penilaian mandiri serta sumber indikator barunya dipetakan.
+- Struktur folder ISHAS meniru pola V1/HIBAH_INTERNAL (app/ + features/ + shared/ + mocks/) tetapi
+  dibangun baru; tidak ada dependensi impor langsung ke kode V1.
+- Pisahkan sesi, draft, domain dummy, dan reset ISHAS sebagai namespace baru murni (origin baru,
+  tidak ada data V1).

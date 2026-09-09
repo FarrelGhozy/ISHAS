@@ -110,12 +110,32 @@ Kebutuhan sebelum kontrak dapat dianggap lengkap:
 - Lokasi wajib bila denah tidak ada masih dapat dipenuhi lewat area. Jika area juga tidak ada,
   kebijakan kirim mengikuti D-11. Membedakan dua keadaan ini perlu ada di form dan seed.
 
-## 6. Data publik, audit, dan notifikasi
+## 6. Matriks bidang publik (D-02 dijawab 8 September 2026)
 
-Setelah D-02 dijawab, tulis matriks bidang berikut untuk publik, pengelola pemilik, pengelola lain,
-Super Admin, dan Peneliti: nomor/judul laporan, uraian, nama/kontak pelapor, identitas akun,
-nama validator/PIC, foto/bukti, lokasi/denah, jawaban mentah, skor, alasan penolakan, serta audit.
-Atur juga isi pratinjau dan ekspor; jangan hanya menyembunyikan kolom pada satu halaman.
+D-02: **ringkasan saja** + **nama validator/PIC**. Matriks berikut berlaku untuk semua halaman
+publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`,
+`/pesantren/[kode]`), pratinjau, dan ekspor dummy — bukan sekadar menyembunyikan kolom di satu halaman.
+
+| Bidang | Publik | Internal (pengelola scope) |
+|---|---|---|
+| Nomor laporan (`RPT-XXXX`) | ❌ | ✅ |
+| Judul temuan / deskripsi | ✅ (bagian ringkasan) | ✅ |
+| Lokasi/area (nama gedung/lantai/area) | ✅ | ✅ |
+| Denah + titik koordinat pelapor | ❌ (tampilan denah khusus pengelola) | ✅ |
+| Nama pelapor / kontak / identitas akun | ❌ | ✅ |
+| Bukti/foto (nama file) | ❌ | ✅ |
+| Jawaban mentah per indikator | ❌ (hanya skor/kategori ringkasan) | ✅ |
+| Severity/priority | ✅ (sebagai chip ringkasan) | ✅ |
+| Status penanganan + progres | ✅ | ✅ |
+| Nama validator (pengelola yang menerima) | ✅ | ✅ |
+| Nama PIC tindak lanjut | ✅ | ✅ |
+| Tenggat, catatan rencana internal | ❌ (hanya progres/status) | ✅ |
+| Alasan penolakan | ❌ | ✅ |
+| Periode + versi instrumen + label data dummy | ✅ | ✅ |
+| Audit log | ❌ | ❌ (hanya Super Admin baca) |
+
+Count antrean tidak publik (panel "N laporan menunggu" dihapus dari `/`). Opsi tampil anonim
+tidak dibangun; nama pelapor tampil apa adanya secara internal dan tidak pernah publik.
 
 Calon kontrak audit: ID peristiwa, ID objek dan jenisnya, ID pelaku jika ada, snapshot peran/nama,
 institutionCode, aksi, waktu, alasan, dan perubahan sebelum/sesudah yang relevan.
@@ -132,10 +152,9 @@ dasar menampilkan alasan penolakan atau detail privat kepada orang yang memasukk
 
 ## 7. Penyimpanan dan reset demo
 
-- Fakta V1: domain memakai `ishas-domain-v3`, sesi memakai `ishas-demo-session-v1`.
-  Rancangan `ishas-mock-v4` adalah key baru. Pindah key tidak otomatis memeriksa atau membuang isi key lama.
-- D-01 menentukan apakah V1 dan V2 harus hidup berdampingan. Jangan menghapus namespace V1
-  sebelum batas migrasi disepakati; reset V2 harus menyebut persis data V2 yang direset.
+- Fakta V1: domain memakai `ishas-domain-v3`, sesi memakai `ishas-demo-session-v1`. Aplikasi ISHAS
+  baru terpisah (D-01), sehingga tidak ada key V1 pada origin baru; key V2 murni baru (`ishas-mock-v4`
+  + key sesi/draft, usulan SUGGESTIONS §7). Reset V2 menyebut persis data V2 yang direset.
 - Draft memerlukan versi skema tersendiri, pesantren, kanal, versi instrumen jika berlaku,
   konteks pemilik, waktu simpan, dan hubungan kiriman. Kebijakan jumlah draft serta logout menunggu D-10.
 - Simulasi bukti hanya menyimpan nama/metadata; sesudah refresh tidak boleh mengklaim isi berkas
@@ -175,6 +194,7 @@ Tujuan perannya dapat dipertahankan, tetapi sumber data V2 perlu dipetakan: inst
 ke form mandiri; snapshot kiriman diterima ke hasil; hasil ke dataset; serta dataset ke ekspor dummy.
 Status Final dan relasi penugasan dari V1 tidak boleh diwarisi sebagai syarat tersembunyi.
 
-Hak melihat jawaban mentah/identitas dan pemilihan kiriman untuk penelitian menunggu D-02/D-04.
+Hak melihat jawaban mentah/identitas dan pemilihan kiriman untuk penelitian mengikuti D-02
+(jawaban mentah/identitas internal; ringkasan + nama validator publik) dan D-04.
 Simulasi import tidak boleh menjadi jalur yang membuat laporan publik tampil tanpa moderasi.
 Jika import hanya pratinjau dummy tanpa mutasi, sebutkan demikian dalam spesifikasi akhir.
