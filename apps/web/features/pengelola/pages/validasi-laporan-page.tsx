@@ -1,0 +1,32 @@
+import { useMemo, useState } from "react";
+import { useMockState, storeActions } from "~/mocks/store/mock-store";
+import { selectAreasByInstitution } from "~/mocks/store/lapor-selectors";
+import { selectInstitutionByCode } from "~/mocks/store/selectors";
+import { StatusChip } from "~/shared/components/status-chip";
+import { EmptyState } from "~/shared/components/empty-state";
+import { Modal } from "~/shared/components/modal";
+import { useCurrentUser } from "~/shared/auth/use-current-user";
+import type { Priority, Report, Severity } from "~/mocks/types";
+
+const levels = ["Tinggi", "Sedang", "Rendah"] as const;
+
+export function ValidasiLaporanPage() {
+  const state = useMockState();
+  const user = useCurrentUser();
+  const [filter, setFilter] = useState("Menunggu validasi");
+  const [query, setQuery] = useState("");
+  const [report, setReport] = useState<Report | null>(null);
+  if (!user || user.roleId !== "pengelola" || user.institutionCodes.length !== 1) return <EmptyState title="Halaman ini hanya untuk Pengelola Pesantren" />;
+  const code = user.institutionCodes[0];
+  const institution = selectInstitutionByCode(state, code);
+  const reports = useMemo(() => state.reports.filter((item) => item.institutionCode === code && (filter === "Semua" || item.validationStatus === filter || item.handlingStatus === filter) && `${item.id} ${item.title} ${item.reporterName}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [state, code, filter, query]);
+  return <section className="flex flex-col gap-4"><header><p className="kicker">Moderasi</p><h1 className="text-2xl font-extrabold text-heading">Validasi laporan</h1><p className="mt-1 text-sm text-secondary-text">Hanya laporan milik {institution?.name ?? code}.</p></header><div className="surface grid gap-3 p-3 sm:grid-cols-2"><label className="text-sm font-bold">Status<select className="mt-1 min-h-11 w-full rounded border border-line-soft px-3" value={filter} onChange={(e) => setFilter(e.target.value)}><option>Menunggu validasi</option><option>Pending</option><option>Proses</option><option>Completed</option><option>Ditolak</option><option>Semua</option></select></label><label className="text-sm font-bold">Cari<input className="mt-1 min-h-11 w-full rounded border border-line-soft px-3" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nomor, judul, pelapor" /></label></div>{reports.length ? <div className="surface divide-y divide-line">{reports.map((item) => <article key={item.id} className="flex flex-wrap items-center gap-3 p-4"><div className="min-w-0 flex-1"><div className="flex flex-wrap gap-2"><strong className="text-primary">{item.id}</strong><StatusChip value={item.channel} /><StatusChip value={item.validationStatus} /></div><h2 className="mt-2 font-bold text-heading">{item.title}</h2><p className="text-sm text-secondary-text">{item.reporterName} · {new Date(item.createdAt).toLocaleString("id-ID")}</p></div><button className="primary-button" onClick={() => setReport(item)}>Periksa</button></article>)}</div> : <EmptyState title="Tidak ada laporan untuk filter ini" description="Ubah filter atau tunggu laporan baru dari pelapor." />}<Review report={report} user={user} state={state} close={() => setReport(null)} /></section>;
+}
+
+function Review({ report, user, state, close }: { report: Report | null; user: NonNullable<ReturnType<typeof useCurrentUser>>; state: ReturnType<typeof useMockState>; close: () => void }) {
+  const [accept, setAccept] = useState(true); const [severity, setSeverity] = useState<Severity>("Belum ditentukan"); const [priority, setPriority] = useState<Priority>("Belum ditentukan"); const [note, setNote] = useState(""); const [error, setError] = useState("");
+  if (!report) return null;
+  const area = selectAreasByInstitution(state, report.institutionCode).find((item) => item.id === report.areaId);
+  const submit = () => { const result = accept ? storeActions.acceptReport(user, report.id, severity as Exclude<Severity, "Belum ditentukan">, priority as Exclude<Priority, "Belum ditentukan">, note || undefined) : storeActions.rejectReport(user, report.id, note); if (result.ok) close(); else setError(result.error); };
+  return <Modal open={true} onClose={close} label={`Periksa ${report.id}`}><div className="max-w-xl"><div className="flex flex-wrap gap-2"><StatusChip value={report.channel} /><StatusChip value={report.validationStatus} /></div><h2 className="mt-3 text-xl font-extrabold text-heading">{report.title}</h2><p className="mt-2 text-sm text-secondary-text">Pelapor: {report.reporterName}<br />Lokasi: {area?.label ?? "Tidak tersedia"}<br />{report.description}{report.evidenceName ? <><br />Bukti: {report.evidenceName}</> : null}</p><div className="mt-4 flex gap-2"><button className={accept ? "primary-button" : "secondary-button"} onClick={() => setAccept(true)}>Terima</button><button className={!accept ? "primary-button" : "secondary-button"} onClick={() => setAccept(false)}>Tolak</button></div>{accept ? <div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm font-bold">Tingkat keparahan<select className="mt-1 min-h-11 w-full rounded border border-line-soft px-3" value={severity} onChange={(e) => setSeverity(e.target.value as Severity)}><option>Belum ditentukan</option>{levels.map((item) => <option key={item}>{item}</option>)}</select></label><label className="text-sm font-bold">Prioritas perbaikan<select className="mt-1 min-h-11 w-full rounded border border-line-soft px-3" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}><option>Belum ditentukan</option>{levels.map((item) => <option key={item}>{item}</option>)}</select></label></div> : null}<label className="mt-4 block text-sm font-bold">{accept ? "Catatan validasi (opsional)" : "Alasan penolakan (minimal 10 karakter)"}<textarea className="mt-1 min-h-24 w-full rounded border border-line-soft p-3 font-normal" value={note} onChange={(e) => setNote(e.target.value)} /><span className="text-secondary-text">{note.length} karakter</span></label>{error ? <p role="alert" className="mt-2 text-sm text-[#b91c1c]">{error}</p> : null}<div className="mt-4 flex gap-2"><button className="primary-button" onClick={submit}>Konfirmasi {accept ? "terima" : "tolak"}</button><button className="secondary-button" onClick={close}>Batal</button></div></div></Modal>;
+}

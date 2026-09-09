@@ -2,6 +2,17 @@
 
 Daftar ini adalah kontrol kerja aktif. Rincian dan keputusan tetap disimpan dalam `planning/`.
 
+## Aktif — Stage 12 (Revisi Pasca Evaluasi Dosen)
+
+- [x] Tetapkan arah V2: `/` jadi dashboard publik, landing dinonaktifkan sementara, asesor dihapus.
+- [x] Tetapkan peran baru: Super Admin, Pengelola Pesantren (mitra), Peneliti, Publik; moderasi wajib sebelum tampil.
+- [x] Tulis `planning/STAGE_12_SELF_REPORT_PUBLIK.md` (delta V1→V2 + acceptance criteria).
+- [x] Buat `docs/v2/` sebagai dokumentasi proyek baru dari nol: README, ROLES, ROUTES, FLOWS, DATA_MODEL, WIREFRAMES, DESIGN_SYSTEM, SUGGESTIONS, MIGRATION_FROM_V1, BACKLOG, AGENTS, TODO, TEST_PLAN, planning/V2-01…V2-09.
+- [ ] Implementasikan V2 per `docs/v2/planning/` V2-01…V2-09 (fondasi, dashboard publik, lapor, baca publik, validasi, lifecycle, lokasi/tindak lanjut, penilaian mandiri, admin + rilis).
+- [ ] Periksa desktop, tablet, ponsel, alur anonim vs login, guard, lint, TypeScript, test, dan build; pindahkan Stage 12 ke `REVIEW`.
+
+**Keputusan:** evaluasi dosen mengaktifkan Stage 12 sebagai `IN PROGRESS`. Stage 11 (landing) dinonaktifkan sementara dan diarsip, bukan dihapus. Proyek V2 akan dibangun dari nol memakai `docs/v2/`; implementasi kode V2 belum termasuk luaran ini.
+
 ## Menunggu Review — Stage 11
 
 - [x] Buat landing page publik di `/` dengan pengenalan, manfaat, empat peran, dan alur penggunaan.
