@@ -85,7 +85,7 @@ export function pilihSnapshotTerbaruDiterima(
 ): SelfAssessmentSnapshot | null {
   const acceptedIds = new Set(
     reports
-      .filter((r) => r.institutionCode === institutionCode && r.channel === "penilaian-mandiri" && r.validationStatus === "Diterima")
+      .filter((r) => r.institutionCode === institutionCode && r.channel === "penilaian-mandiri" && r.validationStatus === "Diterima" && !r.archivedAt)
       .map((r) => r.id),
   );
   return (

@@ -7,7 +7,7 @@ import {
   selectFindingsByReports,
   selectRecommendationsByReports,
   selectRegisteredInstitutions,
-  selectReportsByInstitution,
+  selectPublicReports,
 } from "../store/selectors";
 
 export const mockRepository = {
@@ -15,18 +15,18 @@ export const mockRepository = {
     return selectRegisteredInstitutions(getState());
   },
   validatedReports(institutionCode: string | null) {
-    return selectReportsByInstitution(getState(), institutionCode);
+    return selectPublicReports(getState(), institutionCode);
   },
   findingsFor(institutionCode: string | null) {
     return selectFindingsByReports(
       getState(),
-      selectReportsByInstitution(getState(), institutionCode),
+      selectPublicReports(getState(), institutionCode),
     );
   },
   recommendationsFor(institutionCode: string | null) {
     return selectRecommendationsByReports(
       getState(),
-      selectReportsByInstitution(getState(), institutionCode),
+      selectPublicReports(getState(), institutionCode),
     );
   },
   reset() {

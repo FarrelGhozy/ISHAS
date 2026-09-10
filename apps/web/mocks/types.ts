@@ -75,6 +75,7 @@ export type IndicatorAnswer = {
   note: string;
   evidenceName: string;
   areaId: string;
+  manualLocation?: string; // deskripsi manual bila area tak tersedia (D-11)
   planPoint: { x: number; y: number } | null;
 };
 

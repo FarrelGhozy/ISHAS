@@ -12,7 +12,8 @@ type Indicator = InstrumentVersion["dimensions"][number]["indicators"][number];
 const fieldClass = "mt-1.5 min-h-11 w-full rounded-lg border border-line-soft bg-white px-3 text-sm text-heading";
 
 function answerIsComplete(indicator: Indicator, answer?: Partial<IndicatorAnswer>) {
-  return Boolean(answer?.value && (!indicator.evidenceRequired || answer.evidenceName?.trim()) && (!indicator.locationRequired || answer.areaId) && (answer.value !== "N/A" || (answer.note?.trim().length ?? 0) >= 10));
+  const hasLocation = Boolean(answer?.areaId) || (answer?.manualLocation?.trim().length ?? 0) >= 3;
+  return Boolean(answer?.value && (!indicator.evidenceRequired || answer.evidenceName?.trim()) && (!indicator.locationRequired || hasLocation) && (answer.value !== "N/A" || (answer.note?.trim().length ?? 0) >= 10));
 }
 
 function answerOptions(type: Indicator["answerType"]) {
@@ -30,6 +31,7 @@ export function PenilaianMandiriPage() {
   const [reporterName, setReporterName] = useState(initialDraft?.reporterName ?? user?.name ?? "");
   const [active, setActive] = useState(initialDraft?.activeIndex ?? 0);
   const [answers, setAnswers] = useState<Record<string, Partial<IndicatorAnswer>>>(initialDraft?.answers ?? {});
+  const [draftVersionId, setDraftVersionId] = useState(initialDraft?.instrumentVersionId ?? "");
   const [notice, setNotice] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const blocked = user !== null && !canSubmitReport(user.roleId);
@@ -37,6 +39,11 @@ export function PenilaianMandiriPage() {
   const indicators = useMemo(() => instrument?.dimensions.flatMap((dimension) => dimension.indicators) ?? [], [instrument]);
   const areas = state.areas.filter((area) => area.institutionCode === institutionCode);
   const draftId = `SELF-${institutionCode || "baru"}`;
+  const storedDraft = state.selfAssessmentDrafts[draftId];
+  const effectiveVersionId = draftVersionId || storedDraft?.instrumentVersionId || instrument?.id || "";
+  // D-10: draft terikat versi lama yang sudah diarsip tidak boleh dikirim.
+  // Versi draft tidak diganti diam-diam saat Published baru terbit.
+  const draftStale = Boolean(instrument && effectiveVersionId && effectiveVersionId !== instrument.id);
   const current = indicators[active];
   const dimension = instrument?.dimensions.find((item) => item.indicators.some((indicator) => indicator.id === current?.id));
   const answer = current ? answers[current.id] ?? {} : {};
@@ -44,12 +51,12 @@ export function PenilaianMandiriPage() {
   const answeredCount = indicators.filter((indicator) => Boolean(answers[indicator.id]?.value)).length;
   const progress = indicators.length ? Math.round((completedCount / indicators.length) * 100) : 0;
   const identityComplete = Boolean(institutionCode && reporterName.trim().length >= 2);
-  const valid = identityComplete && completedCount === indicators.length;
+  const valid = identityComplete && completedCount === indicators.length && !draftStale;
 
   useEffect(() => {
-    if (!institutionCode || !instrument || reporterName.trim().length < 2 || submittedId) return;
-    storeActions.saveSelfAssessmentDraft({ id: draftId, institutionCode, reporterName: reporterName.trim(), instrumentVersionId: instrument.id, answers, activeIndex: active, updatedAt: new Date().toISOString() });
-  }, [institutionCode, reporterName, answers, active, instrument?.id, draftId, submittedId]);
+    if (!institutionCode || !instrument || reporterName.trim().length < 2 || submittedId || draftStale) return;
+    storeActions.saveSelfAssessmentDraft({ id: draftId, institutionCode, reporterName: reporterName.trim(), instrumentVersionId: effectiveVersionId || instrument.id, answers, activeIndex: active, updatedAt: new Date().toISOString() });
+  }, [institutionCode, reporterName, answers, active, draftId, submittedId, draftStale, effectiveVersionId, instrument]);
 
   if (blocked) return <EmptyState title="Kirim dinonaktifkan untuk akun Anda" description={`Anda login sebagai ${user?.role}. Keluar dari akun untuk mengisi penilaian sebagai publik.`} />;
   if (!instrument) return <EmptyState title="Belum ada instrumen yang dipublikasikan." />;
@@ -57,13 +64,18 @@ export function PenilaianMandiriPage() {
 
   const selectInstitution = (code: string) => {
     const nextDraft = state.selfAssessmentDrafts[`SELF-${code}`];
-    setInstitutionCode(code); setReporterName(nextDraft?.reporterName ?? user?.name ?? ""); setAnswers(nextDraft?.answers ?? {}); setActive(Math.min(nextDraft?.activeIndex ?? 0, Math.max(indicators.length - 1, 0))); setNotice("");
+    setInstitutionCode(code); setReporterName(nextDraft?.reporterName ?? user?.name ?? ""); setAnswers(nextDraft?.answers ?? {}); setDraftVersionId(nextDraft?.instrumentVersionId ?? instrument?.id ?? ""); setActive(Math.min(nextDraft?.activeIndex ?? 0, Math.max(indicators.length - 1, 0))); setNotice("");
+  };
+  const discardStaleDraft = () => {
+    if (storedDraft) storeActions.deleteSelfAssessmentDraft(draftId);
+    setAnswers({}); setActive(0); setDraftVersionId(instrument?.id ?? ""); setNotice("");
   };
   const setAnswer = (key: keyof IndicatorAnswer, value: string) => {
     if (!current) return;
     setAnswers((old) => ({ ...old, [current.id]: { ...old[current.id], [key]: value } })); setNotice("");
   };
   const submit = () => {
+    if (draftStale) { setNotice("Versi instrumen draft sudah diarsipkan. Buang draft lama dan mulai penilaian baru dengan versi Published terbaru."); return; }
     if (!valid) { setNotice(!identityComplete ? "Lengkapi identitas penilaian terlebih dahulu." : `Masih ada ${indicators.length - completedCount} pertanyaan yang belum lengkap.`); return; }
     const result = storeActions.submitSelfAssessment(user ?? { name: reporterName, role: "Publik" }, draftId);
     if (result.ok) setSubmittedId(result.id ?? "Nomor penilaian dibuat"); else setNotice(result.error ?? "Penilaian belum dapat dikirim. Coba lagi.");
@@ -82,9 +94,11 @@ export function PenilaianMandiriPage() {
       <div className="space-y-4">{current ? <main className="surface overflow-hidden" aria-labelledby="question-title"><div className="border-b border-line bg-strip px-4 py-3 sm:px-5"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-extrabold uppercase tracking-wide text-primary">Langkah 2 · Pertanyaan {active + 1} dari {indicators.length}</p><span className="text-xs font-semibold text-secondary-text">{dimension?.name}</span></div></div>
         <div className="p-4 sm:p-6"><div className="flex flex-wrap gap-2"><span className="status status-neutral">{current.code}</span>{current.evidenceRequired ? <span className="status status-amber"><FileText size={13} />Bukti wajib</span> : null}{current.locationRequired ? <span className="status status-blue"><MapPin size={13} />Lokasi wajib</span> : null}</div><h2 id="question-title" className="mt-3 text-xl font-extrabold text-heading sm:text-2xl">{current.title}</h2><p className="mt-2 text-sm leading-6 text-secondary-text">{current.prompt}</p>
           <fieldset className="mt-6"><legend className="text-sm font-extrabold text-heading">Pilih jawaban <span className="text-primary">*</span></legend><div className={`mt-2 grid gap-2 ${current.answerType === "likert-1-5" ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-3"}`}>{answerOptions(current.answerType).map((option) => <label key={option.value} className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-semibold transition ${answer.value === option.value ? "border-primary bg-marun-bg text-primary ring-1 ring-primary" : "border-line-soft bg-white text-heading hover:border-primary"}`}><input type="radio" className="size-4 accent-primary" name={`answer-${current.id}`} value={option.value} checked={answer.value === option.value} onChange={(event) => setAnswer("value", event.target.value)} /><span>{option.label}</span></label>)}</div></fieldset>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">{current.locationRequired ? <label className="text-sm font-bold text-heading">Area yang dinilai <span className="text-primary">*</span><select className={fieldClass} value={answer.areaId ?? ""} onChange={(event) => setAnswer("areaId", event.target.value)} disabled={!institutionCode}><option value="">{institutionCode ? "Pilih area" : "Pilih pesantren dahulu"}</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name} · {area.floor}</option>)}</select></label> : null}{current.evidenceRequired ? <label className="text-sm font-bold text-heading">Bukti pendukung <span className="text-primary">*</span><input className={fieldClass} value={answer.evidenceName ?? ""} onChange={(event) => setAnswer("evidenceName", event.target.value)} placeholder="Contoh: foto-kabel-aula.jpg" /><span className="mt-1 block text-xs font-normal text-secondary-text">Tuliskan nama foto atau dokumen yang Anda siapkan.</span></label> : null}</div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">{current.locationRequired ? <div><label className="text-sm font-bold text-heading">Area yang dinilai <span className="text-primary">*</span><select className={fieldClass} value={answer.areaId ?? ""} onChange={(event) => setAnswer("areaId", event.target.value)} disabled={!institutionCode}><option value="">{institutionCode ? "Pilih area" : "Pilih pesantren dahulu"}</option>{areas.map((area) => <option key={area.id} value={area.id}>{area.name} · {area.floor}</option>)}</select></label><label className="mt-3 block text-sm font-bold text-heading">Lokasi belum ada di daftar?<input className={fieldClass} value={answer.manualLocation ?? ""} onChange={(event) => setAnswer("manualLocation", event.target.value)} disabled={!institutionCode} maxLength={140} placeholder="Tulis lokasi lengkap (bila area tak tersedia)" /></label><p className="mt-1 text-xs font-normal text-secondary-text">Pilih area bila tersedia. Bila belum ada, tulis lokasi ini; salah satu wajib diisi.</p></div> : null}{current.evidenceRequired ? <label className="text-sm font-bold text-heading">Bukti pendukung <span className="text-primary">*</span><input className={fieldClass} value={answer.evidenceName ?? ""} onChange={(event) => setAnswer("evidenceName", event.target.value)} placeholder="Contoh: foto-kabel-aula.jpg" /><span className="mt-1 block text-xs font-normal text-secondary-text">Tuliskan nama foto atau dokumen yang Anda siapkan.</span></label> : null}</div>
           <label className="mt-5 block text-sm font-bold text-heading">Catatan {answer.value === "N/A" ? <span className="text-primary">* minimal 10 karakter</span> : <span className="font-normal text-secondary-text">(opsional)</span>}<textarea className={`${fieldClass} min-h-28 p-3`} value={answer.note ?? ""} onChange={(event) => setAnswer("note", event.target.value)} placeholder={answer.value === "N/A" ? "Jelaskan mengapa kondisi tidak dapat dinilai…" : "Tambahkan konteks kondisi bila diperlukan…"} /></label></div>
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-strip px-4 py-3 sm:px-5"><button type="button" className="secondary-button" disabled={active === 0} onClick={() => { setActive((value) => value - 1); setNotice(""); }}><ChevronLeft size={16} />Sebelumnya</button><span className={`text-xs font-bold ${answerIsComplete(current, answer) ? "text-[#047857]" : "text-secondary-text"}`}>{answerIsComplete(current, answer) ? "Pertanyaan ini lengkap" : "Lengkapi isian wajib"}</span><button type="button" className="secondary-button" disabled={active === indicators.length - 1} onClick={() => { setActive((value) => value + 1); setNotice(""); }}>Berikutnya<ChevronRight size={16} /></button></div></main> : null}
+
+        {draftStale ? <p role="alert" className="flex flex-wrap items-center gap-2 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"><AlertCircle size={18} />Draft ini terikat {effectiveVersionId} yang sudah diarsip. Kirim dikunci — <button type="button" className="text-button" onClick={discardStaleDraft}>buang draft lama dan mulai baru ({instrument?.id})</button>.</p> : null}
 
         <section className="surface p-4 sm:p-5" aria-labelledby="submit-title"><div className="flex flex-col gap-4 sm:flex-row sm:items-center"><span className={`grid size-11 shrink-0 place-items-center rounded-full ${valid ? "bg-[#dff7ed] text-[#047857]" : "bg-strip text-secondary-text"}`}><ClipboardCheck size={22} /></span><div className="mr-auto"><p className="kicker">Langkah 3</p><h2 id="submit-title" className="font-extrabold text-heading">Kirim untuk divalidasi</h2><p className="mt-1 text-xs text-secondary-text">{valid ? "Semua data lengkap. Setelah dikirim, jawaban tidak dapat diubah." : `${answeredCount} terjawab · ${completedCount} lengkap · ${indicators.length - completedCount} perlu diselesaikan`}</p></div><button type="button" className="primary-button shrink-0" disabled={!valid} onClick={submit}>Kirim penilaian</button></div>{notice ? <p role="alert" className="mt-4 flex items-start gap-2 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"><AlertCircle size={18} />{notice}</p> : null}</section>
       </div>

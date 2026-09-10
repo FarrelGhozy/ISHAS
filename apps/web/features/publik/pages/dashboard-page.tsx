@@ -11,7 +11,7 @@ import {
   selectInstitutionByCode,
   selectRegisteredInstitutions,
   selectRecommendationsByReports,
-  selectReportsByInstitution,
+  selectPublicReports,
   selectUserById,
 } from "~/mocks/store/selectors";
 import {
@@ -43,7 +43,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   const selected =
     rawParam && registered.some((i) => i.code === rawParam) ? rawParam : undefined;
 
-  const reports = useMemo(() => selectReportsByInstitution(state, selected ?? null), [state, selected]);
+  const reports = useMemo(() => selectPublicReports(state, selected ?? null), [state, selected]);
   const findings = useMemo(() => selectFindingsByReports(state, reports), [state, reports]);
   const recommendations = useMemo(
     () => selectRecommendationsByReports(state, reports),
@@ -89,7 +89,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   const institutionComparison: InstitutionComparisonItem[] = registered
     .filter((institution) => scopeCodes.includes(institution.code))
     .map((institution) => {
-      const institutionReports = selectReportsByInstitution(state, institution.code);
+      const institutionReports = selectPublicReports(state, institution.code);
       const institutionFindings = selectFindingsByReports(state, institutionReports);
       const institutionRecommendations = selectRecommendationsByReports(state, institutionReports);
       const institutionSummary = hitungIndexSummary(

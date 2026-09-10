@@ -6,7 +6,7 @@ import {
   selectInstitutionByCode,
   selectRecommendationsByReports,
   selectRegisteredInstitutions,
-  selectReportsByInstitution,
+  selectPublicReports,
   selectUserById,
 } from "~/mocks/store/selectors";
 import { hitungIndexSummary } from "~/mocks/processors/dashboard-aggregate";
@@ -38,7 +38,7 @@ export function PublicReadPage({ kind }: { kind: PublicReadKind }) {
   const institutions = selectRegisteredInstitutions(state);
   const requested = params.get("pesantren") ?? undefined;
   const selected = requested && institutions.some((item) => item.code === requested) ? requested : undefined;
-  const reports = selectReportsByInstitution(state, selected ?? null);
+  const reports = selectPublicReports(state, selected ?? null);
   const findings = selectFindingsByReports(state, reports);
   const recommendations = selectRecommendationsByReports(state, reports);
   const scope = selectInstitutionByCode(state, selected)?.name ?? "Semua pesantren terdaftar";
@@ -56,7 +56,7 @@ export function PublicReadPage({ kind }: { kind: PublicReadKind }) {
   </section>;
 }
 
-function Results({ state, codes, reports }: { state: ReturnType<typeof useMockState>; codes: string[]; reports: ReturnType<typeof selectReportsByInstitution> }) {
+function Results({ state, codes, reports }: { state: ReturnType<typeof useMockState>; codes: string[]; reports: ReturnType<typeof selectPublicReports> }) {
   const summary = hitungIndexSummary({ reports, selfAssessmentSnapshots: state.selfAssessmentSnapshots, instrumentVersions: state.instrumentVersions, indexHistory: state.indexHistory }, codes);
   const assessmentReports = reports.filter((report) => report.channel === "penilaian-mandiri");
   return <div className="grid gap-4 lg:grid-cols-3">
@@ -66,7 +66,7 @@ function Results({ state, codes, reports }: { state: ReturnType<typeof useMockSt
   </div>;
 }
 
-function RiskMap({ findings, reports, state }: { findings: ReturnType<typeof selectFindingsByReports>; reports: ReturnType<typeof selectReportsByInstitution>; state: ReturnType<typeof useMockState> }) {
+function RiskMap({ findings, reports, state }: { findings: ReturnType<typeof selectFindingsByReports>; reports: ReturnType<typeof selectPublicReports>; state: ReturnType<typeof useMockState> }) {
   const activeAreas = new Set(findings.filter((finding) => finding.status !== "Terverifikasi").map((finding) => finding.areaId));
   const areas = state.areas.filter((area) => reports.some((report) => report.institutionCode === area.institutionCode));
   return <div className="grid gap-4 lg:grid-cols-2"><article className="surface p-4"><h2 className="font-extrabold text-heading">Daftar area</h2><p className="mt-1 text-sm text-secondary-text">Area tanpa temuan aktif ditampilkan netral.</p><ul className="mt-3 space-y-2">{areas.map((area) => <li key={area.id} className="flex items-center justify-between gap-3 rounded-lg border border-line p-3"><span><strong className="block text-sm text-heading">{area.name}</strong><span className="text-sm text-secondary-text">{area.zone} · {area.floor}</span></span>{activeAreas.has(area.id) ? <StatusChip value="Berjalan" /> : <span className="text-sm text-secondary-text">Belum ada temuan aktif</span>}</li>)}</ul></article><article className="surface p-4"><h2 className="font-extrabold text-heading">Daftar temuan</h2><div className="mt-3 space-y-3">{findings.map((finding) => { const report = reports.find((item) => item.id === finding.reportId); return <article key={finding.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap gap-2"><StatusChip value={finding.level} /><StatusChip value={finding.status} /></div><h3 className="mt-2 font-bold text-heading">{finding.issue}</h3><p className="mt-1 text-sm text-secondary-text">{finding.location} · Dampak: {finding.impact}</p><p className="mt-2 text-sm text-secondary-text">Rekomendasi: {finding.recommendation}</p><Validator state={state} id={report?.validatedBy} /></article>; })}</div></article></div>;
@@ -81,7 +81,7 @@ function FollowUps({ recommendations }: { recommendations: ReturnType<typeof sel
 }
 
 function LeadershipReport({ state, codes, findings, recommendations }: { state: ReturnType<typeof useMockState>; codes: string[]; findings: ReturnType<typeof selectFindingsByReports>; recommendations: ReturnType<typeof selectRecommendationsByReports> }) {
-  const reports = selectReportsByInstitution(state, codes.length === 1 ? codes[0] : null);
+  const reports = selectPublicReports(state, codes.length === 1 ? codes[0] : null);
   const summary = hitungIndexSummary({ reports, selfAssessmentSnapshots: state.selfAssessmentSnapshots, instrumentVersions: state.instrumentVersions, indexHistory: state.indexHistory }, codes);
   return <article className="surface p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-extrabold text-heading">Ringkasan pimpinan</h2><p className="mt-1 text-sm text-secondary-text">Periode {summary.periode} · data ilustrasi · instrumen {summary.instrumentVersionIds.join(", ") || "belum tersedia"}</p></div><button type="button" className="secondary-button" onClick={() => alert("Unduhan simulasi: file nyata tersedia setelah backend disiapkan.")}><Download size={16} />Unduh simulasi</button></div><div className="mt-5 grid gap-3 sm:grid-cols-3"><Metric label="Indeks K3L" value={summary.currentIndex === null ? "—" : String(Math.round(summary.currentIndex))} /><Metric label="Temuan aktif" value={String(findings.filter((item) => item.status !== "Terverifikasi").length)} /><Metric label="Terverifikasi" value={String(recommendations.filter((item) => item.status === "Terverifikasi").length)} /></div><div className="mt-5 rounded-lg border border-line p-4 text-sm text-secondary-text"><FileText size={18} className="mb-2 text-primary" />Laporan ini hanya berisi ringkasan, dimensi, status tindak lanjut, periode, versi instrumen, dan label data dummy.</div></article>;
 }

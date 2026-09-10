@@ -34,6 +34,23 @@ export function selectValidatedReports(state: { reports: Report[] }): Report[] {
   );
 }
 
+// Bacaan publik (D-08): hanya laporan Diterima + belum diarsip + milik pesantren
+// yang MASIH terdaftar. Hasil lama pesantren Nonaktif/kehilangan pengelola tidak
+// tampil publik; data tetap tersimpan untuk baca internal sesuai scope.
+export function selectPublicReports(
+  state: { institutions: Institution[]; reports: Report[]; users: User[] },
+  institutionCode: string | null,
+): Report[] {
+  const registered = new Set(
+    selectRegisteredInstitutions(state).map((i) => i.code),
+  );
+  const validated = selectValidatedReports(state).filter((r) =>
+    registered.has(r.institutionCode),
+  );
+  if (!institutionCode) return validated;
+  return validated.filter((r) => r.institutionCode === institutionCode);
+}
+
 export function selectValidationQueue(
   state: { reports: Report[] },
   institutionCode: string,
@@ -48,12 +65,11 @@ export function selectValidationQueue(
 }
 
 export function selectReportsByInstitution(
-  state: { reports: Report[] },
+  state: { institutions: Institution[]; reports: Report[]; users: User[] },
   institutionCode: string | null,
 ): Report[] {
-  const validated = selectValidatedReports(state);
-  if (!institutionCode) return validated;
-  return validated.filter((r) => r.institutionCode === institutionCode);
+  // Alias internal = bacaan publik (D-08). Test lama + dashboard peneliti lewat sini.
+  return selectPublicReports(state, institutionCode);
 }
 
 export function selectFindingsByReports(

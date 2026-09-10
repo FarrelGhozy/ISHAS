@@ -347,70 +347,63 @@ Published 6 indikator; gedung/area/denah untuk demo; `indexHistory` 5 periode.
 
 ### B. Pembentukan temuan dari kiriman baru
 
-4. **[LOGIC] `submitSelfAssessment` tidak membentuk temuan/rekomendasi.**
- `apps/web/mocks/store/mock-store.ts:506` hanya membuat `Report` +
- `SelfAssessmentSnapshot` + audit + notifikasi. Seed punya
- `RSK-/REC-` untuk `RPT-0003/0004/0005/0007`, tetapi kiriman mandiri baru
- tidak punya turunan sehingga tidak muncul di peta/rekomendasi sampai ada
- processor pembentuk kandidat temuan. Flow §peta/rekomendasi untuk data baru
- terputus di sini.
+4. **[SELESAI 10 Sep 2026] Terima membentuk turunan ilustratif.**
+ `ensureDerivedWork` di `acceptReport` membuat 1 temuan + 1 rekomendasi
+ `Belum ditindaklanjuti` per laporan (idempoten; seed tidak digandakan).
+ Aturan pemicu per indikator tetap menunggu keputusan ilmiah — jangan baca
+ `findingTrigger` sebagai rumus final (lihat butir 5).
 5. **[FLOW] Aturan pemicu temuan belum final.** `findingTrigger` (`1`, `Tidak`)
  hanya contoh seed ilustratif (`apps/web/mocks/seed/seed.ts:474`), bukan
  aturan universal. Jangan anggap semua `Tidak`/skor rendah = bahaya.
 
 ### C. Validasi dan lokasi laporan
 
-6. **[LOGIC] Self-assessment belum dukung lokasi manual D-11.**
- Lapor punya `manualLocation` (`apps/web/mocks/types.ts:55`,
- `apps/web/mocks/store/mock-store.ts:127`), tetapi
- `submitSelfAssessment` menolak bila `locationRequired` tanpa `areaId`
- (`apps/web/mocks/store/mock-store.ts:519`). Inkonsisten dengan putusan
- D-11: lokasi tidak boleh kosong, boleh deskripsi manual bila area tak ada.
-7. **[FLOW] Kebijakan tanpa area belum konsisten ujung-ke-ujung.**
- Lapor memblokir kirim bila area kosong (`selectedHasNoAreas`), D-11
- membolehkan manual. Seed lokasi hanya lengkap untuk demo tertentu; pesantren
- baru tanpa area akan mentok di form mandiri.
+6. **[SELESAI 10 Sep 2026] Self-assessment dukung lokasi manual D-11.**
+ Validasi `locationRequired` menerima `areaId` ATAU `manualLocation` min 3
+ di UI (`answerIsComplete`), boundary submit, dan snapshot menyimpan
+ `manualLocation`. Form mandiri menampilkan field lokasi manual + modal
+ validasi menampilkannya bila tanpa area.
+7. **[SELESAI 10 Sep 2026] Lokasi manual ujung-ke-ujung.**
+ Lapor dan mandiri menerima `areaId` ATAU `manualLocation` min 3;
+ pesantren baru tanpa area tetap bisa dilaporkan via deskripsi manual
+ (D-11). Pesan `selectedHasNoAreas` hanya informatif, bukan kunci mati.
 
 ### D. Hak kirim dan boundary data
 
-8. **[LOGIC] `submitSelfAssessment` tidak memeriksa peran pengirim.**
- `submitPublicReport` menolak admin/peneliti
- (`apps/web/mocks/store/mock-store.ts:133`), tetapi
- `submitSelfAssessment` tidak memeriksa `actor.roleId`
- (`apps/web/mocks/store/mock-store.ts:506`). Penegakan D-03 di kanal
- mandiri hanya di UI (`blocked`
- `apps/web/features/publik/pages/penilaian-mandiri-page.tsx:35`), sehingga
- panggilan adapter langsung bisa lolos. Perlu pemeriksaan sama di boundary
- data.
-9. **[LOGIC] `saveSelfAssessmentDraft` tanpa validasi scope/versi.**
- `apps/web/mocks/store/mock-store.ts:496` menyimpan draft apa adanya; tidak
- menolak pesantren tak terdaftar atau versi non-Published. UI menutupnya,
- store tidak.
+8. **[SELESAI 10 Sep 2026] `submitSelfAssessment` memeriksa peran pengirim.**
+ Boundary data menolak admin/peneliti/akun tak dikenal seperti
+ `submitPublicReport`; email pengelola tersimpan di
+ `reporterAccountEmail`. Test regresi di
+ `self-assessment-boundary.test.ts`.
+9. **[SELESAI 10 Sep 2026] `saveSelfAssessmentDraft` memvalidasi scope/versi.**
+ Draft scope tak terdaftar / versi non-Published ditolak; draft versi lama
+ yang terdiarsip tidak boleh dikirim (pesan D-10 eksplisit); UI mengunci
+ kirim + menyediakan buang draft lama (`deleteSelfAssessmentDraft`).
 
 ### E. Moderasi dan konkurensi
 
-10. **[LOGIC] Detail validasi belum tampilkan jawaban per indikator.**
- `docs/FLOWS.md:68` meminta pengelola membaca seluruh jawaban mandiri
- hanya-baca, tetapi modal `Review`
- (`apps/web/features/pengelola/pages/validasi-laporan-page.tsx:26`) hanya
- tampilkan judul/deskripsi/bukti/lokasi. Validasi mandiri tanpa melihat
- snapshot tidak lengkap.
-11. **[LOGIC] Tidak ada deteksi keputusan ganda.**
- Dua pengelola/brwsr membuka item sama bisa menimpa tanpa deteksi versi;
- `acceptReport/rejectReport` hanya cek status saat tulis
- (`apps/web/mocks/store/mock-store.ts:240`). Skenario U-05 belum tertutup.
+10. **[SELESAI 10 Sep 2026] Modal validasi tampilkan jawaban per indikator.**
+ `Review` membaca `SelfAssessmentSnapshot` + versi instrumen (hanya-baca:
+ jawaban, catatan, bukti, lokasi per indikator) + versi instrumen pada
+ header kiriman. Modal juga membaca status live (peringatan + tombol
+ terkunci bila sudah diputus) dan `key={report.id}` agar state tidak
+ bocor antar item.
+11. **[SEBAGIAN 10 Sep 2026] Keputusan ganda dibatasi, belum deteksi versi.**
+ Modal membaca status live (peringatan + tombol terkunci bila sudah
+ diputus) dan store menolak transisi dari status non-Menunggu; tetapi
+ belum ada deteksi versi optimistis bila dua tab menulis bersamaan.
+ Skenario U-05 belum tertutup penuh.
 12. **[FLOW] Riwayat keputusan belum eksplisit di UI.**
  Audit ada, tetapi antrean tidak menampilkan linimasa terima/tolak/mundur/
  buka-kembali per laporan.
 
 ### F. Dua jalur PIC/tenggat belum satu aturan
 
-13. **[LOGIC] `updateHandlingStatus` vs `updateRecommendation` bisa beda jalan.**
- Jalur rekomendasi dari `Belum ditindaklanjuti` langsung set laporan
- `Proses` (`apps/web/mocks/store/mock-store.ts:480`) tanpa melewati syarat
- `Pending → Proses` yang sama persis (catatan rencana + cek tenggat masa
- lalu). Sinkronisasi kedua jalur belum eksplisit; flow §8/§9 harus
- menetapkan satu sumber syarat.
+13. **[SELESAI 10 Sep 2026] Syarat PIC/tenggat satu sumber.**
+ `updateRecommendation` dari `Belum ditindaklanjuti` memakai syarat yang
+ sama dengan `Pending → Proses` (PIC min 2 + tenggat ≥ hari ini + catatan
+ rencana) + guard laporan harus `Diterima` dan belum diarsip. Test regresi
+ di `self-assessment-boundary.test.ts`.
 
 ### G. Periode, agregat, tren
 
@@ -434,10 +427,11 @@ Published 6 indikator; gedung/area/denah untuk demo; `indexHistory` 5 periode.
  `USR-004` ada untuk isolasi scope, tetapi `DEMO_ACCOUNTS` hanya 3 kartu
  (`apps/web/mocks/seed/demo-accounts.ts:18`). Demo dua pengelola belum bisa
  login tanpa utak-atik data (D-09 UI tertunda).
-18. **[FLOW] Edge Nonaktif/kehilangan pengelola terakhir belum lengkap.**
- Form menolak kiriman baru, tetapi perilaku sesi aktif, draft terbuka,
- antrean pending, dan pekerjaan berjalan mengikuti D-08 yang sinkronisasinya
- tertunda di `FLOWS.md`.
+18. **[SEBAGIAN 10 Sep 2026] Bacaan publik D-08 ditegakkan; edge internal tersisa.**
+ `selectPublicReports` dipakai dashboard + semua halaman baca + adapter:
+ hasil lama pesantren Nonaktif/kehilangan pengelola tidak tampil publik
+ (data tetap internal). Tersisa: perilaku sesi aktif, draft terbuka,
+ antrean pending, dan pekerjaan berjalan saat scope hilang.
 19. **[FLOW] Draft lintas akun/perangkat belum final.**
  Draft lapor interim tetap ada setelah logout/ganti akun
  (`apps/web/features/publik/lib/lapor-draft.ts:1`); draft mandiri per
@@ -457,14 +451,12 @@ Published 6 indikator; gedung/area/denah untuk demo; `indexHistory` 5 periode.
  Notifikasi hanya ke pemilik scope
  (`apps/web/mocks/store/mock-store.ts:675`); status untuk pelapor login
  masih usulan, pelacakan publik pakai nomor saja bukan bukti kepemilikan.
-22. **[LOGIC] Nama fungsi arsip menyesatkan.**
- `deleteCompletedReport` sebenarnya mengarsip (`archivedAt`), bukan hapus
- (`apps/web/mocks/store/mock-store.ts:372`). Sesuai D-07, tetapi nama +
- pesan UI harus konsisten kata `arsip`, bukan `hapus`.
-23. **[LOGIC] Seed mengandung teks `Anonim — Warga Sekitar` (`RPT-0006`).**
- D-02 melarang opsi anonim; teks bebas boleh berisi kata itu sehingga
- membingungkan. Sebaiknya ganti contoh nama kelompok yang jelas bukan opsi
- anonimitas.
+22. **[SELESAI 10 Sep 2026] Nama arsip diluruskan.**
+ `archiveCompletedReport` adalah nama kanonis (D-07: arsip, bukan hapus);
+ `deleteCompletedReport` hanya alias usang dengan peringatan console +
+ tetap diuji. UI laporan pengelola memakai kata `Arsipkan`/`Arsip Completed`.
+23. **[SELESAI 10 Sep 2026] Seed tanpa kata `Anonim`.** `RPT-0006` memakai
+ `Warga Sekitar — RT 04` + test regresi menolak nama berawalan anonim (D-02).
 
 ### J. Data warisan dan unduh
 
@@ -496,10 +488,14 @@ Published 6 indikator; gedung/area/denah untuk demo; `indexHistory` 5 periode.
 
 ## 15. Verifikasi terakhir
 
-- `bun run lint` dan `bun run typecheck` di `apps/web/` lulus saat audit.
+- `bun run lint`, `bun run typecheck`, `bun test` (70 pass), dan `bun run build`
+ di `apps/web/` lulus 10 Sep 2026 setelah perbaikan.
 - Temuan di §13 berasal dari baca kode + `docs/`, bukan tebakan.
-- Perbaikan disarankan tanpa ubah lama: (1) sinkronkan D-05–D-11 di
- `docs/FLOWS.md`; (2) tambah pembentuk kandidat temuan pasca-kirim
- mandiri; (3) samakan `manualLocation` + cek peran di boundary mandiri;
- (4) tampilkan jawaban snapshot di modal validasi; (5) satukan syarat
- PIC/tenggat; (6) ganti nama `deleteCompletedReport` → arsip.
+- Perbaikan 10 Sep 2026 (tanpa ubah sistem styling; hanya copy satu baris
+ status D-11 + kelas yang sudah ada): (1) cek peran D-03 di boundary mandiri;
+ (2) lokasi manual D-11 di UI + boundary + snapshot; (3) validasi scope/versi
+ draft + kunci kirim draft basi D-10; (4) jawaban snapshot di modal validasi;
+ (5) satu sumber syarat PIC/tenggat; (6) `archiveCompletedReport` kanonis;
+ (7) turunan temuan saat Terima; (8) `selectPublicReports` D-08 di semua
+ halaman publik; (9) indeks lewati snapshot terarsip; (10) seed tanpa
+ `Anonim`; (11) UI arsip + riwayat arsip di laporan pengelola.

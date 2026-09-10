@@ -283,7 +283,7 @@ function LaporPageContent() {
       {!blocked ? <p role="status" className={`text-sm ${draftSaved ? "text-secondary-text" : "text-[#b91c1c]"}`}>
         {draftSaved ? "Draft tersimpan di perangkat ini. Foto hanya dicatat sebagai nama file." : "Draft belum tersimpan. Jangan tutup halaman; periksa ruang dan izin penyimpanan browser."}
       </p> : null}
-      {selectedHasNoAreas ? <p role="status" className="text-sm text-secondary-text">Belum ada area terdaftar; hubungi Pengelola Pesantren. Laporan belum dapat dikirim.</p> : null}
+      {selectedHasNoAreas ? <p role="status" className="text-sm text-secondary-text">Belum ada area terdaftar; tulis lokasi manual pada kolom di bawah (D-11).</p> : null}
       <LaporForm
         values={values}
         errors={visibleErrors}

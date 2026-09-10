@@ -182,7 +182,7 @@ export const SEED: IshasState = {
       id: "RPT-0006",
       channel: "lapor-cepat",
       institutionCode: "PSN-0019",
-      reporterName: "Anonim — Warga Sekitar",
+      reporterName: "Warga Sekitar — RT 04",
       title: "Dinding tembok retak parah",
       description: "Dinding sisi timur retak panjang, diduga karena pohon besar ditebang.",
       rejectionReason:
