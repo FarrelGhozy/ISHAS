@@ -2,22 +2,17 @@
 
 Integrated Safety and Health Assessment System adalah prototipe sistem penilaian K3L untuk pesantren. Tahap saat ini berfokus pada validasi tampilan dan fitur menggunakan data dummy. Backend dan formula ilmiah final belum diimplementasikan.
 
-> Catatan branch `v2`: core aktif adalah aplikasi ISHAS baru (React Router + bun) di `apps/web/` dengan sumber kebenaran `docs/v2/`. Core lama (Next.js/vinext, empat peran + Asesor) diarsipkan di `apps/_archived/web-v1/` dan tidak dipakai di branch ini. Branch `main`/`v1` menyimpan core lama apa adanya.
-
 ## Struktur repository
 
-- `apps/web` — core aktif branch `v2`: aplikasi ISHAS (React Router + TypeScript + bun).
-- `apps/_archived/web-v1` — arsip core lama (Next.js/vinext), hanya di branch `v2`; tidak dipakai dan tidak di-build.
+- `apps/web` — aplikasi ISHAS (React Router + TypeScript + bun).
 - `docs/source` — proposal asli sebagai sumber penelitian.
-- `docs/blueprint` — blueprint dan spesifikasi lama (konteks V1).
-- `docs/v2` — sumber kebenaran branch `v2`: visi, peran, route, alur, model data, dan stage V2-00…V2-09 di `docs/v2/planning/`.
-- `docs/FRONTEND_RULES.md`, `docs/BACKEND_INTEGRATION.md`, `docs/DEMO_SCENARIOS.md`, `docs/FEATURE_COVERAGE.md` — catatan lintas versi (konteks V1 kecuali dinyatakan lain).
-- `planning` — local issue management stage V1 (Stage 01…12).
-- `flow.md` — flow penggunaan utama versi lama (konteks V1).
-- `TODO.md` — kontrol pekerjaan yang sedang aktif.
+- `docs` — sumber kebenaran: visi, peran, route, alur, model data, dan spesifikasi produk yang berlaku.
+- `planning` — local issue management stage (Stage 00...09).
+- `flow.md` — alur operasional aplikasi.
+- `docs/TODO.md` — kontrol pekerjaan yang sedang aktif.
 - `AGENTS.md` — aturan tetap untuk pekerjaan di repository.
 
-## Menjalankan frontend (core V2)
+## Menjalankan frontend
 
 ```bash
 cd apps/web
@@ -29,7 +24,7 @@ Dev server berjalan di port `3003` dan dapat diakses dari jaringan (`host 0.0.0.
 
 Alamat utama `/` membuka dashboard publik tanpa login: agregat semua pesantren terdaftar plus pemilih pesantren. Tidak ada landing page dan tidak ada redirect. Tombol **Masuk** mengarah ke `/login`. Laporan dapat dikirim publik tanpa login (`/lapor`) atau oleh Pengelola Pesantren; semua laporan wajib validasi pengelola sebelum tampil di dashboard.
 
-## Akun demo frontend (core V2)
+## Akun demo frontend
 
 Login demo memakai kartu akun, tanpa kata sandi. Tidak ada peran Asesor.
 
@@ -51,4 +46,4 @@ Semua angka, skor, kategori, indikator, dan isi assessment di frontend saat ini 
 4. Perubahan yang memengaruhi hasil historis harus memiliki versioning dan audit trail.
 5. Identitas commit mengikuti konfigurasi Git milik pemilik repository. Jangan menambahkan atribusi AI atau `Co-authored-by`.
 
-Lihat `CONTRIBUTING.md` untuk ketentuan kontribusi, `AGENTS.md` (dan `docs/v2/AGENTS.md` untuk branch `v2`) untuk aturan kerja, serta `docs/v2/` untuk spesifikasi produk V2 yang berlaku.
+Lihat `CONTRIBUTING.md` untuk ketentuan kontribusi, `AGENTS.md` untuk aturan kerja, serta `docs/` untuk spesifikasi produk yang berlaku.

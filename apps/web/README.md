@@ -17,4 +17,4 @@ bun install
 bun run dev
 ```
 
-Dev server di port `3003` (`host 0.0.0.0`; host yang diizinkan: `ishas.utc.web.id`, `localhost`, `127.0.0.1`). Pemeriksaan: `bun run lint`, `bun run typecheck`, `bun test`, `bun run build`. Spesifikasi lengkap ada di `../../docs/v2/`.
+Dev server di port `3003` (`host 0.0.0.0`; host yang diizinkan: `ishas.utc.web.id`, `localhost`, `127.0.0.1`). Pemeriksaan: `bun run lint`, `bun run typecheck`, `bun test`, `bun run build`. Spesifikasi lengkap ada di `../../docs/`.

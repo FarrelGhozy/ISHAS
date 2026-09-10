@@ -1,0 +1,1 @@
+function t(i,n){if(!n)return[];const r=new Map(i.buildings.map(e=>[e.id,e.name]));return i.areas.filter(e=>e.institutionCode===n).map(e=>({id:e.id,label:`${r.get(e.buildingId)??"Gedung"} · ${e.floor} · ${e.name}`}))}export{t as s};
