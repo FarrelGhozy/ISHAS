@@ -18,6 +18,29 @@ import type {
 
 export const PERIODE_BERJALAN = "Sep 2026"; // ilustratif; kebijakan periode menunggu D-04
 
+// Daftar periode yang dikenal (riwayat ilustratif + periode berjalan) untuk preset
+// `?periode=` (ROUTES §1). Filtering rinci menunggu D-04 final; param ini dipakai
+// sebagai konteks tampilan + fallback notice, bukan agregat ilmiah baru.
+export function knownPeriods(
+  indexHistory: Record<string, IndexPoint[]> | undefined,
+): string[] {
+  const seen = new Set<string>();
+  for (const points of Object.values(indexHistory ?? {})) {
+    for (const point of points) seen.add(point.period);
+  }
+  seen.add(PERIODE_BERJALAN);
+  return [...seen];
+}
+
+export function resolvePeriodeParam(
+  requested: string | null | undefined,
+  known: string[],
+): { selected: string | undefined; invalid: string | undefined } {
+  if (!requested) return { selected: undefined, invalid: undefined };
+  if (known.includes(requested)) return { selected: requested, invalid: undefined };
+  return { selected: undefined, invalid: requested };
+}
+
 const LIKERT_MAX = 5;
 const SKOR_LIKERT_TERENDAH = 20; // likert 1 → 20 pada skala 0–100 (aturan ilustrasi)
 

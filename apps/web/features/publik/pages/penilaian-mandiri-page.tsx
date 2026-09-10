@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 import { AlertCircle, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardCheck, FileText, MapPin, Save } from "lucide-react";
-import { useMockState, storeActions } from "~/mocks/store/mock-store";
+import { useMockState } from "~/mocks/store/mock-store";
+import { mockRepository } from "~/mocks/adapters/mock-repository";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { EmptyState } from "~/shared/components/empty-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
@@ -25,7 +27,14 @@ function answerOptions(type: Indicator["answerType"]) {
 export function PenilaianMandiriPage() {
   const state = useMockState();
   const user = useCurrentUser();
-  const initialInstitution = user?.institutionCodes[0] ?? "";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const registeredCodes = selectRegisteredInstitutions(state).map((i) => i.code);
+  const param = searchParams.get("pesantren");
+  const paramValid = param !== null && registeredCodes.includes(param);
+  const paramInvalid = param !== null && !paramValid;
+  // ROUTES §1: preset ?pesantren= dihormati bila terdaftar; kode tak dikenal tidak
+  // diganti diam-diam — minta pilihan eksplisit (seperti /lapor).
+  const initialInstitution = paramValid && param ? param : (user?.institutionCodes[0] ?? "");
   const initialDraft = state.selfAssessmentDrafts[`SELF-${initialInstitution}`];
   const [institutionCode, setInstitutionCode] = useState(initialInstitution);
   const [reporterName, setReporterName] = useState(initialDraft?.reporterName ?? user?.name ?? "");
@@ -55,7 +64,7 @@ export function PenilaianMandiriPage() {
 
   useEffect(() => {
     if (!institutionCode || !instrument || reporterName.trim().length < 2 || submittedId || draftStale) return;
-    storeActions.saveSelfAssessmentDraft({ id: draftId, institutionCode, reporterName: reporterName.trim(), instrumentVersionId: effectiveVersionId || instrument.id, answers, activeIndex: active, updatedAt: new Date().toISOString() });
+    mockRepository.saveSelfAssessmentDraft({ id: draftId, institutionCode, reporterName: reporterName.trim(), instrumentVersionId: effectiveVersionId || instrument.id, answers, activeIndex: active, updatedAt: new Date().toISOString() });
   }, [institutionCode, reporterName, answers, active, draftId, submittedId, draftStale, effectiveVersionId, instrument]);
 
   if (blocked) return <EmptyState title="Kirim dinonaktifkan untuk akun Anda" description={`Anda login sebagai ${user?.role}. Keluar dari akun untuk mengisi penilaian sebagai publik.`} />;
@@ -65,9 +74,12 @@ export function PenilaianMandiriPage() {
   const selectInstitution = (code: string) => {
     const nextDraft = state.selfAssessmentDrafts[`SELF-${code}`];
     setInstitutionCode(code); setReporterName(nextDraft?.reporterName ?? user?.name ?? ""); setAnswers(nextDraft?.answers ?? {}); setDraftVersionId(nextDraft?.instrumentVersionId ?? instrument?.id ?? ""); setActive(Math.min(nextDraft?.activeIndex ?? 0, Math.max(indicators.length - 1, 0))); setNotice("");
+    const next = new URLSearchParams(searchParams);
+    if (code) next.set("pesantren", code); else next.delete("pesantren");
+    setSearchParams(next);
   };
   const discardStaleDraft = () => {
-    if (storedDraft) storeActions.deleteSelfAssessmentDraft(draftId);
+    if (storedDraft) mockRepository.deleteSelfAssessmentDraft(draftId);
     setAnswers({}); setActive(0); setDraftVersionId(instrument?.id ?? ""); setNotice("");
   };
   const setAnswer = (key: keyof IndicatorAnswer, value: string) => {
@@ -77,12 +89,14 @@ export function PenilaianMandiriPage() {
   const submit = () => {
     if (draftStale) { setNotice("Versi instrumen draft sudah diarsipkan. Buang draft lama dan mulai penilaian baru dengan versi Published terbaru."); return; }
     if (!valid) { setNotice(!identityComplete ? "Lengkapi identitas penilaian terlebih dahulu." : `Masih ada ${indicators.length - completedCount} pertanyaan yang belum lengkap.`); return; }
-    const result = storeActions.submitSelfAssessment(user ?? { name: reporterName, role: "Publik" }, draftId);
+    const actor = user ? { id: user.id, name: user.name, email: user.email, role: user.role } : { name: reporterName.trim(), role: "Publik" };
+    const result = mockRepository.submitSelfAssessment(actor, draftId);
     if (result.ok) setSubmittedId(result.id ?? "Nomor penilaian dibuat"); else setNotice(result.error ?? "Penilaian belum dapat dikirim. Coba lagi.");
   };
 
   return <section className="mx-auto flex max-w-6xl flex-col gap-5">
     <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><p className="kicker">Penilaian mandiri</p><h1 className="text-2xl font-extrabold text-heading">Periksa kondisi K3L pesantren</h1><p className="mt-1 max-w-2xl text-sm text-secondary-text">Jawab sesuai kondisi yang Anda lihat. Data tersimpan otomatis di perangkat ini dan baru dikirim setelah seluruh isian lengkap.</p></div><span className="status status-neutral w-fit"><FileText size={14} />{instrument.label}</span></header>
+    {paramInvalid ? <p role="alert" className="rounded-lg border border-line bg-white p-3 text-sm font-semibold text-[#b91c1c]">Pesantren tidak tersedia untuk pelaporan. Pilih pesantren terdaftar di bawah ini.</p> : null}
 
     <section className="surface overflow-hidden" aria-labelledby="identity-title"><div className="border-b border-line bg-strip px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className="grid size-7 place-items-center rounded-full bg-primary text-xs font-extrabold text-white">1</span><h2 id="identity-title" className="font-extrabold text-heading">Identitas penilaian</h2></div><p className="ml-9 text-xs text-secondary-text">Pilih pesantren agar daftar lokasi dan draft yang sesuai dapat dimuat.</p></div><div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5"><label className="text-sm font-bold text-heading">Pesantren <span className="text-primary">*</span><select className={fieldClass} value={institutionCode} onChange={(event) => selectInstitution(event.target.value)}><option value="">Pilih pesantren</option>{selectRegisteredInstitutions(state).map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></label><label className="text-sm font-bold text-heading">Nama pengisi <span className="text-primary">*</span><input className={fieldClass} value={reporterName} onChange={(event) => setReporterName(event.target.value)} placeholder="Masukkan nama lengkap" autoComplete="name" /><span className="mt-1 block text-xs font-normal text-secondary-text">Nama dicatat sebagai pengisi penilaian.</span></label></div></section>
 

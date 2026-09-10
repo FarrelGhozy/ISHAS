@@ -17,7 +17,9 @@ import {
 import {
   buatDashboardInsight,
   hitungIndexSummary,
+  knownPeriods,
   pilihTemuanPrioritas,
+  resolvePeriodeParam,
   ringkasTindakLanjut,
 } from "~/mocks/processors/dashboard-aggregate";
 import { EmptyState } from "~/shared/components/empty-state";
@@ -39,9 +41,18 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   const [searchParams] = useSearchParams();
 
   const registered = selectRegisteredInstitutions(state);
+  const isLocked = Boolean(lockedInstitutionCode);
   const rawParam = lockedInstitutionCode ?? searchParams.get("pesantren") ?? undefined;
   const selected =
     rawParam && registered.some((i) => i.code === rawParam) ? rawParam : undefined;
+  const pesantrenInvalid = Boolean(rawParam && !selected);
+
+  const known = knownPeriods(state.indexHistory);
+  const requestedPeriode = searchParams.get("periode") ?? undefined;
+  const { selected: selectedPeriode, invalid: invalidPeriode } = resolvePeriodeParam(
+    requestedPeriode,
+    known,
+  );
 
   const reports = useMemo(() => selectPublicReports(state, selected ?? null), [state, selected]);
   const findings = useMemo(() => selectFindingsByReports(state, reports), [state, reports]);
@@ -51,14 +62,21 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   );
 
   const selectedInstitution = selectInstitutionByCode(state, selected);
+  const rawInstitution = selectInstitutionByCode(state, rawParam);
   const scopeLabel = selectedInstitution ? selectedInstitution.name : "Semua terdaftar";
 
-  if (rawParam && !selectedInstitution) {
-    // ROUTES §3: kode tak dikenal → empty state, bukan crash.
+  if (isLocked && pesantrenInvalid) {
+    // ROUTES §3 + D-08: filter terkunci tidak fallback diam-diam.
+    // Bedakan kode tak dikenal vs dikenal-tapi-tidak-terdaftar.
+    const isKnown = Boolean(rawInstitution);
     return (
       <EmptyState
-        title="Pesantren tidak ditemukan"
-        description={`Kode "${rawParam}" tidak dikenal. Periksa kembali tautan atau pilih pesantren dari dashboard.`}
+        title={isKnown ? "Pesantren tidak tersedia untuk publik" : "Pesantren tidak ditemukan"}
+        description={
+          isKnown
+            ? `Kode "${rawParam}" tercatat tetapi tidak memenuhi syarat Pesantren terdaftar (Aktif + pengelola aktif). Hasil lama tidak tampil publik sesuai D-08.`
+            : `Kode "${rawParam}" tidak dikenal. Periksa kembali tautan atau pilih pesantren dari dashboard.`
+        }
         action={<Link className="secondary-button" to="/">Kembali ke dashboard</Link>}
       />
     );
@@ -134,6 +152,12 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
     );
   }
 
+  const periodeNotice = invalidPeriode
+    ? `Periode "${invalidPeriode}" tidak tersedia. Menampilkan periode ${summary.periode}.`
+    : selectedPeriode && selectedPeriode !== summary.periode
+      ? `Pratinjau periode ${selectedPeriode} (ilustrasi). Rincian filter periode menunggu D-04 final; angka utama tetap periode ${summary.periode}.`
+      : null;
+
   if (reports.length === 0) {
     return (
       <section className="flex flex-col gap-5">
@@ -143,6 +167,16 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
           lockedInstitutionCode={lockedInstitutionCode}
           lockedName={selectedInstitution?.name}
         />
+        {!isLocked && pesantrenInvalid ? (
+          <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+            Pesantren pada tautan tidak tersedia. Menampilkan semua pesantren terdaftar.
+          </p>
+        ) : null}
+        {periodeNotice ? (
+          <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+            {periodeNotice}
+          </p>
+        ) : null}
         <EmptyState
           title={`Belum ada hasil tervalidasi untuk ${scopeLabel}.`}
           description="Laporan Menunggu validasi atau Ditolak tidak pernah tampil di dashboard publik."
@@ -165,10 +199,20 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         lockedInstitutionCode={lockedInstitutionCode}
         lockedName={selectedInstitution?.name}
       />
+      {!isLocked && pesantrenInvalid ? (
+        <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+          Pesantren pada tautan tidak tersedia. Menampilkan semua pesantren terdaftar.
+        </p>
+      ) : null}
+      {periodeNotice ? (
+        <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+          {periodeNotice}
+        </p>
+      ) : null}
 
       <ScopeBanner
         scopeLabel={scopeLabel}
-        periode={summary.periode}
+        periode={selectedPeriode ?? summary.periode}
         instrumentLabel={instrumentLabel}
       />
 

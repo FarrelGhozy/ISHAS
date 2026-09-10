@@ -21,7 +21,7 @@ export function AdminPengaturanPage() {
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-heading">Reset data demo</p>
           <p className="text-[10px] text-secondary-text">
-            Mengembalikan seluruh data ISHAS pada perangkat ini ke seed V2 (`ishas-mock-v4`).
+            Mengembalikan seluruh data ISHAS pada perangkat ini ke seed v4 (`ishas-mock-v4` + sesi `ishas-session-v2` + draft `ishas-draft-v2:lapor:`).
             Riwayat demo sebelumnya hilang; audit kembali mengikuti seed.
           </p>
           {done ? (

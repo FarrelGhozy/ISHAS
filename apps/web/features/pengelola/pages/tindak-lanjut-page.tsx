@@ -2,13 +2,14 @@ import { useMemo, useState } from "react";
 import { storeActions, useMockState } from "~/mocks/store/mock-store";
 import type { Recommendation } from "~/mocks/types";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
+import { selectRecommendationsForManager } from "~/mocks/store/selectors";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
   const state = useMockState(); const user = useCurrentUser(); const [status, setStatus] = useState("Semua"); const [priority, setPriority] = useState("Semua"); const [query, setQuery] = useState("");
   if (!user || user.roleId !== "pengelola" || user.institutionCodes.length !== 1) return <EmptyState title="Halaman ini hanya untuk Pengelola Pesantren" />;
-  const items = useMemo(() => state.recommendations.filter((x) => state.reports.some((r) => r.id === x.reportId && r.institutionCode === user.institutionCodes[0] && !r.archivedAt)).filter((x) => status === "Semua" || x.status === status).filter((x) => priority === "Semua" || x.priority === priority).filter((x) => `${x.title} ${x.location}`.toLowerCase().includes(query.toLowerCase())), [state, user, status, priority, query]);
+  const items = useMemo(() => selectRecommendationsForManager(state, user.institutionCodes[0]).filter((x) => status === "Semua" || x.status === status).filter((x) => priority === "Semua" || x.priority === priority).filter((x) => `${x.title} ${x.location}`.toLowerCase().includes(query.toLowerCase())), [state, user, status, priority, query]);
   return <section className="flex flex-col gap-4"><header><p className="kicker">Penanganan</p><h1 className="text-2xl font-extrabold text-heading">Tindak lanjut</h1><p className="mt-1 text-sm text-secondary-text">Rencana tindakan mengubah laporan menjadi Proses; seluruh rekomendasi terverifikasi menutupnya sebagai Completed.</p></header><div className="surface grid gap-3 p-3 md:grid-cols-3"><select className="min-h-11 rounded border border-line-soft px-3" value={status} onChange={(e) => setStatus(e.target.value)}><option>Semua</option><option>Belum ditindaklanjuti</option><option>Berjalan</option><option>Menunggu verifikasi</option><option>Terverifikasi</option></select><select className="min-h-11 rounded border border-line-soft px-3" value={priority} onChange={(e) => setPriority(e.target.value)}><option>Semua</option><option>Tinggi</option><option>Sedang</option><option>Rendah</option></select><input className="min-h-11 rounded border border-line-soft px-3" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cari rekomendasi atau lokasi" /></div>{items.length ? <div className="grid gap-3">{items.map((item) => <Card key={item.id} item={item} />)}</div> : <EmptyState title="Tidak ada tindak lanjut yang cocok" />}</section>;
 }
 function Card({ item }: { item: Recommendation }) {

@@ -3,7 +3,14 @@ import type { Institution } from "~/mocks/types";
 
 export function PublicFilter({ institutions }: { institutions: Institution[] }) {
   const [params, setParams] = useSearchParams();
+  const periodeParam = params.get("periode");
   return (
+    <div className="flex flex-col gap-3">
+      {periodeParam ? (
+        <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+          Pratinjau periode {periodeParam} (ilustrasi). Rincian filter periode menunggu D-04 final.
+        </p>
+      ) : null}
     <label className="surface flex min-w-0 flex-col gap-1 p-3 text-sm font-bold text-heading sm:flex-row sm:items-center sm:gap-3">
       Pesantren
       <select
@@ -13,6 +20,7 @@ export function PublicFilter({ institutions }: { institutions: Institution[] }) 
           const next = new URLSearchParams(params);
           if (event.target.value) next.set("pesantren", event.target.value);
           else next.delete("pesantren");
+          // Pertahankan ?periode= saat ganti pesantren (ROUTES §1: URL sumber kebenaran).
           setParams(next);
         }}
       >
@@ -24,5 +32,6 @@ export function PublicFilter({ institutions }: { institutions: Institution[] }) 
         ))}
       </select>
     </label>
+    </div>
   );
 }

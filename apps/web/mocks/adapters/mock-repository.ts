@@ -48,4 +48,21 @@ export const mockRepository = {
   ): ActionResult {
     return storeActions.submitPublicReport(actor, input);
   },
+  saveSelfAssessmentDraft(input: {
+    id: string;
+    institutionCode: string;
+    reporterName: string;
+    instrumentVersionId: string;
+    answers: Record<string, Partial<import("../types").IndicatorAnswer>>;
+    activeIndex: number;
+    updatedAt: string;
+  }): ActionResult {
+    return storeActions.saveSelfAssessmentDraft(input);
+  },
+  submitSelfAssessment(actor: ReportActor, draftId: string): ActionResult {
+    return storeActions.submitSelfAssessment(actor, draftId);
+  },
+  deleteSelfAssessmentDraft(draftId: string): ActionResult {
+    return storeActions.deleteSelfAssessmentDraft(draftId);
+  },
 };

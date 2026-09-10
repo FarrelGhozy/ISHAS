@@ -198,11 +198,13 @@ export const storeActions = {
       draft.counters.report = n + 1;
       const id = `RPT-${String(n).padStart(4, "0")}`;
       createdId = id;
+      const stampedAt = nowIso();
       draft.reports.push({
         id,
         channel: "lapor-cepat",
         institutionCode: input.institutionCode,
         reporterName,
+        reporterUserId: actor.id,
         reporterAccountEmail: actor.email ?? undefined,
         title,
         description,
@@ -214,7 +216,9 @@ export const storeActions = {
         severity: "Belum ditentukan",
         priority: "Belum ditentukan",
         handlingStatus: "Menunggu validasi",
-        createdAt: nowIso(),
+        createdAt: stampedAt,
+        submittedAt: stampedAt,
+        updatedAt: stampedAt,
       });
       audit(draft, actor, {
         objectType: "Report",
@@ -261,7 +265,10 @@ export const storeActions = {
       report.severity = severity;
       report.priority = priority;
       report.validatedBy = actor.id;
+      report.validatedByName = actor.name;
+      report.validatedByRole = actor.role;
       report.validatedAt = nowIso();
+      report.updatedAt = report.validatedAt;
       report.validationNote = note;
       // Bentuk kandidat temuan/rekomendasi turunan agar kiriman yang diterima
       // langsung mengalir ke peta/rekomendasi (aturan ilustratif, bukan final).
@@ -292,7 +299,10 @@ export const storeActions = {
       report.handlingStatus = "Ditolak";
       report.rejectionReason = reason.trim();
       report.validatedBy = actor.id;
+      report.validatedByName = actor.name;
+      report.validatedByRole = actor.role;
       report.validatedAt = nowIso();
+      report.updatedAt = report.validatedAt;
       audit(draft, actor, {
         objectType: "Report",
         objectId: reportId,
@@ -361,6 +371,7 @@ export const storeActions = {
         }
       }
       report.handlingStatus = next;
+      report.updatedAt = nowIso();
       audit(draft, actor, {
         objectType: "Report",
         objectId: reportId,
@@ -595,11 +606,13 @@ export const storeActions = {
       draft.counters.report = n + 1;
       const id = `RPT-${String(n).padStart(4, "0")}`;
       result = { ok: true, id };
+      const stampedAt = nowIso();
       draft.reports.push({
         id,
         channel: "penilaian-mandiri",
         institutionCode: d.institutionCode,
         reporterName,
+        reporterUserId: sender.id,
         reporterAccountEmail: sender.email ?? undefined,
         title: "Penilaian mandiri K3L",
         description: "Ringkasan jawaban penilaian mandiri terkirim.",
@@ -608,7 +621,9 @@ export const storeActions = {
         severity: "Belum ditentukan",
         priority: "Belum ditentukan",
         handlingStatus: "Menunggu validasi",
-        createdAt: nowIso(),
+        createdAt: stampedAt,
+        submittedAt: stampedAt,
+        updatedAt: stampedAt,
       });
       draft.selfAssessmentSnapshots.push({
         reportId: id,
@@ -645,7 +660,10 @@ export const storeActions = {
     const email = user.email.trim().toLowerCase();
     if (name.length < 2) return { ok: false, error: "Nama pengguna minimal 2 karakter." };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Format email tidak valid." };
+    // D-09 (9 Sep 2026): Super Admin dapat membuat Super Admin, Peneliti, Pengelola.
+    // Pengelola wajib tepat 1 pesantren Aktif; admin/peneliti tanpa scope lembaga.
     if (user.roleId === "pengelola" && (user.institutionCodes.length !== 1 || !currentState.institutions.some((item) => item.code === user.institutionCodes[0] && item.status === "Aktif"))) return { ok: false, error: "Pengelola wajib terhubung ke satu pesantren aktif." };
+    if ((user.roleId === "admin" || user.roleId === "peneliti") && user.institutionCodes.length !== 0) return { ok: false, error: "Super Admin dan Peneliti tidak terikat pesantren." };
     if (getState().users.some((u) => u.email.toLowerCase() === email)) {
       return { ok: false, error: "Email sudah digunakan pada data demo." };
     }
@@ -702,6 +720,76 @@ export const storeActions = {
     const id = `INS-v${major}.0`;
     const copy: InstrumentVersion = { ...structuredClone(source), id, label: `ISHAS v${major}.0`, status: "Draft", publishedAt: undefined };
     setState((draft) => { draft.instrumentVersions.push(copy); audit(draft, { name: "Peneliti" }, { objectType: "InstrumentVersion", objectId: id, action: "Membuat draft instrumen", note: `Salinan ${source.id}` }); });
+    return { ok: true, id };
+  },
+
+  addInstrumentDimension(versionId: string, name: string): ActionResult {
+    const clean = name.trim();
+    if (clean.length < 3) return { ok: false, error: "Nama dimensi minimal 3 karakter." };
+    const target = currentState.instrumentVersions.find((v) => v.id === versionId);
+    if (!target) return { ok: false, error: "Versi instrumen tidak ditemukan." };
+    if (target.status !== "Draft") return { ok: false, error: "Hanya versi Draft yang dapat diubah. Buat versi baru untuk perubahan." };
+    let id = "";
+    setState((draft) => {
+      const version = draft.instrumentVersions.find((v) => v.id === versionId)!;
+      const n = version.dimensions.length + 1;
+      id = `DIM-${String(n).padStart(2, "0")}`;
+      version.dimensions.push({ id, name: clean, indicators: [] });
+      audit(draft, { name: "Peneliti" }, { objectType: "InstrumentVersion", objectId: versionId, action: "Menambah dimensi", note: clean });
+    });
+    return { ok: true, id };
+  },
+
+  addInstrumentIndicator(
+    versionId: string,
+    dimensionId: string,
+    input: {
+      code: string;
+      title: string;
+      prompt: string;
+      answerType: "likert-1-5" | "boolean-ya-tidak" | "likert-1-2-tidak";
+      required: boolean;
+      evidenceRequired: boolean;
+      locationRequired: boolean;
+    },
+  ): ActionResult {
+    const code = input.code.trim();
+    const title = input.title.trim();
+    const prompt = input.prompt.trim();
+    if (!code) return { ok: false, error: "Kode indikator wajib diisi." };
+    if (title.length < 5) return { ok: false, error: "Judul indikator minimal 5 karakter." };
+    if (prompt.length < 10) return { ok: false, error: "Prompt minimal 10 karakter." };
+    const target = currentState.instrumentVersions.find((v) => v.id === versionId);
+    if (!target) return { ok: false, error: "Versi instrumen tidak ditemukan." };
+    if (target.status !== "Draft") return { ok: false, error: "Hanya versi Draft yang dapat diubah. Buat versi baru untuk perubahan." };
+    if (target.dimensions.flatMap((d) => d.indicators).some((i) => i.code.toLowerCase() === code.toLowerCase())) {
+      return { ok: false, error: "Kode indikator sudah digunakan pada versi ini." };
+    }
+    let id = "";
+    setState((draft) => {
+      const version = draft.instrumentVersions.find((v) => v.id === versionId)!;
+      const dim = version.dimensions.find((d) => d.id === dimensionId);
+      if (!dim) return;
+      const count = version.dimensions.flatMap((d) => d.indicators).length + 1;
+      id = `IND-NEW-${String(count).padStart(3, "0")}`;
+      dim.indicators.push({
+        id,
+        code,
+        title,
+        prompt,
+        answerType: input.answerType,
+        required: input.required,
+        evidenceRequired: input.evidenceRequired,
+        locationRequired: input.locationRequired,
+        findingTrigger: "ilustrasi: dikaji pengelola saat validasi",
+      });
+      audit(draft, { name: "Peneliti" }, { objectType: "InstrumentVersion", objectId: versionId, action: "Menambah indikator", note: `${code} · ${title}` });
+    });
+    const ok = currentState.instrumentVersions
+      .find((v) => v.id === versionId)
+      ?.dimensions.find((d) => d.id === dimensionId)
+      ?.indicators.some((i) => i.id === id);
+    if (!ok) return { ok: false, error: "Dimensi tidak ditemukan." };
     return { ok: true, id };
   },
 

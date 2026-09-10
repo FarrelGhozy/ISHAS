@@ -18,7 +18,13 @@ export function ContextBar({
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCode = lockedInstitutionCode ?? searchParams.get("pesantren");
-  const query = selectedCode && registered.some((i) => i.code === selectedCode) ? `?pesantren=${encodeURIComponent(selectedCode)}` : "";
+  const periodeParam = searchParams.get("periode");
+  const queryParts: string[] = [];
+  if (selectedCode && registered.some((i) => i.code === selectedCode)) {
+    queryParts.push(`pesantren=${encodeURIComponent(selectedCode)}`);
+  }
+  if (periodeParam) queryParts.push(`periode=${encodeURIComponent(periodeParam)}`);
+  const query = queryParts.length ? `?${queryParts.join("&")}` : "";
   const adaTerdaftar = registered.length > 0;
 
   return (
@@ -51,7 +57,7 @@ export function ContextBar({
         )}
       </div>
       <span className="text-xs font-semibold text-secondary-text">
-        Periode hasil: {PERIODE_BERJALAN} · ilustrasi
+        Periode hasil: {periodeParam || PERIODE_BERJALAN} · ilustrasi
       </span>
       <div className="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto">
         {!adaTerdaftar ? (

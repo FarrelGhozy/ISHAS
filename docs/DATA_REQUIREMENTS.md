@@ -152,8 +152,9 @@ dasar menampilkan alasan penolakan atau detail privat kepada orang yang memasukk
 
 ## 7. Penyimpanan dan reset demo
 
-- Fakta penyimpanan: domain memakai `ishas-domain-v3`, sesi memakai `ishas-demo-session-v1`.
-  Key aplikasi (`ishas-mock-v4` + key sesi/draft, usulan SUGGESTIONS §7). Reset menyebut persis data yang direset.
+- Fakta penyimpanan (diselaraskan 10 Sep 2026): domain `ishas-mock-v4` (schema v4, localStorage),
+  sesi `ishas-session-v2` (sessionStorage, menunjuk ID akun), draft lapor `ishas-draft-v2:lapor:<kode|umum>`
+  (localStorage per pesantren). Draft penilaian + snapshot tersimpan di dalam domain. Reset menyebut persis data yang direset.
 - Draft memerlukan versi skema tersendiri, pesantren, kanal, versi instrumen jika berlaku,
  konteks pemilik, waktu simpan, dan hubungan kiriman. Kebijakan jumlah draft serta logout menunggu D-10.
 - Simulasi bukti hanya menyimpan nama/metadata; sesudah refresh tidak boleh mengklaim isi berkas

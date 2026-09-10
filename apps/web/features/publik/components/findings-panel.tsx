@@ -2,7 +2,7 @@
 // Kartu temuan: chip severity + status + zona/lokasi + isu + Lihat tindak lanjut →
 // Nama validator TAMPIL, nama pelapor TIDAK (D-02). Hanya temuan laporan `Diterima`.
 
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { ShieldCheck } from "lucide-react";
 import type { Report, RiskFinding, User } from "~/mocks/types";
 import { StatusChip } from "~/shared/components/status-chip";
@@ -18,13 +18,20 @@ export function FindingsPanel({
   reportById: Map<string, Report>;
   userById: (id: string | undefined) => User | undefined;
 }) {
+  const [searchParams] = useSearchParams();
+  const periodeParam = searchParams.get("periode");
+  const withPeriode = (url: string) => {
+    if (!periodeParam) return url;
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}periode=${encodeURIComponent(periodeParam)}`;
+  };
   return (
     <div className="surface p-4">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-sm font-extrabold text-heading">
           Temuan yang perlu ditindaklanjuti
         </h2>
-        <Link className="text-button ms-auto" to={`/peta-risiko${institutionCode ? `?pesantren=${encodeURIComponent(institutionCode)}` : ""}`}>
+        <Link className="text-button ms-auto" to={withPeriode(`/peta-risiko${institutionCode ? `?pesantren=${encodeURIComponent(institutionCode)}` : ""}`)}>
           Buka peta bahaya →
         </Link>
       </div>
@@ -39,7 +46,7 @@ export function FindingsPanel({
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
           {findings.map((f) => {
             const report = reportById.get(f.reportId);
-            const validator = userById(report?.validatedBy);
+            const validatorName = report?.validatedByName ?? userById(report?.validatedBy)?.name;
             return (
               <div key={f.id} className="flex flex-col gap-2 rounded-lg border border-line p-3">
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -51,15 +58,15 @@ export function FindingsPanel({
                   {f.zone} · {f.location}
                 </p>
                 <div className="mt-auto flex flex-wrap items-center justify-between gap-2">
-                  {validator ? (
+                  {validatorName ? (
                     <span className="flex items-center gap-1 text-xs font-semibold text-secondary-text">
                       <ShieldCheck size={11} aria-hidden />
-                      Divalidasi oleh {validator.name}
+                      Divalidasi oleh {validatorName}
                     </span>
                   ) : (
                     <span />
                   )}
-                  <Link className="text-button" to={`/tindak-lanjut?pesantren=${encodeURIComponent(report?.institutionCode ?? institutionCode ?? "")}`}>
+                  <Link className="text-button" to={withPeriode(`/tindak-lanjut?pesantren=${encodeURIComponent(report?.institutionCode ?? institutionCode ?? "")}`)}>
                     Lihat tindak lanjut →
                   </Link>
                 </div>

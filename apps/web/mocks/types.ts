@@ -24,8 +24,10 @@ export type RecommendationStatus =
 export type Institution = {
   code: string; // 'PSN-0018', unik, dibuat berurutan PSN-XXXX
   name: string; // unik, maks 120
-  location: string; // 'Kota Malang'
-  manager: string; // nama pengelola utama (teks)
+  location: string; // 'Kota Malang' (kota/kabupaten; alamat lengkap di address bila ada)
+  address?: string; // alamat lengkap onboarding (FLOWS §1); publik hanya kota/kabupaten (D-02)
+  manager: string; // nama pengelola utama (teks tampilan; relasi resmi via User.institutionCodes)
+  users?: number; // count turunan (DATA_MODEL §2); dihitung, bukan input
   assessment: "Belum dimulai" | "Berjalan" | "Draft" | "Selesai"; // warisan V1; pemetaan menunggu D-04
   status: InstitutionStatus;
 };
@@ -48,6 +50,7 @@ export type Report = {
   channel: ReportChannel;
   institutionCode: string; // FK Institution.code
   reporterName: string; // 2–100 karakter, wajib; tanpa opsi anonim (D-02)
+  reporterUserId?: string; // FK User.id bila dikirim saat login (DATA_REQUIREMENTS §2); email bukan kunci relasi
   reporterAccountEmail?: string; // terisi bila dikirim saat login (pengelola)
   title: string; // 10–140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
   description: string;
@@ -63,11 +66,17 @@ export type Report = {
   handlingStatus: HandlingStatus;
   rejectionReason?: string; // wajib bila Ditolak, min 10
   validationNote?: string;
-  validatedBy?: string;
+  validatedBy?: string; // FK User.id validator (keputusan moderasi)
+  validatedByName?: string; // snapshot nama validator saat keputusan (anti rewrite histori)
+  validatedByRole?: string; // snapshot peran validator saat keputusan
   validatedAt?: string;
   archivedAt?: string;
   archivedReason?: string;
   createdAt: string;
+  submittedAt?: string; // waktu kirim (beda dari createdAt bila relevan)
+  observedAt?: string; // waktu observasi (bukan nama pelapor)
+  updatedAt?: string; // perubahan penanganan terakhir
+  correctionOf?: string; // FK Report.id asal bila koreksi lewat laporan baru (D-07)
 };
 
 export type IndicatorAnswer = {
@@ -87,14 +96,16 @@ export type SelfAssessmentSnapshot = {
 };
 
 export type SelfAssessmentDraft = {
-  // belum dikirim; per perangkat (localStorage) — kebijakan lama menunggu D-10
+  // belum dikirim; per perangkat — kebijakan D-10 (draft lama terkunci kirim)
   id: string; // 'SELF-0001'
   institutionCode: string;
   reporterName: string;
+  reporterUserId?: string; // pemilik draft pada perangkat bersama (D-10)
   instrumentVersionId: string; // terkunci ke Published aktif
   answers: Record<string, Partial<IndicatorAnswer>>;
   activeIndex: number;
   updatedAt: string;
+  submittedReportId?: string; // tautan kiriman setelah sukses (anti kirim ganda)
 };
 
 export type RiskFinding = {
@@ -141,6 +152,9 @@ export type Recommendation = {
   progress: number; // 0–100
   lastNote?: string;
   completionEvidence?: string;
+  updatedAt?: string; // perubahan terakhir (pelaku tercatat di audit)
+  verifiedBy?: string; // FK User.id pemeriksa penyelesaian (D-06)
+  verifiedAt?: string;
 };
 
 export type Building = {

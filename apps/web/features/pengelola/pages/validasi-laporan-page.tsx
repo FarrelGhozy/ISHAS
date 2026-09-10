@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMockState, storeActions } from "~/mocks/store/mock-store";
 import { selectAreasByInstitution } from "~/mocks/store/lapor-selectors";
-import { selectInstitutionByCode } from "~/mocks/store/selectors";
+import { selectInstitutionByCode, selectReportsForManager } from "~/mocks/store/selectors";
 import { StatusChip } from "~/shared/components/status-chip";
 import { EmptyState } from "~/shared/components/empty-state";
 import { Modal } from "~/shared/components/modal";
@@ -19,7 +19,7 @@ export function ValidasiLaporanPage() {
   if (!user || user.roleId !== "pengelola" || user.institutionCodes.length !== 1) return <EmptyState title="Halaman ini hanya untuk Pengelola Pesantren" />;
   const code = user.institutionCodes[0];
   const institution = selectInstitutionByCode(state, code);
-  const reports = useMemo(() => state.reports.filter((item) => item.institutionCode === code && (filter === "Semua" || item.validationStatus === filter || item.handlingStatus === filter) && `${item.id} ${item.title} ${item.reporterName}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [state, code, filter, query]);
+  const reports = useMemo(() => selectReportsForManager(state, code).filter((item) => (filter === "Semua" || item.validationStatus === filter || item.handlingStatus === filter) && `${item.id} ${item.title} ${item.reporterName}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), [state, code, filter, query]);
   return <section className="flex flex-col gap-4"><header><p className="kicker">Moderasi</p><h1 className="text-2xl font-extrabold text-heading">Validasi laporan</h1><p className="mt-1 text-sm text-secondary-text">Hanya laporan milik {institution?.name ?? code}.</p></header><div className="surface grid gap-3 p-3 sm:grid-cols-2"><label className="text-sm font-bold">Status<select className="mt-1 min-h-11 w-full rounded border border-line-soft px-3" value={filter} onChange={(e) => setFilter(e.target.value)}><option>Menunggu validasi</option><option>Pending</option><option>Proses</option><option>Completed</option><option>Ditolak</option><option>Semua</option></select></label><label className="text-sm font-bold">Cari<input className="mt-1 min-h-11 w-full rounded border border-line-soft px-3" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nomor, judul, pelapor" /></label></div>{reports.length ? <div className="surface divide-y divide-line">{reports.map((item) => <article key={item.id} className="flex flex-wrap items-center gap-3 p-4"><div className="min-w-0 flex-1"><div className="flex flex-wrap gap-2"><strong className="text-primary">{item.id}</strong><StatusChip value={item.channel} /><StatusChip value={item.validationStatus} /></div><h2 className="mt-2 font-bold text-heading">{item.title}</h2><p className="text-sm text-secondary-text">{item.reporterName} · {new Date(item.createdAt).toLocaleString("id-ID")}</p></div><button className="primary-button" onClick={() => setReport(item)}>Periksa</button></article>)}</div> : <EmptyState title="Tidak ada laporan untuk filter ini" description="Ubah filter atau tunggu laporan baru dari pelapor." />}<Review key={report?.id ?? "tutup"} report={report} user={user} state={state} close={() => setReport(null)} /></section>;
 }
 

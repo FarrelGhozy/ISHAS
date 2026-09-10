@@ -64,6 +64,37 @@ export function selectValidationQueue(
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+// Bacaan kelola pengelola (internal, bukan publik): seluruh laporan milik satu
+// pesantren, terbaru dulu. Filter status dilakukan di UI; mutasi tetap lewat
+// setStateReport (cek scope + akun aktif).
+export function selectReportsForManager(
+  state: { reports: Report[] },
+  institutionCode: string,
+): Report[] {
+  return state.reports
+    .filter((r) => r.institutionCode === institutionCode)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+// Rekomendasi kelola: hanya turunan laporan Diterima + belum diarsip milik scope.
+// Menutup celah import masa depan yang meloloskan Menunggu/Ditolak ke antrean internal.
+export function selectRecommendationsForManager(
+  state: { reports: Report[]; recommendations: Recommendation[] },
+  institutionCode: string,
+): Recommendation[] {
+  const ids = new Set(
+    state.reports
+      .filter(
+        (r) =>
+          r.institutionCode === institutionCode &&
+          r.validationStatus === "Diterima" &&
+          !r.archivedAt,
+      )
+      .map((r) => r.id),
+  );
+  return state.recommendations.filter((rec) => ids.has(rec.reportId));
+}
+
 export function selectReportsByInstitution(
   state: { institutions: Institution[]; reports: Report[]; users: User[] },
   institutionCode: string | null,
