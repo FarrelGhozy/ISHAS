@@ -13,6 +13,7 @@ export type LaporValues = {
   title: string;
   description: string;
   evidenceName: string;
+  evidenceAssetId?: string;
   contact: string;
 };
 

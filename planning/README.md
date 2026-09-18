@@ -7,6 +7,9 @@ Aturan kerja: `AGENTS.md`. Status harian: `../TODO.md`. Verifikasi: `../TEST_PLA
 
 ## Status
 
+Arahan tambahan 18 September: [bukti gambar Pelaporan](STAGE_REPORT_EVIDENCE.md),
+revisi terbatas unggah lokal dan pemeriksaan internal pada `/lapor`.
+
 Revisi aktif atas arahan langsung 18 September: [Risk Map](STAGE_RISK_MAP.md),
 frontend untuk REVIEW. Status historis stage pada tabel berikut tidak diubah
 sepihak oleh revisi lintas fitur ini.

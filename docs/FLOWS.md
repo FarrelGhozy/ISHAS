@@ -43,7 +43,7 @@ setelah pesantren/akun nonaktif juga perlu keputusan; jangan menghapusnya otomat
  | Lokasi/area | Wajib, dropdown area milik pesantren terpilih (format "Gedung · Lantai · Area"). Jika area belum ada → pesan "Belum ada area terdaftar; hubungi pengelola pondok." |
  | Judul temuan | Wajib, 10–140 karakter. Contoh: "Kabel terbuka di koridor lantai 2". |
  | Deskripsi | Wajib, min 20 karakter: apa, di mana tepatnya, sejak kapan, siapa terdampak. |
- | Foto/bukti | Opsional (simpan nama file dummy). Bukan bukti nyata di prototipe. |
+ | Foto/bukti | Opsional, satu PNG/JPEG/WebP maksimum 5 MB/20 megapiksel. Periksa dekode → simpan blob lokal → pratinjau → ID lampiran pada draft/laporan. Bukti privat, hanya pengelola pemilik scope. Backend belum tersedia. |
  | Kontak | Opsional, maks 100 karakter (untuk klarifikasi). |
 3. Tekan **Kirim laporan** → validasi inline per field → sukses: tampilkan layar konfirmasi berisi **nomor laporan** (`RPT-XXXX`), status `Menunggu validasi`, dan penjelasan "Laporan Anda belum tampil di dashboard; menunggu validasi pengelola pondok." + tombol kembali.
  → Sistem: `validationStatus: Menunggu validasi`, `handlingStatus: Menunggu validasi`, `severity/priority: Belum ditentukan`; audit `Mengirim laporan publik`; notifikasi ke pengelola pesantren terkait (`/pengelola/validasi-laporan`).

@@ -75,7 +75,8 @@ type Report = {
  description: string; // min 20 (lapor-cepat) / ringkasan otomatis dari jawaban terkirim (penilaian-mandiri; aturan penyusunannya belum ditetapkan, D-04/D-05)
  areaId?: string; // FK Area.id; kebijakan tanpa area menunggu D-11
  planPoint?: { x: number; y: number } | null; // 0-100
- evidenceName?: string; // nama file dummy
+ evidenceName?: string; // nama lampiran; data lama bisa hanya berupa nama dummy
+ evidenceAssetId?: string; // ID blob bukti privat di IndexedDB perangkat-lokal (/lapor)
  contact?: string;
  instrumentVersionId?: string; // wajib bila channel penilaian-mandiri
  validationStatus: ValidationStatus;

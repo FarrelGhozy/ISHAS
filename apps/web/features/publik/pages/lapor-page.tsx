@@ -18,6 +18,7 @@ import { EmptyState } from "~/shared/components/empty-state";
 import { LocationPicker } from "~/shared/components/campus-plan";
 import { validateMapLocation } from "~/mocks/processors/campus-map";
 import { LaporForm } from "../components/lapor-form";
+import { ReportEvidencePicker } from "../components/report-evidence-picker";
 import { LaporSuccess } from "../components/lapor-success";
 import {
   EMPTY_LAPOR_VALUES,
@@ -96,6 +97,8 @@ function LaporPageContent() {
   const [touched, setTouched] = useState<Partial<Record<keyof LaporValues, boolean>>>({});
   const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [evidenceUploading, setEvidenceUploading] = useState(false);
+  const [evidenceReady, setEvidenceReady] = useState(() => !values.evidenceAssetId);
   const [formError, setFormError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
@@ -195,8 +198,8 @@ function LaporPageContent() {
     setValues((v) => ({ ...v, [field]: value, ...(field === "areaId" ? { locationSnapshot: undefined } : {}) }));
   }
 
-  function handleSubmit() {
-    if (submitLock.current || blocked) return;
+  async function handleSubmit() {
+    if (submitLock.current || blocked || evidenceUploading || !evidenceReady) return;
     if (mapError) { setFormError(mapError); return; }
     setAttempted(true);
     setTouched({
@@ -218,7 +221,7 @@ function LaporPageContent() {
     // klik ganda lolos sebelum render ulang (store mengembalikan id yang sama).
     submitLock.current = true;
     setSubmitting(true);
-    const result = mockRepository.submitLaporCepat(
+    const result = await mockRepository.submitLaporCepat(
       {
         id: user?.id,
         name: user?.name ?? values.reporterName.trim(),
@@ -233,6 +236,7 @@ function LaporPageContent() {
         areaId: values.areaId,
         manualLocation: values.manualLocation.trim() || undefined,
         evidenceName: values.evidenceName.trim() || undefined,
+        evidenceAssetId: values.evidenceAssetId,
         contact: values.contact.trim() || undefined,
         clientRequestId: requestIdRef.current,
         locationSnapshot: values.locationSnapshot,
@@ -254,7 +258,7 @@ function LaporPageContent() {
     else setConfirmCancel(true);
   }
 
-  const canSubmit = isLaporValid(errors) && !blocked && !mapError;
+  const canSubmit = isLaporValid(errors) && !blocked && !mapError && !evidenceUploading && evidenceReady;
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -287,17 +291,18 @@ function LaporPageContent() {
       ) : null}
 
       {!blocked ? <p role="status" className={`text-sm ${draftSaved ? "text-secondary-text" : "text-[#b91c1c]"}`}>
-        {draftSaved ? "Draft tersimpan di perangkat ini. Foto hanya dicatat sebagai nama file." : "Draft belum tersimpan. Jangan tutup halaman; periksa ruang dan izin penyimpanan browser."}
+        {draftSaved ? "Draft tersimpan di perangkat ini. Gambar bukti tersimpan terpisah di browser yang sama." : "Draft belum tersimpan. Jangan tutup halaman; periksa ruang dan izin penyimpanan browser."}
       </p> : null}
       {selectedHasNoAreas ? <p role="status" className="text-sm text-secondary-text">Belum ada area terdaftar; tulis lokasi manual pada kolom di bawah (D-11).</p> : null}
       <LaporForm
+        evidencePicker={<ReportEvidencePicker institutionCode={values.institutionCode} actor={{ id: user?.id, name: user?.name ?? values.reporterName.trim(), role: user?.role ?? "Publik" }} assetId={values.evidenceAssetId} name={values.evidenceName} disabled={blocked || submitting || evidenceUploading} onBusy={setEvidenceUploading} onAvailability={setEvidenceReady} onChange={(evidenceAssetId, evidenceName = "") => { setFormError(null); setValues((current) => ({ ...current, evidenceAssetId, evidenceName })); }} />}
         locationPicker={values.institutionCode ? <>{mapError ? <p role="alert" className="text-sm text-primary">{mapError}</p> : null}<LocationPicker key={values.institutionCode} plan={activePlan} value={values.locationSnapshot} disabled={blocked} onChange={(locationSnapshot) => { setFormError(null); setValues((current) => ({ ...current, locationSnapshot })); }} /></> : undefined}
         values={values}
         errors={visibleErrors}
         registered={registered}
         areas={areas}
         areasEmpty={selectedHasNoAreas}
-        readOnly={blocked}
+        readOnly={blocked || submitting || evidenceUploading}
         submitting={submitting}
         submitDisabled={blocked || submitting || !canSubmit}
         confirmCancel={confirmCancel}

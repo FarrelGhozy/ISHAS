@@ -148,6 +148,7 @@ export const storeActions = {
       areaId?: string;
       manualLocation?: string;
       evidenceName?: string;
+      evidenceAssetId?: string;
       contact?: string;
       clientRequestId?: string;
       locationSnapshot?: LocationSnapshot;
@@ -179,6 +180,7 @@ export const storeActions = {
     const description = input.description?.trim() ?? "";
     const contact = input.contact?.trim() ?? "";
     const evidenceName = input.evidenceName?.trim() || undefined;
+    if (input.evidenceAssetId && (!/^evidence-asset-[0-9a-f-]{36}$/.test(input.evidenceAssetId) || !evidenceName || evidenceName.length > 200)) return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
     if (reporterName.length < 2) {
       return { ok: false, error: "Nama minimal 2 karakter." };
     }
@@ -237,6 +239,7 @@ export const storeActions = {
         manualLocation,
         locationSnapshot: snapshotLocation(draft, input.institutionCode, input.areaId, manualLocation, input.locationSnapshot),
         evidenceName,
+        evidenceAssetId: input.evidenceAssetId,
         contact: contact || undefined,
         validationStatus: "Menunggu validasi",
         severity: "Belum ditentukan",

@@ -2,7 +2,7 @@
 // Urutan field tetap: Nama → Pesantren → Lokasi/area → Judul → Deskripsi → Foto → Kontak.
 // Logika (draft, kirim, pesantren terpilih) tinggal di halaman; komponen ini hanya render.
 
-import { AlertTriangle, Upload } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { ReactNode } from "react";
 import { Modal } from "~/shared/components/modal";
 import type { LaporErrors, LaporValues } from "../lib/lapor-validation";
@@ -12,6 +12,7 @@ export type InstitutionOption = { code: string; name: string };
 
 type Props = {
   locationPicker?: ReactNode;
+  evidencePicker: ReactNode;
   values: LaporValues;
   errors: LaporErrors;
   registered: InstitutionOption[];
@@ -216,28 +217,7 @@ export function LaporForm(props: Props) {
         ) : null}
       </div>
 
-      <div>
-        <label htmlFor="lapor-foto" className={LABEL}>
-          <span className="inline-flex items-center gap-1">
-            <Upload size={12} aria-hidden />
-            Foto
-          </span>
-        </label>
-        <input
-          id="lapor-foto"
-          ref={(el) => props.registerField("evidenceName", el)}
-          className={INPUT}
-          value={values.evidenceName}
-          disabled={readOnly}
-          placeholder="contoh: koridor.jpg"
-          aria-describedby="lapor-foto-hint"
-          onChange={(e) => props.onChange("evidenceName", e.target.value)}
-          onBlur={() => props.onBlur("evidenceName")}
-        />
-        <p id="lapor-foto-hint" className={HINT}>
-          Opsional · tersimpan sebagai nama file pada prototipe.
-        </p>
-      </div>
+      {props.evidencePicker}
 
       <div>
         <label htmlFor="lapor-kontak" className={LABEL}>

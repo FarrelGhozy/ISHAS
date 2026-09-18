@@ -58,6 +58,11 @@ dengan validasi ketat dan layar sukses bernomor — tanpa pernah tampil langsung
 
 ## Hasil Pemeriksaan
 
+Revisi 18 September atas arahan pemilik: kolom nama file dummy Pelaporan
+diganti unggah gambar lokal. Detail implementasi/uji di
+[STAGE_REPORT_EVIDENCE.md](STAGE_REPORT_EVIDENCE.md); catatan 8 September berikut
+merupakan hasil tahap sebelumnya. Tidak mengubah status historis seluruh stage.
+
 ```
 Tanggal: 8 September 2026
 Route (12/#): #3 terimplementasi, verifikasi render browser menyusul — `/lapor` tanpa

@@ -22,7 +22,7 @@ export function AdminPengaturanPage() {
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-heading">Reset data demo</p>
           <p className="text-[10px] text-secondary-text">
-            Mengembalikan data domain dan aset denah pada perangkat ini ke seed v5. Sesi dan draft laporan cepat tetap tersimpan terpisah; titik draft yang usang perlu dipilih ulang.
+            Mengembalikan data domain, aset denah dan gambar bukti pada perangkat ini ke seed v5. Sesi dan draft laporan cepat tetap tersimpan terpisah; titik usang perlu dipilih ulang dan gambar bukti perlu diunggah kembali.
             Riwayat demo sebelumnya hilang; audit kembali mengikuti seed.
           </p>
           {done ? (

@@ -59,7 +59,8 @@ export type Report = {
   areaId?: string; // FK Area.id
   manualLocation?: string; // lokasi pelapor bila belum tersedia di daftar area (D-11)
   planPoint?: { x: number; y: number } | null; // 0–100
-  evidenceName?: string; // nama file dummy
+  evidenceName?: string; // nama lampiran; data lama dapat hanya berupa nama dummy
+  evidenceAssetId?: string; // blob bukti privat di IndexedDB perangkat-lokal
   contact?: string;
   instrumentVersionId?: string; // wajib bila kanal penilaian-mandiri
   validationStatus: ValidationStatus;

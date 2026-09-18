@@ -64,7 +64,7 @@ test("penggantian memerlukan pengelola scope, persetujuan dan versi aktif yang b
 
 test("public projection tidak membawa nomor laporan/identitas/bukti/audit", () => {
   const items = selectPublicCampusMap(getState(), "PSN-0018").items;
-  for (const item of items) for (const key of ["reportId", "reporterName", "reporterAccountEmail", "contact", "evidence", "auditEvents", "sourceAnswerId"]) expect(key in item).toBe(false);
+  for (const item of items) for (const key of ["reportId", "reporterName", "reporterAccountEmail", "contact", "evidence", "evidenceAssetId", "auditEvents", "sourceAnswerId"]) expect(key in item).toBe(false);
 });
 
 test("cluster menghitung anggota, bukan jumlah kelompok", () => {

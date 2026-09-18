@@ -31,7 +31,10 @@ Keputusan pemilik 8 September 2026: **ISHAS dibangun sebagai aplikasi**
 Seluruh prototipe memakai data dummy; backend dan rumus final belum termasuk.
 Data publik mengikuti D-02 (ringkasan saja + nama validator/PIC) dan hak melapor mengikuti
 D-03 (publik + pengelola; Super Admin/Peneliti harus keluar dahulu).
-Backend, rumus ilmiah final, upload file nyata, dan PDF/Excel nyata belum termasuk.
+Backend, rumus ilmiah final, unggah file ke server, dan PDF/Excel nyata belum termasuk.
+Denah dan gambar bukti Pelaporan dapat dipilih sebagai file lokal dan tersimpan
+di IndexedDB pada perangkat/origin browser yang sama. Bukti tidak dibuka publik;
+penilaian mandiri per indikator masih memakai nama file dummy.
 
 ## Cara membaca hasil validasi
 

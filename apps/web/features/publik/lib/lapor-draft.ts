@@ -5,6 +5,7 @@
 
 import { EMPTY_LAPOR_VALUES, type LaporValues } from "./lapor-validation";
 import { isValidPoint } from "~/mocks/processors/campus-map";
+import { isEvidenceAssetId } from "~/mocks/adapters/report-evidence";
 
 const DRAFT_KEY_PREFIX = "ishas-draft-v2:lapor:";
 
@@ -32,6 +33,7 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
       title: typeof parsed.title === "string" ? parsed.title : "",
       description: typeof parsed.description === "string" ? parsed.description : "",
       evidenceName: typeof parsed.evidenceName === "string" ? parsed.evidenceName : "",
+      evidenceAssetId: isEvidenceAssetId(parsed.evidenceAssetId) ? parsed.evidenceAssetId : undefined,
       contact: typeof parsed.contact === "string" ? parsed.contact : "",
     };
   } catch {
@@ -68,6 +70,7 @@ export function isLaporEmpty(values: LaporValues): boolean {
     values.title.trim() === "" &&
     values.description.trim() === "" &&
     values.evidenceName.trim() === "" &&
+    !values.evidenceAssetId &&
     values.contact.trim() === "" &&
     values.areaId === ""
     && values.manualLocation.trim() === "" && !values.locationSnapshot?.point && !values.locationSnapshot?.floorNote

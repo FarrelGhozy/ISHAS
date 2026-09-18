@@ -1,5 +1,13 @@
 # TODO — Kontrol Kerja Aktif
 
+## Gambar bukti Pelaporan — 18 September 2026
+
+Arahan pemilik mengaktifkan revisi terbatas `/lapor`: satu gambar opsional
+PNG/JPEG/WebP, maksimum 5 MB/20 megapiksel, pratinjau dan lepas/ganti lampiran.
+Blob di IndexedDB, ID pada draft/laporan; pengelola membaca bukti pada validasi,
+bukan ruang publik. Backend/publikasi tidak termasuk.
+Hasil dan batas uji di [stage bukti gambar](../planning/STAGE_REPORT_EVIDENCE.md).
+
 ## Rancangan Risk Map — 18 September 2026
 
 Cakupan: rancangan detail dan ilustrasi, tanpa perubahan kode aplikasi.
