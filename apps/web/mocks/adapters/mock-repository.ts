@@ -9,6 +9,10 @@ import {
   selectRegisteredInstitutions,
   selectPublicReports,
 } from "../store/selectors";
+import type { CampusPlanVersion, LocationSnapshot } from "../types";
+import { putCampusAsset, deleteCampusAsset, clearCampusAssets } from "./campus-assets";
+let resettingAssets = false;
+let assetEpoch = 0;
 
 export const mockRepository = {
   registeredInstitutions() {
@@ -29,8 +33,32 @@ export const mockRepository = {
       selectPublicReports(getState(), institutionCode),
     );
   },
-  reset() {
-    storeActions.resetMockData();
+  async reset() {
+    if (resettingAssets) throw new Error("Reset demo sedang berlangsung.");
+    resettingAssets = true;
+    assetEpoch += 1;
+    try {
+      // Commit metadata reset first; on failure existing asset references stay intact.
+      storeActions.resetMockData();
+      await clearCampusAssets();
+    } finally { resettingAssets = false; }
+  },
+  async uploadCampusPlan(actor: ReportActor, input: Pick<CampusPlanVersion, "institutionCode" | "width" | "height"> & { file: File; expectedActiveId?: string; acknowledged: boolean }): Promise<ActionResult> {
+    const assetId = `campus-asset-${crypto.randomUUID()}`;
+    const uploadEpoch = assetEpoch;
+    try {
+      if (resettingAssets) return { ok: false, error: "Reset demo sedang berlangsung. Coba unggah setelah selesai." };
+      if (!["image/png", "image/jpeg", "image/webp"].includes(input.file.type) || input.file.size > 5 * 1024 * 1024) return { ok: false, error: "Pilih PNG, JPEG atau WebP maksimum 5 MB." };
+      const bitmap = await createImageBitmap(input.file);
+      const width = bitmap.width, height = bitmap.height;
+      bitmap.close();
+      if (Math.min(width, height) < 800) return { ok: false, error: "Sisi pendek denah minimal 800 piksel." };
+      await putCampusAsset(assetId, input.file);
+      if (resettingAssets || uploadEpoch !== assetEpoch) { await deleteCampusAsset(assetId); return { ok: false, error: "Demo sedang direset. Pilih dan unggah denah kembali." }; }
+      const result = storeActions.publishCampusPlan(actor, { institutionCode: input.institutionCode, assetId, width, height, expectedActiveId: input.expectedActiveId, acknowledged: input.acknowledged });
+      if (!result.ok) await deleteCampusAsset(assetId);
+      return result;
+    } catch (error) { return { ok: false, error: error instanceof Error ? error.message : "Gambar gagal dibaca atau disimpan." }; }
   },
   submitLaporCepat(
     actor: ReportActor,
@@ -44,6 +72,7 @@ export const mockRepository = {
       evidenceName?: string;
       contact?: string;
       clientRequestId?: string;
+      locationSnapshot?: LocationSnapshot;
     },
   ): ActionResult {
     return storeActions.submitPublicReport(actor, input);

@@ -1,5 +1,12 @@
 # Alur Operasional Rinci
 
+**Amendemen D-14 — 18 September 2026:** denah aktif untuk pelaporan adalah
+denah gambaran besar per pesantren, bukan per lantai. Titik dan keterangan lantai
+merujuk versi denah saat kirim; lokasi per jawaban penilaian mandiri diwariskan
+ke temuan sumbernya. Hanya temuan Diterima belum diarsip yang dapat menjadi pin
+publik setelah satu pesantren dipilih. Rancangan lengkap dan usulan kewajiban titik
+di [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md); belum implementasi.
+
 Konvensi penulisan tiap langkah: **Aktor → aksi UI → hasil sistem → jejak (audit/notifikasi)**.
 Jika suatu field disebut "wajib", form MENOLAK submit dan menampilkan pesan error inline bila kosong — bukan sekadar himbauan.
 Status alur: rancangan untuk review, bukan instruksi kode. Keputusan terbuka ada di `DECISIONS.md`.

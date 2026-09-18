@@ -93,6 +93,11 @@ Kebutuhan sebelum kontrak dapat dianggap lengkap:
 
 ## 5. Pesantren, akun, lokasi, dan denah
 
+Amendemen D-14 (18 September 2026): ketentuan denah lantai di bawah adalah
+historis. Risk Map baru memakai versi denah gambaran besar per pesantren dengan
+titik nullable terikat versi; lantai berupa keterangan. Detail kontrak dan migrasi
+di [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md) §5–8. Tidak ada koordinat palsu.
+
 - `Institution` memerlukan alamat lengkap yang diminta onboarding, selain kota/kabupaten.
  Nama pengelola utama dapat menjadi data kontak calon saat `Persiapan`; setelah ada akun,
  relasi pengelola harus melalui ID. Kebijakan nama pesantren duplikat perlu mempertimbangkan
@@ -121,7 +126,8 @@ publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/lapor
 | Nomor laporan (`RPT-XXXX`) | ❌ | ✅ |
 | Judul temuan / deskripsi | ✅ (bagian ringkasan) | ✅ |
 | Lokasi/area (nama gedung/lantai/area) | ✅ | ✅ |
-| Denah + titik koordinat pelapor | ❌ (tampilan denah khusus pengelola) | ✅ |
+| Denah gambaran besar + titik temuan tervalidasi | ✅ setelah satu pesantren dipilih (D-14, 18 September 2026) | ✅ |
+| Denah rinci ruangan/per lantai | ❌ (tidak termasuk rancangan Risk Map baru) | Historis sesuai scope |
 | Nama pelapor / kontak / identitas akun | ❌ | ✅ |
 | Bukti/foto (nama file) | ❌ | ✅ |
 | Jawaban mentah per indikator | ❌ (hanya skor/kategori ringkasan) | ✅ |

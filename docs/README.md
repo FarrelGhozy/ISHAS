@@ -1,5 +1,14 @@
 # ISHAS — Dokumentasi Utama (Frontend-Only)
 
+## Amendemen Risk Map — 18 September 2026
+
+Pemilik mengizinkan denah gambaran besar dan titik temuan tervalidasi pada ruang
+publik setelah satu pesantren dipilih (D-14), menggantikan larangan denah publik
+sebelumnya secara terbatas. Denah diunggah Pengelola Pesantren dan dipakai untuk
+titik pelaporan; lantai cukup keterangan, bukan denah terpisah. Lihat
+[rancangan Risk Map](RISK_MAP_DESIGN.md). Tahap ini rancangan + ilustrasi,
+bukan implementasi; bidang privat dan aturan moderasi tetap berlaku.
+
 ## Pembaruan arah dashboard — 18 September 2026
 
 Pemilik meminta evaluasi dan persiapan dashboard utama mengikuti referensi gambar

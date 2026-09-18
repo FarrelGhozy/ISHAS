@@ -1,5 +1,12 @@
 # Model Data Frontend (Skema Rinci)
 
+**Amendemen D-14 — 18 September 2026:** calon kontrak baru memakai
+CampusPlanVersion milik pesantren dan LocationSnapshot dengan point nullable +
+referensi versi; lantai hanya keterangan. Skema per lantai/x-y wajib angka di bawah
+merupakan skema lama, bukan kontrak Risk Map baru. Detail relasi, lineage per jawaban,
+whitelist publik dan migrasi di [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md) §5–8.
+Kode/schema belum diubah; jangan membuat titik tengah sebagai fallback lokasi.
+
 Semua relasi memakai **ID stabil**; label tampilan tidak pernah menjadi kunci.
 Persistensi browser berversi + reset seed. Dilarang menyimpan kata sandi/token.
 

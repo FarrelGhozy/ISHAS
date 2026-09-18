@@ -1,5 +1,12 @@
 # Spesifikasi Halaman (Wireframe Tertulis)
 
+**Amendemen D-14 — 18 September 2026:** larangan denah/titik publik pada
+wireframe historis di bawah diganti terbatas: denah gambaran besar dan pin temuan
+Diterima boleh tampil setelah memilih satu pesantren. Scope general menampilkan
+ajakan pilih pesantren tanpa gambar. Lantai hanya keterangan, bukan denah terpisah.
+Susunan panel, detail pin, responsif dan empty/error state baru di
+[RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md) §2–7; masih rancangan untuk review.
+
 Semua token visual mengacu ke `DESIGN_SYSTEM.md`. Copy dan layout di bawah adalah
 **rancangan untuk diskusi**, belum final. Perubahan besar tampilan menunggu D-12;
 bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di

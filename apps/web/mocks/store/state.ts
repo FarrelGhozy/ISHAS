@@ -5,13 +5,32 @@
 import { SEED } from "../seed/seed";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 4;
-export const MOCK_STORAGE_KEY = "ishas-mock-v4";
+export const MOCK_SCHEMA_VERSION = 5;
+export const MOCK_STORAGE_KEY = "ishas-mock-v5";
+
+// Preserve v4 records, but never promote legacy area/floor coordinates to observations.
+export function migrateV4(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 4) return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 5;
+  // Pasang hanya ilustrasi demo baru, bukan mengonversi denah/titik legacy.
+  migrated.campusPlans = structuredClone(SEED.campusPlans).filter((plan) => migrated.institutions?.some((institution) => institution.code === plan.institutionCode));
+  migrated.institutions?.forEach((institution) => { institution.activeCampusPlanVersionId = migrated.campusPlans.find((plan) => plan.institutionCode === institution.code)?.id; });
+  migrated.reports?.forEach((report) => { delete report.locationSnapshot; report.planPoint = null; });
+  migrated.findings?.forEach((finding) => { delete finding.locationSnapshot; });
+  migrated.selfAssessmentSnapshots?.forEach((snapshot) => {
+    Object.values(snapshot.answers ?? {}).forEach((answer) => { delete answer.locationSnapshot; answer.planPoint = null; });
+  });
+  Object.values(migrated.selfAssessmentDrafts ?? {}).forEach((draft) => {
+    Object.values(draft.answers ?? {}).forEach((answer) => { delete answer.locationSnapshot; answer.planPoint = null; });
+  });
+  return migrated;
+}
 
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
-  const arrays = [state.institutions, state.users, state.reports, state.selfAssessmentSnapshots,
+  const arrays = [state.campusPlans, state.institutions, state.users, state.reports, state.selfAssessmentSnapshots,
     state.findings, state.recommendations, state.buildings, state.areas,
     state.instrumentVersions, state.auditEvents, state.notifications];
   return state.schemaVersion === MOCK_SCHEMA_VERSION && arrays.every(Array.isArray)
@@ -27,9 +46,9 @@ function isValidState(value: unknown): value is IshasState {
 export function loadState(): IshasState {
   if (typeof localStorage === "undefined") return structuredClone(SEED);
   try {
-    const raw = localStorage.getItem(MOCK_STORAGE_KEY);
+    const raw = localStorage.getItem(MOCK_STORAGE_KEY) ?? localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = JSON.parse(raw);
+      const parsed: unknown = migrateV4(JSON.parse(raw));
       if (isValidState(parsed)) return parsed;
     }
   } catch {

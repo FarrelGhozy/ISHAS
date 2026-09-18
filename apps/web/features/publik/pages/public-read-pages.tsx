@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from "react-router";
+import { PublicCampusMap } from "../components/public-campus-map";
 import { Download, ExternalLink, FileText, MapPin } from "lucide-react";
 import { useMockState } from "~/mocks/store/mock-store";
 import {
@@ -52,9 +53,8 @@ export function PublicReadPage({ kind }: { kind: PublicReadKind }) {
     {requested && !selected ? <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">Pesantren pada tautan tidak tersedia. Menampilkan semua pesantren terdaftar.</p> : null}
     {invalidPeriode ? <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">Periode &quot;{invalidPeriode}&quot; tidak tersedia. Menampilkan periode berjalan.</p> : null}
     <PublicFilter institutions={institutions} />
-    {reports.length === 0 ? <EmptyState title={`Belum ada data tervalidasi untuk ${scope}.`} description="Laporan Menunggu validasi atau Ditolak tidak pernah tampil di halaman publik." /> :
+    {kind === "peta" ? <PublicCampusMap institutionCode={selected} /> : reports.length === 0 ? <EmptyState title={`Belum ada data tervalidasi untuk ${scope}.`} description="Laporan Menunggu validasi atau Ditolak tidak pernah tampil di halaman publik." /> :
       kind === "hasil" ? <Results state={state} codes={selected ? [selected] : institutions.map((item) => item.code)} reports={reports} /> :
-      kind === "peta" ? <RiskMap findings={findings} reports={reports} state={state} /> :
       kind === "rekomendasi" ? <Recommendations recommendations={recommendations} /> :
       kind === "tindak-lanjut" ? <FollowUps recommendations={recommendations} /> :
       <LeadershipReport state={state} codes={selected ? [selected] : institutions.map((item) => item.code)} findings={findings} recommendations={recommendations} />}
@@ -69,12 +69,6 @@ function Results({ state, codes, reports }: { state: ReturnType<typeof useMockSt
     <article className="surface p-4 lg:col-span-2"><h2 className="font-extrabold text-heading">Dimensi hasil</h2><p className="mt-1 text-sm text-secondary-text">Versi instrumen dan kategori adalah data ilustrasi.</p><ul className="mt-4 space-y-3">{summary.dimensions.map((dimension) => <li key={dimension.id} className="flex items-center gap-3"><span className="min-w-0 flex-1 text-sm font-semibold text-heading">{dimension.name}</span><strong>{Math.round(dimension.score ?? 0)}</strong><div className="h-2 w-24 overflow-hidden rounded-full bg-strip"><div className="h-full bg-accent" style={{ width: `${Math.round(dimension.score ?? 0)}%` }} /></div></li>)}</ul></article>
     <article className="surface p-4 lg:col-span-3"><h2 className="font-extrabold text-heading">Sumber hasil tervalidasi</h2><div className="mt-3 grid gap-3 md:grid-cols-2">{assessmentReports.map((report) => <div key={report.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap gap-2"><StatusChip value="Diterima" /><StatusChip value="penilaian-mandiri" /></div><p className="mt-2 font-bold text-heading">{report.title}</p><p className="mt-1 text-sm text-secondary-text">{report.instrumentVersionId} · {new Date(report.createdAt).toLocaleDateString("id-ID", { month: "long", year: "numeric" })}</p><Validator state={state} id={report.validatedBy} name={report.validatedByName} /></div>)}</div></article>
   </div>;
-}
-
-function RiskMap({ findings, reports, state }: { findings: ReturnType<typeof selectFindingsByReports>; reports: ReturnType<typeof selectPublicReports>; state: ReturnType<typeof useMockState> }) {
-  const activeAreas = new Set(findings.filter((finding) => finding.status !== "Terverifikasi").map((finding) => finding.areaId));
-  const areas = state.areas.filter((area) => reports.some((report) => report.institutionCode === area.institutionCode));
-  return <div className="grid gap-4 lg:grid-cols-2"><article className="surface p-4"><h2 className="font-extrabold text-heading">Daftar area</h2><p className="mt-1 text-sm text-secondary-text">Area tanpa temuan aktif ditampilkan netral.</p><ul className="mt-3 space-y-2">{areas.map((area) => <li key={area.id} className="flex items-center justify-between gap-3 rounded-lg border border-line p-3"><span><strong className="block text-sm text-heading">{area.name}</strong><span className="text-sm text-secondary-text">{area.zone} · {area.floor}</span></span>{activeAreas.has(area.id) ? <StatusChip value="Berjalan" /> : <span className="text-sm text-secondary-text">Belum ada temuan aktif</span>}</li>)}</ul></article><article className="surface p-4"><h2 className="font-extrabold text-heading">Daftar temuan</h2><div className="mt-3 space-y-3">{findings.map((finding) => { const report = reports.find((item) => item.id === finding.reportId); return <article key={finding.id} className="rounded-lg border border-line p-3"><div className="flex flex-wrap gap-2"><StatusChip value={finding.level} /><StatusChip value={finding.status} /></div><h3 className="mt-2 font-bold text-heading">{finding.issue}</h3><p className="mt-1 text-sm text-secondary-text">{finding.location} · Dampak: {finding.impact}</p><p className="mt-2 text-sm text-secondary-text">Rekomendasi: {finding.recommendation}</p><Validator state={state} id={report?.validatedBy} name={report?.validatedByName} /></article>; })}</div></article></div>;
 }
 
 function Recommendations({ recommendations }: { recommendations: ReturnType<typeof selectRecommendationsByReports> }) {

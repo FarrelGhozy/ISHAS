@@ -43,6 +43,7 @@ export function ContextBar({
             onChange={(e) => {
               const v = e.target.value;
               const next = new URLSearchParams(searchParams);
+              next.delete("denah"); next.delete("risiko"); next.delete("statusPeta");
               if (v) next.set("pesantren", v); else next.delete("pesantren");
               setSearchParams(next);
             }}

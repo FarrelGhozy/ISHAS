@@ -4,6 +4,7 @@
 // ini, tetap ada setelah logout/ganti akun; dibersihkan setelah laporan terkirim.
 
 import { EMPTY_LAPOR_VALUES, type LaporValues } from "./lapor-validation";
+import { isValidPoint } from "~/mocks/processors/campus-map";
 
 const DRAFT_KEY_PREFIX = "ishas-draft-v2:lapor:";
 
@@ -22,6 +23,7 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<LaporValues>;
     return {
+      ...(parsed.locationSnapshot && typeof parsed.locationSnapshot.locationText === "string" && typeof parsed.locationSnapshot.floorNote === "string" && (parsed.locationSnapshot.point === null || isValidPoint(parsed.locationSnapshot.point)) ? { locationSnapshot: parsed.locationSnapshot } : {}),
       reporterName: typeof parsed.reporterName === "string" ? parsed.reporterName : "",
       institutionCode:
         typeof parsed.institutionCode === "string" ? parsed.institutionCode : institutionCode ?? "",
@@ -68,7 +70,7 @@ export function isLaporEmpty(values: LaporValues): boolean {
     values.evidenceName.trim() === "" &&
     values.contact.trim() === "" &&
     values.areaId === ""
-    && values.manualLocation.trim() === ""
+    && values.manualLocation.trim() === "" && !values.locationSnapshot?.point && !values.locationSnapshot?.floorNote
   );
 }
 

@@ -15,10 +15,13 @@ import type {
   User,
   Building,
   InstrumentVersion,
+  LocationSnapshot,
+  CampusPlanVersion,
 } from "../types";
 import { loadState, resetState, saveState } from "./state";
 import { selectRegisteredInstitutions } from "./selectors";
 import type { IshasState } from "../types";
+import { snapshotLocation, validateMapLocation } from "../processors/campus-map";
 
 type Listener = () => void;
 
@@ -109,6 +112,25 @@ export type ReportActor = { id?: string; name: string; email?: string; role?: st
 const seenReportRequests = new Map<string, string>();
 
 export const storeActions = {
+  publishCampusPlan(actor: { id?: string }, input: Pick<CampusPlanVersion, "institutionCode" | "assetId" | "width" | "height"> & { expectedActiveId?: string; acknowledged: boolean }): ActionResult {
+    const account = currentState.users.find((user) => user.id === actor.id);
+    const institution = currentState.institutions.find((item) => item.code === input.institutionCode);
+    if (!account || account.status !== "Aktif" || account.roleId !== "pengelola" || account.institutionCodes.length !== 1 || account.institutionCodes[0] !== input.institutionCode || !institution) return { ok: false, error: "Anda tidak berwenang mengganti denah pesantren ini." };
+    if (!input.acknowledged) return { ok: false, error: "Konfirmasi dampak perubahan denah terlebih dahulu." };
+    if (institution.activeCampusPlanVersionId !== input.expectedActiveId) return { ok: false, error: "Denah aktif berubah. Muat ulang dan periksa versi terbaru sebelum mengganti." };
+    if (!input.assetId.startsWith("campus-asset-") || currentState.campusPlans.some((plan) => plan.assetId === input.assetId) || !Number.isSafeInteger(input.width) || !Number.isSafeInteger(input.height) || Math.min(input.width, input.height) < 800) return { ok: false, error: "Aset atau ukuran denah tidak sah; sisi pendek minimal 800 piksel." };
+    let id = "";
+    try {
+      setState((draft) => {
+        const revision = Math.max(0, ...draft.campusPlans.filter((plan) => plan.institutionCode === input.institutionCode).map((plan) => plan.revision)) + 1;
+        id = `CAMPUS-${input.institutionCode}-v${revision}`;
+        draft.campusPlans.push({ id, institutionCode: input.institutionCode, revision, assetId: input.assetId, width: input.width, height: input.height, uploadedBy: account.id, uploadedAt: nowIso(), illustration: false });
+        draft.institutions.find((item) => item.code === input.institutionCode)!.activeCampusPlanVersionId = id;
+        audit(draft, account, { objectType: "CampusPlan", objectId: id, institutionCode: input.institutionCode, action: "Menerbitkan denah pesantren", note: `Versi ${revision}; titik lama tetap di versi asal.` });
+      });
+      return { ok: true, id };
+    } catch (error) { return { ok: false, error: error instanceof Error ? error.message : "Denah belum tersimpan." }; }
+  },
   resetMockData(): IshasState {
     seenReportRequests.clear();
     currentState = resetState();
@@ -128,6 +150,7 @@ export const storeActions = {
       evidenceName?: string;
       contact?: string;
       clientRequestId?: string;
+      locationSnapshot?: LocationSnapshot;
     },
   ): ActionResult {
     // Recheck the account at the data boundary, including direct adapter calls.
@@ -178,6 +201,8 @@ export const storeActions = {
     if (input.areaId && !ownedAreas.some((a) => a.id === input.areaId)) {
       return { ok: false, error: "Lokasi/area tidak sah untuk pesantren ini." };
     }
+    const mapError = validateMapLocation(currentState, input.institutionCode, input.locationSnapshot);
+    if (mapError) return { ok: false, error: mapError };
     if (title.length < 10) {
       return { ok: false, error: "Judul minimal 10 karakter." };
     }
@@ -210,6 +235,7 @@ export const storeActions = {
         description,
         areaId: input.areaId,
         manualLocation,
+        locationSnapshot: snapshotLocation(draft, input.institutionCode, input.areaId, manualLocation, input.locationSnapshot),
         evidenceName,
         contact: contact || undefined,
         validationStatus: "Menunggu validasi",
@@ -601,6 +627,8 @@ export const storeActions = {
         const hasLocation = Boolean(answer?.areaId) || manualLocation.length >= 3;
         if (!answer?.value || (indicator.evidenceRequired && !answer.evidenceName?.trim()) || (indicator.locationRequired && !hasLocation) || (answer.value === "N/A" && (answer.note?.trim().length ?? 0) < 10)) { result = { ok: false, error: "Lengkapi seluruh jawaban, bukti, catatan N/A, dan lokasi yang wajib." }; return; }
         if (indicator.locationRequired && answer.areaId && !draft.areas.some((area) => area.id === answer.areaId && area.institutionCode === d.institutionCode)) { result = { ok: false, error: "Area penilaian tidak sah untuk pesantren ini." }; return; }
+        const mapError = validateMapLocation(draft, d.institutionCode, answer.locationSnapshot);
+        if (mapError) { result = { ok: false, error: mapError }; return; }
       }
       const n = draft.counters.report;
       draft.counters.report = n + 1;
@@ -639,6 +667,7 @@ export const storeActions = {
               areaId: v.areaId ?? "",
               manualLocation: v.manualLocation?.trim() || undefined,
               planPoint: v.planPoint ?? null,
+              locationSnapshot: snapshotLocation(draft, d.institutionCode, v.areaId, v.manualLocation, v.locationSnapshot),
             },
           ]),
         ),
@@ -805,8 +834,8 @@ export const storeActions = {
 
 // Pembentuk kandidat temuan/rekomendasi turunan (aturan ilustratif, bukan final).
 // Menutup flow terputus: kiriman Diterima selalu punya turunan untuk peta/rekomendasi.
-// Satu pasang per laporan (BUKAN satu per jawaban rendah — aturan pemicu per indikator
-// menunggu keputusan ilmiah). Idempoten: lewati bila turunan sudah ada (mis. seed).
+// Usulan ilustratif: 1/2/Tidak memicu temuan per jawaban; bukan aturan ilmiah final.
+// Idempoten: lewati bila turunan sudah ada (mis. seed).
 function ensureDerivedWork(
   draft: IshasState,
   report: Report,
@@ -820,23 +849,35 @@ function ensureDerivedWork(
     return;
   }
   const snapshot = draft.selfAssessmentSnapshots.find((s) => s.reportId === report.id);
-  const firstAnswer = snapshot
-    ? Object.values(snapshot.answers).find((a) => a.areaId || a.manualLocation)
-    : undefined;
+  // Pemicu ilustratif per tipe jawaban; bukan ambang ilmiah final.
+  const indicators = draft.instrumentVersions.find((version) => version.id === report.instrumentVersionId)?.dimensions.flatMap((dimension) => dimension.indicators) ?? [];
+  const candidates = snapshot ? Object.entries(snapshot.answers).filter(([id, answer]) => {
+    const type = indicators.find((entry) => entry.id === id)?.answerType;
+    return type === "likert-1-5" ? ["1", "2"].includes(answer.value)
+      : type === "likert-1-2-tidak" ? ["1", "Tidak"].includes(answer.value)
+      : type === "boolean-ya-tidak" && answer.value === "Tidak";
+  }) : [];
+  if (snapshot && !candidates.length) return;
+  const sources = candidates.length ? candidates : [["", undefined]] as const;
+  for (const [sourceAnswerId, sourceAnswer] of sources) {
   const area = draft.areas.find(
-    (a) => a.id === (report.areaId ?? firstAnswer?.areaId ?? "") && a.institutionCode === report.institutionCode,
+    (a) => a.id === (sourceAnswer?.areaId ?? report.areaId ?? "") && a.institutionCode === report.institutionCode,
   );
-  const manualLocation = report.manualLocation ?? firstAnswer?.manualLocation?.trim() ?? "";
+  const manualLocation = sourceAnswer?.manualLocation?.trim() ?? report.manualLocation ?? "";
+  const locationSnapshot = sourceAnswer?.locationSnapshot ?? (report.channel === "lapor-cepat" ? report.locationSnapshot : undefined)
+    ?? snapshotLocation(draft, report.institutionCode, area?.id, manualLocation);
   const building = draft.buildings.find((b) => b.id === area?.buildingId);
-  const location = area
-    ? `${building?.name ?? "Gedung"} · ${area.floor} · ${area.name}`
-    : manualLocation || "Lokasi menyusul";
+  const location = `${locationSnapshot.locationText}${locationSnapshot.floorNote ? ` · ${locationSnapshot.floorNote}` : ""}`;
+  const indicator = indicators.find((entry) => entry.id === sourceAnswerId);
+  const issue = indicator ? indicator.title : report.title;
   const n = draft.findings.filter((f) => f.reportId === report.id).length + 1;
   const recommendationId = `REC-${report.id}-${n}`;
   const level = severity === "Belum ditentukan" ? "Sedang" : severity;
   draft.findings.push({
     id: `RSK-${report.id}-${n}`,
     reportId: report.id,
+    sourceAnswerId: sourceAnswerId || undefined,
+    locationSnapshot: structuredClone(locationSnapshot),
     areaId: area?.id ?? "",
     buildingId: building?.id ?? "",
     instrumentVersion: report.instrumentVersionId ?? "Tidak menggunakan instrumen",
@@ -845,12 +886,12 @@ function ensureDerivedWork(
     building: building?.name ?? "—",
     zone: area?.zone ?? "—",
     floor: area?.floor ?? "—",
-    x: area?.x ?? 50,
-    y: area?.y ?? 50,
+    x: locationSnapshot.point?.x ?? 0, // legacy display fields; null snapshot remains unplaced
+    y: locationSnapshot.point?.y ?? 0,
     level,
-    issue: report.title,
+    issue,
     indicator: report.channel === "penilaian-mandiri"
-      ? (report.instrumentVersionId ?? "Instrumen")
+      ? (sourceAnswerId || report.instrumentVersionId || "Instrumen")
       : "Tidak menggunakan instrumen",
     recommendation: `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
     status: "Belum ditindaklanjuti",
@@ -860,16 +901,16 @@ function ensureDerivedWork(
     severityText: level,
     exposedPeople: "Menunggu kajian pengelola",
     existingControl: "—",
-    evidence: report.evidenceName ?? "",
+    evidence: sourceAnswer?.evidenceName ?? report.evidenceName ?? "",
     observedAt: report.createdAt,
-    planVersion: building?.floors.find((f) => f.name === area?.floor)?.planVersion || "—",
+    planVersion: locationSnapshot.campusPlanVersionId ?? "—",
     residualRisk: "Belum dinilai",
   });
   draft.recommendations.push({
     id: recommendationId,
     reportId: report.id,
     priority: priority === "Belum ditentukan" ? "Sedang" : priority,
-    title: `Tindak lanjut: ${report.title}`,
+    title: `Tindak lanjut: ${issue}`,
     location,
     source: report.channel === "penilaian-mandiri"
       ? `${report.instrumentVersionId ?? "INS"} · ${report.id}`
@@ -880,6 +921,7 @@ function ensureDerivedWork(
     dueDate: "",
     progress: 0,
   });
+  }
 }
 
 function archiveCompletedDraft(report: Report, reason: string): ActionResult {

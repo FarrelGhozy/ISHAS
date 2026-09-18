@@ -1,5 +1,10 @@
 # Review arah dashboard — referensi dosen 18 September 2026
 
+Amendemen D-14: pemilik kemudian mengizinkan denah gambaran besar/titik temuan
+publik setelah memilih satu pesantren. Analisis larangan denah publik di bawah
+adalah historis; acuan terbaru [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md).
+Tidak mengesahkan Ekstrem, rumus atau perubahan bidang privat lainnya.
+
 **Status: bahan review dan persiapan; belum implementasi.**
 
 Permintaan pemilik: analisis gambar, evaluasi dokumentasi, dan persiapkan pengerjaan

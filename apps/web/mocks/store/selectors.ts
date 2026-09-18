@@ -45,7 +45,7 @@ export function selectPublicReports(
     selectRegisteredInstitutions(state).map((i) => i.code),
   );
   const validated = selectValidatedReports(state).filter((r) =>
-    registered.has(r.institutionCode),
+    registered.has(r.institutionCode) && r.handlingStatus !== "Completed",
   );
   if (!institutionCode) return validated;
   return validated.filter((r) => r.institutionCode === institutionCode);

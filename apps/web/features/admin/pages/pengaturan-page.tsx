@@ -3,12 +3,13 @@
 
 import { useState } from "react";
 import { RotateCcw } from "lucide-react";
-import { storeActions } from "~/mocks/store/mock-store";
+import { mockRepository } from "~/mocks/adapters/mock-repository";
 
 export function AdminPengaturanPage() {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   return (
     <section className="flex max-w-2xl flex-col gap-4">
@@ -21,7 +22,7 @@ export function AdminPengaturanPage() {
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-heading">Reset data demo</p>
           <p className="text-[10px] text-secondary-text">
-            Mengembalikan seluruh data ISHAS pada perangkat ini ke seed v4 (`ishas-mock-v4` + sesi `ishas-session-v2` + draft `ishas-draft-v2:lapor:`).
+            Mengembalikan data domain dan aset denah pada perangkat ini ke seed v5. Sesi dan draft laporan cepat tetap tersimpan terpisah; titik draft yang usang perlu dipilih ulang.
             Riwayat demo sebelumnya hilang; audit kembali mengikuti seed.
           </p>
           {done ? (
@@ -35,18 +36,22 @@ export function AdminPengaturanPage() {
             <button
               type="button"
               className="primary-button"
-              onClick={() => {
-                try { storeActions.resetMockData(); } catch (error) {
+              disabled={resetting}
+              onClick={async () => {
+                setResetting(true);
+                try { await mockRepository.reset(); } catch (error) {
                   setError(error instanceof Error ? error.message : "Reset gagal. Coba lagi.");
                   setDone(false);
+                  setResetting(false);
                   return;
                 }
                 setError(null);
                 setConfirming(false);
                 setDone(true);
+                setResetting(false);
               }}
             >
-              Ya, reset
+              {resetting ? "Mereset…" : "Ya, reset"}
             </button>
             <button type="button" className="secondary-button" onClick={() => setConfirming(false)}>
               Batal

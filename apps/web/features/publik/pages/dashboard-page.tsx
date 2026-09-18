@@ -31,6 +31,7 @@ import { DimensionPanel } from "../components/dimension-panel";
 import { FindingsPanel } from "../components/findings-panel";
 import { PublicInsightPanels } from "../components/public-insight-panels";
 import { AspectAndRecap, FollowUpSummary, ScoreSummary } from "../components/dashboard-workspace";
+import { PublicCampusMap } from "../components/public-campus-map";
 import {
   InstitutionComparisonPanel,
   type InstitutionComparisonItem,
@@ -181,6 +182,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
           title={`Belum ada hasil tervalidasi untuk ${scopeLabel}.`}
           description="Laporan Menunggu validasi atau Ditolak tidak pernah tampil di dashboard publik."
         />
+        <PublicCampusMap institutionCode={selected} compact />
       </section>
     );
   }
@@ -228,7 +230,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         <AspectAndRecap findings={findings} versions={state.instrumentVersions} areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))} distribution={insight.distribution} />
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
           <FindingsPanel institutionCode={selected} findings={temuanPrioritas} reportById={reportById} userById={(id) => selectUserById(state, id)} />
-          <FollowUpSummary recommendations={recommendations} />
+          <div className="min-w-0 space-y-3"><PublicCampusMap institutionCode={selected} compact /><FollowUpSummary recommendations={recommendations} /></div>
         </div>
         <InstitutionComparisonPanel items={institutionComparison} />
       </section>

@@ -22,6 +22,7 @@ export type RecommendationStatus =
   | "Terverifikasi";
 
 export type Institution = {
+  activeCampusPlanVersionId?: string;
   code: string; // 'PSN-0018', unik, dibuat berurutan PSN-XXXX
   name: string; // unik, maks 120
   location: string; // 'Kota Malang' (kota/kabupaten; alamat lengkap di address bila ada)
@@ -46,6 +47,7 @@ export type User = {
 };
 
 export type Report = {
+  locationSnapshot?: LocationSnapshot;
   id: string; // 'RPT-0001', berurutan
   channel: ReportChannel;
   institutionCode: string; // FK Institution.code
@@ -80,6 +82,7 @@ export type Report = {
 };
 
 export type IndicatorAnswer = {
+  locationSnapshot?: LocationSnapshot;
   value: string;
   note: string;
   evidenceName: string;
@@ -109,6 +112,8 @@ export type SelfAssessmentDraft = {
 };
 
 export type RiskFinding = {
+  locationSnapshot?: LocationSnapshot;
+  sourceAnswerId?: string;
   id: string; // RSK-<reportId>-<n>
   reportId: string; // FK Report (pengganti penugasan V1)
   areaId: string;
@@ -241,6 +246,7 @@ export type IndexPoint = {
 };
 
 export type IshasState = {
+  campusPlans: CampusPlanVersion[];
   schemaVersion: number;
   institutions: Institution[];
   users: User[];
@@ -259,4 +265,24 @@ export type IshasState = {
   // TIDAK disimpan: selalu dihitung dari snapshot `Diterima` (aturan ilustrasi D-04).
   indexHistory: Record<string, IndexPoint[]>;
   counters: { report: number; institution: number };
+};
+
+export type PlanPoint = { x: number; y: number };
+export type LocationSnapshot = {
+  areaId?: string;
+  locationText: string;
+  floorNote: string;
+  campusPlanVersionId: string | null;
+  point: PlanPoint | null;
+};
+export type CampusPlanVersion = {
+  id: string;
+  institutionCode: string;
+  revision: number;
+  assetId: string;
+  width: number;
+  height: number;
+  uploadedBy: string;
+  uploadedAt: string;
+  illustration: boolean;
 };

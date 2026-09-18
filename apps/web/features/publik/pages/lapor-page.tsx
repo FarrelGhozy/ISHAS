@@ -15,6 +15,8 @@ import {
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { canSubmitReport } from "~/shared/auth/session";
 import { EmptyState } from "~/shared/components/empty-state";
+import { LocationPicker } from "~/shared/components/campus-plan";
+import { validateMapLocation } from "~/mocks/processors/campus-map";
 import { LaporForm } from "../components/lapor-form";
 import { LaporSuccess } from "../components/lapor-success";
 import {
@@ -109,6 +111,8 @@ function LaporPageContent() {
   );
   const areaIds = useMemo(() => areas.map((a) => a.id), [areas]);
   const selectedHasNoAreas = values.institutionCode !== "" && areas.length === 0;
+  const activePlan = state.campusPlans.find((plan) => plan.institutionCode === values.institutionCode && plan.id === state.institutions.find((institution) => institution.code === values.institutionCode)?.activeCampusPlanVersionId);
+  const mapError = validateMapLocation(state, values.institutionCode, values.locationSnapshot);
 
   const errors = useMemo(
     () =>
@@ -188,11 +192,12 @@ function LaporPageContent() {
       requestAnimationFrame(() => document.getElementById("lapor-pesantren")?.focus());
       return;
     }
-    setValues((v) => ({ ...v, [field]: value }));
+    setValues((v) => ({ ...v, [field]: value, ...(field === "areaId" ? { locationSnapshot: undefined } : {}) }));
   }
 
   function handleSubmit() {
     if (submitLock.current || blocked) return;
+    if (mapError) { setFormError(mapError); return; }
     setAttempted(true);
     setTouched({
       reporterName: true,
@@ -230,6 +235,7 @@ function LaporPageContent() {
         evidenceName: values.evidenceName.trim() || undefined,
         contact: values.contact.trim() || undefined,
         clientRequestId: requestIdRef.current,
+        locationSnapshot: values.locationSnapshot,
       },
     );
     if (result.ok && result.id) {
@@ -248,7 +254,7 @@ function LaporPageContent() {
     else setConfirmCancel(true);
   }
 
-  const canSubmit = isLaporValid(errors) && !blocked;
+  const canSubmit = isLaporValid(errors) && !blocked && !mapError;
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -285,6 +291,7 @@ function LaporPageContent() {
       </p> : null}
       {selectedHasNoAreas ? <p role="status" className="text-sm text-secondary-text">Belum ada area terdaftar; tulis lokasi manual pada kolom di bawah (D-11).</p> : null}
       <LaporForm
+        locationPicker={values.institutionCode ? <>{mapError ? <p role="alert" className="text-sm text-primary">{mapError}</p> : null}<LocationPicker key={values.institutionCode} plan={activePlan} value={values.locationSnapshot} disabled={blocked} onChange={(locationSnapshot) => { setFormError(null); setValues((current) => ({ ...current, locationSnapshot })); }} /></> : undefined}
         values={values}
         errors={visibleErrors}
         registered={registered}

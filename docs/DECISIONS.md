@@ -38,6 +38,10 @@ Audit ini tidak menganggap setiap rincian turunannya telah disetujui kembali.
 
 ### D-02 — Batas informasi publik — DIJAWAB 8 September 2026
 
+**Amendemen 18 September 2026:** larangan denah/titik publik di bagian historis
+ini diganti terbatas oleh D-14: denah gambaran besar dan titik temuan tervalidasi
+boleh publik setelah memilih satu pesantren. Larangan bidang privat lainnya tetap.
+
 - **Keputusan:** **"Ringkasan saja"** + **nama validator/PIC publik**.
  - Publik melihat ringkasan hasil/progres: angka, kategori ilustratif, tren, temuan
  (judul, lokasi/area, severity, status penanganan), rekomendasi, progres tindak lanjut,
@@ -266,3 +270,30 @@ Satu laporan dianggap `Completed` hanya jika seluruh temuannya telah selesai. Se
 ### D-09 — Kewenangan pembuatan akun — DISETUJUI
 
 Super Admin dapat membuat akun Super Admin lain, Peneliti, dan Pengelola Pesantren. Pengelola tetap harus dihubungkan ke pesantren yang ditentukan; hanya pengelola aktif yang membuat pesantren menjadi `Pesantren terdaftar`.
+
+### D-14 — Denah besar dan Risk Map publik — DISETUJUI 18 September 2026
+
+- Pemilik secara eksplisit mengubah aturan denah publik karena Risk Map penting.
+- Pengelola Pesantren mengunggah denah gambaran besar pesantren, yang dipakai
+  untuk penentuan titik pelaporan dan penggambaran lokasi di dashboard utama.
+- Scope general/semua pesantren tidak langsung menampilkan peta: satu pesantren
+  harus dipilih dahulu.
+- Bukan denah per gedung/per lantai; lantai ditulis sebagai keterangan lokasi.
+- Tahap sekarang hanya rancangan dan generasi ilustrasi; belum izin implementasi.
+- D-02 berubah hanya untuk denah besar/titik temuan publik. Denah rinci, nama/kontak
+  pelapor, bukti/foto laporan dan bidang privat lain tetap tidak publik.
+- Moderasi Diterima, arsip Completed (D-07), syarat pesantren terdaftar (D-08),
+  lokasi wajib (D-11), dan kewenangan penetapan risiko pengelola tetap berlaku.
+- Rincian alur, versi denah, titik nullable, lineage, dan uji:
+  [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md), DRAFT UNTUK REVIEW.
+- Kewajiban titik, batas unggahan, penyimpanan aset dan UX versi merupakan usulan
+  rancangan, belum keputusan final. D-13 lainnya tidak dianggap terjawab otomatis.
+
+#### D-14.a — Peringatan perubahan denah — DISETUJUI 18 September 2026
+
+Pemilik meminta peringatan sebelum unggah agar denah sebisa mungkin tidak diubah,
+dan pemberitahuan sebelum penggantian karena perubahan dapat membuat posisi
+laporan tidak sesuai. Penggantian tidak dilarang mutlak. Rancangan dua tahap dan
+copy di RISK_MAP_DESIGN §4.A.1; detail checkbox/pratinjau merupakan usulan UX.
+Peringatan tidak menggantikan integritas data: titik historis tetap terikat versi
+denah asal, tidak dipindahkan otomatis atau dihapus. Belum implementasi aplikasi.

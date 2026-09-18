@@ -2,7 +2,10 @@
 // Dipakai halaman `/lapor` untuk error inline; store mengulang pemeriksaan yang sama
 // di sisi data (bukan pengganti). Pesan error memakai kalimat persis dokumen.
 
+import type { LocationSnapshot } from "~/mocks/types";
+
 export type LaporValues = {
+  locationSnapshot?: LocationSnapshot;
   reporterName: string;
   institutionCode: string;
   areaId: string;

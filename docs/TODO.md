@@ -1,5 +1,21 @@
 # TODO — Kontrol Kerja Aktif
 
+## Rancangan Risk Map — 18 September 2026
+
+Cakupan: rancangan detail dan ilustrasi, tanpa perubahan kode aplikasi.
+Aturan denah publik diperbarui terbatas melalui D-14; catatan historis larangan
+denah pada bagian lain dibaca bersama amendemen ini.
+
+- [x] Catat keputusan denah besar per pesantren, titik pelaporan, dan syarat pilih pesantren.
+- [x] Audit alur upload → titik → validasi → temuan → peta publik → arsip.
+- [x] Catat arahan peringatan sebelum unggah/penggantian denah (D-14.a),
+  copy kontekstual, pembatalan aman, serta usulan konfirmasi penerbitan versi baru.
+- [x] Susun [rancangan](RISK_MAP_DESIGN.md), kontrak data, versi, state, migrasi dan uji.
+- [x] Selesaikan dan periksa [ilustrasi denah fiktif](assets/risk-map-campus-illustration-v1.png)
+  tanpa pin tertanam; tampilan keseluruhan, tanpa ruangan/per lantai/identitas lokasi nyata.
+- [ ] Review rancangan/ilustrasi bersama pemilik; tentukan kewajiban titik.
+- [ ] Aktifkan revisi implementasi hanya setelah arahan pemilik; belum DONE.
+
 ## Persiapan revisi dashboard — 18 September 2026
 
 Cakupan sesi terbaru: evaluasi dokumentasi dan persiapan redesign, bukan perubahan
@@ -27,6 +43,9 @@ Arahan lanjutan pemilik: navigasi utama mengikuti tampilan role lain. Shell publ
 memakai sidebar 256px dengan logo compact, menu aktif marun solid, header 68px,
 dan Modal menu seluler yang sama dengan workspace. Menu/izin tetap publik;
 filter URL tetap terbawa. Arahan ini menggantikan susunan header sticky di atas.
+
+Tambahan pemilik: menu `Pelaporan` menuju `/lapor` tersedia pada navbar publik
+desktop dan menu ponsel; konteks pesantren/periode tetap terbawa lewat URL.
 
 - [x] Bangun ulang dashboard publik `/` dengan sidebar desktop/menu ringkas seluler,
   ringkasan skor, statistik, tren, risiko, sumber laporan, status tindak lanjut,

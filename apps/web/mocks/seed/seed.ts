@@ -10,10 +10,12 @@ const T = {
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 4,
+  schemaVersion: 5,
+  campusPlans: [{ id: "CAMPUS-PSN-0018-v1", institutionCode: "PSN-0018", revision: 1, assetId: "/images/risk-map-campus-v1.png", width: 1536, height: 1024, uploadedBy: "USR-003", uploadedAt: T.now, illustration: true }],
   institutions: [
     {
       code: "PSN-0018",
+      activeCampusPlanVersionId: "CAMPUS-PSN-0018-v1",
       name: "PP Al-Hikmah Malang",
       location: "Kota Malang",
       manager: "Ust. K.H. Mustofa Kamal",
@@ -259,6 +261,7 @@ export const SEED: IshasState = {
   findings: [
     {
       id: "RSK-RPT-0003-1",
+      locationSnapshot: { areaId: "AREA-002", locationText: "Asrama Putra · Tangga Belakang", floorNote: "Lantai 1", campusPlanVersionId: "CAMPUS-PSN-0018-v1", point: { x: 31, y: 30 } },
       reportId: "RPT-0003",
       areaId: "AREA-002",
       buildingId: "BLD-001",
@@ -288,6 +291,8 @@ export const SEED: IshasState = {
     },
     {
       id: "RSK-RPT-0004-1",
+      sourceAnswerId: "IND-K3L-002",
+      locationSnapshot: { areaId: "AREA-001", locationText: "Asrama Putra · Koridor", floorNote: "Lantai 2", campusPlanVersionId: "CAMPUS-PSN-0018-v1", point: { x: 20, y: 22 } },
       reportId: "RPT-0004",
       areaId: "AREA-001",
       buildingId: "BLD-001",
@@ -519,3 +524,13 @@ export const SEED: IshasState = {
   ],
   counters: { report: 8, institution: 22 },
 };
+
+// Explicit fictional observations for the campus illustration, not migrated floor coordinates.
+for (const finding of SEED.findings.filter((item) => item.locationSnapshot)) {
+  const report = SEED.reports.find((item) => item.id === finding.reportId);
+  if (report?.channel === "lapor-cepat") report.locationSnapshot = structuredClone(finding.locationSnapshot);
+  if (finding.sourceAnswerId) {
+    const answer = SEED.selfAssessmentSnapshots.find((item) => item.reportId === finding.reportId)?.answers[finding.sourceAnswerId];
+    if (answer) answer.locationSnapshot = structuredClone(finding.locationSnapshot);
+  }
+}

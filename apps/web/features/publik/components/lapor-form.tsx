@@ -3,6 +3,7 @@
 // Logika (draft, kirim, pesantren terpilih) tinggal di halaman; komponen ini hanya render.
 
 import { AlertTriangle, Upload } from "lucide-react";
+import type { ReactNode } from "react";
 import { Modal } from "~/shared/components/modal";
 import type { LaporErrors, LaporValues } from "../lib/lapor-validation";
 
@@ -10,6 +11,7 @@ export type AreaOption = { id: string; label: string };
 export type InstitutionOption = { code: string; name: string };
 
 type Props = {
+  locationPicker?: ReactNode;
   values: LaporValues;
   errors: LaporErrors;
   registered: InstitutionOption[];
@@ -167,6 +169,7 @@ export function LaporForm(props: Props) {
         <p className={HINT}>Pilih area bila tersedia. Bila belum ada, tulis lokasi ini; salah satu wajib diisi.</p>
       </div>
 
+      {props.locationPicker}
       <div>
         <label htmlFor="lapor-judul" className={LABEL}>
           Judul temuan*
