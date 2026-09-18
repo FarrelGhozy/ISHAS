@@ -57,6 +57,11 @@ filter URL tetap terbawa. Arahan ini menggantikan susunan header sticky di atas.
 Tambahan pemilik: menu `Pelaporan` menuju `/lapor` tersedia pada navbar publik
 desktop dan menu ponsel; konteks pesantren/periode tetap terbawa lewat URL.
 
+Tambahan 18 September: menu `Penilaian mandiri` menuju `/penilaian-mandiri`
+ditambahkan setelah `Pelaporan` pada shared navbar publik desktop/menu ponsel.
+Konteks pesantren/periode, penanda halaman aktif dan penutupan menu tetap memakai
+alur navigasi bersama; tidak mengubah hak mengirim penilaian.
+
 - [x] Bangun ulang dashboard publik `/` dengan sidebar desktop/menu ringkas seluler,
   ringkasan skor, statistik, tren, risiko, sumber laporan, status tindak lanjut,
   aspek, rekap lokasi, temuan, dan CTA kanal kirim.

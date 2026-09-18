@@ -22,6 +22,9 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 
 ### 2. Halaman `/penilaian-mandiri`
 
+- [x] Arahan 18 September: akses `Penilaian mandiri` melalui navbar publik
+  dashboard (desktop dan menu ponsel); konteks pesantren/periode tetap terbawa.
+
 - [x] Pemilih pesantren* + nama pelapor* (aturan sama Stage 03) SEBELUM pertanyaan; banner kunci versi
  `Menggunakan [ISHAS vX.Y] · terkunci selama pengisian` (versi = Published aktif; tanpa Published →
  halaman terkunci + pesan `Belum ada instrumen yang dipublikasikan.`).
@@ -53,3 +56,8 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 ## Hasil Pemeriksaan
 
 - (Template `TEST_PLAN.md` §6.)
+- Tambahan navbar 18 September: siap REVIEW untuk perubahan terbatas ini;
+  stage lainnya belum dinyatakan selesai. Typecheck, lint, 82 test dan build lulus.
+  Browser: tautan `/penilaian-mandiri?pesantren=PSN-0018` membuka pesantren yang
+  dipilih, menu menutup setelah klik, penanda aktif benar; navigasi desktop/tablet
+  dan menu ponsel diperiksa. Tidak mengubah alur/draft penilaian atau hak akses.

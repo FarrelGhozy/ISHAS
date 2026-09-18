@@ -1,9 +1,10 @@
 import { NavLink, useMatch, useSearchParams } from "react-router";
-import { BarChart3, ClipboardCheck, FileText, ListChecks, MapPin, Megaphone, ShieldAlert } from "lucide-react";
+import { BarChart3, ClipboardCheck, ClipboardList, FileText, ListChecks, MapPin, Megaphone, ShieldAlert } from "lucide-react";
 
 const links = [
   ["/", "Dashboard", BarChart3],
   ["/lapor", "Pelaporan", Megaphone],
+  ["/penilaian-mandiri", "Penilaian mandiri", ClipboardList],
   ["/hasil", "Hasil penilaian", ClipboardCheck],
   ["/peta-risiko", "Peta risiko", MapPin],
   ["/rekomendasi", "Rekomendasi", ShieldAlert],
