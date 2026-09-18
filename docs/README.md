@@ -1,5 +1,18 @@
 # ISHAS — Dokumentasi Utama (Frontend-Only)
 
+## Pembaruan arah dashboard — 18 September 2026
+
+Pemilik meminta evaluasi dan persiapan dashboard utama mengikuti referensi gambar
+dosen. [Review dashboard](DASHBOARD_REDESIGN_REVIEW.md) berisi analisis, konflik aturan,
+susunan yang diusulkan, kontrak metrik, serta rencana pengerjaan. D-13 di
+[DECISIONS.md](DECISIONS.md) mencatat keputusan lanjutan yang masih ditanyakan.
+Belum ada implementasi redesign pada review ini.
+
+Bagian status di bawah merupakan catatan audit awal 8 September. Keputusan lanjutan
+9 September dan progres implementasi pada bagian akhir TODO/planning harus dibaca
+bersamanya; klaim semua stage kode masih BACKLOG tidak menggambarkan kondisi kini.
+Perbedaan status antarfile dicatat di review dashboard, belum ditetapkan ulang sepihak.
+
 **Status saat ini: rencana tervalidasi sebagian — D-01–D-03 dijawab, D-04–D-12 masih terbuka.**
 
 ISHAS direncanakan sebagai perubahan besar berdasarkan evaluasi dosen (September 2026).

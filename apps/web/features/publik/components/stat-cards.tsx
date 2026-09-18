@@ -37,10 +37,12 @@ export function StatCards({
   summary,
   findings,
   recommendations,
+  compact = false,
 }: {
   summary: IndexSummary;
   findings: RiskFinding[];
   recommendations: Recommendation[];
+  compact?: boolean;
 }) {
   const tindakLanjut = ringkasTindakLanjut(recommendations);
 
@@ -61,7 +63,7 @@ export function StatCards({
         : "text-secondary-text";
 
   return (
-    <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className={`grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 ${compact ? "lg:grid-cols-2" : "lg:grid-cols-4"}`}>
       <div className="stat-card">
         <p className="text-xs font-bold uppercase tracking-wide text-secondary-text">
           Indeks K3L

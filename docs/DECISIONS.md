@@ -206,6 +206,33 @@ tidak otomatis menjawab seluruh D-ID. Tandai `DISETUJUI` hanya pada keputusan ya
 Sebelum tahap kode: keputusan penghambat stage tersebut telah dijawab, rancangan yang bertentangan
 telah diselaraskan, acceptance criteria dapat diperiksa, dan pemilik meminta pembangunan dimulai.
 
+## D-13 — Referensi dashboard dosen — PERSIAPAN 18 September 2026
+
+**Arahan pemilik:** analisis gambar dashboard dari dosen, evaluasi dokumentasi, dan
+persiapkan pengerjaan yang kurang lebih mengikuti gambar; pertanyaan boleh diajukan.
+Persiapan redesign diizinkan. Belum ada keputusan untuk menyalin seluruh aturan,
+angka contoh, warna, maupun field form di gambar menjadi ketentuan final.
+
+Analisis dan rencana: [DASHBOARD_REDESIGN_REVIEW.md](DASHBOARD_REDESIGN_REVIEW.md).
+
+Pertanyaan yang diajukan pada sesi ini:
+
+1. Sasaran: halaman utama publik `/`, workspace Pengelola Pesantren, atau keduanya?
+2. Warna: marun ISHAS atau hijau/toska referensi?
+3. Apakah Ekstrem, Likelihood × Severity, form dalam dashboard, dan denah bertitik
+   merupakan aturan baru wajib, atau contoh visual yang mengikuti aturan lama?
+
+**Status:** menunggu jawaban; D-12 terjawab sebagian pada arah susunan visual saja.
+D-02/D-03, aturan ilustrasi D-04, dan keputusan 9 September tetap berlaku sampai
+ada jawaban yang secara eksplisit mengubahnya. Skala/ambang ilmiah tidak disahkan
+oleh referensi gambar. Jika aturan baru diwajibkan, detail per subaturan dicatat
+sebelum perubahan spesifikasi terkait dianggap siap kode.
+
+Dokumen terdampak setelah keputusan: ROLES, ROUTES, FLOWS, DATA_MODEL,
+DATA_REQUIREMENTS, WIREFRAMES, DESIGN_SYSTEM, TEST_PLAN, TODO, dan stage dashboard/
+halaman baca/lokasi/penilaian/integrasi sesuai scope. Review ini hanya persiapan
+di `docs/`; status stage implementasi dan kode tidak diubah.
+
 ## Review frontend stage 1–3 — arahan pemilik 8 September 2026
 
 Pemilik meminta validasi dan perbaikan coding stage 1–3, fokus UI/UX, keluwesan di semua layar, dan alur data frontend. Backend ditunda sampai frontend disepakati. Review perbaikan Stage 01 → Stage 02 → Stage 03 diaktifkan berurutan; stage BACKLOG tidak diaktifkan. Arahan ini mengizinkan perbaikan keterbacaan, ukuran kontrol, navigasi responsif, dan konsistensi draft/filter; identitas warna serta keputusan ilmiah/hak peran tetap mengikuti ketentuan yang sudah disetujui. D-04–D-11 final tetap terbuka; kebijakan interim Stage 03 tetap berlaku. Status akhir menunggu review pemilik, bukan DONE.

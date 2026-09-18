@@ -29,8 +29,8 @@ import { StatCards } from "../components/stat-cards";
 import { IndexTrendPanel } from "../components/index-trend-panel";
 import { DimensionPanel } from "../components/dimension-panel";
 import { FindingsPanel } from "../components/findings-panel";
-import { PublicOverviewCards } from "../components/public-overview-cards";
 import { PublicInsightPanels } from "../components/public-insight-panels";
+import { AspectAndRecap, FollowUpSummary, ScoreSummary } from "../components/dashboard-workspace";
 import {
   InstitutionComparisonPanel,
   type InstitutionComparisonItem,
@@ -186,8 +186,8 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   }
 
   return (
-    <section className="flex flex-col gap-5">
-      <div>
+      <section className="min-w-0 flex flex-col gap-5">
+        <div>
         <p className="kicker">Ringkasan publik</p>
         <h1 className="text-2xl font-extrabold text-heading">Dashboard K3L Pesantren</h1>
         <p className="mt-1 max-w-3xl text-sm text-secondary-text">
@@ -216,27 +216,21 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         instrumentLabel={instrumentLabel}
       />
 
-      <PublicOverviewCards overview={insight.overview} />
-
-      <StatCards summary={summary} findings={findings} recommendations={recommendations} />
-
-      <div className="grid gap-3 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <IndexTrendPanel summary={summary} />
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,1fr)]">
+          <ScoreSummary summary={summary} snapshots={state.selfAssessmentSnapshots.filter((snapshot) => reports.some((report) => report.id === snapshot.reportId))} versions={state.instrumentVersions} />
+          <StatCards summary={summary} findings={findings} recommendations={recommendations} compact />
         </div>
-        <DimensionPanel dimensions={summary.dimensions} />
-      </div>
-
-      <PublicInsightPanels distribution={insight.distribution} />
-
-      <InstitutionComparisonPanel items={institutionComparison} />
-
-      <FindingsPanel
-        institutionCode={selected}
-        findings={temuanPrioritas}
-        reportById={reportById}
-        userById={(id) => selectUserById(state, id)}
-      />
-    </section>
+        <div className="grid gap-3 xl:grid-cols-3">
+          <div className="xl:col-span-2"><IndexTrendPanel summary={summary} /></div>
+          <DimensionPanel dimensions={summary.dimensions} />
+        </div>
+        <PublicInsightPanels distribution={insight.distribution} />
+        <AspectAndRecap findings={findings} versions={state.instrumentVersions} areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))} distribution={insight.distribution} />
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
+          <FindingsPanel institutionCode={selected} findings={temuanPrioritas} reportById={reportById} userById={(id) => selectUserById(state, id)} />
+          <FollowUpSummary recommendations={recommendations} />
+        </div>
+        <InstitutionComparisonPanel items={institutionComparison} />
+      </section>
   );
 }

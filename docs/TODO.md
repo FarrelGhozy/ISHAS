@@ -1,5 +1,42 @@
 # TODO — Kontrol Kerja Aktif
 
+## Persiapan revisi dashboard — 18 September 2026
+
+Cakupan sesi terbaru: evaluasi dokumentasi dan persiapan redesign, bukan perubahan
+kode. Bagian “tanpa kode/BACKLOG” di bawah adalah catatan historis audit awal;
+progres implementasi tercatat pada bagian stage berikutnya.
+
+- [x] Analisis referensi gambar dosen dan bandingkan dengan dokumen serta kode dashboard lokal.
+- [x] Catat perbedaan unit/angka, batas bidang publik, struktur aspek, dan skala risiko.
+- [x] Siapkan [rencana review dashboard](DASHBOARD_REDESIGN_REVIEW.md), kontrak metrik,
+  dependensi, dan pemeriksaan penerimaan untuk redesign.
+- [x] Ajukan tiga pertanyaan keputusan D-13 (sasaran dashboard, warna, aturan baru).
+- [ ] Catat jawaban dan sinkronkan spesifikasi/stage sesuai keputusan.
+- [ ] Rekonsiliasi status historis README/TODO/planning dan pastikan target aplikasi sebelum kode.
+- [ ] Ajukan rencana untuk review; implementasi redesign belum dimulai.
+
+### Implementasi redesign dashboard — 18 September 2026
+
+Perbaikan navigasi atas arahan pemilik pada sesi yang sama: navigasi publik
+dipindahkan ke shared shell agar konsisten di seluruh route publik, halaman aktif
+ditandai marun, menu seluler berada di header dan menutup setelah memilih tautan.
+Header tetap terlihat saat scroll; filter pesantren/periode terbawa pada tautan.
+Lint, typecheck, build, serta pemeriksaan visual desktop dan navigasi ke `/hasil` lulus.
+
+Arahan lanjutan pemilik: navigasi utama mengikuti tampilan role lain. Shell publik
+memakai sidebar 256px dengan logo compact, menu aktif marun solid, header 68px,
+dan Modal menu seluler yang sama dengan workspace. Menu/izin tetap publik;
+filter URL tetap terbawa. Arahan ini menggantikan susunan header sticky di atas.
+
+- [x] Bangun ulang dashboard publik `/` dengan sidebar desktop/menu ringkas seluler,
+  ringkasan skor, statistik, tren, risiko, sumber laporan, status tindak lanjut,
+  aspek, rekap lokasi, temuan, dan CTA kanal kirim.
+- [x] Pertahankan filter pesantren berbasis URL, selector `Diterima`, batas D-02,
+  tiga tingkat risiko, dan fallback `Belum dipetakan` untuk temuan tanpa indikator.
+- [x] Verifikasi visual desktop; lint, typecheck, 70 test, dan build lulus.
+- [ ] Verifikasi visual tablet/ponsel pada browser dengan viewport terkendali sebelum
+  menandai redesign siap review penuh.
+
 Cakupan aktif: validasi dan penyempurnaan rencana, hanya di `docs/`, tanpa kode.
 Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` belum diaktifkan.
 
