@@ -1,9 +1,18 @@
 # Stage Stage 08 — Penilaian Mandiri (Self-Assessment)
 
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
 **Status:** IN PROGRESS
-**Catatan review:** belum diizinkan membuat kode tanpa arahan pemilik. Bagian terkait D-04, D-05, D-06, D-10 dan D-11
-masih menunggu keputusan di `../DECISIONS.md`; D-03 telah dijawab (kirim: publik + pengelola).
-Checklist di bawah adalah rancangan awal; ruang lingkupnya harus diselaraskan setelah jawaban pemilik diterima.
+**Acuan terkini:** D-03 membatasi pengirim publik/pengelola; D-10 mengunci kirim
+draft versi lama, hasil terkirim tetap snapshot; D-11 menyediakan lokasi manual
+bila area kosong; D-14.b menjaga lineage titik per jawaban; D-15 memakai empat
+kategori. D-04 tetap ilustratif. Stage belum selesai uji penerimaan penuh.
 **Dependensi:** Stage 01 (model), Stage 03 (pola kirim), Stage 05 (antrean penerima) `DONE`;
 Stage 07 disarankan (area tersedia).
 **Tujuan:** memindahkan kemampuan `AssessmentFlow` asesor menjadi penilaian mandiri publik:

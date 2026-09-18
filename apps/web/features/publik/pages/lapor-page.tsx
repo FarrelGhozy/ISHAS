@@ -38,6 +38,9 @@ const FOCUS_ORDER: (keyof LaporValues)[] = [
   "institutionCode",
   "areaId",
   "manualLocation",
+  "categoryId",
+  "aspectId",
+  "indicatorId",
   "title",
   "description",
   "contact",
@@ -117,14 +120,38 @@ function LaporPageContent() {
   const activePlan = state.campusPlans.find((plan) => plan.institutionCode === values.institutionCode && plan.id === state.institutions.find((institution) => institution.code === values.institutionCode)?.activeCampusPlanVersionId);
   const mapError = validateMapLocation(state, values.institutionCode, values.locationSnapshot);
 
+  // D-15 cascading: opsi dari versi instrumen Published aktif (single source di seed).
+  const activeVersion = state.instrumentVersions.find((v) => v.id === state.activeInstrumentVersionId && v.status === "Published");
+  const categoryOptions = useMemo(
+    () => (activeVersion?.dimensions ?? []).map((d) => ({ id: d.categoryId ?? d.id, name: d.name })),
+    [activeVersion],
+  );
+  const categoryIds = useMemo(() => categoryOptions.map((c) => c.id), [categoryOptions]);
+  const aspectOptions = useMemo(() => {
+    const dim = activeVersion?.dimensions.find((d) => (d.categoryId ?? d.id) === values.categoryId);
+    return (dim?.aspects ?? []).map((a) => ({ id: a.id, name: a.name }));
+  }, [activeVersion, values.categoryId]);
+  const aspectIds = useMemo(() => aspectOptions.map((a) => a.id), [aspectOptions]);
+  const indicatorOptions = useMemo(() => {
+    if (!activeVersion || !values.aspectId) return [];
+    return activeVersion.dimensions
+      .flatMap((d) => d.indicators)
+      .filter((i) => i.aspectId === values.aspectId)
+      .map((i) => ({ id: i.id, name: `${i.code} · ${i.title}` }));
+  }, [activeVersion, values.aspectId]);
+  const indicatorIds = useMemo(() => indicatorOptions.map((i) => i.id), [indicatorOptions]);
+
   const errors = useMemo(
     () =>
       validateLapor(values, {
         registeredCodes,
         areaIdsOfSelected: areaIds,
         selectedHasNoAreas,
+        categoryIds,
+        aspectIdsOfCategory: aspectIds,
+        indicatorIdsOfAspect: indicatorIds,
       }),
-    [values, registeredCodes, areaIds, selectedHasNoAreas],
+    [values, registeredCodes, areaIds, selectedHasNoAreas, categoryIds, aspectIds, indicatorIds],
   );
   const visibleErrors = useMemo(() => {
     const out: typeof errors = {};
@@ -177,8 +204,7 @@ function LaporPageContent() {
   }
 
   function handleChange(field: keyof LaporValues, value: string) {
-    setFormError(null);
-    if (field === "institutionCode") {
+    setFormError(null);    if (field === "institutionCode") {
       if (!blocked) {
         const currentSaved = !values.institutionCode || saveLaporDraft(values.institutionCode, values);
         const existing = loadLaporDraft(value || null);
@@ -195,7 +221,7 @@ function LaporPageContent() {
       requestAnimationFrame(() => document.getElementById("lapor-pesantren")?.focus());
       return;
     }
-    setValues((v) => ({ ...v, [field]: value, ...(field === "areaId" ? { locationSnapshot: undefined } : {}) }));
+    setValues((v) => ({ ...v, [field]: value, ...(field === "areaId" ? { locationSnapshot: undefined } : {}), ...(field === "categoryId" ? { aspectId: "", indicatorId: "" } : {}), ...(field === "aspectId" ? { indicatorId: "" } : {}) }));
   }
 
   async function handleSubmit() {
@@ -207,6 +233,9 @@ function LaporPageContent() {
       institutionCode: true,
       areaId: true,
       manualLocation: true,
+      categoryId: true,
+      aspectId: true,
+      indicatorId: true,
       title: true,
       description: true,
       contact: true,
@@ -235,6 +264,9 @@ function LaporPageContent() {
         description: values.description.trim(),
         areaId: values.areaId,
         manualLocation: values.manualLocation.trim() || undefined,
+        categoryId: values.categoryId || undefined,
+        aspectId: values.aspectId || undefined,
+        indicatorId: values.indicatorId || undefined,
         evidenceName: values.evidenceName.trim() || undefined,
         evidenceAssetId: values.evidenceAssetId,
         contact: values.contact.trim() || undefined,
@@ -302,6 +334,9 @@ function LaporPageContent() {
         registered={registered}
         areas={areas}
         areasEmpty={selectedHasNoAreas}
+        categories={categoryOptions}
+        aspects={aspectOptions}
+        indicators={indicatorOptions}
         readOnly={blocked || submitting || evidenceUploading}
         submitting={submitting}
         submitDisabled={blocked || submitting || !canSubmit}

@@ -1,8 +1,9 @@
 # Sistem Desain (Disalin Persis dari lama + Tambahan Baru)
 
-> Aturan: seluruh hex di bawah ditetapkan di `apps/web/app/globals.css`. Implementasi WAJIB memakai nilai ini. Dilarang menggeser marun ke merah terang/oranye/biru sebagai warna identitas.
+> Aturan: seluruh hex di bawah ditetapkan di `apps/web/app/app.css`. Implementasi WAJIB memakai nilai ini. Dilarang menggeser marun ke merah terang/oranye/biru sebagai warna identitas.
 
-**Catatan validasi rencana:** token ini adalah acuan visual yang ditetapkan. Pemilik masih membahas ;
+**Catatan terkini:** pemilik menetapkan tema/warna tetap pada penyempurnaan dashboard (D-13).
+**Catatan historis validasi rencana:** token ini adalah acuan visual yang ditetapkan. Pemilik masih membahas;
 detail layout, ukuran teks, dan copy belum disetujui ulang (D-12). Pemeriksaan dokumentasi
 bukan bukti bahwa tampilan atau aksesibilitasnya sudah lulus pengujian.
 
@@ -39,7 +40,7 @@ bukan bukti bahwa tampilan atau aksesibilitasnya sudah lulus pengujian.
 
 | Kelas | Background | Teks | Ikon Lucide | Gaya |
 |---|---|---|---|---|
-| `status-red` | `#fee2e2` | `#b91c1c` | `AlertTriangle`/`Flame` | Uppercase 8px/800, radius 4px, padding 4px 7px |
+| `status-red` | `#fee2e2` | `#b91c1c` | `AlertTriangle`/`Flame` | Teks 12px tebal + ikon, radius 4px, padding 4px 7px |
 | `status-amber` | `#fff3d6` | `#b45309` | `Clock3` | idem |
 | `status-green` | `#dff7ed` | `#047857` | `CheckCircle2` | idem |
 | `status-blue` | `#dff3f7` | `#0d5c75` | `Info`/`Activity` | idem |
@@ -52,6 +53,7 @@ Aksen kartu statistik: atas merah `#dc2626` (`stat-red`), ambar `#d97706` (`stat
 | Nilai data | Kelas | Ikon | Label tampil |
 |---|---|---|---|
 | Severity/Priority `Tinggi` | `status-red` | `AlertTriangle` | `Tinggi` |
+| Level risiko `Ekstrem` (D-15.b, prototipe) | `status-red` | `Flame` | `Ekstrem` |
 | Severity/Priority `Sedang` | `status-amber` | `AlertTriangle` | `Sedang` |
 | Severity/Priority `Rendah` | `status-green` | `CheckCircle2` | `Rendah` |
 | Keduanya `Belum ditentukan` | `status-neutral` | `Minus` | `Belum ditentukan` |
@@ -66,8 +68,8 @@ Aksen kartu statistik: atas merah `#dc2626` (`stat-red`), ambar `#d97706` (`stat
 
 ## 3. Komponen (gaya yang ditetapkan, dipakai ulang tanpa redesign)
 
-- **Tombol utama** (`primary-button`): tinggi min 39px, radius 7px, bg `#9f1239`, teks putih 11px/700, ikon 15px, shadow `0 2px 4px rgb(15 23 42 / 9%)`; disabled: redup + non-klik.
-- **Tombol sekunder** (`secondary-button`): min 38px, border `#cbd5e1`, bg putih, teks `#334155` 10px/700; hover marun (lihat tabel).
+- **Tombol utama** (`primary-button`): tinggi min 44px, radius 7px, bg `#9f1239`, teks putih 14px/700, ikon 15px, shadow `0 2px 4px rgb(15 23 42 / 9%)`; disabled: redup + non-klik.
+- **Tombol sekunder** (`secondary-button`): min 44px, border `#cbd5e1`, bg putih, teks `#334155` 14px/700; hover marun (lihat tabel).
 - **Tombol teks** (`text-button`): untuk link aksi ("Buka peta bahaya →").
 - **Kartu** (`surface`): border `#e2e8f0`, radius 8px, bg putih, shadow `0 1px 2px rgb(15 23 42 / 3%)`.
 - **Banner scope**: border `#fecdd3`, bg `#fff7f8`, radius 8px, ikon `#be123c` 18px.
@@ -77,7 +79,7 @@ Aksen kartu statistik: atas merah `#dc2626` (`stat-red`), ambar `#d97706` (`stat
 ## 4. Aturan aksesibilitas (wajib)
 
 1. Status bahaya selalu label + ikon (aturan produk). Jangan mengandalkan merah saja.
-2. Periksa kontras setiap pasangan teks/latar pada ukuran aktual saat review tampilan; jangan menganggap seluruh kombinasi otomatis lulus karena berasal dari lama. Ukuran badge 8px dan label/tombol 10–11px pada salinan lama perlu pemeriksaan keterbacaan bersama D-12.
+2. Periksa kontras setiap pasangan teks/latar pada ukuran aktual saat review tampilan; jangan menganggap seluruh kombinasi otomatis lulus karena berasal dari lama. Ukuran badge kecil dan label pada salinan lama perlu pemeriksaan keterbacaan bersama D-12.
 3. Fokus keyboard terlihat (ring `#e11d48`); urutan Tab: header → pemilih pesantren → CTA → konten; dialog moderasi menjebak fokus sampai ditutup (Esc menutup).
 4. Area sentuh min 40px di ponsel untuk tombol validasi/terima/tolak.
 

@@ -1,10 +1,17 @@
 # Stage Stage 04 — Halaman Baca Publik
 
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
 **Status:** REVIEW
-**Catatan review:** belum diizinkan membuat kode tanpa arahan pemilik. D-02 telah dijawab
-(8 September 2026): halaman publik hanya ringkasan + nama validator/PIC; denah/bukti/nama pelapor
-internal. Bagian terkait D-04 dan D-08 masih menunggu keputusan di `../DECISIONS.md`.
-Checklist di bawah adalah rancangan awal; ruang lingkupnya harus diselaraskan setelah jawaban pemilik diterima.
+**Acuan terkini:** D-02 menjaga ringkasan publik dan privasi pelapor/bukti; D-08
+mengeluarkan pesantren tidak terdaftar; D-14 mengizinkan denah gambaran besar dan
+titik tervalidasi setelah satu pesantren dipilih. Skor tetap ilustratif D-04.
 **Dependensi:** Review ulang Stage 01–Stage 03 selesai diverifikasi; pemilik meminta kelanjutan stage secara berurutan pada 8 September 2026.
 **Tujuan:** lima halaman baca + deep-link lembaga, semuanya steril dari data belum divalidasi
 dan konsisten satu sama lain untuk filter yang sama.
@@ -19,11 +26,12 @@ dan konsisten satu sama lain untuk filter yang sama.
 
 ### 2. `/peta-risiko` — Peta bahaya & risiko
 
-- [x] Dua tampilan publik: Daftar Area (default, selalu tersedia) + Daftar Temuan; tampilan
- Denah Bangunan (marker bernomor) hanya di workspace pengelola — denah/titik tidak publik (D-02);
- filter pesantren/gedung/lantai/severity/status.
-- [x] Detail temuan (ringkasan): bahaya, dampak, keparahan, lokasi, rekomendasi + validator (D-02);
- bukti, jawaban mentah, dan titik denah tidak publik; tombol ke rekomendasi/tindak lanjut terkait.
+- [x] Peta memakai denah gambaran besar untuk satu pesantren (D-14), versi denah,
+  tingkat risiko/status, titik/cluster dan daftar temuan. Scope general meminta
+  pilih pesantren; tanpa denah tetap ada daftar. Rincian uji: STAGE_RISK_MAP.md.
+- [x] Detail ringkasan: bahaya/lokasi/risiko/status + validator/PIC. Bukti, jawaban
+  mentah, nomor laporan dan identitas pelapor tetap internal. Titik tidak dipindah
+  otomatis antarversi dan laporan tanpa titik tidak diberi centroid.
 - [ ] Area tanpa temuan aktif tampil netral (bukan marker hijau).
 
 ### 3. `/rekomendasi` — Rekomendasi

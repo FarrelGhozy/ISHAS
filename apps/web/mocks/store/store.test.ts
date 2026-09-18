@@ -30,7 +30,7 @@ describe("selector", () => {
   test("antrean validasi terfilter scope dan terurut terbaru", () => {
     const queue = selectValidationQueue(getState(), "PSN-0018");
     expect(queue.map((r) => r.id)).toEqual(["RPT-0001"]);
-    expect(selectValidationQueue(getState(), "PSN-0019").map((r) => r.id)).toEqual(["RPT-0002"]);
+    expect(selectValidationQueue(getState(), "PSN-0019").map((r) => r.id)).toEqual(["RPT-0016", "RPT-0002"]);
   });
 
   test("filter pesantren mempersempit hasil tervalidasi", () => {
@@ -89,7 +89,7 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(5);
+    expect(state.schemaVersion).toBe(6);
     expect(selectRegisteredInstitutions(state).length).toBe(2);
   });
 });
@@ -129,7 +129,7 @@ describe("lokasi dan tindak lanjut V2-07", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("gedung baru membuat lantai awal, area langsung tersimpan, dan denah menyimpan versi", () => {
-    const building = storeActions.addBuilding(manager, { code: "KLS-1", name: "Kelas Baru" });
+    const building = storeActions.addBuilding(manager, { code: "LAB-1", name: "Lab Baru" });
     expect(building.ok).toBe(true);
     if (!building.ok || !building.id) return;
     const id = building.id;
@@ -170,7 +170,7 @@ describe("lapor-cepat V2-03", () => {
     const result = storeActions.submitPublicReport({ name: "Santri Blok B" }, VALID);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.id).toBe("RPT-0008");
+    expect(result.id).toBe("RPT-0017");
 
     const report = getState().reports.find((r) => r.id === result.id);
     expect(report?.channel).toBe("lapor-cepat");
@@ -268,7 +268,7 @@ describe("regresi review frontend", () => {
     for (const id of ["USR-001", "USR-002", "USR-tidak-ada"]) {
       expect(storeActions.submitPublicReport({ id, name: "uji" }, input).ok).toBe(false);
     }
-    expect(getState().reports.length).toBe(7);
+    expect(getState().reports.length).toBe(16);
   });
 
   test("kegagalan penyimpanan tidak membuat record/audit/notifikasi atau menghabiskan nomor", () => {
@@ -284,6 +284,6 @@ describe("regresi review frontend", () => {
       else Reflect.deleteProperty(globalThis, "localStorage");
     }
     const retry = storeActions.submitPublicReport({ name: "uji" }, { ...input, clientRequestId: "retry-after-quota" });
-    expect(retry).toEqual({ ok: true, id: "RPT-0008" });
+    expect(retry).toEqual({ ok: true, id: "RPT-0017" });
   });
 });

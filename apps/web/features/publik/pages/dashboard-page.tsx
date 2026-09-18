@@ -30,7 +30,7 @@ import { IndexTrendPanel } from "../components/index-trend-panel";
 import { DimensionPanel } from "../components/dimension-panel";
 import { FindingsPanel } from "../components/findings-panel";
 import { PublicInsightPanels } from "../components/public-insight-panels";
-import { AspectAndRecap, FollowUpSummary, ScoreSummary } from "../components/dashboard-workspace";
+import { AspectAndRecap, CategoryGuide, FollowUpSummary, RekapKategoriPanel, ScoreSummary } from "../components/dashboard-workspace";
 import { PublicCampusMap } from "../components/public-campus-map";
 import {
   InstitutionComparisonPanel,
@@ -214,24 +214,29 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
 
       <ScopeBanner
         scopeLabel={scopeLabel}
-        periode={selectedPeriode ?? summary.periode}
+        periode={summary.periode}
         instrumentLabel={instrumentLabel}
       />
 
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,1fr)]">
-          <ScoreSummary summary={summary} snapshots={state.selfAssessmentSnapshots.filter((snapshot) => reports.some((report) => report.id === snapshot.reportId))} versions={state.instrumentVersions} />
-          <StatCards summary={summary} findings={findings} recommendations={recommendations} compact />
-        </div>
-        <div className="grid gap-3 xl:grid-cols-3">
-          <div className="xl:col-span-2"><IndexTrendPanel summary={summary} /></div>
-          <DimensionPanel dimensions={summary.dimensions} />
-        </div>
-        <PublicInsightPanels distribution={insight.distribution} />
-        <AspectAndRecap findings={findings} versions={state.instrumentVersions} areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))} distribution={insight.distribution} />
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,1fr)]">
+      <div className="grid min-w-0 items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-4">
+          <div className="grid min-w-0 gap-3 xl:grid-cols-2">
+            <ScoreSummary summary={summary} snapshots={state.selfAssessmentSnapshots.filter((snapshot) => reportById.has(snapshot.reportId))} versions={state.instrumentVersions} />
+            <IndexTrendPanel summary={summary} />
+          </div>
+          <StatCards summary={summary} findings={findings} recommendations={recommendations} />
+          <PublicInsightPanels distribution={insight.distribution} />
+          <AspectAndRecap findings={findings} versions={state.instrumentVersions} areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))} distribution={insight.distribution} reports={reports} />
+          <RekapKategoriPanel reports={reports} findings={findings} snapshots={state.selfAssessmentSnapshots.filter((snapshot) => reportById.has(snapshot.reportId))} versions={state.instrumentVersions} />
           <FindingsPanel institutionCode={selected} findings={temuanPrioritas} reportById={reportById} userById={(id) => selectUserById(state, id)} />
-          <div className="min-w-0 space-y-3"><PublicCampusMap institutionCode={selected} compact /><FollowUpSummary recommendations={recommendations} /></div>
         </div>
+        <aside className="grid min-w-0 gap-3 xl:grid-cols-2 2xl:grid-cols-1" aria-label="Kategori, lokasi, dan tindak lanjut">
+          <CategoryGuide />
+          <PublicCampusMap institutionCode={selected} compact />
+          <FollowUpSummary recommendations={recommendations} institutionCode={selected} />
+          <DimensionPanel dimensions={summary.dimensions} />
+        </aside>
+      </div>
         <InstitutionComparisonPanel items={institutionComparison} />
       </section>
   );

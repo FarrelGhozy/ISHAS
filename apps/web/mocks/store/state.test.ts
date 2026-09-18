@@ -1,7 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
 import { loadState, MOCK_STORAGE_KEY } from "./state";
 import { SEED } from "../seed/seed";
-
 const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
 afterEach(() => {
   if (descriptor) Object.defineProperty(globalThis, "localStorage", descriptor);
@@ -18,4 +17,14 @@ for (const [name, raw] of [
     getItem(key: string) { expect(key).toBe(MOCK_STORAGE_KEY); return raw; },
   } });
   expect(loadState()).toEqual(SEED);
+});
+
+test("state v5 valid dimigrasi ke v6 tanpa kehilangan record", () => {
+  const v5 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 5 });
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
+    getItem() { return v5; },
+  } });
+  const loaded = loadState();
+  expect(loaded.schemaVersion).toBe(6);
+  expect(loaded.reports.length).toBe(SEED.reports.length);
 });

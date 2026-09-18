@@ -1,8 +1,16 @@
 # Stage Stage 06 — Lifecycle Penanganan + Hapus Completed
 
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
 **Status:** REVIEW
 **Catatan review:** D-05, D-06, dan D-07 telah diputuskan pemilik pada 9 September 2026.
-**Dependensi:** Stage 05 `DONE` (laporan `Pending` sudah ada).
+**Dependensi:** Stage 05 tersedia (laporan `Pending` sudah ada).
 **Tujuan:** mengelola status `Pending → Proses → Completed → Arsip` dengan syarat tiap transisi,
 aturan mundur, audit abadi, dan pemetaan visual yang persis.
 

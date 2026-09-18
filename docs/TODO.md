@@ -1,5 +1,28 @@
 # TODO — Kontrol Kerja Aktif
 
+## Kontrol terkini — 18 September 2026
+
+Revisi dashboard untuk REVIEW: [STAGE_DASHBOARD_POLISH.md](../planning/STAGE_DASHBOARD_POLISH.md).
+Arahan pemilik sudah menetapkan dashboard publik mengikuti referensi pertama,
+tema/warna tetap, empat kategori dipertahankan, fokus penyempurnaan.
+Checklist pada stage revisi menjadi kontrol pekerjaan sesi ini. Bagian historis
+“tanpa kode”, “BACKLOG”, dan “menunggu jawaban D-13” di bawah tidak lagi membatasi
+izin implementasi ini. Stage 03 dan 04 berstatus REVIEW sesuai file stage dan
+hasil historis; revisi baru memiliki hasil pemeriksaan terpisah. Stage 07–09 tetap
+IN PROGRESS karena pemeriksaan penerimaannya belum lengkap, bukan dinyatakan DONE.
+
+
+
+- [x] Arahan review terbaru: kartu kategori/lokasi desktop sejajar 22rem, tabel scroll vertikal dengan header sticky; ponsel mengikuti isi. Browser, lint/typecheck/106 test/build lulus (menggantikan koreksi tinggi isi desktop sebelumnya).
+
+## Kategori/aspek K3 (D-15) — 19 September 2026
+
+- [x] Patokan dokumen: `KATEGORI_K3.md` + D-15 (struktur Kategori→Aspek→Indikator, Ekstrem prototipe, risiko tetap pengelola).
+- [x] Sinkronisasi: DATA_MODEL (schema v6, RiskLevel, category/aspect), FLOWS (cascading opsional lapor-cepat), DESIGN_SYSTEM (Ekstrem → status-red + Flame).
+- [ ] Review dokumen bersama pemilik/dosen sebelum implementasi dianggap final.
+- [x] Implementasi kode mengikuti patokan ini (seed INS-v1.1, migrasi v6, rekap per kategori, form cascading, test).
+- [x] Verifikasi: lint + typecheck + 103 test + build lulus (19 Sep 2026). Cek visual 3 viewport browser menyusul (Chromium tak tersedia di lingkungan ini).
+
 ## Gambar bukti Pelaporan — 18 September 2026
 
 Arahan pemilik mengaktifkan revisi terbatas `/lapor`: satu gambar opsional
@@ -45,9 +68,9 @@ progres implementasi tercatat pada bagian stage berikutnya.
 - [x] Siapkan [rencana review dashboard](DASHBOARD_REDESIGN_REVIEW.md), kontrak metrik,
   dependensi, dan pemeriksaan penerimaan untuk redesign.
 - [x] Ajukan tiga pertanyaan keputusan D-13 (sasaran dashboard, warna, aturan baru).
-- [ ] Catat jawaban dan sinkronkan spesifikasi/stage sesuai keputusan.
+- [x] Catat amendemen D-13: tema/warna tetap, penyempurnaan dashboard publik; sinkronkan spesifikasi/stage.
 - [ ] Rekonsiliasi status historis README/TODO/planning dan pastikan target aplikasi sebelum kode.
-- [ ] Ajukan rencana untuk review; implementasi redesign belum dimulai.
+- [x] Izin penyempurnaan diberikan pemilik; hasil revisi dicatat terpisah pada STAGE_DASHBOARD_POLISH.md.
 
 ### Implementasi redesign dashboard — 18 September 2026
 
@@ -76,8 +99,8 @@ alur navigasi bersama; tidak mengubah hak mengirim penilaian.
 - [x] Pertahankan filter pesantren berbasis URL, selector `Diterima`, batas D-02,
   tiga tingkat risiko, dan fallback `Belum dipetakan` untuk temuan tanpa indikator.
 - [x] Verifikasi visual desktop; lint, typecheck, 70 test, dan build lulus.
-- [ ] Verifikasi visual tablet/ponsel pada browser dengan viewport terkendali sebelum
-  menandai redesign siap review penuh.
+- [x] Verifikasi responsivitas revisi dashboard pada browser terkendali 18 September 2026;
+  rincian ukuran dan batas pengujian pada STAGE_DASHBOARD_POLISH.md.
 
 Cakupan aktif: validasi dan penyempurnaan rencana, hanya di `docs/`, tanpa kode.
 Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` belum diaktifkan.
@@ -128,18 +151,19 @@ Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` bel
 - [ ] Cek 3 viewport + keyboard di browser; lint + typecheck + build (lint/typecheck/test/build lulus; viewport/keyboard browser menyusul sebelum REVIEW).
 - [ ] Ajukan hasil untuk review pemilik; interim D-11 (kunci kirim) + draft per pesantren menunggu D-10/D-11 final.
 
-## Stage 04 — Halaman baca publik — `IN PROGRESS`
+## Stage 04 — Halaman baca publik — `REVIEW`
 
 - [x] Bangun halaman hasil, peta risiko, rekomendasi, tindak lanjut, dan laporan dengan filter URL bersama.
 - [x] Pastikan semua tampilan publik membaca data `Diterima` dan memenuhi matriks bidang publik D-02.
+- [x] Perbaikan visual dashboard `/` 19 Sep 2026: batang `Temuan per kategori` menapak baseline + nol garis tipis + skala; `Rekap per kategori` jadi diagram + detail (kartu ponsel + tabel rincian details/sticky). Prosesor/seed tak diubah. Lint + typecheck + 103 test + build lulus (19 Sep 2026, termasuk fiks tinggi batang HP: hapus `flex-1` penyebab track collapse, pakai `h-32/sm:h-36` tetap; fiks PC 19 Sep 2026: grid `items-stretch` + kolom `justify-end` + track `min-h-32/sm:min-h-36` + `xl:flex-1` agar batang mengisi sisa kartu dan baseline menapak bawah; diagram/kartu rekap dilepas atas arahan pemilik — tersisa tabel 9 kolom saja dengan header/kolom diperbesar di HP (`text-base`, `px-5 py-3.5`, `min-w-[880px]`, kolom pertama sticky + hint geser)); cek visual browser menyusul (Chromium tak tersedia di lingkungan ini).
 - [ ] Filter pesantren di tiap halaman; konsistensi lintas halaman untuk filter sama.
-- [ ] Cek 3 viewport; lint + typecheck + build.
+- [ ] Pemeriksaan lintas route/filter Stage 04 terbaru masih terbuka; dashboard revisi sendiri telah diperiksa (STAGE_DASHBOARD_POLISH.md).
 
 ## Stage 05 — Antrean validasi — `REVIEW`
 
-- [ ] `/pengelola/validasi-laporan`: filter + detail hanya-baca + Terima (wajib severity+priority) / Tolak (wajib alasan).
-- [ ] Penolakan sistem bila syarat tak terpenuhi; laporan diterima tampil di dashboard.
-- [ ] Scope isolation: pengelola hanya melihat miliknya.
+- [x] Implementasi `/pengelola/validasi-laporan`: filter + detail + Terima/Tolak tersedia (file Stage 05); uji browser penerimaan penuh masih terbuka.
+- [x] Test store membuktikan penolakan syarat severity/priority/alasan; selector publik hanya menerima laporan Diterima.
+- [x] Test store membuktikan isolasi scope: pengelola tidak dapat memoderasi laporan pesantren lain.
 - [ ] Cek 3 viewport + keyboard + dialog fokus; lint + typecheck + build.
 
 ## Stage 06 — Lifecycle + arsip completed — `REVIEW`

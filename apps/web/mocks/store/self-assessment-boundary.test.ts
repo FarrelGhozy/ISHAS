@@ -21,7 +21,7 @@ function draftLengkap(id: string, overrides: Partial<SelfAssessmentDraft> = {}):
     id,
     institutionCode: "PSN-0018",
     reporterName: "Penguji Mandiri",
-    instrumentVersionId: "INS-v1.0",
+    instrumentVersionId: SEED.activeInstrumentVersionId ?? "INS-v1.1",
     answers: {
       "IND-K3L-001": { value: "3", note: "", evidenceName: "", areaId: "AREA-001", planPoint: null },
       "IND-K3L-002": { value: "2", note: "", evidenceName: "kabel.jpg", areaId: "AREA-001", planPoint: null },
@@ -29,6 +29,10 @@ function draftLengkap(id: string, overrides: Partial<SelfAssessmentDraft> = {}):
       "IND-K3L-004": { value: "3", note: "", evidenceName: "", areaId: "", planPoint: null },
       "IND-K3L-005": { value: "Ya", note: "", evidenceName: "", areaId: "AREA-002", planPoint: null },
       "IND-K3L-006": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
+      "IND-K3L-007": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
+      "IND-K3L-008": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
+      "IND-K3L-009": { value: "2", note: "", evidenceName: "", areaId: "", planPoint: null },
+      "IND-K3L-010": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
     },
     activeIndex: 0,
     updatedAt: new Date().toISOString(),
@@ -54,7 +58,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     ]) {
       expect(storeActions.submitSelfAssessment(actor, "SELF-PSN-0018").ok).toBe(false);
     }
-    expect(getState().reports.length).toBe(7);
+    expect(getState().reports.length).toBe(16);
   });
 
   test("publik tanpa login dan pengelola aktif lolos + email akun tersimpan", () => {
@@ -164,11 +168,16 @@ describe("publik D-08 + arsip di agregat", () => {
 
   test("snapshot laporan yang diarsip tidak menjadi sumber indeks", () => {
     const sebelum = pilihSnapshotTerbaruDiterima(getState().reports, getState().selfAssessmentSnapshots, "PSN-0018");
-    expect(sebelum?.reportId).toBe("RPT-0004");
+    expect(sebelum?.reportId).toBe("RPT-0010");
     const withArchive = getState().reports.map((r) =>
+      r.id === "RPT-0010" ? { ...r, archivedAt: "2026-09-09T00:00:00.000Z" } : r,
+    );
+    // Arsip snapshot terbaru → mundur ke snapshot Diterima sebelumnya (RPT-0004, INS-v1.0).
+    expect(pilihSnapshotTerbaruDiterima(withArchive, getState().selfAssessmentSnapshots, "PSN-0018")?.reportId).toBe("RPT-0004");
+    const withAllArchived = withArchive.map((r) =>
       r.id === "RPT-0004" ? { ...r, archivedAt: "2026-09-09T00:00:00.000Z" } : r,
     );
-    expect(pilihSnapshotTerbaruDiterima(withArchive, getState().selfAssessmentSnapshots, "PSN-0018")).toBeNull();
+    expect(pilihSnapshotTerbaruDiterima(withAllArchived, getState().selfAssessmentSnapshots, "PSN-0018")).toBeNull();
   });
 
   test("archiveCompletedReport + alias lama mengarsipkan (bukan menghapus)", () => {

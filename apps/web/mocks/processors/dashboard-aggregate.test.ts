@@ -40,10 +40,10 @@ describe("hitungIndexSummary dengan seed", () => {
 
   test("satu pesantren: snapshot Diterima terbaru menjadi sumber", () => {
     const summary = hitungIndexSummary(input, ["PSN-0018"]);
-    // RPT-0004 (Diterima): 1,2,Ya,3,Tidak,4 → (20+40+100+60+20+80)/6 ≈ 53,3
-    expect(summary.currentIndex).toBeCloseTo(53.333, 2);
+    // RPT-0010 (Diterima, INS-v1.1): 2,1,Ya,4,Tidak,2,4,4,2,4 → (40+20+100+80+20+40+80+80+40+80)/10 = 58
+    expect(summary.currentIndex).toBeCloseTo(58, 6);
     expect(summary.series.at(-1)?.period).toBe("Sep 2026");
-    expect(summary.instrumentVersionIds).toEqual(["INS-v1.0"]);
+    expect(summary.instrumentVersionIds).toEqual(["INS-v1.1"]);
   });
 
   test("Menunggu validasi tidak memengaruhi angka dalam kondisi apa pun", () => {
@@ -101,7 +101,7 @@ describe("hitungIndexSummary dengan seed", () => {
 
   test("dimensi terisi dari instrumen versi snapshot", () => {
     const summary = hitungIndexSummary(input, ["PSN-0018", "PSN-0019"]);
-    expect(summary.dimensions.map((d) => d.id)).toEqual(["DIM-001", "DIM-002"]);
+    expect(summary.dimensions.map((d) => d.id)).toEqual(["DIM-KES", "DIM-SEH", "DIM-LING", "DIM-PSI"]);
     expect(summary.dimensions.every((d) => d.score !== null)).toBe(true);
   });
 });
@@ -109,7 +109,7 @@ describe("hitungIndexSummary dengan seed", () => {
 describe("pilihSnapshotTerbaruDiterima", () => {
   test("hanya snapshot laporan Diterima", () => {
     const pilihan = pilihSnapshotTerbaruDiterima(SEED.reports, SEED.selfAssessmentSnapshots, "PSN-0019");
-    expect(pilihan?.reportId).toBe("RPT-0007"); // RPT-0002 Menunggu validasi → dilewati
+    expect(pilihan?.reportId).toBe("RPT-0014"); // RPT-0002 Menunggu validasi → dilewati
   });
 });
 
@@ -119,21 +119,21 @@ describe("panel temuan dan tindak lanjut", () => {
   const findings = SEED.findings.filter((f) => ids.has(f.reportId));
   const recs = SEED.recommendations.filter((r) => ids.has(r.reportId));
 
-  test("temuan aktif terurut Tinggi → Sedang → Rendah dan membatasi jumlah", () => {
+  test("temuan aktif terurut Ekstrem → Tinggi → Sedang → Rendah dan membatasi jumlah", () => {
     const prioritas = pilihTemuanPrioritas(findings, 4);
-    expect(prioritas.map((f) => f.level)).toEqual(["Tinggi", "Sedang", "Sedang"]);
+    expect(prioritas.map((f) => f.level)).toEqual(["Ekstrem", "Tinggi", "Tinggi", "Tinggi"]);
     expect(prioritas.every((f) => f.status !== "Terverifikasi")).toBe(true);
   });
 
   test("risiko tinggi menghitung temuan aktif level Tinggi", () => {
-    expect(hitungRisikoTinggi(findings)).toBe(1);
+    expect(hitungRisikoTinggi(findings)).toBe(4);
   });
 
   test("ringkasan tindak lanjut: rata-rata progres + count", () => {
     const ringkas = ringkasTindakLanjut(recs);
-    expect(ringkas.pekerjaan).toBe(4);
-    expect(ringkas.terverifikasi).toBe(1);
-    expect(ringkas.rataProgress).toBe(Math.round((40 + 25 + 100 + 0) / 4));
+    expect(ringkas.pekerjaan).toBe(15);
+    expect(ringkas.terverifikasi).toBe(3);
+    expect(ringkas.rataProgress).toBe(39); // total progres 590 / 15 laporan Diterima
   });
 });
 
@@ -187,13 +187,13 @@ describe("insight dashboard publik", () => {
     });
 
     expect(result.overview.pesantrenTercakup).toBe(2);
-    expect(result.overview.penggunaAktif).toBe(4);
-    expect(result.overview.laporanTervalidasi).toBe(4);
+    expect(result.overview.penggunaAktif).toBe(5);
+    expect(result.overview.laporanTervalidasi).toBe(11);
     expect(result.distribution.kanal).toEqual([
-      { label: "Lapor cepat", value: 2 },
-      { label: "Penilaian mandiri", value: 2 },
+      { label: "Lapor cepat", value: 7 },
+      { label: "Penilaian mandiri", value: 4 },
     ]);
-    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(4);
+    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(11);
   });
 
   test("filter pesantren mempersempit seluruh angka insight", () => {
@@ -213,8 +213,8 @@ describe("insight dashboard publik", () => {
     });
 
     expect(result.overview.pesantrenTercakup).toBe(1);
-    expect(result.overview.penggunaAktif).toBe(3);
-    expect(result.overview.laporanTervalidasi).toBe(2);
-    expect(result.distribution.risiko.reduce((sum, item) => sum + item.value, 0)).toBe(2);
+    expect(result.overview.penggunaAktif).toBe(4);
+    expect(result.overview.laporanTervalidasi).toBe(6);
+    expect(result.distribution.risiko.reduce((sum, item) => sum + item.value, 0)).toBe(9);
   });
 });

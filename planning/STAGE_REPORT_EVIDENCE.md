@@ -11,3 +11,12 @@ Revisi terbatas `/lapor` dan tampilan bukti internal, tanpa backend/publikasi.
 
 Asumsi prototipe: satu PNG/JPEG/WebP, maksimum 5 MB. Penyimpanan hanya perangkat/origin sama.
 DONE hanya setelah review/persetujuan pemilik.
+
+## Pembaruan pemeriksaan — 18 September 2026
+
+Kode unggah/pratinjau dan adapter aset sudah tersedia. Enam test report-evidence
+lulus dalam suite 106 test: tipe/ukuran, alur upload→draft→kirim→validasi,
+referensi hilang/lintas scope, gambar rusak, kegagalan simpan, dan reset. Lint,
+typecheck, build seluruh aplikasi lulus. Checklist visual unggah, refresh nyata,
+ganti/lepas dan pemeriksaan pengelola di browser belum diverifikasi ulang pada
+sesi dashboard ini; status tetap IN PROGRESS, bukan DONE.

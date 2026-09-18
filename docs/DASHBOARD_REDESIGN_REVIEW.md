@@ -1,5 +1,12 @@
 # Review arah dashboard — referensi dosen 18 September 2026
 
+**Amendemen terkini D-13/D-15:** izin penyempurnaan dashboard publik sudah diberikan;
+tema/warna tetap, empat kategori dan Ekstrem mengikuti perubahan pengguna.
+Review awal di bawah dipertahankan sebagai riwayat analisis. Batas implementasi
+terkini: [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md); pelaksanaan:
+[STAGE_DASHBOARD_POLISH.md](../planning/STAGE_DASHBOARD_POLISH.md).
+
+
 Amendemen D-14: pemilik kemudian mengizinkan denah gambaran besar/titik temuan
 publik setelah memilih satu pesantren. Analisis larangan denah publik di bawah
 adalah historis; acuan terbaru [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md).

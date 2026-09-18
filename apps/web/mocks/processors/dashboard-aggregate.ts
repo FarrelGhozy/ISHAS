@@ -12,9 +12,16 @@ import type {
   Recommendation,
   Report,
   RiskFinding,
+  RiskLevel,
   SelfAssessmentSnapshot,
   User,
 } from "../types";
+import {
+  K3_CATEGORIES,
+  K3_CATEGORY_MAP,
+  KATEGORI_BELUM_DIPETAKAN,
+  type K3CategoryId,
+} from "../kategori-k3";
 
 export const PERIODE_BERJALAN = "Sep 2026"; // ilustratif; kebijakan periode menunggu D-04
 
@@ -211,7 +218,7 @@ export function hitungIndexSummary(input: IndexInput, institutionCodes: string[]
   };
 }
 
-const URUTAN_LEVEL: Record<RiskFinding["level"], number> = { Tinggi: 0, Sedang: 1, Rendah: 2 };
+const URUTAN_LEVEL: Record<RiskLevel, number> = { Ekstrem: 0, Tinggi: 1, Sedang: 2, Rendah: 3 };
 
 // Temuan aktif (belum Terverifikasi) untuk panel tindak lanjut, prioritas level tertinggi dulu.
 export function pilihTemuanPrioritas(findings: RiskFinding[], limit = 4): RiskFinding[] {
@@ -227,6 +234,10 @@ export function pilihTemuanPrioritas(findings: RiskFinding[], limit = 4): RiskFi
 
 export function hitungRisikoTinggi(findings: RiskFinding[]): number {
   return findings.filter((f) => f.level === "Tinggi" && f.status !== "Terverifikasi").length;
+}
+
+export function hitungRisikoPrioritas(findings: RiskFinding[]): number {
+  return findings.filter((f) => (f.level === "Tinggi" || f.level === "Ekstrem") && f.status !== "Terverifikasi").length;
 }
 
 export type RingkasanTindakLanjut = { rataProgress: number | null; pekerjaan: number; terverifikasi: number };
@@ -249,7 +260,7 @@ export type DashboardOverview = {
 };
 
 export type DashboardDistribution = {
-  risiko: { label: RiskFinding["level"]; value: number }[];
+  risiko: { label: RiskLevel; value: number }[];
   kanal: { label: "Lapor cepat" | "Penilaian mandiri"; value: number }[];
   tindakLanjut: { label: Recommendation["status"]; value: number }[];
   aktivitas: { period: string; value: number }[];
@@ -306,7 +317,7 @@ export function buatDashboardInsight(input: DashboardInsightInput): {
     (area) => scope.has(area.institutionCode) && buildingIds.has(area.buildingId),
   ).length;
 
-  const riskLevels: RiskFinding["level"][] = ["Tinggi", "Sedang", "Rendah"];
+  const riskLevels: RiskLevel[] = ["Ekstrem", "Tinggi", "Sedang", "Rendah"];
   const recommendationStatuses: Recommendation["status"][] = [
     "Belum ditindaklanjuti",
     "Berjalan",
@@ -348,3 +359,143 @@ export function buatDashboardInsight(input: DashboardInsightInput): {
     },
   };
 }
+
+// ---- Rekapitulasi per kategori K3 (D-15) ----
+// Satu-satunya pemetaan indikator → kategori/aspek berasal dari versi instrumen
+// (field categoryId/aspectId), bukan kata kunci judul. Indikator tanpa relasi
+// (lapor-cepat) dihitung pada baris `Belum dipetakan`.
+
+export type RekapKategori = {
+  categoryId: K3CategoryId | null;
+  name: string;
+  jumlahIndikator: number;
+  jumlahTemuan: number;
+  jumlahSesuai: number;
+  jumlahTidakSesuai: number;
+  risiko: Record<RiskLevel, number>;
+};
+
+export type RekapKategoriInput = {
+  reports: Report[];
+  findings: RiskFinding[];
+  snapshots: SelfAssessmentSnapshot[];
+  versions: InstrumentVersion[];
+};
+
+function kategoriOfIndicator(
+  versions: InstrumentVersion[],
+  indicatorId: string,
+): { categoryId: K3CategoryId | null; aspectId?: string } {
+  for (const version of versions) {
+    for (const dim of version.dimensions) {
+      const ind = dim.indicators.find((i) => i.id === indicatorId);
+      if (ind) return { categoryId: (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null, aspectId: ind.aspectId };
+    }
+  }
+  return { categoryId: null };
+}
+
+/** Kategori sebuah temuan: field langsung dulu, lalu relasi indikator, lalu laporan. */
+export function kategoriOfFinding(
+  finding: RiskFinding,
+  versions: InstrumentVersion[],
+  reportsById?: Map<string, Report>,
+): K3CategoryId | null {
+  if (finding.categoryId) return finding.categoryId;
+  if (finding.indicator && finding.indicator !== "Tidak menggunakan instrumen") {
+    const rel = kategoriOfIndicator(versions, finding.indicator);
+    if (rel.categoryId) return rel.categoryId;
+  }
+  const report = reportsById?.get(finding.reportId);
+  return report?.categoryId ?? null;
+}
+
+function memicuTemuan(
+  versions: InstrumentVersion[],
+  snapshot: SelfAssessmentSnapshot,
+  indicatorId: string,
+  value: string,
+): boolean {
+  const version = versions.find((item) => item.id === snapshot.instrumentVersionId);
+  const answerType = version?.dimensions.flatMap((dimension) => dimension.indicators)
+    .find((indicator) => indicator.id === indicatorId)?.answerType;
+  if (answerType === "likert-1-5") return ["1", "2"].includes(value);
+  if (answerType === "likert-1-2-tidak") return ["1", "Tidak"].includes(value);
+  if (answerType === "boolean-ya-tidak") return value === "Tidak";
+  return false;
+}
+
+export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] {
+  const acceptedIds = new Set(input.reports.filter((report) => report.validationStatus === "Diterima" && !report.archivedAt && report.handlingStatus !== "Completed").map((report) => report.id));
+  const reportsById = new Map(input.reports.map((r) => [r.id, r]));
+
+  const rows = new Map<string, RekapKategori>();
+  for (const cat of K3_CATEGORIES) {
+    rows.set(cat.id, {
+      categoryId: cat.id,
+      name: cat.name,
+      jumlahIndikator: 0,
+      jumlahTemuan: 0,
+      jumlahSesuai: 0,
+      jumlahTidakSesuai: 0,
+      risiko: { Ekstrem: 0, Tinggi: 0, Sedang: 0, Rendah: 0 },
+    });
+  }
+  rows.set(KATEGORI_BELUM_DIPETAKAN, {
+    categoryId: null,
+    name: KATEGORI_BELUM_DIPETAKAN,
+    jumlahIndikator: 0,
+    jumlahTemuan: 0,
+    jumlahSesuai: 0,
+    jumlahTidakSesuai: 0,
+    risiko: { Ekstrem: 0, Tinggi: 0, Sedang: 0, Rendah: 0 },
+  });
+
+  // Katalog Published saja; Draft/Archived tidak memperbesar katalog aktif.
+  const seenIndicator = new Set<string>();
+  for (const version of input.versions.filter((item) => item.status === "Published")) {
+    for (const dim of version.dimensions) {
+      for (const ind of dim.indicators) {
+        if (seenIndicator.has(ind.id)) continue;
+        seenIndicator.add(ind.id);
+        const catId = (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null;
+        const row = rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
+        row.jumlahIndikator += 1;
+      }
+    }
+  }
+
+  // Sesuai / tidak sesuai dari snapshot laporan Diterima.
+  for (const snapshot of input.snapshots) {
+    if (!acceptedIds.has(snapshot.reportId)) continue;
+    const version = input.versions.find((item) => item.id === snapshot.instrumentVersionId);
+    if (!version) continue;
+    for (const [indicatorId, answer] of Object.entries(snapshot.answers)) {
+      const value = answer.value?.trim() ?? "";
+      if (!value || value === "N/A") continue;
+      const indicator = version.dimensions.flatMap((dimension) => dimension.indicators).find((item) => item.id === indicatorId);
+      if (!indicator) continue;
+      const valid = indicator.answerType === "boolean-ya-tidak" ? ["Ya", "Tidak"].includes(value)
+        : indicator.answerType === "likert-1-2-tidak" ? ["1", "2", "Tidak"].includes(value)
+        : ["1", "2", "3", "4", "5"].includes(value);
+      if (!valid) continue;
+      const { categoryId } = kategoriOfIndicator([version], indicatorId);
+      const row = rows.get(categoryId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
+      if (memicuTemuan(input.versions, snapshot, indicatorId, value)) row.jumlahTidakSesuai += 1;
+      else row.jumlahSesuai += 1;
+    }
+  }
+
+  // Temuan + sebaran risiko (satu hitung per ID temuan).
+  for (const finding of input.findings) {
+    if (!acceptedIds.has(finding.reportId)) continue;
+    const catId = kategoriOfFinding(finding, input.versions, reportsById);
+    const row = rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
+    row.jumlahTemuan += 1;
+    row.risiko[finding.level] += 1;
+  }
+
+  return [...rows.values()];
+}
+
+export { K3_CATEGORIES, K3_CATEGORY_MAP, KATEGORI_BELUM_DIPETAKAN };

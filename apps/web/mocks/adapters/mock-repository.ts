@@ -92,6 +92,9 @@ export const mockRepository = {
       description: string;
       areaId?: string;
       manualLocation?: string;
+      categoryId?: string;
+      aspectId?: string;
+      indicatorId?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;

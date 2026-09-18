@@ -1,5 +1,11 @@
 # Stage Stage 00 — Validasi dan Penyempurnaan Rencana
 
+**Pembaruan 18 September 2026:** stage ini tetap diskusi dokumentasi/keilmuan yang
+belum lengkap. Arahan pembangunan frontend dan penyempurnaan dashboard telah
+diberikan secara terpisah (D-13 amendemen); status Stage 00 tidak berarti seluruh
+repository hanya boleh mengubah dokumen. Rumus/bobot/ambang final tetap terbuka.
+
+
 **Status:** IN PROGRESS
 **Jenis luaran:** dokumen diskusi, tanpa kode.
 **Dasar:** permintaan pemilik pada 8 September 2026; perubahan hanya di `docs/`.

@@ -28,7 +28,7 @@ export function InstitutionComparisonPanel({ items }: { items: InstitutionCompar
       </div>
       <div className="divide-y divide-line">
         {sorted.map((item) => (
-          <article key={item.code} className="grid gap-3 p-4 lg:grid-cols-[minmax(14rem,1.4fr)_1fr_6rem_6rem_7rem] lg:items-center">
+          <article key={item.code} className="grid gap-3 p-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_5rem_6rem_6rem] xl:items-center">
             <div className="min-w-0">
               <Link className="inline-flex items-center gap-1 text-sm font-extrabold text-heading hover:text-primary hover:underline" to={`/pesantren/${item.code}`}>
                 {item.name}<ArrowRight size={13} aria-hidden />
@@ -55,7 +55,7 @@ export function InstitutionComparisonPanel({ items }: { items: InstitutionCompar
 
 function Metric({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md bg-strip px-3 py-2 lg:block lg:bg-transparent lg:p-0 lg:text-right">
+    <div className="flex items-center justify-between gap-3 rounded-md bg-strip px-3 py-2 xl:block xl:bg-transparent xl:p-0 xl:text-right">
       <span className="text-xs font-semibold text-secondary-text">{label}</span>
       <strong className="block text-base text-heading lg:mt-1">{value}</strong>
     </div>

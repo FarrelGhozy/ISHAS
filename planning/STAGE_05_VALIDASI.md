@@ -1,10 +1,19 @@
 # Stage Stage 05 — Antrean Validasi Pengelola
 
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
 **Status:** REVIEW
-**Catatan review:** belum diizinkan membuat kode tanpa arahan pemilik. Bagian terkait D-05 dan D-06
-masih menunggu keputusan di `../DECISIONS.md`; D-02 telah dijawab. Checklist di bawah adalah
-rancangan awal; ruang lingkupnya harus diselaraskan setelah jawaban pemilik diterima.
-**Dependensi:** Stage 03 `DONE` (ada laporan masuk antrean).
+**Acuan terkini:** D-02 menjaga bidang publik; D-06 mengizinkan moderasi laporan
+sendiri dengan audit; D-14.b menjaga lineage temuan per jawaban; D-15 menetapkan
+kategori/aspek dan Ekstrem untuk level risiko. Severity/priority tetap wajib
+pengelola, tanpa default. Pemeriksaan browser penuh stage ini masih terbuka.
+**Dependensi:** Stage 03 tersedia (ada laporan masuk antrean).
 **Tujuan:** satu-satunya pintu masuk data ke dashboard: pengelola memeriksa lalu Terima
 (wajib severity+priority) atau Tolak (wajib alasan) — dengan scope isolation ketat.
 

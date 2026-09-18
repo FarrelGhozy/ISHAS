@@ -8,6 +8,7 @@ import type {
   Area,
   Institution,
   Report,
+  RiskFinding,
   SelfAssessmentDraft,
   Severity,
   Priority,
@@ -147,6 +148,9 @@ export const storeActions = {
       description: string;
       areaId?: string;
       manualLocation?: string;
+      categoryId?: string;
+      aspectId?: string;
+      indicatorId?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;
@@ -203,6 +207,28 @@ export const storeActions = {
     if (input.areaId && !ownedAreas.some((a) => a.id === input.areaId)) {
       return { ok: false, error: "Lokasi/area tidak sah untuk pesantren ini." };
     }
+    // D-15 cascading opsional: konsistensi kategori → aspek → indikator dicek di
+    // versi Published aktif; tanpa pilihan tetap sah.
+    const activeVersion = currentState.instrumentVersions.find((v) => v.id === currentState.activeInstrumentVersionId && v.status === "Published");
+    const categoryId = input.categoryId?.trim() || undefined;
+    const aspectId = input.aspectId?.trim() || undefined;
+    const indicatorId = input.indicatorId?.trim() || undefined;
+    if (aspectId && !categoryId) return { ok: false, error: "Pilih kategori terlebih dahulu." };
+    if (indicatorId && !aspectId) return { ok: false, error: "Pilih aspek terlebih dahulu." };
+    if (categoryId && activeVersion && !activeVersion.dimensions.some((d) => (d.categoryId ?? d.id) === categoryId)) {
+      return { ok: false, error: "Kategori tidak dikenal." };
+    }
+    if (aspectId && activeVersion) {
+      const dim = activeVersion.dimensions.find((d) => (d.categoryId ?? d.id) === categoryId);
+      if (!dim || !(dim.aspects ?? []).some((a) => a.id === aspectId)) {
+        return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
+      }
+      if (indicatorId && !dim.indicators.some((i) => i.id === indicatorId && i.aspectId === aspectId)) {
+        return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
+      }
+    } else if (indicatorId && activeVersion) {
+      return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
+    }
     const mapError = validateMapLocation(currentState, input.institutionCode, input.locationSnapshot);
     if (mapError) return { ok: false, error: mapError };
     if (title.length < 10) {
@@ -233,6 +259,9 @@ export const storeActions = {
         reporterName,
         reporterUserId: actor.id,
         reporterAccountEmail: actor.email ?? undefined,
+        categoryId: categoryId as Report["categoryId"],
+        aspectId,
+        indicatorId,
         title,
         description,
         areaId: input.areaId,
@@ -755,7 +784,7 @@ export const storeActions = {
     return { ok: true, id };
   },
 
-  addInstrumentDimension(versionId: string, name: string): ActionResult {
+  addInstrumentDimension(versionId: string, name: string, categoryId?: string): ActionResult {
     const clean = name.trim();
     if (clean.length < 3) return { ok: false, error: "Nama dimensi minimal 3 karakter." };
     const target = currentState.instrumentVersions.find((v) => v.id === versionId);
@@ -766,7 +795,7 @@ export const storeActions = {
       const version = draft.instrumentVersions.find((v) => v.id === versionId)!;
       const n = version.dimensions.length + 1;
       id = `DIM-${String(n).padStart(2, "0")}`;
-      version.dimensions.push({ id, name: clean, indicators: [] });
+      version.dimensions.push({ id, name: clean, categoryId: categoryId as InstrumentVersion["dimensions"][number]["categoryId"], indicators: [] });
       audit(draft, { name: "Peneliti" }, { objectType: "InstrumentVersion", objectId: versionId, action: "Menambah dimensi", note: clean });
     });
     return { ok: true, id };
@@ -783,6 +812,8 @@ export const storeActions = {
       required: boolean;
       evidenceRequired: boolean;
       locationRequired: boolean;
+      categoryId?: string;
+      aspectId?: string;
     },
   ): ActionResult {
     const code = input.code.trim();
@@ -813,6 +844,8 @@ export const storeActions = {
         required: input.required,
         evidenceRequired: input.evidenceRequired,
         locationRequired: input.locationRequired,
+        categoryId: (input.categoryId ?? dim.categoryId) as InstrumentVersion["dimensions"][number]["indicators"][number]["categoryId"],
+        aspectId: input.aspectId,
         findingTrigger: "ilustrasi: dikaji pengelola saat validasi",
       });
       audit(draft, { name: "Peneliti" }, { objectType: "InstrumentVersion", objectId: versionId, action: "Menambah indikator", note: `${code} · ${title}` });
@@ -876,6 +909,10 @@ function ensureDerivedWork(
   const n = draft.findings.filter((f) => f.reportId === report.id).length + 1;
   const recommendationId = `REC-${report.id}-${n}`;
   const level = severity === "Belum ditentukan" ? "Sedang" : severity;
+  // D-15: wariskan relasi kategori/aspek dari indikator; lapor-cepat memakai
+  // pilihan pelapor bila ada (tanpa menebak dari judul).
+  const versionDims = draft.instrumentVersions.find((v) => v.id === report.instrumentVersionId)?.dimensions ?? [];
+  const dimOfIndicator = indicator ? versionDims.find((d) => d.indicators.some((i) => i.id === indicator.id)) : undefined;
   draft.findings.push({
     id: `RSK-${report.id}-${n}`,
     reportId: report.id,
@@ -884,6 +921,8 @@ function ensureDerivedWork(
     areaId: area?.id ?? "",
     buildingId: building?.id ?? "",
     instrumentVersion: report.instrumentVersionId ?? "Tidak menggunakan instrumen",
+    categoryId: (indicator?.categoryId ?? dimOfIndicator?.categoryId ?? report.categoryId) as RiskFinding["categoryId"],
+    aspectId: indicator?.aspectId ?? report.aspectId,
     recommendationId,
     location,
     building: building?.name ?? "—",
@@ -895,7 +934,7 @@ function ensureDerivedWork(
     issue,
     indicator: report.channel === "penilaian-mandiri"
       ? (sourceAnswerId || report.instrumentVersionId || "Instrumen")
-      : "Tidak menggunakan instrumen",
+      : (report.indicatorId ?? "Tidak menggunakan instrumen"),
     recommendation: `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
     status: "Belum ditindaklanjuti",
     hazard: "Menunggu kajian pengelola",
@@ -917,7 +956,7 @@ function ensureDerivedWork(
     location,
     source: report.channel === "penilaian-mandiri"
       ? `${report.instrumentVersionId ?? "INS"} · ${report.id}`
-      : `IND-LAPOR-CEPAT · ${report.id}`,
+      : `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
     action: "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
     status: "Belum ditindaklanjuti",
     owner: "",

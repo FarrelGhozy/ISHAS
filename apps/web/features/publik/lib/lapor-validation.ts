@@ -10,6 +10,9 @@ export type LaporValues = {
   institutionCode: string;
   areaId: string;
   manualLocation: string;
+  categoryId: string; // D-15: KAT-* opsional ("" = tidak memilih)
+  aspectId: string; // D-15: ASP-* opsional, harus milik categoryId
+  indicatorId: string; // D-15: IND-* opsional, harus milik aspectId
   title: string;
   description: string;
   evidenceName: string;
@@ -22,6 +25,9 @@ export const EMPTY_LAPOR_VALUES: LaporValues = {
   institutionCode: "",
   areaId: "",
   manualLocation: "",
+  categoryId: "",
+  aspectId: "",
+  indicatorId: "",
   title: "",
   description: "",
   evidenceName: "",
@@ -36,6 +42,9 @@ export function validateLapor(
     registeredCodes: string[];
     areaIdsOfSelected: string[];
     selectedHasNoAreas: boolean;
+    categoryIds?: string[];
+    aspectIdsOfCategory?: string[];
+    indicatorIdsOfAspect?: string[];
   },
 ): LaporErrors {
   const errors: LaporErrors = {};
@@ -65,6 +74,21 @@ export function validateLapor(
 
   if (values.contact.trim().length > 100) {
     errors.contact = "Kontak maksimal 100 karakter.";
+  }
+
+  // D-15 cascading opsional: aspek butuh kategori; indikator butuh aspek; semua
+  // harus konsisten dengan opsi yang tersedia (konsistensi penuh dicek di store).
+  if (values.aspectId && !values.categoryId) {
+    errors.aspectId = "Pilih kategori terlebih dahulu.";
+  } else if (values.categoryId && context.categoryIds && !context.categoryIds.includes(values.categoryId)) {
+    errors.categoryId = "Kategori tidak dikenal.";
+  } else if (values.aspectId && context.aspectIdsOfCategory && !context.aspectIdsOfCategory.includes(values.aspectId)) {
+    errors.aspectId = "Aspek tidak termasuk kategori ini.";
+  }
+  if (values.indicatorId && !values.aspectId) {
+    errors.indicatorId = "Pilih aspek terlebih dahulu.";
+  } else if (values.indicatorId && context.indicatorIdsOfAspect && !context.indicatorIdsOfAspect.includes(values.indicatorId)) {
+    errors.indicatorId = "Indikator tidak termasuk aspek ini.";
   }
 
   return errors;

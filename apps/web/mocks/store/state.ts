@@ -5,8 +5,8 @@
 import { SEED } from "../seed/seed";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 5;
-export const MOCK_STORAGE_KEY = "ishas-mock-v5";
+export const MOCK_SCHEMA_VERSION = 6;
+export const MOCK_STORAGE_KEY = "ishas-mock-v6";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -24,6 +24,16 @@ export function migrateV4(value: unknown): unknown {
   Object.values(migrated.selfAssessmentDrafts ?? {}).forEach((draft) => {
     Object.values(draft.answers ?? {}).forEach((answer) => { delete answer.locationSnapshot; answer.planPoint = null; });
   });
+  return migrateV5(migrated);
+}
+
+// D-15: v5 → v6 mempertahankan seluruh record/ID; hanya menaikkan versi agar seed
+// INS-v1.1 (4 kategori) + field categoryId/aspectId + level Ekstrem berlaku.
+// Snapshot dan temuan lama tetap valid tanpa penulisan ulang.
+export function migrateV5(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 5) return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 6;
   return migrated;
 }
 
@@ -46,9 +56,9 @@ function isValidState(value: unknown): value is IshasState {
 export function loadState(): IshasState {
   if (typeof localStorage === "undefined") return structuredClone(SEED);
   try {
-    const raw = localStorage.getItem(MOCK_STORAGE_KEY) ?? localStorage.getItem("ishas-mock-v4");
+    const raw = localStorage.getItem(MOCK_STORAGE_KEY) ?? localStorage.getItem("ishas-mock-v5") ?? localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV4(JSON.parse(raw));
+      const parsed: unknown = migrateV5(migrateV4(JSON.parse(raw)));
       if (isValidState(parsed)) return parsed;
     }
   } catch {

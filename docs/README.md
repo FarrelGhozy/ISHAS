@@ -1,5 +1,22 @@
 # ISHAS — Dokumentasi Utama (Frontend-Only)
 
+## Status kerja terkini — penyempurnaan 18 September 2026
+
+Frontend tersedia di `apps/web/`. Revisi utama untuk REVIEW:
+[penyempurnaan dashboard](../planning/STAGE_DASHBOARD_POLISH.md), diizinkan pemilik
+untuk responsivitas, visualisasi, dokumentasi/alur data, dan sinkronisasi stage,
+tanpa perubahan tema/warna. Kontrak:
+[DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md). Status tiap stage di
+[planning/README.md](../planning/README.md); DONE hanya setelah persetujuan.
+
+Bagian audit/persiapan lama di bawah adalah historis. D-13 telah diamendemen;
+D-14 berlaku untuk denah publik terbatas, D-15 untuk empat kategori dan Ekstrem.
+Skala ilmiah/bobot/ambang final tetap menunggu penelitian. Tanggal 19 September
+pada perubahan pengguna dipertahankan sebagai catatan asal, bukan hasil uji baru
+sesi 18 September ini.
+
+
+
 ## Amendemen Risk Map — 18 September 2026
 
 Pemilik mengizinkan denah gambaran besar dan titik temuan tervalidasi pada ruang

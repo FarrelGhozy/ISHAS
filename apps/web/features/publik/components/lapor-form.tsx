@@ -9,6 +9,7 @@ import type { LaporErrors, LaporValues } from "../lib/lapor-validation";
 
 export type AreaOption = { id: string; label: string };
 export type InstitutionOption = { code: string; name: string };
+export type KategoriOption = { id: string; name: string };
 
 type Props = {
   locationPicker?: ReactNode;
@@ -18,6 +19,9 @@ type Props = {
   registered: InstitutionOption[];
   areas: AreaOption[];
   areasEmpty: boolean;
+  categories: KategoriOption[];
+  aspects: KategoriOption[];
+  indicators: KategoriOption[];
   readOnly: boolean;
   submitting: boolean;
   submitDisabled: boolean;
@@ -171,6 +175,81 @@ export function LaporForm(props: Props) {
       </div>
 
       {props.locationPicker}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label htmlFor="lapor-kategori" className={LABEL}>
+            Kategori K3
+          </label>
+          <select
+            id="lapor-kategori"
+            ref={(el) => props.registerField("categoryId", el)}
+            className={`${INPUT} ${errors.categoryId ? INPUT_ERROR : ""}`}
+            value={values.categoryId}
+            disabled={readOnly}
+            aria-invalid={Boolean(errors.categoryId)}
+            aria-describedby={errors.categoryId ? "lapor-kategori-error" : undefined}
+            onChange={(e) => props.onChange("categoryId", e.target.value)}
+            onBlur={() => props.onBlur("categoryId")}
+          >
+            <option value="">Pilih kategori (opsional)</option>
+            {props.categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          {errors.categoryId ? <FieldError id="lapor-kategori-error" message={errors.categoryId} /> : null}
+        </div>
+        <div>
+          <label htmlFor="lapor-aspek" className={LABEL}>
+            Aspek
+          </label>
+          <select
+            id="lapor-aspek"
+            ref={(el) => props.registerField("aspectId", el)}
+            className={`${INPUT} ${errors.aspectId ? INPUT_ERROR : ""}`}
+            value={values.aspectId}
+            disabled={readOnly || !values.categoryId}
+            aria-invalid={Boolean(errors.aspectId)}
+            aria-describedby={errors.aspectId ? "lapor-aspek-error" : undefined}
+            onChange={(e) => props.onChange("aspectId", e.target.value)}
+            onBlur={() => props.onBlur("aspectId")}
+          >
+            <option value="">{values.categoryId ? "Pilih aspek (opsional)" : "Pilih kategori dahulu"}</option>
+            {props.aspects.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+          {errors.aspectId ? <FieldError id="lapor-aspek-error" message={errors.aspectId} /> : null}
+        </div>
+        <div>
+          <label htmlFor="lapor-indikator" className={LABEL}>
+            Indikator terkait
+          </label>
+          <select
+            id="lapor-indikator"
+            ref={(el) => props.registerField("indicatorId", el)}
+            className={`${INPUT} ${errors.indicatorId ? INPUT_ERROR : ""}`}
+            value={values.indicatorId}
+            disabled={readOnly || !values.aspectId}
+            aria-invalid={Boolean(errors.indicatorId)}
+            aria-describedby={errors.indicatorId ? "lapor-indikator-error" : undefined}
+            onChange={(e) => props.onChange("indicatorId", e.target.value)}
+            onBlur={() => props.onBlur("indicatorId")}
+          >
+            <option value="">{values.aspectId ? "Pilih indikator (opsional)" : "Pilih aspek dahulu"}</option>
+            {props.indicators.map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.name}
+              </option>
+            ))}
+          </select>
+          {errors.indicatorId ? <FieldError id="lapor-indikator-error" message={errors.indicatorId} /> : null}
+        </div>
+      </div>
+      <p className={HINT}>Opsional: memilih kategori memfilter aspek; memilih aspek memfilter indikator. Tingkat risiko tetap ditentukan pengelola saat validasi.</p>
       <div>
         <label htmlFor="lapor-judul" className={LABEL}>
           Judul temuan*

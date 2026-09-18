@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Clock3,
+  Flame,
   Info,
   Megaphone,
   Minus,
@@ -22,6 +23,7 @@ const BLUE = "status-blue";
 const NEUTRAL = "status-neutral";
 
 const MAP: Record<string, Chip> = {
+  Ekstrem: { className: RED, icon: Flame, label: "Ekstrem" },
   Tinggi: { className: RED, icon: AlertTriangle, label: "Tinggi" },
   Sedang: { className: AMBER, icon: AlertTriangle, label: "Sedang" },
   Rendah: { className: GREEN, icon: CheckCircle2, label: "Rendah" },

@@ -8,6 +8,9 @@ const BASE: LaporValues = {
   institutionCode: "PSN-0018",
   areaId: "AREA-001",
   manualLocation: "",
+  categoryId: "",
+  aspectId: "",
+  indicatorId: "",
   title: "Kabel terbuka di koridor lantai 2",
   description: "Kabel listrik menggantung di koridor lantai 2 asrama sejak kemarin.",
   evidenceName: "",
@@ -54,5 +57,34 @@ describe("validateLapor", () => {
     expect(errors.title).toBe("Judul minimal 10 karakter.");
     expect(errors.description).toBe("Deskripsi minimal 20 karakter.");
     expect(errors.contact).toBe("Kontak maksimal 100 karakter.");
+  });
+
+  test("cascading D-15: aspek tanpa kategori → ditolak", () => {
+    const errors = validateLapor({ ...BASE, aspectId: "ASP-KES-001" }, CTX);
+    expect(errors.aspectId).toBe("Pilih kategori terlebih dahulu.");
+  });
+
+  test("cascading D-15: indikator tanpa aspek → ditolak", () => {
+    const errors = validateLapor(
+      { ...BASE, categoryId: "KAT-KESELAMATAN", indicatorId: "IND-K3L-001" },
+      { ...CTX, categoryIds: ["KAT-KESELAMATAN"], aspectIdsOfCategory: ["ASP-KES-001"], indicatorIdsOfAspect: [] },
+    );
+    expect(errors.indicatorId).toBe("Pilih aspek terlebih dahulu.");
+  });
+
+  test("cascading D-15: aspek di luar kategori → ditolak", () => {
+    const errors = validateLapor(
+      { ...BASE, categoryId: "KAT-KESEHATAN", aspectId: "ASP-KES-001" },
+      { ...CTX, categoryIds: ["KAT-KESEHATAN"], aspectIdsOfCategory: ["ASP-SEH-001"] },
+    );
+    expect(errors.aspectId).toBe("Aspek tidak termasuk kategori ini.");
+  });
+
+  test("cascading D-15: pilihan konsisten → tanpa error", () => {
+    const errors = validateLapor(
+      { ...BASE, categoryId: "KAT-KESELAMATAN", aspectId: "ASP-KES-001", indicatorId: "IND-K3L-001" },
+      { ...CTX, categoryIds: ["KAT-KESELAMATAN"], aspectIdsOfCategory: ["ASP-KES-001"], indicatorIdsOfAspect: ["IND-K3L-001"] },
+    );
+    expect(errors).toEqual({});
   });
 });

@@ -122,3 +122,12 @@ Skenario berikut menjadi calon acceptance test setelah keputusan terkait disetuj
 - Stage 07: uji area di laporan cepat; hubungan area ke form penilaian dilengkapi di Stage 08.
 - Stage 08: uji Published → pengisian → kirim → moderasi → hasil → dataset Peneliti yang disepakati.
 - Stage 09: uji integrasi seluruh alur; catat hasil terbaru tanpa mengubah persetujuan stage lama menjadi belum disetujui.
+
+## Hasil revisi dashboard — 18 September 2026
+
+Hasil terperinci: [STAGE_DASHBOARD_POLISH.md](../planning/STAGE_DASHBOARD_POLISH.md).
+Lint, typecheck, 106 test dan build lulus. Browser memeriksa visual ponsel/tablet/
+desktop/lebar, batas halaman 6 ukuran, grafik/table scroll, menu mobile, scope
+pesantren, Back/Forward dan periode pratinjau. Kontrak:
+[DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md). Ini bukan pengganti pemeriksaan
+E2E seluruh peran dan stage; checklist yang belum diuji tetap terbuka.

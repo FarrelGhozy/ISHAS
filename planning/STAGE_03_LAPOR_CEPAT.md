@@ -1,6 +1,14 @@
 # Stage Stage 03 — Laporan Cepat `/lapor`
 
-**Status:** IN PROGRESS
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
+**Status:** REVIEW
 **Catatan review:** diaktifkan eksplisit oleh pemilik pada sesi 8 September 2026 ("kerjakan
 stage 3"). D-02/D-03 telah dijawab (8 September 2026): tanpa opsi anonim; kirim hanya publik +
 pengelola; Super Admin/Peneliti kirim nonaktif. Jawaban sesi ini: D-11 interim = kunci kirim +
@@ -9,7 +17,7 @@ menunggu); draft interim = satu draft per pesantren di perangkat, bertahan setel
 akun (cermin `ishas-draft-v2:lapor:*`; kebijakan final D-10 tetap menunggu).
 Dialog `/lapor` dari `/` bersifat opsional ("dapat") — sesi ini membangun halaman kanonis
 `/lapor` saja; CTA dashboard tetap menaut ke URL kanonis.
-**Dependensi:** Stage 01 `DONE` (model + seed + area), Stage 02 disarankan (CTA sudah ada).
+**Dependensi:** Stage 01 tersedia (model + seed + area), Stage 02 disarankan (CTA sudah ada).
 **Tujuan:** form laporan satu langkah yang bisa dikirim tanpa login maupun saat login pengelola,
 dengan validasi ketat dan layar sukses bernomor — tanpa pernah tampil langsung di dashboard.
 

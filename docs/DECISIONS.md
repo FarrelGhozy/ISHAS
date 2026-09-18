@@ -210,7 +210,18 @@ tidak otomatis menjawab seluruh D-ID. Tandai `DISETUJUI` hanya pada keputusan ya
 Sebelum tahap kode: keputusan penghambat stage tersebut telah dijawab, rancangan yang bertentangan
 telah diselaraskan, acceptance criteria dapat diperiksa, dan pemilik meminta pembangunan dimulai.
 
-## D-13 — Referensi dashboard dosen — PERSIAPAN 18 September 2026
+## D-13 — Referensi dashboard dosen — PENYEMPURNAAN DIIZINKAN 18 September 2026
+
+**Amendemen sesi penyempurnaan:** pemilik menetapkan susunan mengikuti gambar
+dashboard pertama, tema dan warna tetap, fokus responsivitas semua ukuran layar,
+visualisasi data, dokumentasi/alur data, serta pembaruan stage sesuai bukti.
+Empat kategori D-15 dipertahankan; tidak menambahkan dimensi ilmiah, mengganti
+rumus, atau memindahkan kewenangan risiko dari pengelola. Angka/skema pada kedua
+gambar adalah referensi, bukan ketentuan ilmiah final. Arahan ini menggantikan
+status persiapan/menunggu jawaban untuk sasaran dan warna pada catatan di bawah.
+Pelaksanaan: `planning/STAGE_DASHBOARD_POLISH.md`.
+
+### Catatan historis persiapan
 
 **Arahan pemilik:** analisis gambar dashboard dari dosen, evaluasi dokumentasi, dan
 persiapkan pengerjaan yang kurang lebih mengikuti gambar; pertanyaan boleh diajukan.
@@ -320,3 +331,17 @@ Asumsi prototipe yang dipakai sementara dan masih perlu review:
   ambang ilmiah final; severity/priority tetap wajib ditetapkan pengelola saat terima.
 
 Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
+
+## D-15 — Empat kategori/aspek K3 — DISETUJUI 19 September 2026
+
+- Pemilik meminta 4 kategori utama menjadi struktur baku konsisten:
+  Keselamatan, Kesehatan, Lingkungan, Psikososial (detail di [KATEGORI_K3.md](KATEGORI_K3.md)).
+- **D-15.a — Struktur:** Kategori → Aspek → Indikator. `dimensions` existing dimigrasikan
+  (bukan duplikat); `INS-v1.0` diarsipkan, `INS-v1.1` (4 kategori, 10 indikator) menjadi Published aktif.
+- **D-15.b — Ekstrem:** level risiko menjadi Rendah/Sedang/Tinggi/**Ekstrem** (asumsi prototipe;
+  matriks Likelihood×Severity brief hanya ilustrasi visual, ambang resmi menunggu D-04/D-13).
+  Tampilan Ekstrem memakai kelas existing `status-red` + ikon `Flame` + label teks.
+- **D-15.c — Form:** cascading Kategori → Aspek → Indikator pada pelaporan; field risiko
+  (Likelihood/Severity/Risk Score/Rekomendasi) tetap khusus pengelola saat validasi (FLOWS §4).
+- **D-15.d — Tahap:** dokumen patokan dulu (`KATEGORI_K3.md` + sinkronisasi), implementasi kode
+  setelah review; migrasi schema v5→v6 mempertahankan seluruh record/ID.

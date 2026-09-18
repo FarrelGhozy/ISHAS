@@ -4,7 +4,7 @@
 import { Activity, AlertTriangle, CheckCircle2, ShieldCheck, TrendingDown, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { IndexSummary } from "~/mocks/processors/dashboard-aggregate";
-import { ringkasTindakLanjut } from "~/mocks/processors/dashboard-aggregate";
+import { hitungRisikoPrioritas, ringkasTindakLanjut } from "~/mocks/processors/dashboard-aggregate";
 import type { Recommendation, RiskFinding } from "~/mocks/types";
 
 function StatCard({
@@ -63,7 +63,7 @@ export function StatCards({
         : "text-secondary-text";
 
   return (
-    <div className={`grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 ${compact ? "lg:grid-cols-2" : "lg:grid-cols-4"}`}>
+    <div className={`grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 ${compact ? "lg:grid-cols-2" : "xl:grid-cols-4"}`}>
       <div className="stat-card">
         <p className="text-xs font-bold uppercase tracking-wide text-secondary-text">
           Indeks K3L
@@ -82,8 +82,8 @@ export function StatCards({
         </p>
       </div>
       <StatCard
-        label="Risiko tinggi"
-        value={String(hitungTemuanTinggi(findings))}
+        label="Risiko tinggi / ekstrem"
+        value={String(hitungRisikoPrioritas(findings))}
         sub="Perlu tindakan segera"
         icon={AlertTriangle}
         tone="stat-red"
@@ -108,8 +108,4 @@ export function StatCards({
       />
     </div>
   );
-}
-
-function hitungTemuanTinggi(findings: RiskFinding[]): number {
-  return findings.filter((f) => f.level === "Tinggi" && f.status !== "Terverifikasi").length;
 }

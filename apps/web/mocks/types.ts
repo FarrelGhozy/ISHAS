@@ -1,6 +1,10 @@
 // Tipe domain ISHAS — mengikuti docs DATA_MODEL.md §1–§2 (sketsa v4).
 // Semua relasi memakai ID stabil; label tampilan bukan kunci.
 
+import type { K3CategoryId } from "./kategori-k3";
+
+export type RiskLevel = "Rendah" | "Sedang" | "Tinggi" | "Ekstrem"; // D-15.b, asumsi prototipe
+
 export type InstitutionStatus = "Persiapan" | "Aktif" | "Nonaktif";
 export type RoleId = "admin" | "peneliti" | "pengelola";
 export type RoleLabel = "Super Admin" | "Peneliti" | "Pengelola Pesantren";
@@ -51,6 +55,9 @@ export type Report = {
   id: string; // 'RPT-0001', berurutan
   channel: ReportChannel;
   institutionCode: string; // FK Institution.code
+  categoryId?: K3CategoryId; // D-15: kategori pilihan pelapor (opsional, cascading)
+  aspectId?: string; // D-15: aspek pilihan pelapor (opsional)
+  indicatorId?: string; // D-15: indikator terkait pilihan pelapor (opsional)
   reporterName: string; // 2–100 karakter, wajib; tanpa opsi anonim (D-02)
   reporterUserId?: string; // FK User.id bila dikirim saat login (DATA_REQUIREMENTS §2); email bukan kunci relasi
   reporterAccountEmail?: string; // terisi bila dikirim saat login (pengelola)
@@ -120,6 +127,8 @@ export type RiskFinding = {
   areaId: string;
   buildingId: string;
   instrumentVersion: string;
+  categoryId?: K3CategoryId; // D-15: turunan indikator; kosong = Belum dipetakan
+  aspectId?: string; // D-15
   recommendationId: string;
   location: string;
   building: string;
@@ -127,7 +136,7 @@ export type RiskFinding = {
   floor: string;
   x: number;
   y: number;
-  level: "Tinggi" | "Sedang" | "Rendah";
+  level: RiskLevel;
   issue: string;
   indicator: string;
   recommendation: string;
@@ -141,7 +150,7 @@ export type RiskFinding = {
   evidence: string;
   observedAt: string;
   planVersion: string;
-  residualRisk: "Tinggi" | "Sedang" | "Rendah" | "Belum dinilai";
+  residualRisk: RiskLevel | "Belum dinilai";
 };
 
 export type Recommendation = {
@@ -203,11 +212,16 @@ export type InstrumentVersion = {
   dimensions: {
     id: string;
     name: string;
+    categoryId?: K3CategoryId; // D-15: dimensi = wadah satu kategori
+    description?: string;
+    aspects?: { id: string; name: string }[];
     indicators: {
       id: string; // 'IND-XXX-000'
       code: string;
       title: string;
       prompt: string;
+      categoryId?: K3CategoryId; // D-15
+      aspectId?: string; // D-15
       answerType: "likert-1-5" | "boolean-ya-tidak" | "likert-1-2-tidak";
       required: boolean;
       evidenceRequired: boolean;

@@ -1,5 +1,24 @@
 # Spesifikasi Halaman (Wireframe Tertulis)
 
+## Susunan dashboard terkini — amendemen D-13, 18 September 2026
+
+Tema, warna, token, dan gaya dasar dipertahankan. Sidebar desktop/menu mobile
+berasal dari shared shell publik. Konten utama: ringkasan dan tren, statistik,
+aktivitas/risiko/kanal/status, grafik kategori dan rekap lokasi, tabel kategori,
+lalu temuan prioritas. Pada layar sangat lebar (breakpoint 2xl), kolom pendamping
+20rem berisi kategori, peta, tindak lanjut, dan hasil dimensi. Di layar lebih
+sempit kolom pendamping turun ke bawah, kemudian seluruh kartu menumpuk di ponsel.
+Grafik kategori horizontal di ponsel; label tidak dipotong. Pada desktop xl,
+kartu kategori dan lokasi sama tinggi 22rem; tabel lokasi scroll vertikal dengan
+header sticky dan legenda tetap. Di bawah xl tinggi mengikuti isi. Tabel kategori tetap
+9 kolom, scroll di panel dengan kolom pertama sticky dan baris total.
+
+Acuan metrik/filter: [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md).
+Susunan ini menggantikan region dashboard historis §1; perubahan tidak menambah
+menu pengaturan publik atau form penetapan risiko publik.
+
+
+
 **Amendemen D-14 — 18 September 2026:** larangan denah/titik publik pada
 wireframe historis di bawah diganti terbatas: denah gambaran besar dan pin temuan
 Diterima boleh tampil setelah memilih satu pesantren. Scope general menampilkan

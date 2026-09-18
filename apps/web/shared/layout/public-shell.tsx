@@ -27,7 +27,7 @@ export default function PublicLayout() {
   }, []);
 
   return (
-    <div className="flex min-h-dvh">
+    <div className="flex min-h-dvh min-w-0">
       <a className="skip-link primary-button" href="#main-content">Lewati ke konten</a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
         <div className="border-b border-line px-4 py-4"><Link to="/" aria-label="ISHAS — beranda"><IshasMark variant="compact" /></Link></div>
@@ -44,7 +44,7 @@ export default function PublicLayout() {
       <header className="flex min-h-[68px] flex-wrap items-center gap-2 border-b border-line bg-white px-3 py-2 sm:px-4">
           <button type="button" className="secondary-button px-3 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Buka menu" aria-haspopup="dialog"><Menu size={20} aria-hidden /></button>
           <span className="hidden text-sm font-bold text-secondary-text xl:block">Publik / Pelapor</span>
-          <div className="ms-auto flex min-w-0 flex-wrap items-center gap-2">
+          <div className="ms-auto flex min-w-0 flex-1 flex-wrap justify-end items-center gap-2">
             <StatusChip value="Data publik · ilustrasi" />
             {user ? (
               <>
@@ -52,7 +52,7 @@ export default function PublicLayout() {
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-marun-bg text-xs font-extrabold text-primary">
                     {user.initials}
                   </span>
-                  <span className="leading-tight">
+                  <span className="min-w-0 break-words leading-tight">
                     <span className="block text-xs font-bold text-heading">{user.name}</span>
                     <span className="block text-xs font-semibold text-secondary-text">
                       {user.role}
@@ -75,7 +75,7 @@ export default function PublicLayout() {
             )}
           </div>
       </header>
-        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-4 py-6 lg:px-6">
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
           <Outlet />
         </main>
       <footer className="border-t border-line py-4 text-center text-xs font-semibold text-secondary-text">

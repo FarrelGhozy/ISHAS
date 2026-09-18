@@ -1,5 +1,14 @@
 # Alur Operasional Rinci
 
+## Amendemen alur dashboard — 18 September 2026
+
+Kontrak alur lintas kanal/validasi/publik/arsip dan unit metrik terkini ada di
+[DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md). Periode URL masih pratinjau;
+filter operasional utama adalah pesantren. Risiko tetap keputusan pengelola,
+empat kategori mengikuti D-15, snapshot lama memakai versi asal.
+
+
+
 **Amendemen D-14 — 18 September 2026:** denah aktif untuk pelaporan adalah
 denah gambaran besar per pesantren, bukan per lantai. Titik dan keterangan lantai
 merujuk versi denah saat kirim; lokasi per jawaban penilaian mandiri diwariskan
@@ -39,7 +48,8 @@ setelah pesantren/akun nonaktif juga perlu keputusan; jangan menghapusnya otomat
  | Field | Aturan |
  |---|---|
  | Nama pelapor | Wajib, 2–100 karakter. Boleh nama asli atau nama kelompok ("Santri Blok A"). Bukan email, bukan username. Nama selalu tampil apa adanya secara internal; tidak ada opsi anonim (D-02). Publik tidak menampilkan nama pelapor. |
- | Pesantren | Wajib, dropdown HANYA pesantren terdaftar (`kode — nama`). Tidak ada opsi isi manual. |
+  | Pesantren | Wajib, dropdown HANYA pesantren terdaftar (`kode — nama`). Tidak ada opsi isi manual. |
+| Kategori / Aspek / Indikator terkait | Opsional (D-15). Cascading: pilih Kategori (Keselamatan/Kesehatan/Lingkungan/Psikosial) → Aspek terfilter → Indikator terfilter. Laporan tanpa pilihan ini tetap sah. `aspectId` harus milik `categoryId`; `indicatorId` harus milik `aspectId`. Field risiko (Likelihood/Severity/Risk Score/Rekomendasi) TIDAK ada di form publik; diisi pengelola saat validasi (§4). |
  | Lokasi/area | Wajib, dropdown area milik pesantren terpilih (format "Gedung · Lantai · Area"). Jika area belum ada → pesan "Belum ada area terdaftar; hubungi pengelola pondok." |
  | Judul temuan | Wajib, 10–140 karakter. Contoh: "Kabel terbuka di koridor lantai 2". |
  | Deskripsi | Wajib, min 20 karakter: apa, di mana tepatnya, sejak kapan, siapa terdampak. |

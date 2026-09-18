@@ -2,6 +2,7 @@ import { Activity, BarChart3, CircleDot, ClipboardList } from "lucide-react";
 import type { DashboardDistribution } from "~/mocks/processors/dashboard-aggregate";
 
 const RISK_COLORS: Record<string, string> = {
+  Ekstrem: "#7f1d1d",
   Tinggi: "#dc2626",
   Sedang: "#d97706",
   Rendah: "#047857",
@@ -38,7 +39,7 @@ function PanelHeading({
 
 export function PublicInsightPanels({ distribution }: { distribution: DashboardDistribution }) {
   return (
-    <section className="grid gap-3 lg:grid-cols-12" aria-label="Analisis data publik">
+    <section className="grid gap-3 md:grid-cols-2" aria-label="Analisis data publik">
       <ActivityChart data={distribution.aktivitas} />
       <RiskChart data={distribution.risiko} />
       <ChannelChart data={distribution.kanal} />
@@ -50,7 +51,7 @@ export function PublicInsightPanels({ distribution }: { distribution: DashboardD
 function ActivityChart({ data }: { data: DashboardDistribution["aktivitas"] }) {
   const max = Math.max(...data.map((item) => item.value), 1);
   return (
-    <article className="surface p-4 lg:col-span-7">
+    <article className="surface p-4 min-w-0">
       <PanelHeading
         icon={Activity}
         title="Aktivitas laporan tervalidasi"
@@ -60,10 +61,10 @@ function ActivityChart({ data }: { data: DashboardDistribution["aktivitas"] }) {
         {data.map((item) => (
           <div key={item.period} className="flex h-full min-w-0 flex-col justify-end text-center">
             <span className="mb-1 text-xs font-extrabold text-heading">{item.value}</span>
-            <div className="flex h-32 items-end rounded-t-md bg-strip px-1 sm:px-2">
+            <div className="flex h-32 shrink-0 items-end rounded-t-md border-b border-line bg-strip px-1 sm:px-2">
               <div
                 className="w-full rounded-t bg-primary"
-                style={{ height: `${item.value === 0 ? 3 : Math.max((item.value / max) * 100, 14)}%` }}
+                style={{ height: `${(item.value / max) * 100}%` }}
               />
             </div>
             <span className="mt-2 truncate text-xs font-semibold text-secondary-text">{item.period}</span>
@@ -85,13 +86,13 @@ function RiskChart({ data }: { data: DashboardDistribution["risiko"] }) {
   const background = total ? `conic-gradient(${stops.join(", ")})` : "#eef2f6";
 
   return (
-    <article className="surface p-4 lg:col-span-5">
+    <article className="surface p-4 min-w-0">
       <PanelHeading
         icon={CircleDot}
         title="Komposisi tingkat risiko"
         description="Seluruh temuan dari laporan yang sudah diterima"
       />
-      <div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
+      <div className="mt-5 flex flex-col items-center gap-5 min-[1800px]:flex-row min-[1800px]:justify-center">
         <div className="relative grid h-36 w-36 shrink-0 place-items-center rounded-full" style={{ background }} role="img" aria-label={`Total ${total} temuan: ${data.map((item) => `${item.label} ${item.value}`).join(", ")}`}>
           <span className="grid h-20 w-20 place-items-center rounded-full bg-white text-center shadow-[var(--shadow-surface)]">
             <span>
@@ -107,7 +108,7 @@ function RiskChart({ data }: { data: DashboardDistribution["risiko"] }) {
                 <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: RISK_COLORS[item.label] }} aria-hidden />
                 {item.label}
               </span>
-              <strong className="text-heading">{item.value}</strong>
+              <span className="text-right"><strong className="text-heading">{item.value}</strong><span className="ml-2 text-xs text-secondary-text">{total ? Math.round(item.value / total * 100) : 0}%</span></span>
             </li>
           ))}
         </ul>
@@ -119,7 +120,7 @@ function RiskChart({ data }: { data: DashboardDistribution["risiko"] }) {
 function ChannelChart({ data }: { data: DashboardDistribution["kanal"] }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   return (
-    <article className="surface p-4 lg:col-span-5">
+    <article className="surface p-4 min-w-0">
       <PanelHeading
         icon={ClipboardList}
         title="Sumber laporan"
@@ -148,7 +149,7 @@ function ChannelChart({ data }: { data: DashboardDistribution["kanal"] }) {
 function FollowUpChart({ data }: { data: DashboardDistribution["tindakLanjut"] }) {
   const max = Math.max(...data.map((item) => item.value), 1);
   return (
-    <article className="surface p-4 lg:col-span-7">
+    <article className="surface p-4 min-w-0">
       <PanelHeading
         icon={BarChart3}
         title="Status tindak lanjut"
@@ -156,7 +157,7 @@ function FollowUpChart({ data }: { data: DashboardDistribution["tindakLanjut"] }
       />
       <div className="mt-4 space-y-3">
         {data.map((item) => (
-          <div key={item.label} className="grid grid-cols-[minmax(0,1fr)_2fr_2rem] items-center gap-3 text-xs">
+          <div key={item.label} className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_2rem] items-center gap-3 text-xs">
             <span className="font-semibold text-heading">{item.label}</span>
             <div className="h-2.5 overflow-hidden rounded-full bg-strip">
               <div className="h-full rounded-full" style={{ width: `${(item.value / max) * 100}%`, backgroundColor: STATUS_COLORS[item.label] }} />

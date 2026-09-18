@@ -1,10 +1,17 @@
 # Stage Stage 09 — Admin + Sinkron Dokumen + Rilis REVIEW
 
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
 **Status:** IN PROGRESS
-**Catatan review:** belum diizinkan membuat kode tanpa arahan pemilik. D-01 dan D-02 telah dijawab
-(8 September 2026): aplikasi ISHAS.
-Bagian terkait D-04, D-08 dan D-09 masih menunggu keputusan di `../DECISIONS.md`.
-Checklist di bawah adalah rancangan awal; ruang lingkupnya harus diselaraskan setelah jawaban pemilik diterima.
+**Acuan terkini:** aplikasi frontend D-01 tersedia. D-08 membatasi publik pada
+pesantren terdaftar; keputusan D-09 yang masih terbuka perlu dibedakan per bagian.
+Pemeriksaan rilis/route semua peran belum lengkap; stage tetap IN PROGRESS.
 **Dependensi:** Stage 01…Stage 08 `DONE`/`REVIEW` (tahap penutup).
 **Tujuan:** melengkapi sisi Super Admin, menyinkronkan seluruh dokumen,
 dan menjalankan uji rilis penuh sebelum meminta persetujuan.

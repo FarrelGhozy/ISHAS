@@ -1,15 +1,21 @@
 # Stage Stage 02 — Shell Publik + Dashboard Agregat
 
+**Pembaruan 18 September 2026:** hasil stage awal tetap REVIEW. Penyempurnaan
+responsivitas/visualisasi mengikuti D-13 amendemen di STAGE_DASHBOARD_POLISH.md.
+Kontrak metrik dan periode: docs/DASHBOARD_DATA_FLOW.md; tidak memakai hasil uji
+lama sebagai bukti untuk revisi baru.
+
+
 **Status:** REVIEW
 **Catatan review:** D-02 telah dijawab (8 September 2026): publik ringkasan saja + nama
 validator/PIC; **count antrean tidak publik**. Bagian D-04 dijawab pemilik pada 8 September 2026
 sebagai **aturan ilustrasi** (bukan rumus final): skor dari snapshot penilaian mandiri `Diterima`
 terbaru per pesantren, normalisasi likert, rata-rata bobot sama per lembaga, tren memakai deret
-ilustratif seed. Rincian di `../DECISIONS.md` (usulan D-04). Stage diaktifkan pemilik pada
+ilustratif seed. Rincian di `../docs/DECISIONS.md` (usulan D-04). Stage diaktifkan pemilik pada
 sesi yang sama ("kerjakan stage 2" + "dashboardnya penuh dengan data").
 **Dependensi:** Stage 01 `REVIEW` (fondasi tersedia; persetujuan formal menyusul sesuai aturan §3).
-**Tujuan:** dashboard `/` final secara visual dan fungsional: shell publik ringan,
-pemilih pesantren, agregat multi-lembaga, grafik, temuan prioritas, panel antrean netral.
+**Tujuan:** dashboard `/` publik: shared shell dengan sidebar/menu mobile,
+pemilih pesantren, agregat multi-lembaga, grafik, temuan prioritas; count antrean tidak publik.
 
 ## Ruang lingkup
 

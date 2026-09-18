@@ -1,8 +1,16 @@
 # Stage Stage 07 — Lokasi + Tindak Lanjut Kelola + Laporan Pengelola
 
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
 **Status:** IN PROGRESS
 **Catatan review:** D-05, D-06, D-07, dan D-11 telah diputuskan pemilik pada 9 September 2026.
-**Dependensi:** Stage 05 `DONE` (scope + antrean), Stage 06 disarankan (status mapan).
+**Dependensi:** Stage 05 tersedia (scope + antrean), Stage 06 disarankan (status mapan).
 **Tujuan:** senjata operasional pengelola: master lokasi yang menghidupi dropdown lapor,
 tindak lanjut yang menggerakkan status, dan laporan pimpinan scope sendiri.
 

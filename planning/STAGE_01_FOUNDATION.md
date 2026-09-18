@@ -1,9 +1,17 @@
 # Stage Stage 01 — Fondasi Aplikasi ISHAS (Scaffold, Data, Login, `/` Publik)
 
+**Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
+keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
+D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.
+Status REVIEW tidak berarti DONE atau seluruh pemeriksaan terbaru sudah lengkap.
+Revisi dashboard saat ini dicatat terpisah pada STAGE_DASHBOARD_POLISH.md;
+checklist yang belum diverifikasi tetap terbuka.
+
+
 **Status:** REVIEW (luaran selesai diperiksa 8 September 2026; `DONE` menunggu persetujuan pemilik)
 **Catatan review:** D-01–D-03 telah dijawab (8 September 2026): aplikasi ISHAS,
 React Router, folder per fitur, bun 1.4. Bagian terkait D-04, D-05, D-07, D-09 dan D-10
-masih menunggu keputusan di `../DECISIONS.md`. Checklist di bawah adalah rancangan awal;
+masih menunggu keputusan di `../docs/DECISIONS.md`. Checklist di bawah adalah rancangan awal;
 ruang lingkupnya diselaraskan sebelum stage diaktifkan.
 **Dependensi:** Stage 00 disetujui, keputusan yang memengaruhi fondasi dijawab, dan pemilik secara
 eksplisit meminta mulai pembangunan kode + lokasi folder aplikasi dikonfirmasi.

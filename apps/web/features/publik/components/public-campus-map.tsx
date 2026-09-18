@@ -6,8 +6,8 @@ import { clusterMapItems, selectPublicCampusMap, type PublicMapItem } from "~/mo
 import { CampusPlan } from "~/shared/components/campus-plan";
 import { StatusChip } from "~/shared/components/status-chip";
 
-const rank = { Tinggi: 0, Sedang: 1, Rendah: 2 };
-const color = { Tinggi: "#b91c1c", Sedang: "#b45309", Rendah: "#047857" };
+const rank: Record<string, number> = { Ekstrem: 0, Tinggi: 1, Sedang: 2, Rendah: 3 };
+const color: Record<string, string> = { Ekstrem: "#7f1d1d", Tinggi: "#b91c1c", Sedang: "#b45309", Rendah: "#047857" };
 
 export function PublicCampusMap({ institutionCode, compact = false }: { institutionCode?: string; compact?: boolean }) {
   return <MapContent key={institutionCode ?? "general"} institutionCode={institutionCode} compact={compact} />;
@@ -54,7 +54,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
         const selected = group.some((item) => opened.includes(item.key));
         return <button type="button" key={group[0].key} aria-pressed={selected} aria-label={group.length > 1 ? `${group.length} temuan. Tingkat tertinggi ${highest.level}` : `${highest.issue}. Risiko ${highest.level}. ${highest.floor}`} className={`absolute grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white shadow-md focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${selected ? "ring-2 ring-primary ring-offset-2" : ""}`} style={{ left: `clamp(22px, ${group[0].point!.x}%, calc(100% - 22px))`, top: `clamp(22px, ${group[0].point!.y}%, calc(100% - 22px))`, backgroundColor: group.length > 1 ? "#102a35" : color[highest.level], color: "white" }} onClick={() => setOpened(group.map((item) => item.key))}>{group.length > 1 ? <strong>{group.length}</strong> : <span className="flex items-center gap-0.5">{highest.level === "Rendah" ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}<strong className="text-sm">{index + 1}</strong></span>}</button>;
       })}</CampusPlan></div></div><p className="text-xs text-secondary-text">Versi {plan.revision} · {plan.illustration ? "Ilustrasi denah · bukan lokasi sebenarnya" : "Denah gambaran besar pesantren"}</p></> : <p role="status" className="rounded-lg bg-strip p-4 text-sm text-secondary-text">Denah pesantren belum tersedia. Ringkasan lokasi temuan tetap dapat dibaca.</p>}
-      <ul className="flex flex-wrap gap-3 text-sm" aria-label="Legenda risiko">{(["Tinggi", "Sedang", "Rendah"] as const).map((level) => <li key={level}><StatusChip value={level} /></li>)}</ul>
+      <ul className="flex flex-wrap gap-3 text-sm" aria-label="Legenda risiko">{(["Ekstrem", "Tinggi", "Sedang", "Rendah"] as const).map((level) => <li key={level}><StatusChip value={level} /></li>)}</ul>
       <p className="text-sm text-secondary-text">{filtered.length} temuan · {visible.length} bertitik pada denah ini · {other.length} pada versi lain · {unplaced.length} tanpa titik</p>
       {other.length ? <p role="status" className="rounded bg-marun-bg p-3 text-sm text-primary">Ada {other.length} temuan pada versi denah sebelumnya/lain. Pilih versinya untuk melihat titik; titik tidak dipindahkan otomatis.</p> : null}
       {!filtered.length ? <div role="status" className="rounded bg-strip p-3 text-sm text-secondary-text">{items.length ? <>Tidak ada temuan pada filter ini. <button type="button" className="text-button" onClick={reset}>Reset filter</button></> : "Belum ada temuan tervalidasi. Ini bukan pernyataan bahwa lokasi aman."}</div> : null}

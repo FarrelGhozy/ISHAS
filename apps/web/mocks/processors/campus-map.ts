@@ -32,7 +32,7 @@ export function snapshotLocation(state: IshasState, code: string, areaId?: strin
 
 export type PublicMapItem = {
   key: string; issue: string; location: string; floor: string;
-  level: "Tinggi" | "Sedang" | "Rendah"; status: string;
+  level: import("../types").RiskLevel; status: string;
   point: PlanPoint | null; versionId: string | null; validator: string; pic: string;
 };
 

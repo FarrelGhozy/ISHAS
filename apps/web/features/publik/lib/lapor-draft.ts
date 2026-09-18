@@ -30,6 +30,9 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
         typeof parsed.institutionCode === "string" ? parsed.institutionCode : institutionCode ?? "",
       areaId: typeof parsed.areaId === "string" ? parsed.areaId : "",
       manualLocation: typeof parsed.manualLocation === "string" ? parsed.manualLocation : "",
+      categoryId: typeof parsed.categoryId === "string" ? parsed.categoryId : "",
+      aspectId: typeof parsed.aspectId === "string" ? parsed.aspectId : "",
+      indicatorId: typeof parsed.indicatorId === "string" ? parsed.indicatorId : "",
       title: typeof parsed.title === "string" ? parsed.title : "",
       description: typeof parsed.description === "string" ? parsed.description : "",
       evidenceName: typeof parsed.evidenceName === "string" ? parsed.evidenceName : "",
@@ -74,6 +77,7 @@ export function isLaporEmpty(values: LaporValues): boolean {
     values.contact.trim() === "" &&
     values.areaId === ""
     && values.manualLocation.trim() === "" && !values.locationSnapshot?.point && !values.locationSnapshot?.floorNote
+    && values.categoryId === "" && values.aspectId === "" && values.indicatorId === ""
   );
 }
 
