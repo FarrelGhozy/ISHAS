@@ -13,7 +13,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + pengelola).
 | `/lapor` | Laporan cepat | Form ringan satu langkah | Bisa juga dibuka sebagai dialog dari `/`, tapi URL kanonis tetap `/lapor` |
 | `/penilaian-mandiri` | Penilaian mandiri | Instrumen Published penuh + draft lokal + kirim validasi | Satu-satunya tempat isi indikator |
 | `/hasil` | Hasil assessment | Per dimensi + antarperiode, mengikuti filter pesantren | Hanya data `Diterima` |
-| `/peta-risiko` | Peta bahaya & risiko | Rancangan D-14: pilih satu pesantren untuk denah gambaran besar + titik temuan Diterima; daftar temuan tetap tersedia. Belum diimplementasikan | Filter pesantren; usulan versi denah, tingkat risiko, status; lantai berupa keterangan |
+| `/peta-risiko` | Peta bahaya & risiko | D-14: pilih satu pesantren untuk denah gambaran besar + titik temuan Diterima yang aktif; daftar temuan termasuk tanpa titik | Filter URL: pesantren, `denah`, `risiko`, `statusPeta`; lantai berupa keterangan. Frontend REVIEW |
 | `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId` |
 | `/tindak-lanjut` | Tindak lanjut (baca) | Progres + status + nama PIC; bukti penyelesaian tidak publik (D-02) | Tombol kelola hanya muncul bila login pengelola pemilik scope |
 | `/laporan` | Laporan pimpinan | Ringkasan + dimensi + status + metadata versi instrumen | Simulasi unduh PDF/Excel (label dummy) |

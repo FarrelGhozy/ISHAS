@@ -105,3 +105,16 @@ test("Completed dan arsip tidak tampil pada peta publik", () => {
   storeActions.archiveCompletedReport({ id: "USR-004", name: "Penguji", role: "Pengelola Pesantren" }, "RPT-0005", "Arsip akhir periode");
   expect(selectPublicCampusMap(getState(), "PSN-0019").items).toHaveLength(1);
 });
+
+test("jawaban sesuai tidak menghasilkan pin temuan generik", () => {
+  const version = getState().instrumentVersions.find((item) => item.id === "INS-v1.0")!;
+  const answers = Object.fromEntries(version.dimensions.flatMap((dimension) => dimension.indicators).map((indicator) => [indicator.id, {
+    value: indicator.answerType === "boolean-ya-tidak" ? "Ya" : indicator.answerType === "likert-1-2-tidak" ? "2" : "4",
+    note: "", evidenceName: "bukti.jpg", areaId: "AREA-001", planPoint: null,
+  }]));
+  storeActions.saveSelfAssessmentDraft({ id: "SELF-sesuai", institutionCode: "PSN-0018", reporterName: "Penguji", instrumentVersionId: "INS-v1.0", answers, activeIndex: 0, updatedAt: new Date().toISOString() });
+  const result = storeActions.submitSelfAssessment({ name: "Penguji" }, "SELF-sesuai");
+  if (!result.ok || !result.id) throw Error("Submit gagal");
+  expect(storeActions.acceptReport(manager, result.id, "Rendah", "Rendah").ok).toBe(true);
+  expect(getState().findings.filter((item) => item.reportId === result.id)).toHaveLength(0);
+});

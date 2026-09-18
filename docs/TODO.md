@@ -14,7 +14,17 @@ denah pada bagian lain dibaca bersama amendemen ini.
 - [x] Selesaikan dan periksa [ilustrasi denah fiktif](assets/risk-map-campus-illustration-v1.png)
   tanpa pin tertanam; tampilan keseluruhan, tanpa ruangan/per lantai/identitas lokasi nyata.
 - [ ] Review rancangan/ilustrasi bersama pemilik; tentukan kewajiban titik.
-- [ ] Aktifkan revisi implementasi hanya setelah arahan pemilik; belum DONE.
+- [x] Revisi implementasi diaktifkan melalui `ok kerjakan`; hasil pada stage Risk Map, belum DONE.
+
+## Implementasi Risk Map — 18 September 2026 — REVIEW
+
+- [x] Denah kampus satu pesantren, unggah pengelola, dua tahap peringatan dan versi historis.
+- [x] Titik opsional lapor cepat dan per jawaban penilaian mandiri; floor teks, draft dan snapshot.
+- [x] Validasi → temuan dengan lineage → peta publik; pending/ditolak/Completed tidak tampil.
+- [x] Schema v5, migrasi v4 tanpa titik legacy otomatis, aset IndexedDB dan reset demo.
+- [x] Dashboard general meminta pilih pesantren; peta lengkap mendukung versi, risiko, status dan pembesaran.
+- [x] Uji otomatis dan pemeriksaan browser; rincian hasil/batas di [stage Risk Map](../planning/STAGE_RISK_MAP.md).
+- [ ] Review pemilik; putuskan apakah titik wajib. Belum DONE, tanpa push/publikasi.
 
 ## Persiapan revisi dashboard — 18 September 2026
 

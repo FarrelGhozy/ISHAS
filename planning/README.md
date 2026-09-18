@@ -7,6 +7,10 @@ Aturan kerja: `AGENTS.md`. Status harian: `../TODO.md`. Verifikasi: `../TEST_PLA
 
 ## Status
 
+Revisi aktif atas arahan langsung 18 September: [Risk Map](STAGE_RISK_MAP.md),
+frontend untuk REVIEW. Status historis stage pada tabel berikut tidak diubah
+sepihak oleh revisi lintas fitur ini.
+
 - `BACKLOG`: belum dijadwalkan.
 - `READY`: kebutuhan jelas, siap dikerjakan.
 - `IN PROGRESS`: sedang dikerjakan; hanya satu stage utama dalam satu waktu.

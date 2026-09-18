@@ -1,8 +1,10 @@
 # Rancangan Risk Map ISHAS
 
-Tanggal: 18 September 2026. Status: DRAFT UNTUK REVIEW.
-Luaran sesi ini: rancangan dan ilustrasi contoh, bukan implementasi aplikasi.
-Dasar keputusan pemilik: D-14 pada [DECISIONS.md](DECISIONS.md).
+Tanggal: 18 September 2026. Status: IMPLEMENTASI FRONTEND UNTUK REVIEW.
+Rancangan dan ilustrasi telah dilanjutkan menjadi prototipe setelah arahan
+`ok kerjakan`; bukan backend/produksi. Dasar keputusan pemilik: D-14 sampai
+D-14.b pada [DECISIONS.md](DECISIONS.md). Bagian usulan di bawah adalah catatan
+awal; status hasil nyata dan batas saat ini di [stage Risk Map](../planning/STAGE_RISK_MAP.md).
 
 ## 1. Keputusan dan batas
 
@@ -17,8 +19,8 @@ Sudah diputuskan pemilik:
 - Sebelum unggah, tampilkan peringatan agar denah sebisa mungkin tidak diubah;
   sebelum penggantian, wajib ada pemberitahuan dampak perubahan lokasi.
 
-Rincian pada bagian berikut merupakan usulan desain untuk ditinjau, bukan
-persetujuan implementasi maupun ketentuan ilmiah final. Data dan tingkat risiko
+Rincian pada bagian berikut merupakan rancangan untuk ditinjau, bukan
+ketentuan ilmiah final. Data dan tingkat risiko
 tetap ilustratif. Izin denah publik tidak membuka identitas pelapor, kontak,
 bukti/foto laporan, jawaban mentah, catatan internal, atau audit.
 

@@ -297,3 +297,26 @@ laporan tidak sesuai. Penggantian tidak dilarang mutlak. Rancangan dua tahap dan
 copy di RISK_MAP_DESIGN §4.A.1; detail checkbox/pratinjau merupakan usulan UX.
 Peringatan tidak menggantikan integritas data: titik historis tetap terikat versi
 denah asal, tidak dipindahkan otomatis atau dihapus. Belum implementasi aplikasi.
+
+#### D-14.b — Aktivasi implementasi frontend — 18 September 2026
+
+Arahan pemilik `ok kerjakan` mengaktifkan revisi Risk Map lintas fitur. Status
+implementasi REVIEW, bukan persetujuan DONE atau izin backend/push/publikasi.
+Pernyataan “belum izin implementasi” pada D-14/D-14.a merupakan catatan tahap awal.
+
+Asumsi prototipe yang dipakai sementara dan masih perlu review:
+
+- Titik opsional; pilihan area atau deskripsi lokasi tetap wajib. Tidak ada titik
+  otomatis/centroid. Lantai keterangan teks, bukan gambar terpisah.
+- Unggah PNG/JPEG/WebP maksimum 5 MB, sisi pendek minimal 800 piksel; gambar
+  tersimpan di IndexedDB browser, metadata schema v5 di localStorage.
+- Penerbitan denah memerlukan pratinjau dan checkbox konfirmasi; versi lama tetap
+  tersedia. Draft bertitik versi lama harus dipilih ulang atau dihapus titiknya.
+- Migrasi v4 mempertahankan data/ID, memasang ilustrasi kampus fiktif untuk mitra
+  demo yang sesuai, tetapi tidak menganggap koordinat legacy sebagai titik laporan.
+- Temuan penilaian mandiri diturunkan per jawaban sumber. Pemicu ilustratif:
+  Likert 1–5 bernilai 1/2; Likert 1–2/Tidak bernilai 1/Tidak; boolean bernilai Tidak.
+  Nilai 2 pada Likert 1–2 berarti Sesuai, bukan temuan risiko. Ini bukan rumus atau
+  ambang ilmiah final; severity/priority tetap wajib ditetapkan pengelola saat terima.
+
+Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
