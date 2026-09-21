@@ -1,0 +1,8 @@
+node_modules/
+build/
+dist/
+.react-router/
+.vite/
+*.tsbuildinfo
+coverage/
+.nyc_output/

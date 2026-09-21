@@ -1,5 +1,18 @@
 # TODO — Kontrol Kerja Aktif
 
+## Infrastruktur Docker Compose + `.env` — 21 September 2026 — `IN PROGRESS`
+
+Revisi lintas fitur atas arahan pemilik: proyek memakai Docker Compose dengan
+environment dari `.env`. Cakupan: `docker-compose.yml` root (service `web-dev` +
+`web-prod`), `apps/web/Dockerfile` multi-stage, `nginx.conf`, `.dockerignore`,
+`.env.example` + `.env` lokal, dan seksi Docker di README. Tanpa perubahan kode
+aplikasi, copy, desain, maupun status stage lain (Stage 07–09 tetap `IN PROGRESS`,
+Stage 01–06 tetap `REVIEW`).
+
+- [x] Arahan pemilik: compose berbasis `.env`; frontend dev+prod; nginx multi-stage; satu port 3003 (dev/prod bergantian via profile).
+- [x] Builder produksi memakai Node (`node:22-slim`, Bun dari npm) karena `react-router build` memerlukan kondisi ekspor Node (`renderToPipeableStream`); `bun.lock` tetap sumber kebenaran dependensi.
+- [x] Verifikasi 21 Sep 2026: `compose config` kedua profile; prod (`/`, `/hasil`, `/lapor`, `/peta-risiko`, `/login` HTTP 200 + konten aplikasi), dev (`/` 200, Vite client 200, bind mount live/hot reload); lint + typecheck + 106 test + build lulus.
+
 ## Kontrol terkini — 18 September 2026
 
 Revisi dashboard untuk REVIEW: [STAGE_DASHBOARD_POLISH.md](../planning/STAGE_DASHBOARD_POLISH.md).

@@ -22,6 +22,19 @@ bun run dev
 
 Dev server berjalan di port `3003` dan dapat diakses dari jaringan (`host 0.0.0.0`). Pemeriksaan teknis dapat dijalankan dengan `bun run lint`, `bun run typecheck`, `bun test`, dan `bun run build`. Data dummy tersimpan di browser selama demo (kunci `ishas-mock-v4`) dan dapat dikembalikan ke seed awal melalui Pengaturan Admin (Reset data demo).
 
+## Menjalankan dengan Docker
+
+Environment Compose diambil dari file `.env` di root (tidak di-commit; contoh di `.env.example`).
+
+```bash
+cp .env.example .env
+docker compose --profile dev up --build    # dev + hot reload di localhost:3003
+docker compose --profile prod up --build   # hasil build statis (nginx) di localhost:3003
+```
+
+Dev dan prod memakai port host yang sama (`WEB_PORT`), jadi jalankan bergantian.
+Ubah port/tag image cukup lewat `.env`; `docker compose config` untuk memeriksa hasil interpolasi.
+
 Alamat utama `/` membuka dashboard publik tanpa login: agregat semua pesantren terdaftar plus pemilih pesantren. Tidak ada landing page dan tidak ada redirect. Tombol **Masuk** mengarah ke `/login`. Laporan dapat dikirim publik tanpa login (`/lapor`) atau oleh Pengelola Pesantren; semua laporan wajib validasi pengelola sebelum tampil di dashboard.
 
 ## Akun demo frontend
