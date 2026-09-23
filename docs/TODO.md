@@ -12,6 +12,7 @@ Stage 01–06 tetap `REVIEW`).
 - [x] Arahan pemilik: compose berbasis `.env`; frontend dev+prod; nginx multi-stage; satu port 3003 (dev/prod bergantian via profile).
 - [x] Builder produksi memakai Node (`node:22-slim`, Bun dari npm) karena `react-router build` memerlukan kondisi ekspor Node (`renderToPipeableStream`); `bun.lock` tetap sumber kebenaran dependensi.
 - [x] Verifikasi 21 Sep 2026: `compose config` kedua profile; prod (`/`, `/hasil`, `/lapor`, `/peta-risiko`, `/login` HTTP 200 + konten aplikasi), dev (`/` 200, Vite client 200, bind mount live/hot reload); lint + typecheck + 106 test + build lulus.
+- [x] Sinkronisasi 23 Sep 2026: perbaiki `bun run dev` EACCES (`.react-router/` milik root dari container dev). `.react-router/`/`build/` dev diisolasi di volume Compose; `vite.config.ts` baca `PORT` + `VITE_ALLOWED_HOSTS` dari env (default 3003 + daftar host tetap, container dev tetap listen 3003). Verifikasi: dev lokal + dev Docker (`/` HTTP 200) jalan bergantian, `.react-router` host tetap milik pengguna; lint + typecheck + 106 test + build lulus.
 
 ## Kontrol terkini — 18 September 2026
 

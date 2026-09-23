@@ -19,6 +19,12 @@ services:
     volumes:
       - ./apps/web:/app
       - web-dev-modules:/app/node_modules
+      # Direktori generated diisolasi di volume agar container (root)
+      # tidak menulis file milik root ke bind mount host.
+      # Tanpa ini, `bun run dev` lokal gagal EACCES setelah `compose up`
+      # karena `.react-router/` menjadi milik root.
+      - web-dev-router:/app/.react-router
+      - web-dev-build:/app/build
     profiles:
       - dev
 
@@ -40,3 +46,5 @@ services:
 
 volumes:
   web-dev-modules:
+  web-dev-router:
+  web-dev-build:
