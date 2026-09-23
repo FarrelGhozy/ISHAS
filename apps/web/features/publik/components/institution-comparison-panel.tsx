@@ -23,24 +23,41 @@ export function InstitutionComparisonPanel({ items }: { items: InstitutionCompar
           <h2 id="institution-comparison-title" className="text-sm font-extrabold text-heading">
             {items.length > 1 ? "Perbandingan pesantren" : "Ringkasan pesantren"}
           </h2>
-          <p className="mt-0.5 text-xs text-secondary-text">Indeks, laporan, temuan aktif, dan progres dalam satu tampilan</p>
+          <p className="mt-0.5 text-xs text-secondary-text">
+            Indeks, laporan, temuan aktif, dan progres dalam satu tampilan
+          </p>
         </div>
       </div>
       <div className="divide-y divide-line">
         {sorted.map((item) => (
-          <article key={item.code} className="grid gap-3 p-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_5rem_6rem_6rem] xl:items-center">
+          <article
+            key={item.code}
+            className="grid gap-3 p-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_5rem_6rem_6rem] xl:items-center"
+          >
             <div className="min-w-0">
-              <Link className="inline-flex items-center gap-1 text-sm font-extrabold text-heading hover:text-primary hover:underline" to={`/pesantren/${item.code}`}>
-                {item.name}<ArrowRight size={13} aria-hidden />
+              <Link
+                className="inline-flex items-center gap-1 text-sm font-extrabold text-heading hover:text-primary hover:underline"
+                to={`/pesantren/${item.code}`}
+              >
+                {item.name}
+                <ArrowRight size={13} aria-hidden />
               </Link>
-              <p className="mt-0.5 text-xs text-secondary-text">{item.code} · {item.location}</p>
+              <p className="mt-0.5 text-xs text-secondary-text">
+                {item.code} · {item.location}
+              </p>
             </div>
             <div>
               <div className="flex items-center justify-between gap-2 text-xs font-semibold text-secondary-text">
-                <span>Indeks K3L</span><strong className="text-sm text-heading">{item.index === null ? "—" : Math.round(item.index)}</strong>
+                <span>Indeks K3L</span>
+                <strong className="text-sm text-heading">
+                  {item.index === null ? "—" : Math.round(item.index)}
+                </strong>
               </div>
               <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-strip">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${item.index ?? 0}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${item.index ?? 0}%` }}
+                />
               </div>
             </div>
             <Metric label="Laporan" value={item.reports} />

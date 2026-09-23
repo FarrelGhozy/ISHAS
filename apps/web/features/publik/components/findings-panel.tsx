@@ -28,10 +28,13 @@ export function FindingsPanel({
   return (
     <div className="surface p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-sm font-extrabold text-heading">
-          Temuan yang perlu ditindaklanjuti
-        </h2>
-        <Link className="text-button ms-auto" to={withPeriode(`/peta-risiko${institutionCode ? `?pesantren=${encodeURIComponent(institutionCode)}` : ""}`)}>
+        <h2 className="text-sm font-extrabold text-heading">Temuan yang perlu ditindaklanjuti</h2>
+        <Link
+          className="text-button ms-auto"
+          to={withPeriode(
+            `/peta-risiko${institutionCode ? `?pesantren=${encodeURIComponent(institutionCode)}` : ""}`,
+          )}
+        >
           Buka peta bahaya →
         </Link>
       </div>
@@ -39,9 +42,7 @@ export function FindingsPanel({
         Peta risiko awal memakai lokasi/area pesantren, bukan peta geografis.
       </p>
       {findings.length === 0 ? (
-        <p className="mt-3 text-sm text-secondary-text">
-          Tidak ada temuan aktif pada konteks ini.
-        </p>
+        <p className="mt-3 text-sm text-secondary-text">Tidak ada temuan aktif pada konteks ini.</p>
       ) : (
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
           {findings.map((f) => {
@@ -66,7 +67,12 @@ export function FindingsPanel({
                   ) : (
                     <span />
                   )}
-                  <Link className="text-button" to={withPeriode(`/tindak-lanjut?pesantren=${encodeURIComponent(report?.institutionCode ?? institutionCode ?? "")}`)}>
+                  <Link
+                    className="text-button"
+                    to={withPeriode(
+                      `/tindak-lanjut?pesantren=${encodeURIComponent(report?.institutionCode ?? institutionCode ?? "")}`,
+                    )}
+                  >
                     Lihat tindak lanjut →
                   </Link>
                 </div>

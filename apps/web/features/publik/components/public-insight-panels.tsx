@@ -57,7 +57,11 @@ function ActivityChart({ data }: { data: DashboardDistribution["aktivitas"] }) {
         title="Aktivitas laporan tervalidasi"
         description="Jumlah laporan yang dapat dipublikasikan dalam enam bulan terakhir"
       />
-      <div className="mt-5 grid h-48 grid-cols-6 items-end gap-2 sm:gap-4" role="img" aria-label={data.map((item) => `${item.period}: ${item.value} laporan`).join(", ")}>
+      <div
+        className="mt-5 grid h-48 grid-cols-6 items-end gap-2 sm:gap-4"
+        role="img"
+        aria-label={data.map((item) => `${item.period}: ${item.value} laporan`).join(", ")}
+      >
         {data.map((item) => (
           <div key={item.period} className="flex h-full min-w-0 flex-col justify-end text-center">
             <span className="mb-1 text-xs font-extrabold text-heading">{item.value}</span>
@@ -67,7 +71,9 @@ function ActivityChart({ data }: { data: DashboardDistribution["aktivitas"] }) {
                 style={{ height: `${(item.value / max) * 100}%` }}
               />
             </div>
-            <span className="mt-2 truncate text-xs font-semibold text-secondary-text">{item.period}</span>
+            <span className="mt-2 truncate text-xs font-semibold text-secondary-text">
+              {item.period}
+            </span>
           </div>
         ))}
       </div>
@@ -93,7 +99,12 @@ function RiskChart({ data }: { data: DashboardDistribution["risiko"] }) {
         description="Seluruh temuan dari laporan yang sudah diterima"
       />
       <div className="mt-5 flex flex-col items-center gap-5 min-[1800px]:flex-row min-[1800px]:justify-center">
-        <div className="relative grid h-36 w-36 shrink-0 place-items-center rounded-full" style={{ background }} role="img" aria-label={`Total ${total} temuan: ${data.map((item) => `${item.label} ${item.value}`).join(", ")}`}>
+        <div
+          className="relative grid h-36 w-36 shrink-0 place-items-center rounded-full"
+          style={{ background }}
+          role="img"
+          aria-label={`Total ${total} temuan: ${data.map((item) => `${item.label} ${item.value}`).join(", ")}`}
+        >
           <span className="grid h-20 w-20 place-items-center rounded-full bg-white text-center shadow-[var(--shadow-surface)]">
             <span>
               <strong className="block text-2xl text-heading">{total}</strong>
@@ -105,10 +116,19 @@ function RiskChart({ data }: { data: DashboardDistribution["risiko"] }) {
           {data.map((item) => (
             <li key={item.label} className="flex items-center justify-between gap-4 text-sm">
               <span className="flex items-center gap-2 font-semibold text-secondary-text">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: RISK_COLORS[item.label] }} aria-hidden />
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: RISK_COLORS[item.label] }}
+                  aria-hidden
+                />
                 {item.label}
               </span>
-              <span className="text-right"><strong className="text-heading">{item.value}</strong><span className="ml-2 text-xs text-secondary-text">{total ? Math.round(item.value / total * 100) : 0}%</span></span>
+              <span className="text-right">
+                <strong className="text-heading">{item.value}</strong>
+                <span className="ml-2 text-xs text-secondary-text">
+                  {total ? Math.round((item.value / total) * 100) : 0}%
+                </span>
+              </span>
             </li>
           ))}
         </ul>
@@ -133,10 +153,15 @@ function ChannelChart({ data }: { data: DashboardDistribution["kanal"] }) {
             <div key={item.label}>
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="font-bold text-heading">{item.label}</span>
-                <span className="font-semibold text-secondary-text">{item.value} · {percentage}%</span>
+                <span className="font-semibold text-secondary-text">
+                  {item.value} · {percentage}%
+                </span>
               </div>
               <div className="mt-2 h-3 overflow-hidden rounded-full bg-strip">
-                <div className={`h-full rounded-full ${index === 0 ? "bg-primary" : "bg-accent"}`} style={{ width: `${percentage}%` }} />
+                <div
+                  className={`h-full rounded-full ${index === 0 ? "bg-primary" : "bg-accent"}`}
+                  style={{ width: `${percentage}%` }}
+                />
               </div>
             </div>
           );
@@ -157,10 +182,19 @@ function FollowUpChart({ data }: { data: DashboardDistribution["tindakLanjut"] }
       />
       <div className="mt-4 space-y-3">
         {data.map((item) => (
-          <div key={item.label} className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_2rem] items-center gap-3 text-xs">
+          <div
+            key={item.label}
+            className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_2rem] items-center gap-3 text-xs"
+          >
             <span className="font-semibold text-heading">{item.label}</span>
             <div className="h-2.5 overflow-hidden rounded-full bg-strip">
-              <div className="h-full rounded-full" style={{ width: `${(item.value / max) * 100}%`, backgroundColor: STATUS_COLORS[item.label] }} />
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${(item.value / max) * 100}%`,
+                  backgroundColor: STATUS_COLORS[item.label],
+                }}
+              />
             </div>
             <strong className="text-right text-sm text-heading">{item.value}</strong>
           </div>

@@ -3,11 +3,20 @@ import { clearLaporDraft, loadLaporDraft, saveLaporDraft, EMPTY_LAPOR_VALUES } f
 const descriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
 beforeEach(() => {
   const entries = new Map<string, string>();
-  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
-    getItem(key: string) { return entries.get(key) ?? null; },
-    setItem(key: string, value: string) { entries.set(key, value); },
-    removeItem(key: string) { entries.delete(key); },
-  } });
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem(key: string) {
+        return entries.get(key) ?? null;
+      },
+      setItem(key: string, value: string) {
+        entries.set(key, value);
+      },
+      removeItem(key: string) {
+        entries.delete(key);
+      },
+    },
+  });
 });
 afterEach(() => {
   if (descriptor) Object.defineProperty(globalThis, "localStorage", descriptor);
@@ -24,9 +33,17 @@ test("draft tersimpan terpisah dan membatalkan A tidak menghapus B", () => {
   expect(loadLaporDraft(b.institutionCode)).toEqual(b);
 });
 test("kuota/izin penyimpanan gagal dilaporkan, bukan sukses diam-diam", () => {
-  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
-    setItem() { throw new Error("quota"); }, removeItem() { throw new Error("denied"); },
-  } });
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      setItem() {
+        throw new Error("quota");
+      },
+      removeItem() {
+        throw new Error("denied");
+      },
+    },
+  });
   expect(saveLaporDraft(null, EMPTY_LAPOR_VALUES)).toBe(false);
   expect(clearLaporDraft(null)).toBe(false);
 });

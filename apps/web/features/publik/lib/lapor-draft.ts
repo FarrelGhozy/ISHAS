@@ -24,10 +24,17 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<LaporValues>;
     return {
-      ...(parsed.locationSnapshot && typeof parsed.locationSnapshot.locationText === "string" && typeof parsed.locationSnapshot.floorNote === "string" && (parsed.locationSnapshot.point === null || isValidPoint(parsed.locationSnapshot.point)) ? { locationSnapshot: parsed.locationSnapshot } : {}),
+      ...(parsed.locationSnapshot &&
+      typeof parsed.locationSnapshot.locationText === "string" &&
+      typeof parsed.locationSnapshot.floorNote === "string" &&
+      (parsed.locationSnapshot.point === null || isValidPoint(parsed.locationSnapshot.point))
+        ? { locationSnapshot: parsed.locationSnapshot }
+        : {}),
       reporterName: typeof parsed.reporterName === "string" ? parsed.reporterName : "",
       institutionCode:
-        typeof parsed.institutionCode === "string" ? parsed.institutionCode : institutionCode ?? "",
+        typeof parsed.institutionCode === "string"
+          ? parsed.institutionCode
+          : (institutionCode ?? ""),
       areaId: typeof parsed.areaId === "string" ? parsed.areaId : "",
       manualLocation: typeof parsed.manualLocation === "string" ? parsed.manualLocation : "",
       categoryId: typeof parsed.categoryId === "string" ? parsed.categoryId : "",
@@ -36,7 +43,9 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
       title: typeof parsed.title === "string" ? parsed.title : "",
       description: typeof parsed.description === "string" ? parsed.description : "",
       evidenceName: typeof parsed.evidenceName === "string" ? parsed.evidenceName : "",
-      evidenceAssetId: isEvidenceAssetId(parsed.evidenceAssetId) ? parsed.evidenceAssetId : undefined,
+      evidenceAssetId: isEvidenceAssetId(parsed.evidenceAssetId)
+        ? parsed.evidenceAssetId
+        : undefined,
       contact: typeof parsed.contact === "string" ? parsed.contact : "",
     };
   } catch {
@@ -75,9 +84,13 @@ export function isLaporEmpty(values: LaporValues): boolean {
     values.evidenceName.trim() === "" &&
     !values.evidenceAssetId &&
     values.contact.trim() === "" &&
-    values.areaId === ""
-    && values.manualLocation.trim() === "" && !values.locationSnapshot?.point && !values.locationSnapshot?.floorNote
-    && values.categoryId === "" && values.aspectId === "" && values.indicatorId === ""
+    values.areaId === "" &&
+    values.manualLocation.trim() === "" &&
+    !values.locationSnapshot?.point &&
+    !values.locationSnapshot?.floorNote &&
+    values.categoryId === "" &&
+    values.aspectId === "" &&
+    values.indicatorId === ""
   );
 }
 

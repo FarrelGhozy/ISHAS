@@ -14,11 +14,15 @@ export function LaporSuccess({
   onReportAnother: () => void;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { heading.current?.focus(); }, []);
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
   return (
     <section className="surface mx-auto flex w-full max-w-2xl flex-col items-center gap-2 px-6 py-12 text-center">
       <CheckCircle2 size={40} className="text-[#047857]" aria-hidden />
-      <h1 ref={heading} tabIndex={-1} className="text-xl font-extrabold text-heading">Laporan terkirim</h1>
+      <h1 ref={heading} tabIndex={-1} className="text-xl font-extrabold text-heading">
+        Laporan terkirim
+      </h1>
       <p className="text-sm font-extrabold text-primary">{reportId}</p>
       <StatusChip value="Menunggu validasi" />
       <p className="max-w-md text-sm text-secondary-text">

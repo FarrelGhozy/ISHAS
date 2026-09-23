@@ -14,7 +14,11 @@ export function PublicReadPlaceholder({ title, stage }: { title: string; stage: 
       <EmptyState
         title="Halaman dibangun di V2-04"
         description={`Rancangan lengkap halaman ini ada di dokumen WIREFRAMES; hanya data Diterima yang tampil (${stage}).`}
-        action={<Link className="secondary-button" to="/">Kembali ke dashboard</Link>}
+        action={
+          <Link className="secondary-button" to="/">
+            Kembali ke dashboard
+          </Link>
+        }
       />
     </section>
   );

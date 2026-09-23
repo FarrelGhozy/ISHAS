@@ -58,7 +58,9 @@ export function validateLapor(
 
   if (!errors.institutionCode) {
     if (!values.areaId && values.manualLocation.trim().length < 3) {
-      errors.areaId = context.selectedHasNoAreas ? "Tulis lokasi karena daftar area belum tersedia." : "Pilih area atau tulis lokasi secara manual.";
+      errors.areaId = context.selectedHasNoAreas
+        ? "Tulis lokasi karena daftar area belum tersedia."
+        : "Pilih area atau tulis lokasi secara manual.";
     } else if (values.areaId && !context.areaIdsOfSelected.includes(values.areaId)) {
       errors.areaId = "Lokasi/area tidak sah untuk pesantren ini.";
     }
@@ -80,14 +82,26 @@ export function validateLapor(
   // harus konsisten dengan opsi yang tersedia (konsistensi penuh dicek di store).
   if (values.aspectId && !values.categoryId) {
     errors.aspectId = "Pilih kategori terlebih dahulu.";
-  } else if (values.categoryId && context.categoryIds && !context.categoryIds.includes(values.categoryId)) {
+  } else if (
+    values.categoryId &&
+    context.categoryIds &&
+    !context.categoryIds.includes(values.categoryId)
+  ) {
     errors.categoryId = "Kategori tidak dikenal.";
-  } else if (values.aspectId && context.aspectIdsOfCategory && !context.aspectIdsOfCategory.includes(values.aspectId)) {
+  } else if (
+    values.aspectId &&
+    context.aspectIdsOfCategory &&
+    !context.aspectIdsOfCategory.includes(values.aspectId)
+  ) {
     errors.aspectId = "Aspek tidak termasuk kategori ini.";
   }
   if (values.indicatorId && !values.aspectId) {
     errors.indicatorId = "Pilih aspek terlebih dahulu.";
-  } else if (values.indicatorId && context.indicatorIdsOfAspect && !context.indicatorIdsOfAspect.includes(values.indicatorId)) {
+  } else if (
+    values.indicatorId &&
+    context.indicatorIdsOfAspect &&
+    !context.indicatorIdsOfAspect.includes(values.indicatorId)
+  ) {
     errors.indicatorId = "Indikator tidak termasuk aspek ini.";
   }
 

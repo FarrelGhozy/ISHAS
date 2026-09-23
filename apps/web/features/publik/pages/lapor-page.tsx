@@ -26,12 +26,7 @@ import {
   validateLapor,
   type LaporValues,
 } from "../lib/lapor-validation";
-import {
-  clearLaporDraft,
-  isLaporEmpty,
-  loadLaporDraft,
-  saveLaporDraft,
-} from "../lib/lapor-draft";
+import { clearLaporDraft, isLaporEmpty, loadLaporDraft, saveLaporDraft } from "../lib/lapor-draft";
 
 const FOCUS_ORDER: (keyof LaporValues)[] = [
   "reporterName",
@@ -81,14 +76,20 @@ function LaporPageContent() {
   const [values, setValues] = useState<LaporValues>(() => {
     if (initialCode) {
       const draft = loadLaporDraft(initialCode);
-      if (draft) return { ...draft, institutionCode: initialCode, reporterName: draft.reporterName || (isPrefilledManager ? user.name : "") };
+      if (draft)
+        return {
+          ...draft,
+          institutionCode: initialCode,
+          reporterName: draft.reporterName || (isPrefilledManager ? user.name : ""),
+        };
       return {
         ...EMPTY_LAPOR_VALUES,
         institutionCode: initialCode,
         reporterName: user?.roleId === "pengelola" ? (user.name ?? "") : "",
       };
     }
-    if (paramInvalid) return { ...EMPTY_LAPOR_VALUES, reporterName: isPrefilledManager ? user.name : "" };
+    if (paramInvalid)
+      return { ...EMPTY_LAPOR_VALUES, reporterName: isPrefilledManager ? user.name : "" };
     // Tanpa param: pulihkan cermin draft terakhir ("umum") bila ada isinya.
     const mirror = loadLaporDraft(null);
     if (mirror && (!isLaporEmpty(mirror) || mirror.institutionCode)) return mirror;
@@ -117,13 +118,22 @@ function LaporPageContent() {
   );
   const areaIds = useMemo(() => areas.map((a) => a.id), [areas]);
   const selectedHasNoAreas = values.institutionCode !== "" && areas.length === 0;
-  const activePlan = state.campusPlans.find((plan) => plan.institutionCode === values.institutionCode && plan.id === state.institutions.find((institution) => institution.code === values.institutionCode)?.activeCampusPlanVersionId);
+  const activePlan = state.campusPlans.find(
+    (plan) =>
+      plan.institutionCode === values.institutionCode &&
+      plan.id ===
+        state.institutions.find((institution) => institution.code === values.institutionCode)
+          ?.activeCampusPlanVersionId,
+  );
   const mapError = validateMapLocation(state, values.institutionCode, values.locationSnapshot);
 
   // D-15 cascading: opsi dari versi instrumen Published aktif (single source di seed).
-  const activeVersion = state.instrumentVersions.find((v) => v.id === state.activeInstrumentVersionId && v.status === "Published");
+  const activeVersion = state.instrumentVersions.find(
+    (v) => v.id === state.activeInstrumentVersionId && v.status === "Published",
+  );
   const categoryOptions = useMemo(
-    () => (activeVersion?.dimensions ?? []).map((d) => ({ id: d.categoryId ?? d.id, name: d.name })),
+    () =>
+      (activeVersion?.dimensions ?? []).map((d) => ({ id: d.categoryId ?? d.id, name: d.name })),
     [activeVersion],
   );
   const categoryIds = useMemo(() => categoryOptions.map((c) => c.id), [categoryOptions]);
@@ -179,7 +189,11 @@ function LaporPageContent() {
         <EmptyState
           title="Belum ada pesantren terdaftar"
           description="Pendaftaran dilakukan oleh Super Admin. Pelaporan dinonaktifkan sampai ada pesantren terdaftar."
-          action={<Link className="secondary-button" to="/">Kembali ke dashboard</Link>}
+          action={
+            <Link className="secondary-button" to="/">
+              Kembali ke dashboard
+            </Link>
+          }
         />
       </section>
     );
@@ -196,7 +210,11 @@ function LaporPageContent() {
           setAttempted(false);
           setTouched({});
           setFormError(null);
-          setValues({ ...EMPTY_LAPOR_VALUES, institutionCode: values.institutionCode, reporterName: isPrefilledManager ? user.name : "" });
+          setValues({
+            ...EMPTY_LAPOR_VALUES,
+            institutionCode: values.institutionCode,
+            reporterName: isPrefilledManager ? user.name : "",
+          });
           requestAnimationFrame(() => fieldRefs.current.reporterName?.focus());
         }}
       />
@@ -204,13 +222,21 @@ function LaporPageContent() {
   }
 
   function handleChange(field: keyof LaporValues, value: string) {
-    setFormError(null);    if (field === "institutionCode") {
+    setFormError(null);
+    if (field === "institutionCode") {
       if (!blocked) {
-        const currentSaved = !values.institutionCode || saveLaporDraft(values.institutionCode, values);
+        const currentSaved =
+          !values.institutionCode || saveLaporDraft(values.institutionCode, values);
         const existing = loadLaporDraft(value || null);
-        const next = existing ?? { ...EMPTY_LAPOR_VALUES, reporterName: isPrefilledManager ? user.name : values.reporterName, institutionCode: value };
+        const next = existing ?? {
+          ...EMPTY_LAPOR_VALUES,
+          reporterName: isPrefilledManager ? user.name : values.reporterName,
+          institutionCode: value,
+        };
         if (!currentSaved || !saveLaporDraft(value || null, next)) {
-          setFormError("Draft belum dapat disimpan. Periksa penyimpanan browser sebelum berpindah pesantren.");
+          setFormError(
+            "Draft belum dapat disimpan. Periksa penyimpanan browser sebelum berpindah pesantren.",
+          );
           return;
         }
       }
@@ -221,12 +247,21 @@ function LaporPageContent() {
       requestAnimationFrame(() => document.getElementById("lapor-pesantren")?.focus());
       return;
     }
-    setValues((v) => ({ ...v, [field]: value, ...(field === "areaId" ? { locationSnapshot: undefined } : {}), ...(field === "categoryId" ? { aspectId: "", indicatorId: "" } : {}), ...(field === "aspectId" ? { indicatorId: "" } : {}) }));
+    setValues((v) => ({
+      ...v,
+      [field]: value,
+      ...(field === "areaId" ? { locationSnapshot: undefined } : {}),
+      ...(field === "categoryId" ? { aspectId: "", indicatorId: "" } : {}),
+      ...(field === "aspectId" ? { indicatorId: "" } : {}),
+    }));
   }
 
   async function handleSubmit() {
     if (submitLock.current || blocked || evidenceUploading || !evidenceReady) return;
-    if (mapError) { setFormError(mapError); return; }
+    if (mapError) {
+      setFormError(mapError);
+      return;
+    }
     setAttempted(true);
     setTouched({
       reporterName: true,
@@ -290,7 +325,8 @@ function LaporPageContent() {
     else setConfirmCancel(true);
   }
 
-  const canSubmit = isLaporValid(errors) && !blocked && !mapError && !evidenceUploading && evidenceReady;
+  const canSubmit =
+    isLaporValid(errors) && !blocked && !mapError && !evidenceUploading && evidenceReady;
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -298,8 +334,8 @@ function LaporPageContent() {
         <p className="kicker">Laporan publik</p>
         <h1 className="text-xl font-extrabold text-heading">Laporkan temuan bahaya</h1>
         <p className="mt-1 text-sm text-secondary-text">
-          Laporan Anda tidak langsung tampil; pengelola pondok memvalidasi dan menentukan
-          tingkat bahaya terlebih dahulu.
+          Laporan Anda tidak langsung tampil; pengelola pondok memvalidasi dan menentukan tingkat
+          bahaya terlebih dahulu.
         </p>
       </header>
 
@@ -317,18 +353,67 @@ function LaporPageContent() {
           role="note"
           className="rounded-[7px] border border-line bg-strip px-3 py-2 text-xs font-semibold text-secondary-text"
         >
-          Kirim dinonaktifkan untuk akun Anda — Anda login sebagai {user?.role}. Keluar dari
-          akun untuk melapor sebagai publik.
+          Kirim dinonaktifkan untuk akun Anda — Anda login sebagai {user?.role}. Keluar dari akun
+          untuk melapor sebagai publik.
         </div>
       ) : null}
 
-      {!blocked ? <p role="status" className={`text-sm ${draftSaved ? "text-secondary-text" : "text-[#b91c1c]"}`}>
-        {draftSaved ? "Draft tersimpan di perangkat ini. Gambar bukti tersimpan terpisah di browser yang sama." : "Draft belum tersimpan. Jangan tutup halaman; periksa ruang dan izin penyimpanan browser."}
-      </p> : null}
-      {selectedHasNoAreas ? <p role="status" className="text-sm text-secondary-text">Belum ada area terdaftar; tulis lokasi manual pada kolom di bawah (D-11).</p> : null}
+      {!blocked ? (
+        <p
+          role="status"
+          className={`text-sm ${draftSaved ? "text-secondary-text" : "text-[#b91c1c]"}`}
+        >
+          {draftSaved
+            ? "Draft tersimpan di perangkat ini. Gambar bukti tersimpan terpisah di browser yang sama."
+            : "Draft belum tersimpan. Jangan tutup halaman; periksa ruang dan izin penyimpanan browser."}
+        </p>
+      ) : null}
+      {selectedHasNoAreas ? (
+        <p role="status" className="text-sm text-secondary-text">
+          Belum ada area terdaftar; tulis lokasi manual pada kolom di bawah (D-11).
+        </p>
+      ) : null}
       <LaporForm
-        evidencePicker={<ReportEvidencePicker institutionCode={values.institutionCode} actor={{ id: user?.id, name: user?.name ?? values.reporterName.trim(), role: user?.role ?? "Publik" }} assetId={values.evidenceAssetId} name={values.evidenceName} disabled={blocked || submitting || evidenceUploading} onBusy={setEvidenceUploading} onAvailability={setEvidenceReady} onChange={(evidenceAssetId, evidenceName = "") => { setFormError(null); setValues((current) => ({ ...current, evidenceAssetId, evidenceName })); }} />}
-        locationPicker={values.institutionCode ? <>{mapError ? <p role="alert" className="text-sm text-primary">{mapError}</p> : null}<LocationPicker key={values.institutionCode} plan={activePlan} value={values.locationSnapshot} disabled={blocked} onChange={(locationSnapshot) => { setFormError(null); setValues((current) => ({ ...current, locationSnapshot })); }} /></> : undefined}
+        evidencePicker={
+          <ReportEvidencePicker
+            institutionCode={values.institutionCode}
+            actor={{
+              id: user?.id,
+              name: user?.name ?? values.reporterName.trim(),
+              role: user?.role ?? "Publik",
+            }}
+            assetId={values.evidenceAssetId}
+            name={values.evidenceName}
+            disabled={blocked || submitting || evidenceUploading}
+            onBusy={setEvidenceUploading}
+            onAvailability={setEvidenceReady}
+            onChange={(evidenceAssetId, evidenceName = "") => {
+              setFormError(null);
+              setValues((current) => ({ ...current, evidenceAssetId, evidenceName }));
+            }}
+          />
+        }
+        locationPicker={
+          values.institutionCode ? (
+            <>
+              {mapError ? (
+                <p role="alert" className="text-sm text-primary">
+                  {mapError}
+                </p>
+              ) : null}
+              <LocationPicker
+                key={values.institutionCode}
+                plan={activePlan}
+                value={values.locationSnapshot}
+                disabled={blocked}
+                onChange={(locationSnapshot) => {
+                  setFormError(null);
+                  setValues((current) => ({ ...current, locationSnapshot }));
+                }}
+              />
+            </>
+          ) : undefined
+        }
         values={values}
         errors={visibleErrors}
         registered={registered}
@@ -351,7 +436,12 @@ function LaporPageContent() {
           const scoped = !values.institutionCode || clearLaporDraft(values.institutionCode);
           const mirror = clearLaporDraft(null);
           if (scoped && mirror) navigate("/");
-          else { setConfirmCancel(false); setFormError("Draft belum dapat dihapus. Periksa izin penyimpanan browser lalu coba lagi."); }
+          else {
+            setConfirmCancel(false);
+            setFormError(
+              "Draft belum dapat dihapus. Periksa izin penyimpanan browser lalu coba lagi.",
+            );
+          }
         }}
         onKeepEditing={() => setConfirmCancel(false)}
         registerField={(field, el) => {

@@ -1,7 +1,14 @@
 // 4 kartu statistik dashboard — WIREFRAMES.md §1 region 2 + DESIGN_SYSTEM.md §1/§3.
 // Indeks memakai aturan ilustrasi D-04 (label ilustrasi di banner/grafik, bukan rumus final).
 
-import { Activity, AlertTriangle, CheckCircle2, ShieldCheck, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  ShieldCheck,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { IndexSummary } from "~/mocks/processors/dashboard-aggregate";
 import { hitungRisikoPrioritas, ringkasTindakLanjut } from "~/mocks/processors/dashboard-aggregate";
@@ -63,11 +70,11 @@ export function StatCards({
         : "text-secondary-text";
 
   return (
-    <div className={`grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 ${compact ? "lg:grid-cols-2" : "xl:grid-cols-4"}`}>
+    <div
+      className={`grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 ${compact ? "lg:grid-cols-2" : "xl:grid-cols-4"}`}
+    >
       <div className="stat-card">
-        <p className="text-xs font-bold uppercase tracking-wide text-secondary-text">
-          Indeks K3L
-        </p>
+        <p className="text-xs font-bold uppercase tracking-wide text-secondary-text">Indeks K3L</p>
         <div className="mt-1 flex items-center gap-2">
           <p className="text-2xl font-extrabold text-heading">
             {summary.currentIndex === null ? "—" : Math.round(summary.currentIndex)}

@@ -47,7 +47,10 @@ export function IndexTrendPanel({ summary }: { summary: IndexSummary }) {
   const hasData = series.length >= 1 && summary.currentIndex !== null;
   const trend =
     summary.delta === null ? null : summary.arah === "tetap" ? (
-      <span className="flex items-center gap-1 text-sm text-secondary-text"><Minus size={14} aria-hidden />Setara periode lalu</span>
+      <span className="flex items-center gap-1 text-sm text-secondary-text">
+        <Minus size={14} aria-hidden />
+        Setara periode lalu
+      </span>
     ) : summary.arah === "turun" ? (
       <span className="flex items-center gap-1 text-sm font-bold text-[#b91c1c]">
         <TrendingDown size={13} aria-hidden />
@@ -55,8 +58,7 @@ export function IndexTrendPanel({ summary }: { summary: IndexSummary }) {
       </span>
     ) : (
       <span className="trend-up flex items-center gap-1 text-sm font-bold text-[#047857]">
-        <TrendingUp size={13} aria-hidden />
-        +{summary.delta} periode ini
+        <TrendingUp size={13} aria-hidden />+{summary.delta} periode ini
       </span>
     );
 
@@ -69,7 +71,10 @@ export function IndexTrendPanel({ summary }: { summary: IndexSummary }) {
       <p className="mt-0.5 text-xs text-secondary-text">
         Perbandingan enam periode terakhir · skala indeks 0–100 · data ilustrasi
       </p>
-      <div ref={ref} className="mt-3 min-h-[225px]" role="img"
+      <div
+        ref={ref}
+        className="mt-3 min-h-[225px]"
+        role="img"
         aria-label={
           hasData
             ? `Grafik perkembangan indeks ${summary.periode}: ${series
@@ -111,7 +116,13 @@ function GrafikArea({
   const area = `${garis} L${x(series.length - 1)},${y(0)} L${x(0)},${y(0)} Z`;
 
   return (
-    <svg viewBox={`0 0 ${width} ${TINGGI}`} width="100%" height={TINGGI} className="block" aria-hidden>
+    <svg
+      viewBox={`0 0 ${width} ${TINGGI}`}
+      width="100%"
+      height={TINGGI}
+      className="block"
+      aria-hidden
+    >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#be123c" stopOpacity="0.24" />
@@ -120,14 +131,28 @@ function GrafikArea({
       </defs>
       {[0, 25, 50, 75, 100].map((v) => (
         <g key={v}>
-          <line x1={PADDING.kiri} x2={width - PADDING.kanan} y1={y(v)} y2={y(v)} stroke="#e2e8f0" strokeWidth="1" />
+          <line
+            x1={PADDING.kiri}
+            x2={width - PADDING.kanan}
+            y1={y(v)}
+            y2={y(v)}
+            stroke="#e2e8f0"
+            strokeWidth="1"
+          />
           <text x={PADDING.kiri - 6} y={y(v) + 3.5} textAnchor="end" fontSize="10" fill="#64748b">
             {v}
           </text>
         </g>
       ))}
       <path d={area} fill={`url(#${gradientId})`} />
-      <path d={garis} fill="none" stroke="#be123c" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />
+      <path
+        d={garis}
+        fill="none"
+        stroke="#be123c"
+        strokeWidth="3"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
       {series.map((p, i) => (
         <g key={p.period}>
           <circle cx={x(i)} cy={y(p.index)} r={i === series.length - 1 ? 4.5 : 3} fill="#be123c" />

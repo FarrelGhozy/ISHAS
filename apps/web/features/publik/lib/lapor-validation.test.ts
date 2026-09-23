@@ -67,7 +67,12 @@ describe("validateLapor", () => {
   test("cascading D-15: indikator tanpa aspek → ditolak", () => {
     const errors = validateLapor(
       { ...BASE, categoryId: "KAT-KESELAMATAN", indicatorId: "IND-K3L-001" },
-      { ...CTX, categoryIds: ["KAT-KESELAMATAN"], aspectIdsOfCategory: ["ASP-KES-001"], indicatorIdsOfAspect: [] },
+      {
+        ...CTX,
+        categoryIds: ["KAT-KESELAMATAN"],
+        aspectIdsOfCategory: ["ASP-KES-001"],
+        indicatorIdsOfAspect: [],
+      },
     );
     expect(errors.indicatorId).toBe("Pilih aspek terlebih dahulu.");
   });
@@ -82,8 +87,18 @@ describe("validateLapor", () => {
 
   test("cascading D-15: pilihan konsisten → tanpa error", () => {
     const errors = validateLapor(
-      { ...BASE, categoryId: "KAT-KESELAMATAN", aspectId: "ASP-KES-001", indicatorId: "IND-K3L-001" },
-      { ...CTX, categoryIds: ["KAT-KESELAMATAN"], aspectIdsOfCategory: ["ASP-KES-001"], indicatorIdsOfAspect: ["IND-K3L-001"] },
+      {
+        ...BASE,
+        categoryId: "KAT-KESELAMATAN",
+        aspectId: "ASP-KES-001",
+        indicatorId: "IND-K3L-001",
+      },
+      {
+        ...CTX,
+        categoryIds: ["KAT-KESELAMATAN"],
+        aspectIdsOfCategory: ["ASP-KES-001"],
+        indicatorIdsOfAspect: ["IND-K3L-001"],
+      },
     );
     expect(errors).toEqual({});
   });

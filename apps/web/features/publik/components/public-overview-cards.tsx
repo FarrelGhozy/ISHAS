@@ -1,10 +1,4 @@
-import {
-  Building2,
-  ClipboardCheck,
-  MapPinned,
-  UsersRound,
-  type LucideIcon,
-} from "lucide-react";
+import { Building2, ClipboardCheck, MapPinned, UsersRound, type LucideIcon } from "lucide-react";
 import type { DashboardOverview } from "~/mocks/processors/dashboard-aggregate";
 
 function OverviewCard({

@@ -30,7 +30,13 @@ import { IndexTrendPanel } from "../components/index-trend-panel";
 import { DimensionPanel } from "../components/dimension-panel";
 import { FindingsPanel } from "../components/findings-panel";
 import { PublicInsightPanels } from "../components/public-insight-panels";
-import { AspectAndRecap, CategoryGuide, FollowUpSummary, RekapKategoriPanel, ScoreSummary } from "../components/dashboard-workspace";
+import {
+  AspectAndRecap,
+  CategoryGuide,
+  FollowUpSummary,
+  RekapKategoriPanel,
+  ScoreSummary,
+} from "../components/dashboard-workspace";
 import { DashboardDocPanel } from "../components/public-instrument-docs";
 import { PublicCampusMap } from "../components/public-campus-map";
 import {
@@ -45,8 +51,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   const registered = selectRegisteredInstitutions(state);
   const isLocked = Boolean(lockedInstitutionCode);
   const rawParam = lockedInstitutionCode ?? searchParams.get("pesantren") ?? undefined;
-  const selected =
-    rawParam && registered.some((i) => i.code === rawParam) ? rawParam : undefined;
+  const selected = rawParam && registered.some((i) => i.code === rawParam) ? rawParam : undefined;
   const pesantrenInvalid = Boolean(rawParam && !selected);
 
   const known = knownPeriods(state.indexHistory);
@@ -79,7 +84,11 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
             ? `Kode "${rawParam}" tercatat tetapi tidak memenuhi syarat Pesantren terdaftar (Aktif + pengelola aktif). Hasil lama tidak tampil publik sesuai D-08.`
             : `Kode "${rawParam}" tidak dikenal. Periksa kembali tautan atau pilih pesantren dari dashboard.`
         }
-        action={<Link className="secondary-button" to="/">Kembali ke dashboard</Link>}
+        action={
+          <Link className="secondary-button" to="/">
+            Kembali ke dashboard
+          </Link>
+        }
       />
     );
   }
@@ -127,7 +136,8 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         location: institution.location,
         index: institutionSummary.currentIndex,
         reports: institutionReports.length,
-        activeFindings: institutionFindings.filter((finding) => finding.status !== "Terverifikasi").length,
+        activeFindings: institutionFindings.filter((finding) => finding.status !== "Terverifikasi")
+          .length,
         progress: ringkasTindakLanjut(institutionRecommendations).rataProgress,
       };
     });
@@ -136,7 +146,8 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   const reportById = new Map(reports.map((r) => [r.id, r]));
   const instrumentLabel =
     summary.instrumentVersionIds.length === 1
-      ? (state.instrumentVersions.find((v) => v.id === summary.instrumentVersionIds[0])?.label ?? null)
+      ? (state.instrumentVersions.find((v) => v.id === summary.instrumentVersionIds[0])?.label ??
+        null)
       : summary.instrumentVersionIds.length > 1
         ? "Beberapa versi instrumen"
         : null;
@@ -170,12 +181,18 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
           lockedName={selectedInstitution?.name}
         />
         {!isLocked && pesantrenInvalid ? (
-          <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+          <p
+            role="status"
+            className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text"
+          >
             Pesantren pada tautan tidak tersedia. Menampilkan semua pesantren terdaftar.
           </p>
         ) : null}
         {periodeNotice ? (
-          <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+          <p
+            role="status"
+            className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text"
+          >
             {periodeNotice}
           </p>
         ) : null}
@@ -189,12 +206,13 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   }
 
   return (
-      <section className="min-w-0 flex flex-col gap-5">
-        <div>
+    <section className="min-w-0 flex flex-col gap-5">
+      <div>
         <p className="kicker">Ringkasan publik</p>
         <h1 className="text-2xl font-extrabold text-heading">Dashboard K3L Pesantren</h1>
         <p className="mt-1 max-w-3xl text-sm text-secondary-text">
-          Pantau cakupan, hasil penilaian, tingkat risiko, dan kemajuan tindak lanjut dari data yang telah divalidasi.
+          Pantau cakupan, hasil penilaian, tingkat risiko, dan kemajuan tindak lanjut dari data yang
+          telah divalidasi.
         </p>
       </div>
       <ContextBar
@@ -203,12 +221,18 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         lockedName={selectedInstitution?.name}
       />
       {!isLocked && pesantrenInvalid ? (
-        <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+        <p
+          role="status"
+          className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text"
+        >
           Pesantren pada tautan tidak tersedia. Menampilkan semua pesantren terdaftar.
         </p>
       ) : null}
       {periodeNotice ? (
-        <p role="status" className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text">
+        <p
+          role="status"
+          className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text"
+        >
           {periodeNotice}
         </p>
       ) : null}
@@ -222,24 +246,51 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
       <div className="grid min-w-0 items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-4">
           <div className="grid min-w-0 gap-3 xl:grid-cols-2">
-            <ScoreSummary summary={summary} snapshots={state.selfAssessmentSnapshots.filter((snapshot) => reportById.has(snapshot.reportId))} versions={state.instrumentVersions} />
+            <ScoreSummary
+              summary={summary}
+              snapshots={state.selfAssessmentSnapshots.filter((snapshot) =>
+                reportById.has(snapshot.reportId),
+              )}
+              versions={state.instrumentVersions}
+            />
             <IndexTrendPanel summary={summary} />
           </div>
           <StatCards summary={summary} findings={findings} recommendations={recommendations} />
           <PublicInsightPanels distribution={insight.distribution} />
-          <AspectAndRecap findings={findings} versions={state.instrumentVersions} areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))} distribution={insight.distribution} reports={reports} />
-          <RekapKategoriPanel reports={reports} findings={findings} snapshots={state.selfAssessmentSnapshots.filter((snapshot) => reportById.has(snapshot.reportId))} versions={state.instrumentVersions} />
+          <AspectAndRecap
+            findings={findings}
+            versions={state.instrumentVersions}
+            areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))}
+            distribution={insight.distribution}
+            reports={reports}
+          />
+          <RekapKategoriPanel
+            reports={reports}
+            findings={findings}
+            snapshots={state.selfAssessmentSnapshots.filter((snapshot) =>
+              reportById.has(snapshot.reportId),
+            )}
+            versions={state.instrumentVersions}
+          />
           <DashboardDocPanel />
-          <FindingsPanel institutionCode={selected} findings={temuanPrioritas} reportById={reportById} userById={(id) => selectUserById(state, id)} />
+          <FindingsPanel
+            institutionCode={selected}
+            findings={temuanPrioritas}
+            reportById={reportById}
+            userById={(id) => selectUserById(state, id)}
+          />
         </div>
-        <aside className="grid min-w-0 gap-3 xl:grid-cols-2 2xl:grid-cols-1" aria-label="Kategori, lokasi, dan tindak lanjut">
+        <aside
+          className="grid min-w-0 gap-3 xl:grid-cols-2 2xl:grid-cols-1"
+          aria-label="Kategori, lokasi, dan tindak lanjut"
+        >
           <CategoryGuide />
           <PublicCampusMap institutionCode={selected} compact />
           <FollowUpSummary recommendations={recommendations} institutionCode={selected} />
           <DimensionPanel dimensions={summary.dimensions} />
         </aside>
       </div>
-        <InstitutionComparisonPanel items={institutionComparison} />
-      </section>
+      <InstitutionComparisonPanel items={institutionComparison} />
+    </section>
   );
 }

@@ -10,8 +10,8 @@ export function DokumenPage() {
         <p className="kicker">Pustaka</p>
         <h1 className="text-2xl font-extrabold text-heading">Dokumen detail indikator</h1>
         <p className="mt-1 max-w-3xl text-sm text-secondary-text">
-          Penjelasan PDF per indikator instrumen. Berkas Public dapat dilihat dan diunduh;
-          berkas Privat hanya tampil nama.
+          Penjelasan PDF per indikator instrumen. Berkas Public dapat dilihat dan diunduh; berkas
+          Privat hanya tampil nama.
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">

@@ -24,7 +24,10 @@ function usePublicDocRows() {
   const user = useCurrentUser();
   const canOpenPrivate = user?.roleId === "peneliti" && user?.status === "Aktif";
   const rows = useMemo(
-    () => selectPublicDocRows(selectIndicatorDocRows(state)).map((row) => stripPrivateAsset(row, canOpenPrivate)),
+    () =>
+      selectPublicDocRows(selectIndicatorDocRows(state)).map((row) =>
+        stripPrivateAsset(row, canOpenPrivate),
+      ),
     [state, canOpenPrivate],
   );
   return { rows, viewerId: user?.id };
@@ -45,7 +48,8 @@ async function openDoc(
   try {
     if (mode === "view") {
       const tab = window.open(url, "_blank", "noopener");
-      if (!tab) onError("Browser memblokir tab baru. Izinkan popup untuk situs ini lalu coba lagi.");
+      if (!tab)
+        onError("Browser memblokir tab baru. Izinkan popup untuk situs ini lalu coba lagi.");
     } else {
       const a = document.createElement("a");
       a.href = url;
@@ -59,7 +63,15 @@ async function openDoc(
   }
 }
 
-function DocTable({ rows, viewerId, onError }: { rows: ReturnType<typeof usePublicDocRows>["rows"]; viewerId: string | undefined; onError: (m: string) => void }) {
+function DocTable({
+  rows,
+  viewerId,
+  onError,
+}: {
+  rows: ReturnType<typeof usePublicDocRows>["rows"];
+  viewerId: string | undefined;
+  onError: (m: string) => void;
+}) {
   if (rows.length === 0) {
     return (
       <EmptyState
@@ -69,38 +81,65 @@ function DocTable({ rows, viewerId, onError }: { rows: ReturnType<typeof usePubl
     );
   }
   return (
-    <div role="region" aria-label="Daftar dokumen indikator" className="overflow-x-auto rounded-lg border border-line">
+    <div
+      role="region"
+      aria-label="Daftar dokumen indikator"
+      className="overflow-x-auto rounded-lg border border-line"
+    >
       <table className="min-w-[720px] w-full text-left text-sm">
         <thead className="sticky top-0 bg-strip">
           <tr>
-            <th scope="col" className="px-3 py-2 text-xs font-bold text-secondary-text">Indikator</th>
-            <th scope="col" className="px-3 py-2 text-xs font-bold text-secondary-text">Status</th>
-            <th scope="col" className="px-3 py-2 text-xs font-bold text-secondary-text">Aksi</th>
+            <th scope="col" className="px-3 py-2 text-xs font-bold text-secondary-text">
+              Indikator
+            </th>
+            <th scope="col" className="px-3 py-2 text-xs font-bold text-secondary-text">
+              Status
+            </th>
+            <th scope="col" className="px-3 py-2 text-xs font-bold text-secondary-text">
+              Aksi
+            </th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.indicatorId} className="border-t border-line align-top">
               <td className="px-3 py-2">
-                <p className="font-bold text-heading">{row.code} · {row.title}</p>
+                <p className="font-bold text-heading">
+                  {row.code} · {row.title}
+                </p>
                 <p className="text-xs text-faint">
-                  {row.categoryName}{row.aspectName ? ` · ${row.aspectName}` : ""}{row.doc ? ` · ${row.doc.fileName} · ${formatFileSize(row.doc.fileSize)}` : ""}
+                  {row.categoryName}
+                  {row.aspectName ? ` · ${row.aspectName}` : ""}
+                  {row.doc ? ` · ${row.doc.fileName} · ${formatFileSize(row.doc.fileSize)}` : ""}
                 </p>
               </td>
-              <td className="px-3 py-2">{row.doc ? <StatusChip value={row.doc.visibility} /> : null}</td>
+              <td className="px-3 py-2">
+                {row.doc ? <StatusChip value={row.doc.visibility} /> : null}
+              </td>
               <td className="px-3 py-2">
                 {row.doc?.visibility === "Public" && row.doc.assetId ? (
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" className="secondary-button px-3 py-2 text-xs" onClick={() => void openDoc(viewerId, row.indicatorId, "view", onError)}>
-                      <Eye size={14} aria-hidden />Lihat
+                    <button
+                      type="button"
+                      className="secondary-button px-3 py-2 text-xs"
+                      onClick={() => void openDoc(viewerId, row.indicatorId, "view", onError)}
+                    >
+                      <Eye size={14} aria-hidden />
+                      Lihat
                     </button>
-                    <button type="button" className="secondary-button px-3 py-2 text-xs" onClick={() => void openDoc(viewerId, row.indicatorId, "download", onError)}>
-                      <Download size={14} aria-hidden />Unduh
+                    <button
+                      type="button"
+                      className="secondary-button px-3 py-2 text-xs"
+                      onClick={() => void openDoc(viewerId, row.indicatorId, "download", onError)}
+                    >
+                      <Download size={14} aria-hidden />
+                      Unduh
                     </button>
                   </div>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs font-semibold text-faint">
-                    <Lock size={14} aria-hidden />Terkunci
+                    <Lock size={14} aria-hidden />
+                    Terkunci
                   </span>
                 )}
               </td>
@@ -133,7 +172,9 @@ function FilterBar({ filter, onChange }: { filter: DocFilter; onChange: (f: DocF
         >
           <option value="Semua">Semua kategori</option>
           {K3_CATEGORIES.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
           ))}
         </select>
       </label>
@@ -142,7 +183,9 @@ function FilterBar({ filter, onChange }: { filter: DocFilter; onChange: (f: DocF
         <select
           className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={filter.visibility}
-          onChange={(e) => onChange({ ...filter, visibility: e.target.value as DocFilter["visibility"] })}
+          onChange={(e) =>
+            onChange({ ...filter, visibility: e.target.value as DocFilter["visibility"] })
+          }
         >
           <option value="Semua">Semua</option>
           <option value="Public">Public</option>
@@ -156,7 +199,11 @@ function FilterBar({ filter, onChange }: { filter: DocFilter; onChange: (f: DocF
 /** Halaman penuh /dokumen: search + filter + tabel. */
 export function PublicInstrumentDocs() {
   const { rows, viewerId } = usePublicDocRows();
-  const [filter, setFilter] = useState<DocFilter>({ q: "", categoryId: "Semua", visibility: "Semua" });
+  const [filter, setFilter] = useState<DocFilter>({
+    q: "",
+    categoryId: "Semua",
+    visibility: "Semua",
+  });
   const [error, setError] = useState("");
   const visible = useMemo(() => filterDocRows(rows, filter), [rows, filter]);
   const publicCount = rows.filter((r) => r.doc?.visibility === "Public").length;
@@ -165,10 +212,14 @@ export function PublicInstrumentDocs() {
     <div className="flex min-w-0 flex-col gap-3">
       <FilterBar filter={filter} onChange={setFilter} />
       <p className="text-xs text-faint">
-        {rows.length} dokumen ({publicCount} Public) · Dokumen bersifat global; filter pesantren tidak memengaruhi daftar ini.
-        Berkas Privat hanya tampil nama.
+        {rows.length} dokumen ({publicCount} Public) · Dokumen bersifat global; filter pesantren
+        tidak memengaruhi daftar ini. Berkas Privat hanya tampil nama.
       </p>
-      {error ? <p role="alert" className="text-sm font-semibold text-primary">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm font-semibold text-primary">
+          {error}
+        </p>
+      ) : null}
       <DocTable rows={visible} viewerId={viewerId} onError={setError} />
     </div>
   );
@@ -185,14 +236,20 @@ export function DashboardDocPanel() {
     <article aria-label="Dokumen detail instrumen" className="surface min-w-0 p-4">
       <div className="mb-1 flex flex-wrap items-center gap-2">
         <h2 className="mr-auto flex items-center gap-2 font-bold text-heading">
-          <FileText size={18} aria-hidden className="text-primary" />Dokumen detail instrumen
+          <FileText size={18} aria-hidden className="text-primary" />
+          Dokumen detail instrumen
         </h2>
         <StatusChip value="Data publik · ilustrasi" />
       </div>
       <p className="mb-3 text-xs text-secondary-text">
-        Penjelasan PDF per indikator ({publicCount} Public dari {rows.length} dokumen). Berkas Privat hanya tampil nama.
+        Penjelasan PDF per indikator ({publicCount} Public dari {rows.length} dokumen). Berkas
+        Privat hanya tampil nama.
       </p>
-      {error ? <p role="alert" className="mb-2 text-sm font-semibold text-primary">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="mb-2 text-sm font-semibold text-primary">
+          {error}
+        </p>
+      ) : null}
       <DocTable rows={top} viewerId={viewerId} onError={setError} />
       <Link to="/dokumen" className="text-button mt-3 inline-block min-h-11 py-2 text-sm">
         Buka semua dokumen →

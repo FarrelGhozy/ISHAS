@@ -30,7 +30,9 @@ export function ContextBar({
   return (
     <div className="surface flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
       <div className="flex min-w-0 w-full flex-col items-start gap-2 text-sm sm:w-auto sm:flex-row sm:items-center font-bold text-secondary-text">
-        <label htmlFor="dashboard-pesantren" className="shrink-0">Pesantren</label>
+        <label htmlFor="dashboard-pesantren" className="shrink-0">
+          Pesantren
+        </label>
         {lockedInstitutionCode ? (
           <span className="rounded-[4px] bg-strip px-2 py-1 text-xs text-heading">
             {lockedInstitutionCode} — {lockedName}
@@ -43,8 +45,11 @@ export function ContextBar({
             onChange={(e) => {
               const v = e.target.value;
               const next = new URLSearchParams(searchParams);
-              next.delete("denah"); next.delete("risiko"); next.delete("statusPeta");
-              if (v) next.set("pesantren", v); else next.delete("pesantren");
+              next.delete("denah");
+              next.delete("risiko");
+              next.delete("statusPeta");
+              if (v) next.set("pesantren", v);
+              else next.delete("pesantren");
               setSearchParams(next);
             }}
           >

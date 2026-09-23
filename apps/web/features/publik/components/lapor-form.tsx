@@ -47,7 +47,8 @@ const ERROR = "mt-1 flex items-center gap-1 text-[12px] font-semibold text-[#b91
 function FieldError({ id, message }: { id: string; message: string }) {
   return (
     <p id={id} role="alert" className={ERROR}>
-      <AlertTriangle size={14} aria-hidden />{message}
+      <AlertTriangle size={14} aria-hidden />
+      {message}
     </p>
   );
 }
@@ -107,8 +108,8 @@ export function LaporForm(props: Props) {
           {isPrefilledManager
             ? "Terisi otomatis dari akun Pengelola Pesantren — tetap dapat diubah. "
             : null}
-          Nama selalu dicatat dan tampil apa adanya secara internal; tidak ditampilkan di
-          dashboard publik.
+          Nama selalu dicatat dan tampil apa adanya secara internal; tidak ditampilkan di dashboard
+          publik.
         </p>
         {errors.reporterName ? (
           <FieldError id="lapor-nama-error" message={errors.reporterName} />
@@ -170,8 +171,20 @@ export function LaporForm(props: Props) {
         <label htmlFor="lapor-lokasi-manual" className={`${LABEL} mt-3`}>
           Lokasi belum ada di daftar?
         </label>
-        <input id="lapor-lokasi-manual" ref={(el) => props.registerField("manualLocation", el)} className={INPUT} value={values.manualLocation} disabled={readOnly || !values.institutionCode} maxLength={140} placeholder="Tulis lokasi lengkap" onChange={(e) => props.onChange("manualLocation", e.target.value)} onBlur={() => props.onBlur("manualLocation")} />
-        <p className={HINT}>Pilih area bila tersedia. Bila belum ada, tulis lokasi ini; salah satu wajib diisi.</p>
+        <input
+          id="lapor-lokasi-manual"
+          ref={(el) => props.registerField("manualLocation", el)}
+          className={INPUT}
+          value={values.manualLocation}
+          disabled={readOnly || !values.institutionCode}
+          maxLength={140}
+          placeholder="Tulis lokasi lengkap"
+          onChange={(e) => props.onChange("manualLocation", e.target.value)}
+          onBlur={() => props.onBlur("manualLocation")}
+        />
+        <p className={HINT}>
+          Pilih area bila tersedia. Bila belum ada, tulis lokasi ini; salah satu wajib diisi.
+        </p>
       </div>
 
       {props.locationPicker}
@@ -198,7 +211,9 @@ export function LaporForm(props: Props) {
               </option>
             ))}
           </select>
-          {errors.categoryId ? <FieldError id="lapor-kategori-error" message={errors.categoryId} /> : null}
+          {errors.categoryId ? (
+            <FieldError id="lapor-kategori-error" message={errors.categoryId} />
+          ) : null}
         </div>
         <div>
           <label htmlFor="lapor-aspek" className={LABEL}>
@@ -215,7 +230,9 @@ export function LaporForm(props: Props) {
             onChange={(e) => props.onChange("aspectId", e.target.value)}
             onBlur={() => props.onBlur("aspectId")}
           >
-            <option value="">{values.categoryId ? "Pilih aspek (opsional)" : "Pilih kategori dahulu"}</option>
+            <option value="">
+              {values.categoryId ? "Pilih aspek (opsional)" : "Pilih kategori dahulu"}
+            </option>
             {props.aspects.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name}
@@ -239,17 +256,24 @@ export function LaporForm(props: Props) {
             onChange={(e) => props.onChange("indicatorId", e.target.value)}
             onBlur={() => props.onBlur("indicatorId")}
           >
-            <option value="">{values.aspectId ? "Pilih indikator (opsional)" : "Pilih aspek dahulu"}</option>
+            <option value="">
+              {values.aspectId ? "Pilih indikator (opsional)" : "Pilih aspek dahulu"}
+            </option>
             {props.indicators.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.name}
               </option>
             ))}
           </select>
-          {errors.indicatorId ? <FieldError id="lapor-indikator-error" message={errors.indicatorId} /> : null}
+          {errors.indicatorId ? (
+            <FieldError id="lapor-indikator-error" message={errors.indicatorId} />
+          ) : null}
         </div>
       </div>
-      <p className={HINT}>Opsional: memilih kategori memfilter aspek; memilih aspek memfilter indikator. Tingkat risiko tetap ditentukan pengelola saat validasi.</p>
+      <p className={HINT}>
+        Opsional: memilih kategori memfilter aspek; memilih aspek memfilter indikator. Tingkat
+        risiko tetap ditentukan pengelola saat validasi.
+      </p>
       <div>
         <label htmlFor="lapor-judul" className={LABEL}>
           Judul temuan*
@@ -317,12 +341,15 @@ export function LaporForm(props: Props) {
         <p id="lapor-kontak-hint" className={HINT}>
           Opsional · maks 100 karakter (untuk klarifikasi).
         </p>
-        {errors.contact ? (
-          <FieldError id="lapor-kontak-error" message={errors.contact} />
-        ) : null}
+        {errors.contact ? <FieldError id="lapor-kontak-error" message={errors.contact} /> : null}
       </div>
 
-      {!readOnly && submitDisabled ? <p className="text-sm text-secondary-text">Lengkapi nama (minimal 2 karakter), pesantren, area, judul (minimal 10 karakter), dan deskripsi (minimal 20 karakter) untuk mengirim.</p> : null}
+      {!readOnly && submitDisabled ? (
+        <p className="text-sm text-secondary-text">
+          Lengkapi nama (minimal 2 karakter), pesantren, area, judul (minimal 10 karakter), dan
+          deskripsi (minimal 20 karakter) untuk mengirim.
+        </p>
+      ) : null}
       <div className="flex flex-wrap items-center gap-2 pt-1">
         <button type="submit" className="primary-button" disabled={submitDisabled}>
           {submitting ? "Mengirim…" : "Kirim laporan"}
@@ -338,18 +365,18 @@ export function LaporForm(props: Props) {
       </div>
 
       <Modal open={confirmCancel} onClose={props.onKeepEditing} label="Buang draft laporan?">
-          <p className="text-xs font-bold text-heading">Buang perubahan?</p>
-          <p className="mt-1 text-sm text-secondary-text">
-            Perubahan yang belum dikirim akan hilang.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button type="button" className="secondary-button" onClick={props.onConfirmCancel}>
-              Ya, batalkan
-            </button>
-            <button type="button" className="primary-button" onClick={props.onKeepEditing}>
-              Lanjutkan mengisi
-            </button>
-          </div>
+        <p className="text-xs font-bold text-heading">Buang perubahan?</p>
+        <p className="mt-1 text-sm text-secondary-text">
+          Perubahan yang belum dikirim akan hilang.
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button type="button" className="secondary-button" onClick={props.onConfirmCancel}>
+            Ya, batalkan
+          </button>
+          <button type="button" className="primary-button" onClick={props.onKeepEditing}>
+            Lanjutkan mengisi
+          </button>
+        </div>
       </Modal>
     </form>
   );
