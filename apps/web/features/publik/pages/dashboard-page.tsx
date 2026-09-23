@@ -31,6 +31,7 @@ import { DimensionPanel } from "../components/dimension-panel";
 import { FindingsPanel } from "../components/findings-panel";
 import { PublicInsightPanels } from "../components/public-insight-panels";
 import { AspectAndRecap, CategoryGuide, FollowUpSummary, RekapKategoriPanel, ScoreSummary } from "../components/dashboard-workspace";
+import { DashboardDocPanel } from "../components/public-instrument-docs";
 import { PublicCampusMap } from "../components/public-campus-map";
 import {
   InstitutionComparisonPanel,
@@ -228,6 +229,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
           <PublicInsightPanels distribution={insight.distribution} />
           <AspectAndRecap findings={findings} versions={state.instrumentVersions} areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))} distribution={insight.distribution} reports={reports} />
           <RekapKategoriPanel reports={reports} findings={findings} snapshots={state.selfAssessmentSnapshots.filter((snapshot) => reportById.has(snapshot.reportId))} versions={state.instrumentVersions} />
+          <DashboardDocPanel />
           <FindingsPanel institutionCode={selected} findings={temuanPrioritas} reportById={reportById} userById={(id) => selectUserById(state, id)} />
         </div>
         <aside className="grid min-w-0 gap-3 xl:grid-cols-2 2xl:grid-cols-1" aria-label="Kategori, lokasi, dan tindak lanjut">

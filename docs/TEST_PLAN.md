@@ -18,7 +18,7 @@ Tulis hasilnya di bagian `Hasil Pemeriksaan` file stage (tanggal + lulus/gagal +
 
 Periksa hasil navigasi, isi, sesi, dan scope yang benar. Route yang memang mengalihkan pengguna
 tidak wajib merespons HTTP 200 pada permintaan awal; periksa tujuan serta tidak ada loop/kebocoran konten.
-Inventaris ROUTES memuat 27 pola kanonis; tabel berikut mengelompokkan kasus, bukan menghitung URL unik.
+Inventaris ROUTES memuat 29 pola kanonis (D-16 menambah `/dokumen` + `/peneliti/dokumen-instrumen`); tabel berikut mengelompokkan kasus, bukan menghitung URL unik.
 Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 
 | # | URL | Kondisi | Harapan |
@@ -27,12 +27,12 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 | 2 | `/` | login tiap peran | isi SAMA seperti tanpa login + tombol ruang kerja |
 | 3 | `/lapor` | tanpa login | form aktif bila ada pesantren terdaftar |
 | 4 | `/penilaian-mandiri` | tanpa login | form aktif bila ada Published |
-| 5 | `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan` | tanpa login | hanya data `Diterima` |
+| 5 | `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`, `/dokumen` | tanpa login | hanya data `Diterima` (dokumen: Public penuh, Privat hanya nama) |
 | 6 | `/pesantren/PSN-0018` | tanpa login | filter terkunci ke lembaga itu |
 | 7 | `/pesantren/XXX-tak-dikenal` | tanpa login | empty state, bukan crash |
 | 8 | `/login` | — | tepat 3 kartu akun, tanpa asesor |
 | 9 | `/admin/*` (6 route) | admin / anonim / peran salah | allowed / → `/login` / → `/akses-ditolak` |
-| 10 | `/peneliti/*` (6 route) | peneliti / anonim / peran salah | allowed / → `/login` / → `/akses-ditolak` |
+| 10 | `/peneliti/*` (7 route) | peneliti / anonim / peran salah | allowed / → `/login` / → `/akses-ditolak` |
 | 11 | `/pengelola/validasi-laporan` dkk | pengelola / anonim / peran salah | allowed scope sendiri / → `/login` / → `/akses-ditolak` |
 | 12 | `/asesor/*` (sisa lama) | siapa pun | pesan penghapusan + tombol ke `/penilaian-mandiri` |
 

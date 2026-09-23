@@ -7,6 +7,8 @@ import { useSyncExternalStore } from "react";
 import type {
   Area,
   Institution,
+  InstrumentDoc,
+  InstrumentDocVisibility,
   Report,
   RiskFinding,
   SelfAssessmentDraft,
@@ -864,6 +866,103 @@ export const storeActions = {
     if (target.status !== "Draft") return { ok: false, error: "Hanya versi Draft yang dapat dipublikasikan." };
     if (!target.dimensions.length || target.dimensions.some((dimension) => !dimension.indicators.length)) return { ok: false, error: "Setiap dimensi wajib memiliki indikator." };
     setState((draft) => { draft.instrumentVersions.forEach((item) => { if (item.status === "Published") item.status = "Archived"; }); const version = draft.instrumentVersions.find((item) => item.id === id)!; version.status = "Published"; version.publishedAt = nowIso(); draft.activeInstrumentVersionId = id; audit(draft, { name: "Peneliti" }, { objectType: "InstrumentVersion", objectId: id, action: "Mempublikasikan instrumen" }); });
+    return { ok: true };
+  },
+
+  // D-16: pustaka detail indikator — independen dari versioning instrumen.
+  // Satu indicatorId = satu berkas; unggah baru mengganti metadata lama.
+  upsertInstrumentDoc(
+    actor: { id?: string; name: string; role?: string },
+    input: {
+      indicatorId: string;
+      fileName: string;
+      fileSize: number;
+      assetId: string;
+      visibility?: InstrumentDocVisibility;
+      categoryId?: string;
+      aspectId?: string;
+    },
+  ): ActionResult {
+    const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+      return { ok: false, error: "Hanya akun Peneliti aktif yang dapat mengelola berkas indikator." };
+    }
+    const indicatorId = input.indicatorId.trim();
+    const fileName = input.fileName.trim();
+    if (!indicatorId) return { ok: false, error: "Indikator tidak ditemukan." };
+    const catalog = currentState.instrumentVersions.flatMap((v) =>
+      v.dimensions.flatMap((d) => d.indicators.map((i) => ({ dim: d, ind: i }))),
+    );
+    const found = catalog.find((entry) => entry.ind.id === indicatorId);
+    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    if (!fileName.toLowerCase().endsWith(".pdf") || fileName.length > 200) {
+      return { ok: false, error: "Hanya berkas PDF yang didukung." };
+    }
+    if (!Number.isSafeInteger(input.fileSize) || input.fileSize <= 0 || input.fileSize > 10 * 1024 * 1024) {
+      return { ok: false, error: "Ukuran PDF harus lebih dari 0 dan maksimal 10 MB." };
+    }
+    if (typeof input.assetId !== "string" || !input.assetId) {
+      return { ok: false, error: "Berkas belum tersimpan. Unggah ulang PDF." };
+    }
+    const visibility: InstrumentDocVisibility = input.visibility === "Public" ? "Public" : "Privat";
+    const id = `DOC-${indicatorId}`;
+    setState((draft) => {
+      const doc: InstrumentDoc = {
+        id,
+        indicatorId,
+        categoryId: input.categoryId ?? found.ind.categoryId ?? found.dim.categoryId,
+        aspectId: input.aspectId ?? found.ind.aspectId,
+        fileName,
+        fileSize: input.fileSize,
+        mime: "application/pdf",
+        assetId: input.assetId,
+        visibility,
+        updatedBy: account.name,
+        updatedAt: nowIso(),
+      };
+      const at = draft.instrumentDocs.findIndex((item) => item.indicatorId === indicatorId);
+      if (at >= 0) draft.instrumentDocs[at] = doc;
+      else draft.instrumentDocs.push(doc);
+      audit(draft, account, { objectType: "InstrumentDoc", objectId: id, action: "Mengunggah berkas indikator", note: `${fileName} · ${visibility}` });
+    });
+    return { ok: true, id };
+  },
+
+  setInstrumentDocVisibility(
+    actor: { id?: string; name: string; role?: string },
+    indicatorId: string,
+    visibility: InstrumentDocVisibility,
+  ): ActionResult {
+    const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+      return { ok: false, error: "Hanya akun Peneliti aktif yang dapat mengubah visibilitas berkas." };
+    }
+    if (visibility !== "Public" && visibility !== "Privat") {
+      return { ok: false, error: "Visibilitas harus Public atau Privat." };
+    }
+    const target = currentState.instrumentDocs.find((item) => item.indicatorId === indicatorId);
+    if (!target) return { ok: false, error: "Berkas indikator belum diunggah." };
+    setState((draft) => {
+      const doc = draft.instrumentDocs.find((item) => item.indicatorId === indicatorId)!;
+      doc.visibility = visibility;
+      doc.updatedBy = account.name;
+      doc.updatedAt = nowIso();
+      audit(draft, account, { objectType: "InstrumentDoc", objectId: doc.id, action: "Mengubah visibilitas berkas", note: visibility });
+    });
+    return { ok: true };
+  },
+
+  deleteInstrumentDoc(actor: { id?: string; name: string; role?: string }, indicatorId: string): ActionResult {
+    const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+      return { ok: false, error: "Hanya akun Peneliti aktif yang dapat menghapus berkas." };
+    }
+    const target = currentState.instrumentDocs.find((item) => item.indicatorId === indicatorId);
+    if (!target) return { ok: false, error: "Berkas indikator belum diunggah." };
+    setState((draft) => {
+      draft.instrumentDocs = draft.instrumentDocs.filter((item) => item.indicatorId !== indicatorId);
+      audit(draft, account, { objectType: "InstrumentDoc", objectId: target.id, action: "Menghapus berkas indikator", note: target.fileName });
+    });
     return { ok: true };
   },
 };

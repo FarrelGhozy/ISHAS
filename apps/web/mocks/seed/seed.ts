@@ -24,7 +24,7 @@ const T = {
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 6,
+  schemaVersion: 7,
   campusPlans: [
     { id: "CAMPUS-PSN-0018-v1", institutionCode: "PSN-0018", revision: 1, assetId: "/images/risk-map-campus-v1.png", width: 1536, height: 1024, uploadedBy: "USR-003", uploadedAt: T.now, illustration: true },
     { id: "CAMPUS-PSN-0019-v1", institutionCode: "PSN-0019", revision: 1, assetId: "/images/risk-map-campus-v1.png", width: 1536, height: 1024, uploadedBy: "USR-004", uploadedAt: "2026-09-02T10:00:00.000Z", illustration: true },
@@ -1420,6 +1420,14 @@ export const SEED: IshasState = {
     },
   ],
   activeInstrumentVersionId: "INS-v1.1",
+  // D-16: pustaka detail indikator (ilustrasi). Blob PDF contoh dibuat otomatis
+  // di browser (buildSeedPdfBlob); bukan biner bawaan. 2 Public + 2 Privat.
+  instrumentDocs: [
+    { id: "DOC-IND-K3L-001", indicatorId: "IND-K3L-001", categoryId: "KAT-KESELAMATAN", aspectId: "ASP-KES-001", fileName: "detail-instalasi-listrik.pdf", fileSize: 124000, mime: "application/pdf", assetId: "seed-instrument-doc-IND-K3L-001", visibility: "Public", updatedBy: "Dr. M. Ridwan", updatedAt: "2026-09-20T08:00:00.000Z" },
+    { id: "DOC-IND-K3L-004", indicatorId: "IND-K3L-004", categoryId: "KAT-KESEHATAN", aspectId: "ASP-SEH-001", fileName: "detail-air-bersih.pdf", fileSize: 98000, mime: "application/pdf", assetId: "seed-instrument-doc-IND-K3L-004", visibility: "Public", updatedBy: "Dr. M. Ridwan", updatedAt: "2026-09-20T08:10:00.000Z" },
+    { id: "DOC-IND-K3L-009", indicatorId: "IND-K3L-009", categoryId: "KAT-PSIKOSOSIAL", aspectId: "ASP-PSI-001", fileName: "detail-beban-kerja.pdf", fileSize: 112000, mime: "application/pdf", assetId: "seed-instrument-doc-IND-K3L-009", visibility: "Privat", updatedBy: "Dr. M. Ridwan", updatedAt: "2026-09-21T09:00:00.000Z" },
+    { id: "DOC-IND-K3L-010", indicatorId: "IND-K3L-010", categoryId: "KAT-PSIKOSOSIAL", aspectId: "ASP-PSI-002", fileName: "detail-dukungan-sosial.pdf", fileSize: 105000, mime: "application/pdf", assetId: "seed-instrument-doc-IND-K3L-010", visibility: "Privat", updatedBy: "Dr. M. Ridwan", updatedAt: "2026-09-21T09:15:00.000Z" },
+  ],
   // Riwayat indeks ilustratif (periode lampau) — rumus final menunggu D-04.
   // Titik periode berjalan (Sep 2026) dihitung dari snapshot `Diterima`, bukan dari sini.
   // PSN-0018 memulai lebih rendah (perlu perhatian), PSN-0019 lebih baik;

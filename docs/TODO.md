@@ -1,5 +1,19 @@
 # TODO — Kontrol Kerja Aktif
 
+## Pustaka detail indikator (PDF Public/Privat) — 23 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan pemilik (`ok kerjakan`): Peneliti mengunggah satu PDF per
+indikator; tampil di dashboard utama + halaman publik `/dokumen` (navbar umum
+baru); `Privat` hanya tampil nama tanpa tombol Lihat/Unduh; isi privat penuh
+hanya untuk Peneliti; independen dari versioning; frontend-only, backend
+menyusul. Keputusan D-16; stage: [STAGE_DOKUMEN_INDIKATOR.md](../planning/STAGE_DOKUMEN_INDIKATOR.md).
+
+- [x] Catat D-16 + stage IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Mocks schema v7 + adapter IndexedDB + seed + actions + selector publik.
+- [x] UI Peneliti (`/peneliti/instrumen` seksi tabel) + UI publik (`/dokumen` + panel `/`).
+- [x] Verifikasi: lint + typecheck + 115 test + build + 3 viewport + alur utama lulus (23 Sep 2026; uji klik workspace peneliti + unduh PDF bahan review).
+- [ ] Review pemilik; DONE hanya setelah disetujui. Stage: `REVIEW`.
+
 ## Infrastruktur Docker Compose + `.env` — 21 September 2026 — `IN PROGRESS`
 
 Revisi lintas fitur atas arahan pemilik: proyek memakai Docker Compose dengan

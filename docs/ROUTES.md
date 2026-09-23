@@ -16,6 +16,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + pengelola).
 | `/peta-risiko` | Peta bahaya & risiko | D-14: pilih satu pesantren untuk denah gambaran besar + titik temuan Diterima yang aktif; daftar temuan termasuk tanpa titik | Filter URL: pesantren, `denah`, `risiko`, `statusPeta`; lantai berupa keterangan. Frontend REVIEW |
 | `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId` |
 | `/tindak-lanjut` | Tindak lanjut (baca) | Progres + status + nama PIC; bukti penyelesaian tidak publik (D-02) | Tombol kelola hanya muncul bila login pengelola pemilik scope |
+| `/dokumen` | Dokumen indikator (D-16) | Pustaka PDF per indikator: search + filter kategori/status; Public = Lihat tab baru + Unduh; Privat = nama + terkunci tanpa tombol | Global (filter pesantren tidak memfilter dokumen); guard publik `allowed` semua sesi |
 | `/laporan` | Laporan pimpinan | Ringkasan + dimensi + status + metadata versi instrumen | Simulasi unduh PDF/Excel (label dummy) |
 | `/pesantren/[kode]` | Profil ringkas lembaga | Sama seperti `/` dengan filter terkunci ke `[kode]` | `[kode]` = `institutionCode` mis. `PSN-0018`; kode tak dikenal → empty state, bukan crash |
 | `/login` | Masuk | 3 kartu akun: Super Admin, Peneliti, Pengelola Pesantren | Tanpa kartu asesor; tanpa link "kembali ke beranda" (beranda = `/` itu sendiri) |
@@ -47,6 +48,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + pengelola).
 | `/admin/pengaturan` | admin | Preferensi + reset data demo |
 | `/peneliti/dashboard` | peneliti | Dashboard penelitian |
 | `/peneliti/instrumen` | peneliti | Builder |
+| `/peneliti/dokumen-instrumen` | peneliti | Pustaka PDF per indikator (D-16) |
 | `/peneliti/versioning` | peneliti | Draft/Published/Archived |
 | `/peneliti/scoring` | peneliti | Konfigurasi scoring |
 | `/peneliti/validasi-publikasi` | peneliti | Checklist + kunci publish |
@@ -86,7 +88,7 @@ Pemeriksaan scope juga berlaku pada aksi simpan berdasarkan ID, bukan hanya menu
 
 ## 5. Kelengkapan navigasi sebelum rencana difinalkan
 
-- Daftar di atas memuat 27 pola route kanonis (11 publik/bantuan + 16 workspace), termasuk satu pola profil dinamis. Ini bukan 27 URL uji saja.
+- Daftar di atas memuat 29 pola route kanonis (12 publik/bantuan + 17 workspace), termasuk satu pola profil dinamis. Ini bukan 29 URL uji saja.
 - Tambahkan pemeriksaan URL indeks `/admin`, `/peneliti`, `/pengelola`, tujuan login tiap peran,
  route lama `/pengelola/*` yang berubah, route tidak dikenal, dan `/asesor` maupun `/asesor/*`.
 - Tujuan pengelola pada rancangan baru adalah halaman utama Validasi Laporan; jangan menyisakan

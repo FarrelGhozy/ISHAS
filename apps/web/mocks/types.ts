@@ -19,6 +19,23 @@ export type HandlingStatus =
   | "Completed"
   | "Ditolak";
 export type InstrumentStatus = "Draft" | "Published" | "Archived";
+export type InstrumentDocVisibility = "Public" | "Privat";
+
+// D-16: pustaka detail indikator — satu PDF per indikator, independen dari
+// versioning instrumen. Blob PDF di IndexedDB perangkat-lokal.
+export type InstrumentDoc = {
+  id: string; // 'DOC-IND-K3L-001' stabil per indicatorId
+  indicatorId: string; // FK indikator INS-v1.1 ('IND-K3L-*')
+  categoryId?: string; // denormalisasi untuk filter (KAT-*)
+  aspectId?: string; // denormalisasi (ASP-*)
+  fileName: string;
+  fileSize: number; // bytes
+  mime: "application/pdf";
+  assetId: string; // blob di IndexedDB perangkat-lokal
+  visibility: InstrumentDocVisibility; // default 'Privat'
+  updatedBy: string;
+  updatedAt: string;
+};
 export type RecommendationStatus =
   | "Belum ditindaklanjuti"
   | "Berjalan"
@@ -274,6 +291,7 @@ export type IshasState = {
   areas: Area[];
   instrumentVersions: InstrumentVersion[];
   activeInstrumentVersionId: string | null;
+  instrumentDocs: InstrumentDoc[]; // D-16: pustaka PDF per indikator
   auditEvents: AuditEvent[];
   notifications: Notification[];
   // Riwayat indeks ilustratif per pesantren (periode lampau). Titik periode berjalan

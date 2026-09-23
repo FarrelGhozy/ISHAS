@@ -345,3 +345,48 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   (Likelihood/Severity/Risk Score/Rekomendasi) tetap khusus pengelola saat validasi (FLOWS §4).
 - **D-15.d — Tahap:** dokumen patokan dulu (`KATEGORI_K3.md` + sinkronisasi), implementasi kode
   setelah review; migrasi schema v5→v6 mempertahankan seluruh record/ID.
+
+## D-16 — Pustaka detail indikator (PDF Public/Privat) — DISETUJUI 23 September 2026
+
+- Pemilik meminta fitur baru: Peneliti mengunggah berkas PDF per indikator
+  (satu PDF per indikator `INS-v1.1`); berkas tampil di dashboard utama dan
+  halaman publik baru, sinkron dengan ruang Peneliti. Fokus tahap ini
+  frontend-only (data dummy + blob lokal); backend menyusul.
+- **D-16.a — Unit:** satu PDF per indikator, terikat `indicatorId` stabil
+  (`IND-K3L-*`) + denormalisasi `categoryId/aspectId` untuk filter. Bukan tabel
+  custom bebas. Independen dari versioning instrumen: tidak ikut
+  `Draft/Published/Archived`, tidak mengunci `penilaian-mandiri`.
+- **D-16.b — Visibilitas:** `Public` = publik dapat `Lihat` (tab baru) +
+  `Unduh`. `Privat` = di publik hanya tampil nama indikator + status
+  terkunci; tombol `Lihat`/`Unduh` tidak dirender. Isi privat penuh hanya
+  untuk Peneliti. Default saat unggah = `Privat` (aman dulu).
+- **D-16.c — Format:** hanya PDF (`application/pdf`, ekstensi `.pdf`, header
+  `%PDF`); batas prototipe 10 MB (asumsi, dapat diturunkan ke 5 MB).
+  Satu indikator = satu berkas (unggah baru mengganti + konfirmasi).
+  Hapus = hapus permanen metadata + blob dengan konfirmasi + audit.
+- **D-16.d — Navigasi publik:** navbar umum bertambah `Dokumen` → `/dokumen`
+  (halaman penuh search/filter/tabel) + panel ringkas di dashboard utama `/`
+  setelah rekap kategori. Filter pesantren tidak memfilter dokumen (global).
+- **D-16.e — Navigasi peneliti (23 September 2026):** kelola berkas menempati
+  menu tersendiri `Dokumen instrumen` → `/peneliti/dokumen-instrumen`
+  (bukan seksi di `/peneliti/instrumen`); guard workspace peneliti berlaku.
+- Dokumen terdampak: ROUTES, DATA_MODEL (schema v7), FLOWS §7, WIREFRAMES,
+  DESIGN_SYSTEM (`Public → status-green + CheckCircle2`, `Privat →
+  status-neutral + Lock`), TEST_PLAN, TODO, stage `STAGE_DOKUMEN_INDIKATOR.md`.
+  D-02 tetap berlaku: blob privat tidak pernah disajikan ke publik; guard
+  frontend simulasi UX, otorisasi nyata di backend nanti.
+
+## D-16.f — Pemulihan halaman galat + render defensif instrumen (23 September 2026)
+
+- Laporan pemilik: menu `Instrumen` peneliti menampilkan halaman galat
+  (`Terjadi kesalahan tak terduga`). Pemeriksaan pada kode saat ini tidak
+  mereproduksi crash dengan data baru, migrasi v6→v7, maupun mutasi draft;
+  penyebab paling mungkin adalah data dummy tersimpan yang menyimpang di
+  browser atau bundel dev yang basi (HMR).
+- Perbaikan tanpa mengubah perilaku data valid: render
+  `/peneliti/instrumen` menormalisasi `instrumentVersions/dimensions/
+  indicators/aspects` (array tak valid → kosong, bukan crash); validasi
+  `isValidState` dibuat null-safe; halaman galat global mendapat tombol
+  `Kembalikan data demo` (hapus kunci `ishas-mock-v*` lalu muat ulang) agar
+  loop galat akibat penyimpanan rusak dapat dipulihkan pengguna. Sesi login
+  tidak ikut dihapus.

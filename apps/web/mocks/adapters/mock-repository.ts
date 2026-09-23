@@ -12,6 +12,16 @@ import {
 import type { CampusPlanVersion, LocationSnapshot } from "../types";
 import { putCampusAsset, deleteCampusAsset, clearCampusAssets } from "./campus-assets";
 import { clearEvidenceAssets, deleteEvidenceAsset, getEvidenceAsset, putEvidenceAsset, validateEvidenceFile } from "./report-evidence";
+import {
+  buildSeedPdfBlob,
+  clearInstrumentDocAssets,
+  deleteInstrumentDocAsset,
+  getInstrumentDocAsset,
+  hasPdfHeader,
+  isSeedInstrumentDocAssetId,
+  putInstrumentDocAsset,
+  validateInstrumentDocFile,
+} from "./instrument-docs";
 let resettingAssets = false;
 let assetEpoch = 0;
 
@@ -41,7 +51,7 @@ export const mockRepository = {
     try {
       // Commit metadata reset first; on failure existing asset references stay intact.
       storeActions.resetMockData();
-      const results = await Promise.allSettled([clearCampusAssets(), clearEvidenceAssets()]);
+      const results = await Promise.allSettled([clearCampusAssets(), clearEvidenceAssets(), clearInstrumentDocAssets()]);
       if (results.some((result) => result.status === "rejected")) throw new Error("Data demo telah direset, tetapi sebagian gambar belum dapat dibersihkan. Periksa penyimpanan browser lalu ulangi reset.");
     } finally { resettingAssets = false; }
   },
@@ -83,6 +93,83 @@ export const mockRepository = {
       return { ok: true, id };
     } catch { return { ok: false, error: "Gambar gagal dibaca atau disimpan. Pilih gambar yang valid dan periksa penyimpanan browser." }; }
   },
+  // D-16: pustaka detail indikator — hanya Peneliti aktif yang dapat mengunggah.
+  async uploadInstrumentDoc(
+    actor: ReportActor,
+    indicatorId: string,
+    file: File,
+    visibility: "Public" | "Privat",
+  ): Promise<ActionResult> {
+    const epoch = assetEpoch;
+    const assetId = `instrument-doc-${crypto.randomUUID()}`;
+    try {
+      if (resettingAssets) return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      const state = getState();
+      const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
+      if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+        return { ok: false, error: "Hanya akun Peneliti aktif yang dapat mengunggah berkas." };
+      }
+      const invalid = validateInstrumentDocFile(file);
+      if (invalid) return { ok: false, error: invalid };
+      if (!(await hasPdfHeader(file))) return { ok: false, error: "Berkas bukan PDF yang valid." };
+      if (resettingAssets || epoch !== assetEpoch) return { ok: false, error: "Demo telah direset. Pilih berkas kembali." };
+      await putInstrumentDocAsset(assetId, { indicatorId, name: file.name.trim(), blob: file });
+      if (resettingAssets || epoch !== assetEpoch) {
+        await deleteInstrumentDocAsset(assetId);
+        return { ok: false, error: "Demo telah direset. Pilih berkas kembali." };
+      }
+      const result = storeActions.upsertInstrumentDoc(
+        { id: account.id, name: account.name, role: account.role },
+        { indicatorId, fileName: file.name.trim(), fileSize: file.size, assetId, visibility },
+      );
+      if (!result.ok) await deleteInstrumentDocAsset(assetId);
+      return result;
+    } catch {
+      await deleteInstrumentDocAsset(assetId).catch(() => undefined);
+      return { ok: false, error: "Berkas gagal dibaca atau disimpan. Pilih PDF yang valid dan periksa penyimpanan browser." };
+    }
+  },
+
+  // D-16/D-02: blob privat tidak pernah disajikan ke publik — diperiksa di sini,
+  // bukan hanya dengan menyembunyikan tombol.
+  async openInstrumentDoc(
+    viewer: { id?: string },
+    indicatorId: string,
+  ): Promise<{ ok: true; blob: Blob; fileName: string } | { ok: false; error: string }> {
+    const state = getState();
+    const doc = state.instrumentDocs.find((item) => item.indicatorId === indicatorId);
+    if (!doc || !doc.assetId) return { ok: false, error: "Berkas belum tersedia untuk indikator ini." };
+    const account = viewer.id ? state.users.find((item) => item.id === viewer.id) : undefined;
+    const canOpen = doc.visibility === "Public" || (account?.status === "Aktif" && account?.roleId === "peneliti");
+    if (!canOpen) return { ok: false, error: "Berkas Privat hanya dapat dibuka oleh Peneliti." };
+    try {
+      if (isSeedInstrumentDocAssetId(doc.assetId)) {
+        const found = state.instrumentVersions
+          .flatMap((v) => v.dimensions.flatMap((d) => d.indicators))
+          .find((i) => i.id === indicatorId);
+        return {
+          ok: true,
+          blob: buildSeedPdfBlob(found?.code ?? indicatorId, found?.title ?? "", doc.fileName),
+          fileName: doc.fileName,
+        };
+      }
+      const asset = await getInstrumentDocAsset(doc.assetId);
+      if (!asset) return { ok: false, error: "Berkas tidak tersedia pada perangkat ini. Unggah ulang melalui ruang Peneliti." };
+      return { ok: true, blob: asset.blob, fileName: doc.fileName };
+    } catch {
+      return { ok: false, error: "Berkas tidak dapat dimuat. Periksa penyimpanan browser." };
+    }
+  },
+
+  async removeInstrumentDoc(actor: ReportActor, indicatorId: string): Promise<ActionResult> {
+    const state = getState();
+    const doc = state.instrumentDocs.find((item) => item.indicatorId === indicatorId);
+    if (!doc) return { ok: false, error: "Berkas indikator belum diunggah." };
+    const result = storeActions.deleteInstrumentDoc(actor, indicatorId);
+    if (result.ok) await deleteInstrumentDocAsset(doc.assetId).catch(() => undefined);
+    return result;
+  },
+
   async submitLaporCepat(
     actor: ReportActor,
     input: {

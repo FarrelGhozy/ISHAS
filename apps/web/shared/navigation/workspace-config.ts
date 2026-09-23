@@ -2,6 +2,7 @@
 
 import {
   Activity,
+  BookOpen,
   Building2,
   ClipboardList,
   Database,
@@ -34,6 +35,7 @@ export const ROLE_NAVIGATION: Record<RoleId, NavItem[]> = {
   peneliti: [
     { label: "Dashboard penelitian", path: "/peneliti/dashboard", icon: Activity },
     { label: "Instrumen", path: "/peneliti/instrumen", icon: ListChecks },
+    { label: "Dokumen instrumen", path: "/peneliti/dokumen-instrumen", icon: BookOpen },
     { label: "Versioning", path: "/peneliti/versioning", icon: ClipboardList },
     { label: "Scoring", path: "/peneliti/scoring", icon: Database },
     { label: "Validasi & publikasi", path: "/peneliti/validasi-publikasi", icon: FileCheck2 },

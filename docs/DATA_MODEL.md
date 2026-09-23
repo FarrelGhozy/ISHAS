@@ -28,9 +28,29 @@ keputusan D-04–D-11 masih memengaruhi isinya.
 
 ## 0. Versi schema 
 
-- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v6`. Aplikasi ISHAS
-- `MOCK_SCHEMA_VERSION`: `6` (v6 menambah kategori/aspek K3 + level Ekstrem; D-15).
-- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 6`, pulihkan seed.
+- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v7`. Aplikasi ISHAS
+- `MOCK_SCHEMA_VERSION`: `7` (v7 menambah pustaka detail indikator D-16:
+  `instrumentDocs` + blob PDF di IndexedDB `ishas-instrument-docs-v1`).
+- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 7`, pulihkan seed.
+- Migrasi v6→v7 mempertahankan seluruh record/ID; hanya menambah
+  `instrumentDocs` (seed 2 Public + 2 Privat ilustrasi). Snapshot/temuan lama
+  tidak dihitung ulang.
+
+```ts
+type InstrumentDocVisibility = 'Public' | 'Privat';
+type InstrumentDoc = {
+  id: string; // 'DOC-IND-K3L-001' stabil per indicatorId
+  indicatorId: string; // FK indikator INS-v1.1 ('IND-K3L-*')
+  categoryId?: string; // denormalisasi untuk filter (KAT-*)
+  aspectId?: string; // denormalisasi (ASP-*)
+  fileName: string; // 'detail-xxx.pdf'
+  fileSize: number; // bytes, maks prototipe 10 MB
+  mime: 'application/pdf';
+  assetId: string; // blob di IndexedDB perangkat-lokal
+  visibility: InstrumentDocVisibility; // default 'Privat'
+  updatedBy: string; updatedAt: string;
+};
+```
 - Migrasi v5→v6 mempertahankan seluruh record/ID; hanya menambah field
   (`categoryId/aspectId` fallback, `level` tetap valid). Snapshot `INS-v1.0` tidak dihitung ulang.
 

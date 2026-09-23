@@ -19,12 +19,33 @@ for (const [name, raw] of [
   expect(loadState()).toEqual(SEED);
 });
 
-test("state v5 valid dimigrasi ke v6 tanpa kehilangan record", () => {
+test("state entri instrumen null tidak melempar dan pulih ke seed", () => {
+  const bad = structuredClone(SEED) as unknown as Record<string, unknown>;
+  bad["instrumentVersions"] = [{ id: "rusak", dimensions: [null] }];
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
+    getItem() { return JSON.stringify(bad); },
+  } });
+  expect(loadState()).toEqual(SEED);
+});
+
+test("state v6 tanpa instrumentDocs dimigrasi ke v7 berisi seed docs", () => {
+  const v6 = structuredClone(SEED) as unknown as Record<string, unknown>;
+  delete v6["instrumentDocs"];
+  v6["schemaVersion"] = 6;
+  Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
+    getItem() { return JSON.stringify(v6); },
+  } });
+  const loaded = loadState();
+  expect(loaded.schemaVersion).toBe(7);
+  expect(loaded.instrumentDocs).toEqual(SEED.instrumentDocs);
+});
+
+test("state v5 valid dimigrasi ke v7 tanpa kehilangan record", () => {
   const v5 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 5 });
   Object.defineProperty(globalThis, "localStorage", { configurable: true, value: {
     getItem() { return v5; },
   } });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(6);
+  expect(loaded.schemaVersion).toBe(7);
   expect(loaded.reports.length).toBe(SEED.reports.length);
 });

@@ -89,7 +89,7 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(6);
+    expect(state.schemaVersion).toBe(7);
     expect(selectRegisteredInstitutions(state).length).toBe(2);
   });
 });

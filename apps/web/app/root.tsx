@@ -53,18 +53,47 @@ function RootError() {
   const message = isRouteErrorResponse(error)
     ? `${error.status} ${error.statusText}`
     : "Terjadi kesalahan tak terduga.";
+  // Pemulihan data demo rusak: hapus mock tersimpan lalu muat ulang.
+  const resetDemoAndReload = () => {
+    try {
+      for (let i = 0; i < localStorage.length;) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("ishas-mock-v")) {
+          localStorage.removeItem(key);
+        } else {
+          i += 1;
+        }
+      }
+    } catch {
+      // Penyimpanan tak dapat dibaca; tetap coba muat ulang.
+    }
+    window.location.reload();
+  };
   return (
     <div className="flex min-h-dvh items-center justify-center px-4">
       <div className="surface max-w-md p-8 text-center">
         <h1 className="text-lg font-extrabold text-heading">Terjadi kesalahan</h1>
         <p className="mt-2 text-xs text-secondary-text">{message}</p>
-        <button
-          type="button"
-          className="primary-button mt-4"
-          onClick={() => window.location.reload()}
-        >
-          Muat ulang
-        </button>
+        <p className="mt-2 text-xs text-secondary-text">
+          Bila galat berulang setelah muat ulang, data demo di perangkat ini
+          mungkin rusak dan dapat dikembalikan ke awal.
+        </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => window.location.reload()}
+          >
+            Muat ulang
+          </button>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={resetDemoAndReload}
+          >
+            Kembalikan data demo
+          </button>
+        </div>
       </div>
     </div>
   );

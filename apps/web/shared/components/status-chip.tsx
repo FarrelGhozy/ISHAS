@@ -8,6 +8,7 @@ import {
   Clock3,
   Flame,
   Info,
+  Lock,
   Megaphone,
   Minus,
   X,
@@ -48,6 +49,8 @@ const MAP: Record<string, Chip> = {
   Archived: { className: NEUTRAL, icon: ClipboardCheck, label: "Archived" },
   "lapor-cepat": { className: BLUE, icon: Megaphone, label: "Lapor cepat" },
   "penilaian-mandiri": { className: BLUE, icon: ClipboardCheck, label: "Penilaian mandiri" },
+  Public: { className: GREEN, icon: CheckCircle2, label: "Public" },
+  Privat: { className: NEUTRAL, icon: Lock, label: "Privat" },
   "Data publik · ilustrasi": { className: BLUE, icon: Info, label: "Data publik · ilustrasi" },
 };
 

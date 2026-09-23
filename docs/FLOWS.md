@@ -135,6 +135,25 @@ tidak boleh disamakan tanpa aturan penghubung tersebut.
 
 Draft → tambah dimensi/indikator (pertanyaan, jenis jawaban, bobot dummy, bukti, lokasi, referensi, rubric, rekomendasi) → simpan → validasi checklist → Published (kunci; arsipkan yang lama) → otomatis menjadi sumber `/penilaian-mandiri`. Perubahan setelah publish hanya lewat versi baru (clone snapshot). Bobot/ambang/rumus tetap dummy sampai keputusan ilmiah final.
 
-Keterhubungan dataset, status hasil , impor dummy, serta akses jawaban mentah perlu dipetakan
-sebelum dianggap sama dengan lama; lihat `DATA_REQUIREMENTS.md` §9. Moderasi laporan oleh pengelola
-berbeda dari validasi ilmiah instrumen oleh tim penelitian.
+ Keterhubungan dataset, status hasil , impor dummy, serta akses jawaban mentah perlu dipetakan
+ sebelum dianggap sama dengan lama; lihat `DATA_REQUIREMENTS.md` §9. Moderasi laporan oleh pengelola
+ berbeda dari validasi ilmiah instrumen oleh tim penelitian.
+
+## 8. Pustaka detail indikator — PDF Public/Privat (Aktor: Peneliti, D-16)
+
+**Prasyarat:** login sebagai Peneliti. Independen dari versioning instrumen
+(tidak dikunci `Published`) dan tidak memengaruhi `penilaian-mandiri`.
+
+1. Buka `/peneliti/dokumen-instrumen` (menu `Dokumen instrumen`) → pilih
+   indikator (`INS-v1.1`) → **Unggah PDF** (hanya `.pdf`/`application/pdf` +
+   header `%PDF`, maks 10 MB; default `Privat`) → simpan blob lokal + metadata
+   + audit `Mengunggah berkas indikator`.
+   → Sistem: satu indikator = satu berkas; unggah baru mengganti dengan
+   konfirmasi; `Public/Privat` dapat diubah tanpa unggah ulang; hapus memakai
+   konfirmasi + audit dan menghapus blob.
+2. Publik membuka `/dokumen` atau panel dashboard `/` → search + filter
+   kategori/status → untuk `Public`: **Lihat** (tab baru) + **Unduh**; untuk
+   `Privat`: hanya nama + status terkunci, tanpa kedua tombol.
+   → Sistem: adapter memeriksa `visibility` sebelum menyajikan blob; blob
+   privat tidak pernah disajikan ke publik (D-02). Filter pesantren tidak
+   memfilter dokumen (global).

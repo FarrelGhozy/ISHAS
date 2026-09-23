@@ -1,5 +1,5 @@
 import { NavLink, useMatch, useSearchParams } from "react-router";
-import { BarChart3, ClipboardCheck, ClipboardList, FileText, ListChecks, MapPin, Megaphone, ShieldAlert } from "lucide-react";
+import { BarChart3, BookOpen, ClipboardCheck, ClipboardList, FileText, ListChecks, MapPin, Megaphone, ShieldAlert } from "lucide-react";
 
 const links = [
   ["/", "Dashboard", BarChart3],
@@ -10,6 +10,7 @@ const links = [
   ["/rekomendasi", "Rekomendasi", ShieldAlert],
   ["/tindak-lanjut", "Tindak lanjut", ListChecks],
   ["/laporan", "Laporan", FileText],
+  ["/dokumen", "Dokumen", BookOpen],
 ] as const;
 
 export function PublicNavigation({ onNavigate }: { onNavigate?: () => void }) {

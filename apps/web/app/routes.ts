@@ -18,6 +18,7 @@ export default [
     route("rekomendasi", "routes/rekomendasi.tsx"),
     route("tindak-lanjut", "routes/tindak-lanjut.tsx"),
     route("laporan", "routes/laporan.tsx"),
+    route("dokumen", "routes/dokumen.tsx"),
     route("pesantren/:kode", "routes/pesantren.$kode.tsx"),
 
     // Sisa URL lama dari V1 (penanganan penghentian, bukan workspace aktif)
@@ -38,6 +39,7 @@ export default [
     index("routes/peneliti.index.tsx"),
     route("dashboard", "routes/peneliti.dashboard.tsx"),
     route("instrumen", "routes/peneliti.instrumen.tsx"),
+    route("dokumen-instrumen", "routes/peneliti.dokumen-instrumen.tsx"),
     route("versioning", "routes/peneliti.versioning.tsx"),
     route("scoring", "routes/peneliti.scoring.tsx"),
     route("validasi-publikasi", "routes/peneliti.validasi-publikasi.tsx"),

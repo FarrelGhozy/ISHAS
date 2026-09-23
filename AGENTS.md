@@ -63,6 +63,16 @@ Jika sumber ilmiah belum menetapkan rumus, ambang, atau klasifikasi, tandai seba
 - Pecah komponen berdasarkan role dan fitur tanpa mengubah desain, copy, atau behavior di luar ruang lingkup stage aktif.
 - Gunakan komponen yang sudah tersedia di `apps/web/shared/components/` sebelum membuat primitive interaktif baru.
 
+## Format dan Keterbacaan Kode
+
+Aturan ini berlaku untuk semua kode di `apps/web/` agar pemilik mudah membaca dan memeriksa:
+
+- Satu elemen JSX / satu statement per baris. Dilarang menggabung seluruh komponen menjadi satu baris raksasa (gaya minified).
+- Jaga panjang baris wajar (±100–120 kolom); pecah deretan atribut JSX yang panjang ke baris tersendiri dengan satu atribut per baris bila perlu.
+- Satu file satu tanggung jawab. Bila satu file melewati ±300 baris atau satu baris melewati ±500 karakter, pecah menjadi komponen/helper terpisah di folder yang sesuai.
+- Saat menyentuh file berbaris raksasa dalam ruang lingkup stage aktif, rapikan formatnya sekalian (whitespace-only, tanpa mengubah desain, copy, atau behavior). Jangan memformat ulang file di luar ruang lingkup.
+- Komentar ringkas berbahasa Indonesia; tanpa komentar untuk hal yang sudah jelas dari nama variabel/komponen.
+
 ## Cara Kerja Asisten
 
 - Hemat perintah: jangan menjalankan command (shell, test, build, git) di tengah pengerjaan kode bila tidak perlu. Kumpulkan kebutuhan verifikasi lalu jalankan sekaligus di akhir (mis. lint + typecheck + test + build dalam satu putaran).

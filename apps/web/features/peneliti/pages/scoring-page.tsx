@@ -3,6 +3,59 @@ import { skorSnapshot } from "~/mocks/processors/dashboard-aggregate";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
-  const state=useMockState();
-  return <section className="flex flex-col gap-4"><header><p className="kicker">Analisis</p><h1 className="text-2xl font-extrabold text-heading">Scoring</h1><p className="text-sm text-secondary-text">Audit hasil normalisasi setiap snapshot. Hanya data diterima yang masuk indeks publik.</p></header><div className="scope-banner">Aturan ilustrasi: skala 1–5 dinormalisasi menjadi 20–100; Ya = 100; Tidak = 20; N/A tidak dihitung.</div><div className="surface overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-strip text-xs text-secondary-text"><tr><th className="p-3">Laporan</th><th className="p-3">Pesantren</th><th className="p-3">Versi</th><th className="p-3">Validasi</th><th className="p-3 text-right">Skor</th><th className="p-3">Dimensi</th></tr></thead><tbody className="divide-y divide-line">{state.selfAssessmentSnapshots.map(s=>{const report=state.reports.find(r=>r.id===s.reportId);const institution=state.institutions.find(i=>i.code===report?.institutionCode);const score=skorSnapshot(state.instrumentVersions,s);return <tr key={s.reportId}><td className="p-3 font-bold text-heading">{s.reportId}</td><td className="p-3">{institution?.name??"—"}</td><td className="p-3">{s.instrumentVersionId}</td><td className="p-3"><StatusChip value={report?.validationStatus??"Tidak diketahui"}/></td><td className="p-3 text-right text-lg font-extrabold">{score.index===null?"—":Math.round(score.index)}</td><td className="p-3 text-xs text-secondary-text">{Object.entries(score.byDimension).map(([id,value])=>`${id}: ${value===null?"—":Math.round(value)}`).join(" · ")}</td></tr>})}</tbody></table></div></section>;
+  const state = useMockState();
+
+  return (
+    <section className="flex flex-col gap-4">
+      <header>
+        <p className="kicker">Analisis</p>
+        <h1 className="text-2xl font-extrabold text-heading">Scoring</h1>
+        <p className="text-sm text-secondary-text">
+          Audit hasil normalisasi setiap snapshot. Hanya data diterima yang masuk indeks publik.
+        </p>
+      </header>
+      <div className="scope-banner">
+        Aturan ilustrasi: skala 1–5 dinormalisasi menjadi 20–100; Ya = 100; Tidak = 20; N/A tidak dihitung.
+      </div>
+      <div className="surface overflow-x-auto">
+        <table className="w-full min-w-[680px] text-left text-sm">
+          <thead className="bg-strip text-xs text-secondary-text">
+            <tr>
+              <th className="p-3">Laporan</th>
+              <th className="p-3">Pesantren</th>
+              <th className="p-3">Versi</th>
+              <th className="p-3">Validasi</th>
+              <th className="p-3 text-right">Skor</th>
+              <th className="p-3">Dimensi</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {state.selfAssessmentSnapshots.map((s) => {
+              const report = state.reports.find((r) => r.id === s.reportId);
+              const institution = state.institutions.find((i) => i.code === report?.institutionCode);
+              const score = skorSnapshot(state.instrumentVersions, s);
+              return (
+                <tr key={s.reportId}>
+                  <td className="p-3 font-bold text-heading">{s.reportId}</td>
+                  <td className="p-3">{institution?.name ?? "—"}</td>
+                  <td className="p-3">{s.instrumentVersionId}</td>
+                  <td className="p-3">
+                    <StatusChip value={report?.validationStatus ?? "Tidak diketahui"} />
+                  </td>
+                  <td className="p-3 text-right text-lg font-extrabold">
+                    {score.index === null ? "—" : Math.round(score.index)}
+                  </td>
+                  <td className="p-3 text-xs text-secondary-text">
+                    {Object.entries(score.byDimension)
+                      .map(([id, value]) => `${id}: ${value === null ? "—" : Math.round(value)}`)
+                      .join(" · ")}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
 }

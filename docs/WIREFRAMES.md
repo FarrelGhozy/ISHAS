@@ -106,3 +106,18 @@ Catatan review: tujuan Peneliti dipertahankan, tetapi kontrak dataset/hasil haru
 Pola baca publik memakai aksi melihat detail/progres. Aksi kelola menuju workspace pemilik
 dan hanya muncul jika kewenangannya sesuai. Kalimat ajakan masuk tidak menggantikan pemeriksaan hak akses.
 Pesan alasan tombol nonaktif harus terbaca juga pada ponsel dan keyboard, bukan hanya tooltip saat hover.
+
+## 9. Dokumen detail indikator — D-16
+
+- `/dokumen` (navbar umum `Dokumen`): kicker `Pustaka` + H1 `Dokumen detail
+  indikator` + deskripsi "Penjelasan PDF per indikator. Berkas Privat hanya
+  tampil nama." + search (kode/judul/nama file) + filter Kategori + filter
+  Status + tabel desktop/kartu ponsel (kolom: Indikator | Kategori/Aspek |
+  Status | Aksi). `Public` = tombol `Lihat` + `Unduh`; `Privat` = teks
+  `Terkunci` + gembok, tanpa tombol. State loading/empty/error mengikuti §0.
+- Panel ringkas di `/` setelah rekap kategori, sebelum temuan prioritas:
+  ringkasan jumlah Public/Privat + 5 baris teratas + link `Buka semua dokumen →`
+  ke `/dokumen`. Filter pesantren tidak memfilter dokumen (tulis hint kecil).
+- `/peneliti/dokumen-instrumen` (menu `Dokumen instrumen`, D-16.e): tabel per indikator
+  (Indikator | Status | Berkas + ukuran/tgl | Aksi: Unggah/Ganti, Lihat,
+  Unduh, Jadikan Public/Privat, Hapus) + search/filter + konfirmasi ganti/hapus.
