@@ -11,9 +11,9 @@ elemen JSX/statement per baris, lebar ±100 kolom, tanpa baris ±500 karakter.
 Status stage lain tidak berubah.
 
 - [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
-- [ ] Format seluruh file sumber (prettier, print-width 100).
-- [ ] Verifikasi: lint + typecheck + test + build sekaligus di akhir.
-- [ ] Commit kecil per area (Conventional Commits); tanpa push.
+- [x] Format seluruh file sumber (prettier, print-width 100).
+- [x] Verifikasi: lint + typecheck + 123 test + build lulus (23 Sep 2026).
+- [x] Commit kecil per area (Conventional Commits); tanpa push.
 - [ ] Review pemilik.
 
 ## Pustaka detail indikator (PDF Public/Privat) — 23 September 2026 — `IN PROGRESS`
