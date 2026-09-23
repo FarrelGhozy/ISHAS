@@ -15,7 +15,8 @@ export function Page() {
         </p>
       </header>
       <div className="scope-banner">
-        Aturan ilustrasi: skala 1–5 dinormalisasi menjadi 20–100; Ya = 100; Tidak = 20; N/A tidak dihitung.
+        Aturan ilustrasi: skala 1–5 dinormalisasi menjadi 20–100; Ya = 100; Tidak = 20; N/A tidak
+        dihitung.
       </div>
       <div className="surface overflow-x-auto">
         <table className="w-full min-w-[680px] text-left text-sm">
@@ -32,7 +33,9 @@ export function Page() {
           <tbody className="divide-y divide-line">
             {state.selfAssessmentSnapshots.map((s) => {
               const report = state.reports.find((r) => r.id === s.reportId);
-              const institution = state.institutions.find((i) => i.code === report?.institutionCode);
+              const institution = state.institutions.find(
+                (i) => i.code === report?.institutionCode,
+              );
               const score = skorSnapshot(state.instrumentVersions, s);
               return (
                 <tr key={s.reportId}>

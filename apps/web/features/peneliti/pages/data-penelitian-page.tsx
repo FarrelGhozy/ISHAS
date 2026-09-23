@@ -43,7 +43,9 @@ export function Page() {
         >
           <option>Semua</option>
           {state.institutions.map((x) => (
-            <option value={x.code} key={x.code}>{x.name}</option>
+            <option value={x.code} key={x.code}>
+              {x.name}
+            </option>
           ))}
         </select>
       </div>
@@ -55,7 +57,9 @@ export function Page() {
             return (
               <article className="flex flex-wrap items-center gap-3 p-4 text-sm" key={x.id}>
                 <div className="mr-auto">
-                  <strong className="text-heading">{x.id} · {inst?.name}</strong>
+                  <strong className="text-heading">
+                    {x.id} · {inst?.name}
+                  </strong>
                   <p className="text-xs text-secondary-text">
                     {x.reporterName} · {new Date(x.createdAt).toLocaleString("id-ID")}
                   </p>
@@ -70,7 +74,10 @@ export function Page() {
           })}
         </div>
       ) : (
-        <EmptyState title="Data tidak ditemukan" description="Sesuaikan pencarian atau filter pesantren." />
+        <EmptyState
+          title="Data tidak ditemukan"
+          description="Sesuaikan pencarian atau filter pesantren."
+        />
       )}
     </section>
   );

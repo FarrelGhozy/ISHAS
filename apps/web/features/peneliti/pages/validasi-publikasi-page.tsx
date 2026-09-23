@@ -15,15 +15,19 @@ export function Page() {
         </p>
       </header>
       <div className="scope-banner">
-        Keputusan menerima atau menolak laporan tetap berada pada Pengelola Pesantren sesuai lingkup lembaga.
-        Peneliti mengaudit kesiapan publikasi.
+        Keputusan menerima atau menolak laporan tetap berada pada Pengelola Pesantren sesuai lingkup
+        lembaga. Peneliti mengaudit kesiapan publikasi.
       </div>
       <div className="surface divide-y divide-line">
         {assessments.map((x) => {
           const snapshot = state.selfAssessmentSnapshots.find((s) => s.reportId === x.id);
-          const version = state.instrumentVersions.find((v) => v.id === snapshot?.instrumentVersionId);
+          const version = state.instrumentVersions.find(
+            (v) => v.id === snapshot?.instrumentVersionId,
+          );
           const expected = version?.dimensions.flatMap((d) => d.indicators).length ?? 0;
-          const answered = snapshot ? Object.values(snapshot.answers).filter((a) => a.value).length : 0;
+          const answered = snapshot
+            ? Object.values(snapshot.answers).filter((a) => a.value).length
+            : 0;
           const complete = Boolean(snapshot && expected > 0 && answered === expected);
           return (
             <article className="flex flex-wrap items-center gap-3 p-4" key={x.id}>
@@ -32,7 +36,8 @@ export function Page() {
                   {x.id} · {state.institutions.find((i) => i.code === x.institutionCode)?.name}
                 </strong>
                 <p className="text-xs text-secondary-text">
-                  {snapshot?.instrumentVersionId ?? "Tanpa snapshot"} · {answered}/{expected} jawaban terisi
+                  {snapshot?.instrumentVersionId ?? "Tanpa snapshot"} · {answered}/{expected}{" "}
+                  jawaban terisi
                 </p>
                 <p className="text-xs text-faint">
                   {x.validationStatus === "Diterima" && complete

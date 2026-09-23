@@ -6,7 +6,10 @@ import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
   const state = useMockState();
-  const summary = hitungIndexSummary(state, selectRegisteredInstitutions(state).map((x) => x.code));
+  const summary = hitungIndexSummary(
+    state,
+    selectRegisteredInstitutions(state).map((x) => x.code),
+  );
   const published = state.instrumentVersions.find((x) => x.id === state.activeInstrumentVersionId);
   const waiting = state.reports.filter(
     (x) => x.channel === "penilaian-mandiri" && x.validationStatus === "Menunggu validasi",
@@ -17,7 +20,9 @@ export function Page() {
       <header>
         <p className="kicker">Ruang kerja ilmiah</p>
         <h1 className="text-2xl font-extrabold text-heading">Dashboard Peneliti</h1>
-        <p className="text-sm text-secondary-text">Ringkasan instrumen, cakupan data, dan kesiapan publikasi.</p>
+        <p className="text-sm text-secondary-text">
+          Ringkasan instrumen, cakupan data, dan kesiapan publikasi.
+        </p>
       </header>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <article className="stat-card">
@@ -36,7 +41,9 @@ export function Page() {
         </article>
         <article className="stat-card">
           <p className="text-xs font-bold text-secondary-text">Snapshot penelitian</p>
-          <p className="mt-2 text-3xl font-extrabold text-heading">{state.selfAssessmentSnapshots.length}</p>
+          <p className="mt-2 text-3xl font-extrabold text-heading">
+            {state.selfAssessmentSnapshots.length}
+          </p>
           <p className="text-xs text-faint">Semua status validasi</p>
         </article>
         <article className="stat-card">
@@ -49,7 +56,9 @@ export function Page() {
         <div className="surface p-4">
           <div className="flex justify-between">
             <h2 className="font-bold text-heading">Skor per dimensi</h2>
-            <Link className="text-button" to="/peneliti/scoring">Detail</Link>
+            <Link className="text-button" to="/peneliti/scoring">
+              Detail
+            </Link>
           </div>
           {summary.dimensions.map((x) => (
             <div className="mt-4" key={x.id}>
@@ -66,7 +75,9 @@ export function Page() {
         <div className="surface overflow-hidden">
           <div className="flex justify-between border-b border-line p-4">
             <h2 className="font-bold text-heading">Versi instrumen</h2>
-            <Link className="text-button" to="/peneliti/versioning">Kelola</Link>
+            <Link className="text-button" to="/peneliti/versioning">
+              Kelola
+            </Link>
           </div>
           {state.instrumentVersions.map((x) => (
             <div className="flex items-center gap-3 border-b border-line p-4" key={x.id}>

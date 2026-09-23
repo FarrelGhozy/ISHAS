@@ -30,14 +30,19 @@ export function Page() {
           Buat draft dari versi aktif
         </button>
       </header>
-      {note ? <p role="status" className="text-sm">{note}</p> : null}
+      {note ? (
+        <p role="status" className="text-sm">
+          {note}
+        </p>
+      ) : null}
       <div className="surface divide-y divide-line">
         {[...state.instrumentVersions].reverse().map((x) => (
           <article className="flex flex-wrap items-center gap-3 p-4" key={x.id}>
             <div className="mr-auto">
               <strong className="text-heading">{x.label}</strong>
               <p className="text-xs text-secondary-text">
-                {x.id} · {x.dimensions.length} dimensi · {x.dimensions.flatMap((d) => d.indicators).length} indikator
+                {x.id} · {x.dimensions.length} dimensi ·{" "}
+                {x.dimensions.flatMap((d) => d.indicators).length} indikator
               </p>
               <p className="text-xs text-faint">
                 {x.publishedAt

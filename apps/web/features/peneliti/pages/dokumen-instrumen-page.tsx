@@ -10,8 +10,8 @@ export function Page() {
         <p className="kicker">Pustaka</p>
         <h1 className="text-2xl font-extrabold text-heading">Dokumen instrumen</h1>
         <p className="text-sm text-secondary-text">
-          Unggah satu PDF per indikator. Berkas Public tampil penuh di publik;
-          berkas Privat hanya tampil nama. Mengganti berkas tidak mengubah soal penilaian mandiri.
+          Unggah satu PDF per indikator. Berkas Public tampil penuh di publik; berkas Privat hanya
+          tampil nama. Mengganti berkas tidak mengubah soal penilaian mandiri.
         </p>
       </header>
       <InstrumentDocManager />
