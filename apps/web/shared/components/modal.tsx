@@ -4,7 +4,13 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** Native dialog supplies focus containment, Escape, and focus restoration. */
-export function Modal({ open, onClose, label, children, className = "" }: {
+export function Modal({
+  open,
+  onClose,
+  label,
+  children,
+  className = "",
+}: {
   open: boolean;
   onClose: () => void;
   label: string;

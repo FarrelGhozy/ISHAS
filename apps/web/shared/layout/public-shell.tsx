@@ -18,32 +18,62 @@ export default function PublicLayout() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  useEffect(() => { setMobileOpen(false); }, [location.pathname, location.search]);
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname, location.search]);
   useEffect(() => {
     const media = window.matchMedia("(min-width: 1024px)");
-    const close = () => { if (media.matches) setMobileOpen(false); };
+    const close = () => {
+      if (media.matches) setMobileOpen(false);
+    };
     media.addEventListener("change", close);
     return () => media.removeEventListener("change", close);
   }, []);
 
   return (
     <div className="flex min-h-dvh min-w-0">
-      <a className="skip-link primary-button" href="#main-content">Lewati ke konten</a>
+      <a className="skip-link primary-button" href="#main-content">
+        Lewati ke konten
+      </a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
-        <div className="border-b border-line px-4 py-4"><Link to="/" aria-label="ISHAS — beranda"><IshasMark variant="compact" /></Link></div>
+        <div className="border-b border-line px-4 py-4">
+          <Link to="/" aria-label="ISHAS — beranda">
+            <IshasMark variant="compact" />
+          </Link>
+        </div>
         <PublicNavigation />
-        <p className="border-t border-line p-4 text-xs text-secondary-text">Data ilustrasi · prototipe frontend</p>
+        <p className="border-t border-line p-4 text-xs text-secondary-text">
+          Data ilustrasi · prototipe frontend
+        </p>
       </aside>
       <Modal open={mobileOpen} onClose={() => setMobileOpen(false)} label="Menu publik">
-        <div className="flex items-center justify-between gap-3"><IshasMark variant="compact" />
-          <button type="button" className="secondary-button px-3" onClick={() => setMobileOpen(false)} aria-label="Tutup menu"><X size={20} aria-hidden /></button>
+        <div className="flex items-center justify-between gap-3">
+          <IshasMark variant="compact" />
+          <button
+            type="button"
+            className="secondary-button px-3"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Tutup menu"
+          >
+            <X size={20} aria-hidden />
+          </button>
         </div>
         <PublicNavigation onNavigate={() => setMobileOpen(false)} />
       </Modal>
       <div className="flex min-w-0 flex-1 flex-col">
-      <header className="flex min-h-[68px] flex-wrap items-center gap-2 border-b border-line bg-white px-3 py-2 sm:px-4">
-          <button type="button" className="secondary-button px-3 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Buka menu" aria-haspopup="dialog"><Menu size={20} aria-hidden /></button>
-          <span className="hidden text-sm font-bold text-secondary-text xl:block">Publik / Pelapor</span>
+        <header className="flex min-h-[68px] flex-wrap items-center gap-2 border-b border-line bg-white px-3 py-2 sm:px-4">
+          <button
+            type="button"
+            className="secondary-button px-3 lg:hidden"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Buka menu"
+            aria-haspopup="dialog"
+          >
+            <Menu size={20} aria-hidden />
+          </button>
+          <span className="hidden text-sm font-bold text-secondary-text xl:block">
+            Publik / Pelapor
+          </span>
           <div className="ms-auto flex min-w-0 flex-1 flex-wrap justify-end items-center gap-2">
             <StatusChip value="Data publik · ilustrasi" />
             {user ? (
@@ -74,13 +104,17 @@ export default function PublicLayout() {
               </Link>
             )}
           </div>
-      </header>
-        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-6">
+        </header>
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-6"
+        >
           <Outlet />
         </main>
-      <footer className="border-t border-line py-4 text-center text-xs font-semibold text-secondary-text">
-        ISHAS · prototipe frontend · seluruh angka adalah data ilustrasi
-      </footer>
+        <footer className="border-t border-line py-4 text-center text-xs font-semibold text-secondary-text">
+          ISHAS · prototipe frontend · seluruh angka adalah data ilustrasi
+        </footer>
       </div>
     </div>
   );

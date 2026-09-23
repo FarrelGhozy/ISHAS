@@ -181,13 +181,58 @@ body {
 }
 
 /* Fluid layouts keep controls usable at narrow widths and browser zoom. */
-body { margin: 0; overflow-wrap: anywhere; }
-button, a, input, select, textarea { touch-action: manipulation; }
-button:not(:disabled), select:not(:disabled) { cursor: pointer; }
-svg { flex-shrink: 0; }
-[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
-.skip-link { position: absolute; top: .5rem; left: .5rem; z-index: 50; transform: translateY(-200%); }
-.skip-link:focus { transform: translateY(0); }
-.app-dialog { margin: auto; width: min(32rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; border: 1px solid var(--color-line); border-radius: .75rem; padding: 1.25rem; color: var(--color-body-text); background: white; }
-.app-dialog::backdrop { background: rgb(16 42 53 / 45%); }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+body {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+button:not(:disabled),
+select:not(:disabled) {
+  cursor: pointer;
+}
+svg {
+  flex-shrink: 0;
+}
+[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 50;
+  transform: translateY(-200%);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+.app-dialog {
+  margin: auto;
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  color: var(--color-body-text);
+  background: white;
+}
+.app-dialog::backdrop {
+  background: rgb(16 42 53 / 45%);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

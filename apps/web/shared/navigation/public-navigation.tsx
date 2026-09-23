@@ -1,5 +1,15 @@
 import { NavLink, useMatch, useSearchParams } from "react-router";
-import { BarChart3, BookOpen, ClipboardCheck, ClipboardList, FileText, ListChecks, MapPin, Megaphone, ShieldAlert } from "lucide-react";
+import {
+  BarChart3,
+  BookOpen,
+  ClipboardCheck,
+  ClipboardList,
+  FileText,
+  ListChecks,
+  MapPin,
+  Megaphone,
+  ShieldAlert,
+} from "lucide-react";
 
 const links = [
   ["/", "Dashboard", BarChart3],
@@ -32,9 +42,12 @@ export function PublicNavigation({ onNavigate }: { onNavigate?: () => void }) {
               end={to === "/"}
               aria-current={to === "/" && institution ? "page" : undefined}
               onClick={onNavigate}
-              className={({ isActive }) => `flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${isActive || (to === "/" && institution) ? "bg-primary text-white" : "text-secondary-text hover:bg-strip"}`}
+              className={({ isActive }) =>
+                `flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold ${isActive || (to === "/" && institution) ? "bg-primary text-white" : "text-secondary-text hover:bg-strip"}`
+              }
             >
-              <Icon size={18} aria-hidden />{label}
+              <Icon size={18} aria-hidden />
+              {label}
             </NavLink>
           </li>
         ))}

@@ -4,13 +4,7 @@
 import { Link } from "react-router";
 import { EmptyState } from "./empty-state";
 
-export function PlaceholderPage({
-  title,
-  stage,
-}: {
-  title: string;
-  stage: string;
-}) {
+export function PlaceholderPage({ title, stage }: { title: string; stage: string }) {
   return (
     <section className="flex flex-col gap-4">
       <header>

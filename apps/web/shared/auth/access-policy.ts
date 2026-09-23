@@ -13,7 +13,9 @@ const ROLE_PREFIXES: { prefix: string; roleId: RoleId }[] = [
 ];
 
 export function workspaceRoleFor(pathname: string): RoleId | null {
-  const match = ROLE_PREFIXES.find((p) => pathname === p.prefix || pathname.startsWith(`${p.prefix}/`));
+  const match = ROLE_PREFIXES.find(
+    (p) => pathname === p.prefix || pathname.startsWith(`${p.prefix}/`),
+  );
   return match?.roleId ?? null;
 }
 
@@ -50,6 +52,9 @@ export function resolveLoginRedirect(redirectTo: string | null, roleId: RoleId):
   return expectedRole === roleId ? redirectTo : workspaceHome(roleId);
 }
 
-export function canManageInstitution(user: { roleId: RoleId; institutionCodes: string[] }, code: string): boolean {
+export function canManageInstitution(
+  user: { roleId: RoleId; institutionCodes: string[] },
+  code: string,
+): boolean {
   return user.roleId === "pengelola" && user.institutionCodes.includes(code);
 }

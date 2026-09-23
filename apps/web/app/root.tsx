@@ -75,22 +75,14 @@ function RootError() {
         <h1 className="text-lg font-extrabold text-heading">Terjadi kesalahan</h1>
         <p className="mt-2 text-xs text-secondary-text">{message}</p>
         <p className="mt-2 text-xs text-secondary-text">
-          Bila galat berulang setelah muat ulang, data demo di perangkat ini
-          mungkin rusak dan dapat dikembalikan ke awal.
+          Bila galat berulang setelah muat ulang, data demo di perangkat ini mungkin rusak dan dapat
+          dikembalikan ke awal.
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => window.location.reload()}
-          >
+          <button type="button" className="primary-button" onClick={() => window.location.reload()}>
             Muat ulang
           </button>
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={resetDemoAndReload}
-          >
+          <button type="button" className="secondary-button" onClick={resetDemoAndReload}>
             Kembalikan data demo
           </button>
         </div>

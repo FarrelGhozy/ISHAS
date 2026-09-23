@@ -1,5 +1,21 @@
 # TODO — Kontrol Kerja Aktif
 
+## Perapihan format kode apps/web — 23 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: rapikan format seluruh kode `apps/web/`
+yang berantakan (baris raksasa gaya minified) agar mudah dibaca. Whitespace-only,
+tanpa mengubah desain, copy, atau behavior; lalu commit per area. Cakupan: file
+sumber `*.ts/*.tsx/*.css` ter-track (±153 file); tanpa `build/`,
+`node_modules/`, `.react-router/`, tanpa `bun.lock`. Acuan AGENTS §Format: satu
+elemen JSX/statement per baris, lebar ±100 kolom, tanpa baris ±500 karakter.
+Status stage lain tidak berubah.
+
+- [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [ ] Format seluruh file sumber (prettier, print-width 100).
+- [ ] Verifikasi: lint + typecheck + test + build sekaligus di akhir.
+- [ ] Commit kecil per area (Conventional Commits); tanpa push.
+- [ ] Review pemilik.
+
 ## Pustaka detail indikator (PDF Public/Privat) — 23 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan pemilik (`ok kerjakan`): Peneliti mengunggah satu PDF per
