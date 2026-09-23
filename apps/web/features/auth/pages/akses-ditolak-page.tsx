@@ -41,7 +41,11 @@ export function AksesDitolakPage() {
             </button>
           </>
         )}
-        <button type="button" className="text-button mt-3 block w-full" onClick={() => navigate("/")}>
+        <button
+          type="button"
+          className="text-button mt-3 block w-full"
+          onClick={() => navigate("/")}
+        >
           Kembali ke dashboard publik
         </button>
       </div>

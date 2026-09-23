@@ -10,7 +10,11 @@ export function AsesorDeprecatedPage() {
       <EmptyState
         title="Peran Asesor sudah dihapus pada V2"
         description="Gunakan Penilaian Mandiri untuk mengisi instrumen tanpa penugasan."
-        action={<Link className="primary-button" to="/penilaian-mandiri">Ke Penilaian Mandiri</Link>}
+        action={
+          <Link className="primary-button" to="/penilaian-mandiri">
+            Ke Penilaian Mandiri
+          </Link>
+        }
       />
     </section>
   );

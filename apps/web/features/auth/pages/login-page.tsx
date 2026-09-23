@@ -16,7 +16,9 @@ export function LoginPage() {
   const redirectTo = searchParams.get("redirectTo");
 
   function login(accountId: string, roleId: (typeof DEMO_ACCOUNTS)[number]["roleId"]) {
-    try { sessionStore.login(accountId); } catch {
+    try {
+      sessionStore.login(accountId);
+    } catch {
       setError("Sesi tidak dapat disimpan. Izinkan penyimpanan browser lalu coba lagi.");
       return;
     }
@@ -57,7 +59,11 @@ export function LoginPage() {
             Tiga peran login. Pelapor publik tidak perlu masuk — cukup buka dashboard.
           </p>
         </div>
-        {error ? <p role="alert" className="text-sm text-[#b91c1c]">{error}</p> : null}
+        {error ? (
+          <p role="alert" className="text-sm text-[#b91c1c]">
+            {error}
+          </p>
+        ) : null}
         {DEMO_ACCOUNTS.map((acc) => (
           <button
             key={acc.id}
@@ -72,9 +78,7 @@ export function LoginPage() {
               <span className="block text-xs font-extrabold text-heading">
                 Masuk sebagai {acc.role}
               </span>
-              <span className="block text-sm text-secondary-text">
-                {acc.description}
-              </span>
+              <span className="block text-sm text-secondary-text">{acc.description}</span>
               <span className="block text-xs font-semibold text-secondary-text">{acc.scope}</span>
             </span>
             <ArrowRight size={15} className="text-primary" aria-hidden />

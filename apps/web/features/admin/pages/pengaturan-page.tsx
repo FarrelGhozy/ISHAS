@@ -17,13 +17,19 @@ export function AdminPengaturanPage() {
         <p className="kicker">Pengaturan</p>
         <h1 className="text-lg font-extrabold text-heading">Pengaturan sistem (demo)</h1>
       </header>
-      {error ? <p role="alert" className="text-sm text-[#b91c1c]">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-[#b91c1c]">
+          {error}
+        </p>
+      ) : null}
       <div className="surface flex flex-wrap items-center gap-3 p-4">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-heading">Reset data demo</p>
           <p className="text-[10px] text-secondary-text">
-            Mengembalikan data domain, aset denah dan gambar bukti pada perangkat ini ke seed v5. Sesi dan draft laporan cepat tetap tersimpan terpisah; titik usang perlu dipilih ulang dan gambar bukti perlu diunggah kembali.
-            Riwayat demo sebelumnya hilang; audit kembali mengikuti seed.
+            Mengembalikan data domain, aset denah dan gambar bukti pada perangkat ini ke seed v5.
+            Sesi dan draft laporan cepat tetap tersimpan terpisah; titik usang perlu dipilih ulang
+            dan gambar bukti perlu diunggah kembali. Riwayat demo sebelumnya hilang; audit kembali
+            mengikuti seed.
           </p>
           {done ? (
             <p className="mt-1 text-[10px] font-bold status status-green inline-flex">
@@ -39,7 +45,9 @@ export function AdminPengaturanPage() {
               disabled={resetting}
               onClick={async () => {
                 setResetting(true);
-                try { await mockRepository.reset(); } catch (error) {
+                try {
+                  await mockRepository.reset();
+                } catch (error) {
                   setError(error instanceof Error ? error.message : "Reset gagal. Coba lagi.");
                   setDone(false);
                   setResetting(false);

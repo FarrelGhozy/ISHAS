@@ -2,4 +2,112 @@ import { useMemo, useState } from "react";
 import { storeActions, useMockState } from "~/mocks/store/mock-store";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
-export function Page(){const state=useMockState();const[name,setName]=useState("");const[location,setLocation]=useState("");const[query,setQuery]=useState("");const[note,setNote]=useState("");const rows=useMemo(()=>state.institutions.filter(x=>`${x.code} ${x.name} ${x.location} ${x.manager}`.toLowerCase().includes(query.toLowerCase())),[state.institutions,query]);const add=()=>{const code=`PSN-${String(state.counters.institution).padStart(4,"0")}`;const r=storeActions.addInstitution({code,name,location,manager:"Belum ditetapkan",assessment:"Belum dimulai",status:"Persiapan"});setNote(r.ok?`${code} ditambahkan sebagai Persiapan.`:r.error);if(r.ok){setName("");setLocation("");}};const update=(code:string,status:"Persiapan"|"Aktif"|"Nonaktif")=>{const r=storeActions.setInstitutionStatus(code,status);setNote(r.ok?`Status ${code} diperbarui.`:r.error);};return <section className="flex flex-col gap-4"><header><p className="kicker">Administrasi</p><h1 className="text-2xl font-extrabold text-heading">Pesantren</h1><p className="text-sm text-secondary-text">Kelola registrasi dan kesiapan operasional pesantren.</p></header><div className="surface grid gap-3 p-4 sm:grid-cols-3"><label className="text-xs font-bold">Nama pesantren<input className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal" value={name} onChange={e=>setName(e.target.value)}/></label><label className="text-xs font-bold">Kabupaten/kota<input className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal" value={location} onChange={e=>setLocation(e.target.value)}/></label><button type="button" className="primary-button self-end" onClick={add}>Tambah pesantren</button></div>{note&&<p role="status" className="text-sm">{note}</p>}<input aria-label="Cari pesantren" className="min-h-11 rounded border border-line-soft px-3" placeholder="Cari kode, nama, lokasi, atau pengelola…" value={query} onChange={e=>setQuery(e.target.value)}/>{rows.length?<div className="surface divide-y divide-line">{rows.map(x=><article className="flex flex-wrap items-center gap-3 p-4 text-sm" key={x.code}><div className="mr-auto"><strong className="text-heading">{x.code} · {x.name}</strong><p className="text-xs text-secondary-text">{x.location} · {x.manager}</p></div><StatusChip value={x.status}/><select aria-label={`Status ${x.name}`} className="min-h-11 rounded border border-line-soft px-2" value={x.status} onChange={e=>update(x.code,e.target.value as typeof x.status)}><option>Persiapan</option><option>Aktif</option><option>Nonaktif</option></select></article>)}</div>:<EmptyState title="Pesantren tidak ditemukan"/>}</section>}
+export function Page() {
+  const state = useMockState();
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [query, setQuery] = useState("");
+  const [note, setNote] = useState("");
+  const rows = useMemo(
+    () =>
+      state.institutions.filter((x) =>
+        `${x.code} ${x.name} ${x.location} ${x.manager}`
+          .toLowerCase()
+          .includes(query.toLowerCase()),
+      ),
+    [state.institutions, query],
+  );
+  const add = () => {
+    const code = `PSN-${String(state.counters.institution).padStart(4, "0")}`;
+    const r = storeActions.addInstitution({
+      code,
+      name,
+      location,
+      manager: "Belum ditetapkan",
+      assessment: "Belum dimulai",
+      status: "Persiapan",
+    });
+    setNote(r.ok ? `${code} ditambahkan sebagai Persiapan.` : r.error);
+    if (r.ok) {
+      setName("");
+      setLocation("");
+    }
+  };
+  const update = (code: string, status: "Persiapan" | "Aktif" | "Nonaktif") => {
+    const r = storeActions.setInstitutionStatus(code, status);
+    setNote(r.ok ? `Status ${code} diperbarui.` : r.error);
+  };
+  return (
+    <section className="flex flex-col gap-4">
+      <header>
+        <p className="kicker">Administrasi</p>
+        <h1 className="text-2xl font-extrabold text-heading">Pesantren</h1>
+        <p className="text-sm text-secondary-text">
+          Kelola registrasi dan kesiapan operasional pesantren.
+        </p>
+      </header>
+      <div className="surface grid gap-3 p-4 sm:grid-cols-3">
+        <label className="text-xs font-bold">
+          Nama pesantren
+          <input
+            className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label className="text-xs font-bold">
+          Kabupaten/kota
+          <input
+            className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </label>
+        <button type="button" className="primary-button self-end" onClick={add}>
+          Tambah pesantren
+        </button>
+      </div>
+      {note && (
+        <p role="status" className="text-sm">
+          {note}
+        </p>
+      )}
+      <input
+        aria-label="Cari pesantren"
+        className="min-h-11 rounded border border-line-soft px-3"
+        placeholder="Cari kode, nama, lokasi, atau pengelola…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      {rows.length ? (
+        <div className="surface divide-y divide-line">
+          {rows.map((x) => (
+            <article className="flex flex-wrap items-center gap-3 p-4 text-sm" key={x.code}>
+              <div className="mr-auto">
+                <strong className="text-heading">
+                  {x.code} · {x.name}
+                </strong>
+                <p className="text-xs text-secondary-text">
+                  {x.location} · {x.manager}
+                </p>
+              </div>
+              <StatusChip value={x.status} />
+              <select
+                aria-label={`Status ${x.name}`}
+                className="min-h-11 rounded border border-line-soft px-2"
+                value={x.status}
+                onChange={(e) => update(x.code, e.target.value as typeof x.status)}
+              >
+                <option>Persiapan</option>
+                <option>Aktif</option>
+                <option>Nonaktif</option>
+              </select>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="Pesantren tidak ditemukan" />
+      )}
+    </section>
+  );
+}

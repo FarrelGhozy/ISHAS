@@ -9,7 +9,11 @@ export function NotFoundPage() {
       <EmptyState
         title="Halaman tidak ditemukan"
         description="Alamat yang dibuka tidak dikenal pada aplikasi ISHAS."
-        action={<Link className="secondary-button" to="/">Kembali ke dashboard publik</Link>}
+        action={
+          <Link className="secondary-button" to="/">
+            Kembali ke dashboard publik
+          </Link>
+        }
       />
     </section>
   );
