@@ -3,10 +3,7 @@
 // impor dari sini. Ikon berupa nama komponen lucide-react yang sudah tersedia.
 
 export type K3CategoryId =
-  | "KAT-KESELAMATAN"
-  | "KAT-KESEHATAN"
-  | "KAT-LINGKUNGAN"
-  | "KAT-PSIKOSOSIAL";
+  "KAT-KESELAMATAN" | "KAT-KESEHATAN" | "KAT-LINGKUNGAN" | "KAT-PSIKOSOSIAL";
 
 export type K3Aspect = {
   id: string;
@@ -53,8 +50,7 @@ export const K3_CATEGORIES: K3Category[] = [
   {
     id: "KAT-KESEHATAN",
     name: "Kesehatan",
-    description:
-      "Aspek yang berkaitan dengan kesehatan penghuni/pengguna lingkungan pesantren.",
+    description: "Aspek yang berkaitan dengan kesehatan penghuni/pengguna lingkungan pesantren.",
     icon: "HeartPulse",
     coverage: [
       "Kebersihan",
@@ -75,8 +71,7 @@ export const K3_CATEGORIES: K3Category[] = [
   {
     id: "KAT-LINGKUNGAN",
     name: "Lingkungan",
-    description:
-      "Aspek yang berkaitan dengan kondisi dan pengelolaan lingkungan pesantren.",
+    description: "Aspek yang berkaitan dengan kondisi dan pengelolaan lingkungan pesantren.",
     icon: "Leaf",
     coverage: [
       "Pengelolaan sampah",

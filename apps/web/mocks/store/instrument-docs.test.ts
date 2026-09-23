@@ -11,11 +11,20 @@ beforeEach(() => {
 });
 
 test("hanya peneliti aktif yang dapat mengelola berkas", () => {
-  const input = { indicatorId: "IND-K3L-002", fileName: "detail.pdf", fileSize: 1000, assetId: "instrument-doc-123e4567-e89b-12d3-a456-426614174000" };
+  const input = {
+    indicatorId: "IND-K3L-002",
+    fileName: "detail.pdf",
+    fileSize: 1000,
+    assetId: "instrument-doc-123e4567-e89b-12d3-a456-426614174000",
+  };
   expect(storeActions.upsertInstrumentDoc(PENGELOLA, input).ok).toBe(false);
-  expect(storeActions.setInstrumentDocVisibility(PENGELOLA, "IND-K3L-001", "Public").ok).toBe(false);
+  expect(storeActions.setInstrumentDocVisibility(PENGELOLA, "IND-K3L-001", "Public").ok).toBe(
+    false,
+  );
   expect(storeActions.deleteInstrumentDoc(PENGELOLA, "IND-K3L-001").ok).toBe(false);
-  expect(storeActions.upsertInstrumentDoc(PENELITI, { ...input, indicatorId: "TIDAK-ADA" }).ok).toBe(false);
+  expect(
+    storeActions.upsertInstrumentDoc(PENELITI, { ...input, indicatorId: "TIDAK-ADA" }).ok,
+  ).toBe(false);
 });
 
 test("unggah, ubah visibilitas, dan hapus berkas teraudit", () => {
@@ -53,12 +62,21 @@ const MANUAL_INPUT = {
 
 test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () => {
   expect(storeActions.createInstrumentDocEntry(PENGELOLA, MANUAL_INPUT).ok).toBe(false);
-  expect(storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, categoryId: "" }).ok).toBe(false);
-  expect(storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, title: "abc" }).ok).toBe(false);
   expect(
-    storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, categoryId: "KAT-KESEHATAN" }).ok,
+    storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, categoryId: "" }).ok,
+  ).toBe(false);
+  expect(
+    storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, title: "abc" }).ok,
+  ).toBe(false);
+  expect(
+    storeActions.createInstrumentDocEntry(PENELITI, {
+      ...MANUAL_INPUT,
+      categoryId: "KAT-KESEHATAN",
+    }).ok,
   ).toBe(false); // aspek tidak sesuai kategori
-  expect(storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, code: "IND-K3L-001" }).ok).toBe(false); // kode katalog
+  expect(
+    storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, code: "IND-K3L-001" }).ok,
+  ).toBe(false); // kode katalog
 
   const created = storeActions.createInstrumentDocEntry(PENELITI, MANUAL_INPUT);
   expect(created.ok).toBe(true);
@@ -84,7 +102,11 @@ test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () =
 });
 
 test("migrasi v6 ke v7 mempertahankan record dan menambah instrumentDocs", () => {
-  const v6 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 6, instrumentDocs: undefined });
+  const v6 = JSON.stringify({
+    ...structuredClone(SEED),
+    schemaVersion: 6,
+    instrumentDocs: undefined,
+  });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
     value: { getItem: () => v6 },

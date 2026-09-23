@@ -42,7 +42,9 @@ export function selectIndicatorDocRows(state: {
             code: ind.code,
             title: ind.title,
             categoryId,
-            categoryName: (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) || dim.name,
+            categoryName:
+              (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) ||
+              dim.name,
             aspectId,
             aspectName: (aspectId && K3_ASPECT_MAP[aspectId]?.name) || "",
             doc: docs.get(ind.id) ?? null,
@@ -62,7 +64,9 @@ export function selectIndicatorDocRows(state: {
         code: doc.indicatorCode ?? doc.indicatorId,
         title: doc.indicatorTitle ?? doc.fileName,
         categoryId,
-        categoryName: (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) || KATEGORI_BELUM_DIPETAKAN,
+        categoryName:
+          (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) ||
+          KATEGORI_BELUM_DIPETAKAN,
         aspectId,
         aspectName: (aspectId && K3_ASPECT_MAP[aspectId]?.name) || "",
         doc,

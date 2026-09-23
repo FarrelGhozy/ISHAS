@@ -58,12 +58,48 @@ describe("hitungIndexSummary dengan seed", () => {
             instrumentVersionId: "INS-v1.0",
             submittedAt: "2026-09-08T00:00:00.000Z",
             answers: {
-              "IND-K3L-001": { value: "5", note: "", evidenceName: "", areaId: "AREA-005", planPoint: null },
-              "IND-K3L-002": { value: "5", note: "", evidenceName: "", areaId: "AREA-005", planPoint: null },
-              "IND-K3L-003": { value: "Ya", note: "", evidenceName: "", areaId: "AREA-005", planPoint: null },
-              "IND-K3L-004": { value: "5", note: "", evidenceName: "", areaId: "AREA-005", planPoint: null },
-              "IND-K3L-005": { value: "Ya", note: "", evidenceName: "", areaId: "AREA-005", planPoint: null },
-              "IND-K3L-006": { value: "5", note: "", evidenceName: "", areaId: "AREA-005", planPoint: null },
+              "IND-K3L-001": {
+                value: "5",
+                note: "",
+                evidenceName: "",
+                areaId: "AREA-005",
+                planPoint: null,
+              },
+              "IND-K3L-002": {
+                value: "5",
+                note: "",
+                evidenceName: "",
+                areaId: "AREA-005",
+                planPoint: null,
+              },
+              "IND-K3L-003": {
+                value: "Ya",
+                note: "",
+                evidenceName: "",
+                areaId: "AREA-005",
+                planPoint: null,
+              },
+              "IND-K3L-004": {
+                value: "5",
+                note: "",
+                evidenceName: "",
+                areaId: "AREA-005",
+                planPoint: null,
+              },
+              "IND-K3L-005": {
+                value: "Ya",
+                note: "",
+                evidenceName: "",
+                areaId: "AREA-005",
+                planPoint: null,
+              },
+              "IND-K3L-006": {
+                value: "5",
+                note: "",
+                evidenceName: "",
+                areaId: "AREA-005",
+                planPoint: null,
+              },
             },
           },
         ],
@@ -101,14 +137,23 @@ describe("hitungIndexSummary dengan seed", () => {
 
   test("dimensi terisi dari instrumen versi snapshot", () => {
     const summary = hitungIndexSummary(input, ["PSN-0018", "PSN-0019"]);
-    expect(summary.dimensions.map((d) => d.id)).toEqual(["DIM-KES", "DIM-SEH", "DIM-LING", "DIM-PSI"]);
+    expect(summary.dimensions.map((d) => d.id)).toEqual([
+      "DIM-KES",
+      "DIM-SEH",
+      "DIM-LING",
+      "DIM-PSI",
+    ]);
     expect(summary.dimensions.every((d) => d.score !== null)).toBe(true);
   });
 });
 
 describe("pilihSnapshotTerbaruDiterima", () => {
   test("hanya snapshot laporan Diterima", () => {
-    const pilihan = pilihSnapshotTerbaruDiterima(SEED.reports, SEED.selfAssessmentSnapshots, "PSN-0019");
+    const pilihan = pilihSnapshotTerbaruDiterima(
+      SEED.reports,
+      SEED.selfAssessmentSnapshots,
+      "PSN-0019",
+    );
     expect(pilihan?.reportId).toBe("RPT-0014"); // RPT-0002 Menunggu validasi → dilewati
   });
 });
@@ -178,7 +223,9 @@ describe("insight dashboard publik", () => {
     const result = buatDashboardInsight({
       reports,
       findings: SEED.findings.filter((finding) => ids.has(finding.reportId)),
-      recommendations: SEED.recommendations.filter((recommendation) => ids.has(recommendation.reportId)),
+      recommendations: SEED.recommendations.filter((recommendation) =>
+        ids.has(recommendation.reportId),
+      ),
       institutions: SEED.institutions,
       users: SEED.users,
       buildings: SEED.buildings,
@@ -204,7 +251,9 @@ describe("insight dashboard publik", () => {
     const result = buatDashboardInsight({
       reports,
       findings: SEED.findings.filter((finding) => ids.has(finding.reportId)),
-      recommendations: SEED.recommendations.filter((recommendation) => ids.has(recommendation.reportId)),
+      recommendations: SEED.recommendations.filter((recommendation) =>
+        ids.has(recommendation.reportId),
+      ),
       institutions: SEED.institutions,
       users: SEED.users,
       buildings: SEED.buildings,

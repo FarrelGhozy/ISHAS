@@ -17,7 +17,9 @@ export function isSeedInstrumentDocAssetId(id: unknown): boolean {
   return typeof id === "string" && SEED_ID.test(id);
 }
 
-export function validateInstrumentDocFile(file: Pick<File, "size" | "type" | "name">): string | null {
+export function validateInstrumentDocFile(
+  file: Pick<File, "size" | "type" | "name">,
+): string | null {
   if (file.type !== INSTRUMENT_DOC_MIME || !file.name.trim().toLowerCase().endsWith(".pdf")) {
     return "Hanya berkas PDF yang didukung.";
   }
@@ -95,7 +97,8 @@ async function database(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => request.result.createObjectStore("assets");
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(new Error("Penyimpanan dokumen tidak dapat dibuka."));
-    request.onblocked = () => reject(new Error("Penyimpanan dokumen sedang digunakan. Tutup tab demo lain dan coba lagi."));
+    request.onblocked = () =>
+      reject(new Error("Penyimpanan dokumen sedang digunakan. Tutup tab demo lain dan coba lagi."));
   });
 }
 

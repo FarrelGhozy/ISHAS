@@ -28,9 +28,7 @@ export const PERIODE_BERJALAN = "Sep 2026"; // ilustratif; kebijakan periode men
 // Daftar periode yang dikenal (riwayat ilustratif + periode berjalan) untuk preset
 // `?periode=` (ROUTES §1). Filtering rinci menunggu D-04 final; param ini dipakai
 // sebagai konteks tampilan + fallback notice, bukan agregat ilmiah baru.
-export function knownPeriods(
-  indexHistory: Record<string, IndexPoint[]> | undefined,
-): string[] {
+export function knownPeriods(indexHistory: Record<string, IndexPoint[]> | undefined): string[] {
   const seen = new Set<string>();
   for (const points of Object.values(indexHistory ?? {})) {
     for (const point of points) seen.add(point.period);
@@ -82,7 +80,12 @@ export function skorSnapshot(
 ): SnapshotSkor {
   const version = versions.find((v) => v.id === snapshot.instrumentVersionId);
   if (!version) {
-    return { index: null, byDimension: {}, instrumentVersionId: snapshot.instrumentVersionId, submittedAt: snapshot.submittedAt };
+    return {
+      index: null,
+      byDimension: {},
+      instrumentVersionId: snapshot.instrumentVersionId,
+      submittedAt: snapshot.submittedAt,
+    };
   }
   const byDimension: Record<string, number | null> = {};
   const all: number[] = [];
@@ -115,7 +118,13 @@ export function pilihSnapshotTerbaruDiterima(
 ): SelfAssessmentSnapshot | null {
   const acceptedIds = new Set(
     reports
-      .filter((r) => r.institutionCode === institutionCode && r.channel === "penilaian-mandiri" && r.validationStatus === "Diterima" && !r.archivedAt)
+      .filter(
+        (r) =>
+          r.institutionCode === institutionCode &&
+          r.channel === "penilaian-mandiri" &&
+          r.validationStatus === "Diterima" &&
+          !r.archivedAt,
+      )
       .map((r) => r.id),
   );
   return (
@@ -181,7 +190,11 @@ export function hitungIndexSummary(input: IndexInput, institutionCodes: string[]
   const periodeOrder: string[] = [];
   const periodeValues = new Map<string, number[]>();
   for (const code of institutionCodes) {
-    const snapshot = pilihSnapshotTerbaruDiterima(input.reports, input.selfAssessmentSnapshots, code);
+    const snapshot = pilihSnapshotTerbaruDiterima(
+      input.reports,
+      input.selfAssessmentSnapshots,
+      code,
+    );
     if (!snapshot || skorSnapshot(input.instrumentVersions, snapshot).index === null) continue;
     for (const point of input.indexHistory?.[code] ?? []) {
       if (!periodeValues.has(point.period)) periodeOrder.push(point.period);
@@ -226,8 +239,7 @@ export function pilihTemuanPrioritas(findings: RiskFinding[], limit = 4): RiskFi
     .filter((f) => f.status !== "Terverifikasi")
     .sort(
       (a, b) =>
-        URUTAN_LEVEL[a.level] - URUTAN_LEVEL[b.level] ||
-        b.observedAt.localeCompare(a.observedAt),
+        URUTAN_LEVEL[a.level] - URUTAN_LEVEL[b.level] || b.observedAt.localeCompare(a.observedAt),
     )
     .slice(0, limit);
 }
@@ -237,10 +249,16 @@ export function hitungRisikoTinggi(findings: RiskFinding[]): number {
 }
 
 export function hitungRisikoPrioritas(findings: RiskFinding[]): number {
-  return findings.filter((f) => (f.level === "Tinggi" || f.level === "Ekstrem") && f.status !== "Terverifikasi").length;
+  return findings.filter(
+    (f) => (f.level === "Tinggi" || f.level === "Ekstrem") && f.status !== "Terverifikasi",
+  ).length;
 }
 
-export type RingkasanTindakLanjut = { rataProgress: number | null; pekerjaan: number; terverifikasi: number };
+export type RingkasanTindakLanjut = {
+  rataProgress: number | null;
+  pekerjaan: number;
+  terverifikasi: number;
+};
 
 export function ringkasTindakLanjut(recommendations: Recommendation[]): RingkasanTindakLanjut {
   return {
@@ -278,15 +296,26 @@ export type DashboardInsightInput = {
 };
 
 const BULAN_SINGKAT = [
-  "Jan", "Feb", "Mar", "Apr", "Mei", "Jun",
-  "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
 ];
 
 function enamBulanSampai(isoDates: string[]): { key: string; label: string }[] {
-  const latest = isoDates
-    .map((value) => new Date(value))
-    .filter((value) => !Number.isNaN(value.getTime()))
-    .sort((a, b) => b.getTime() - a.getTime())[0] ?? new Date("2026-09-01T00:00:00.000Z");
+  const latest =
+    isoDates
+      .map((value) => new Date(value))
+      .filter((value) => !Number.isNaN(value.getTime()))
+      .sort((a, b) => b.getTime() - a.getTime())[0] ?? new Date("2026-09-01T00:00:00.000Z");
 
   return Array.from({ length: 6 }, (_, index) => {
     const date = new Date(Date.UTC(latest.getUTCFullYear(), latest.getUTCMonth() - (5 - index), 1));
@@ -304,14 +333,18 @@ export function buatDashboardInsight(input: DashboardInsightInput): {
   distribution: DashboardDistribution;
 } {
   const scope = new Set(input.scopeCodes);
-  const activeInstitutions = input.institutions.filter((institution) => scope.has(institution.code));
+  const activeInstitutions = input.institutions.filter((institution) =>
+    scope.has(institution.code),
+  );
   const penggunaAktif = input.users.filter(
     (user) =>
       user.status === "Aktif" &&
       (user.institutionCodes.length === 0 || user.institutionCodes.some((code) => scope.has(code))),
   ).length;
   const buildingIds = new Set(
-    input.buildings.filter((building) => scope.has(building.institutionCode)).map((building) => building.id),
+    input.buildings
+      .filter((building) => scope.has(building.institutionCode))
+      .map((building) => building.id),
   );
   const lokasiDipantau = input.areas.filter(
     (area) => scope.has(area.institutionCode) && buildingIds.has(area.buildingId),
@@ -350,7 +383,8 @@ export function buatDashboardInsight(input: DashboardInsightInput): {
       ],
       tindakLanjut: recommendationStatuses.map((label) => ({
         label,
-        value: input.recommendations.filter((recommendation) => recommendation.status === label).length,
+        value: input.recommendations.filter((recommendation) => recommendation.status === label)
+          .length,
       })),
       aktivitas: months.map((month) => ({
         period: month.label,
@@ -389,7 +423,11 @@ function kategoriOfIndicator(
   for (const version of versions) {
     for (const dim of version.dimensions) {
       const ind = dim.indicators.find((i) => i.id === indicatorId);
-      if (ind) return { categoryId: (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null, aspectId: ind.aspectId };
+      if (ind)
+        return {
+          categoryId: (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null,
+          aspectId: ind.aspectId,
+        };
     }
   }
   return { categoryId: null };
@@ -417,7 +455,8 @@ function memicuTemuan(
   value: string,
 ): boolean {
   const version = versions.find((item) => item.id === snapshot.instrumentVersionId);
-  const answerType = version?.dimensions.flatMap((dimension) => dimension.indicators)
+  const answerType = version?.dimensions
+    .flatMap((dimension) => dimension.indicators)
     .find((indicator) => indicator.id === indicatorId)?.answerType;
   if (answerType === "likert-1-5") return ["1", "2"].includes(value);
   if (answerType === "likert-1-2-tidak") return ["1", "Tidak"].includes(value);
@@ -426,7 +465,16 @@ function memicuTemuan(
 }
 
 export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] {
-  const acceptedIds = new Set(input.reports.filter((report) => report.validationStatus === "Diterima" && !report.archivedAt && report.handlingStatus !== "Completed").map((report) => report.id));
+  const acceptedIds = new Set(
+    input.reports
+      .filter(
+        (report) =>
+          report.validationStatus === "Diterima" &&
+          !report.archivedAt &&
+          report.handlingStatus !== "Completed",
+      )
+      .map((report) => report.id),
+  );
   const reportsById = new Map(input.reports.map((r) => [r.id, r]));
 
   const rows = new Map<string, RekapKategori>();
@@ -459,7 +507,8 @@ export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] 
         if (seenIndicator.has(ind.id)) continue;
         seenIndicator.add(ind.id);
         const catId = (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null;
-        const row = rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
+        const row =
+          rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
         row.jumlahIndikator += 1;
       }
     }
@@ -473,14 +522,20 @@ export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] 
     for (const [indicatorId, answer] of Object.entries(snapshot.answers)) {
       const value = answer.value?.trim() ?? "";
       if (!value || value === "N/A") continue;
-      const indicator = version.dimensions.flatMap((dimension) => dimension.indicators).find((item) => item.id === indicatorId);
+      const indicator = version.dimensions
+        .flatMap((dimension) => dimension.indicators)
+        .find((item) => item.id === indicatorId);
       if (!indicator) continue;
-      const valid = indicator.answerType === "boolean-ya-tidak" ? ["Ya", "Tidak"].includes(value)
-        : indicator.answerType === "likert-1-2-tidak" ? ["1", "2", "Tidak"].includes(value)
-        : ["1", "2", "3", "4", "5"].includes(value);
+      const valid =
+        indicator.answerType === "boolean-ya-tidak"
+          ? ["Ya", "Tidak"].includes(value)
+          : indicator.answerType === "likert-1-2-tidak"
+            ? ["1", "2", "Tidak"].includes(value)
+            : ["1", "2", "3", "4", "5"].includes(value);
       if (!valid) continue;
       const { categoryId } = kategoriOfIndicator([version], indicatorId);
-      const row = rows.get(categoryId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
+      const row =
+        rows.get(categoryId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
       if (memicuTemuan(input.versions, snapshot, indicatorId, value)) row.jumlahTidakSesuai += 1;
       else row.jumlahSesuai += 1;
     }

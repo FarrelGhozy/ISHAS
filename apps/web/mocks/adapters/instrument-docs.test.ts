@@ -15,9 +15,15 @@ test("validasi menolak non-PDF dan berkas terlalu besar", () => {
     "Hanya berkas PDF yang didukung.",
   );
   expect(
-    validateInstrumentDocFile({ name: "besar.pdf", size: 11 * 1024 * 1024, type: "application/pdf" }),
+    validateInstrumentDocFile({
+      name: "besar.pdf",
+      size: 11 * 1024 * 1024,
+      type: "application/pdf",
+    }),
   ).toBe("Ukuran PDF harus lebih dari 0 dan maksimal 10 MB.");
-  expect(validateInstrumentDocFile({ name: "ok.pdf", size: 1024, type: "application/pdf" })).toBeNull();
+  expect(
+    validateInstrumentDocFile({ name: "ok.pdf", size: 1024, type: "application/pdf" }),
+  ).toBeNull();
 });
 
 test("pola id membedakan unggahan dan seed", () => {
@@ -25,7 +31,9 @@ test("pola id membedakan unggahan dan seed", () => {
   expect(isInstrumentDocAssetId("seed-instrument-doc-IND-K3L-001")).toBe(true);
   expect(isInstrumentDocAssetId("evidence-asset-123")).toBe(false);
   expect(isSeedInstrumentDocAssetId("seed-instrument-doc-IND-K3L-001")).toBe(true);
-  expect(isSeedInstrumentDocAssetId("instrument-doc-123e4567-e89b-12d3-a456-426614174000")).toBe(false);
+  expect(isSeedInstrumentDocAssetId("instrument-doc-123e4567-e89b-12d3-a456-426614174000")).toBe(
+    false,
+  );
 });
 
 test("PDF seed diawali header %PDF-", async () => {

@@ -12,12 +12,7 @@ export type ReportChannel = "lapor-cepat" | "penilaian-mandiri";
 export type ValidationStatus = "Menunggu validasi" | "Diterima" | "Ditolak";
 export type Severity = "Belum ditentukan" | "Tinggi" | "Sedang" | "Rendah";
 export type Priority = "Belum ditentukan" | "Tinggi" | "Sedang" | "Rendah";
-export type HandlingStatus =
-  | "Menunggu validasi"
-  | "Pending"
-  | "Proses"
-  | "Completed"
-  | "Ditolak";
+export type HandlingStatus = "Menunggu validasi" | "Pending" | "Proses" | "Completed" | "Ditolak";
 export type InstrumentStatus = "Draft" | "Published" | "Archived";
 export type InstrumentDocVisibility = "Public" | "Privat";
 
@@ -41,10 +36,7 @@ export type InstrumentDoc = {
   updatedAt: string;
 };
 export type RecommendationStatus =
-  | "Belum ditindaklanjuti"
-  | "Berjalan"
-  | "Menunggu verifikasi"
-  | "Terverifikasi";
+  "Belum ditindaklanjuti" | "Berjalan" | "Menunggu verifikasi" | "Terverifikasi";
 
 export type Institution = {
   activeCampusPlanVersionId?: string;

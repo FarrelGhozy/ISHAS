@@ -25,12 +25,16 @@ test("aset privat disembunyikan dari pembaca umum", () => {
 });
 
 test("filter mencari kode/judul/nama file + kategori + visibilitas", () => {
-  expect(filterDocRows(rows, { q: "beban kerja", categoryId: "Semua", visibility: "Semua" }).length).toBe(1);
+  expect(
+    filterDocRows(rows, { q: "beban kerja", categoryId: "Semua", visibility: "Semua" }).length,
+  ).toBe(1);
   expect(
     filterDocRows(rows, { q: "", categoryId: "KAT-PSIKOSOSIAL", visibility: "Semua" }).length,
   ).toBe(2);
   expect(filterDocRows(rows, { q: "", categoryId: "Semua", visibility: "Public" }).length).toBe(2);
-  expect(filterDocRows(rows, { q: "detail-air", categoryId: "Semua", visibility: "Semua" }).length).toBe(1);
+  expect(
+    filterDocRows(rows, { q: "detail-air", categoryId: "Semua", visibility: "Semua" }).length,
+  ).toBe(1);
 });
 
 test("entri dokumen manual (D-16.g) tampil sebagai baris pustaka", () => {
@@ -50,7 +54,10 @@ test("entri dokumen manual (D-16.g) tampil sebagai baris pustaka", () => {
     updatedBy: "Dr. M. Ridwan",
     updatedAt: "2026-09-23T00:00:00.000Z",
   };
-  const withManual = selectIndicatorDocRows({ ...SEED, instrumentDocs: [...SEED.instrumentDocs, manual] });
+  const withManual = selectIndicatorDocRows({
+    ...SEED,
+    instrumentDocs: [...SEED.instrumentDocs, manual],
+  });
   expect(withManual.length).toBe(11);
   const row = withManual.find((r) => r.indicatorId === "IND-DOC-001")!;
   expect(row.code).toBe("IND-DOC-001");

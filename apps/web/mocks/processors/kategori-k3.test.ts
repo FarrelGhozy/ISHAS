@@ -45,7 +45,9 @@ describe("K3_CATEGORIES single source of truth", () => {
 });
 
 describe("hitungRekapKategori", () => {
-  const reports = SEED.reports.filter((r) => r.validationStatus === "Diterima" && !r.archivedAt && r.handlingStatus !== "Completed");
+  const reports = SEED.reports.filter(
+    (r) => r.validationStatus === "Diterima" && !r.archivedAt && r.handlingStatus !== "Completed",
+  );
   const ids = new Set(reports.map((r) => r.id));
   const findings = SEED.findings.filter((f) => ids.has(f.reportId));
   const snapshots = SEED.selfAssessmentSnapshots.filter((s) => ids.has(s.reportId));
@@ -94,7 +96,9 @@ describe("hitungRekapKategori", () => {
   });
 
   test("Draft tidak memperbesar katalog dan tidak mengganti definisi jawaban historis", () => {
-    const historical = structuredClone(SEED.instrumentVersions.find((version) => version.id === snapshots[0].instrumentVersionId)!);
+    const historical = structuredClone(
+      SEED.instrumentVersions.find((version) => version.id === snapshots[0].instrumentVersionId)!,
+    );
     const indicator = historical.dimensions[0].indicators[0];
     indicator.answerType = "likert-1-2-tidak";
     indicator.categoryId = "KAT-PSIKOSOSIAL";
@@ -103,8 +107,16 @@ describe("hitungRekapKategori", () => {
     draft.status = "Draft";
     draft.dimensions[0].indicators[0].answerType = "likert-1-5";
     draft.dimensions[0].indicators[0].categoryId = "KAT-KESELAMATAN";
-    const snapshot = { ...snapshots[0], answers: { [indicator.id]: { ...Object.values(snapshots[0].answers)[0], value: "2" } } };
-    const rows = hitungRekapKategori({ ...input, findings: [], snapshots: [snapshot], versions: [draft, historical] });
+    const snapshot = {
+      ...snapshots[0],
+      answers: { [indicator.id]: { ...Object.values(snapshots[0].answers)[0], value: "2" } },
+    };
+    const rows = hitungRekapKategori({
+      ...input,
+      findings: [],
+      snapshots: [snapshot],
+      versions: [draft, historical],
+    });
     expect(rows.find((row) => row.name === "Psikososial")!.jumlahSesuai).toBe(1);
     expect(rows.reduce((sum, row) => sum + row.jumlahTidakSesuai, 0)).toBe(0);
     expect(rows.reduce((sum, row) => sum + row.jumlahIndikator, 0)).toBe(0);
@@ -113,33 +125,53 @@ describe("hitungRekapKategori", () => {
   test("laporan pending, ditolak, dan Completed tidak mengisi rekap meskipun input tercampur", () => {
     const excluded = ["Menunggu validasi", "Ditolak"] as const;
     for (const validationStatus of excluded) {
-      const rows = hitungRekapKategori({ ...input, reports: reports.map((report) => ({ ...report, validationStatus })) });
-      expect(rows.reduce((sum, row) => sum + row.jumlahTemuan + row.jumlahSesuai + row.jumlahTidakSesuai, 0)).toBe(0);
+      const rows = hitungRekapKategori({
+        ...input,
+        reports: reports.map((report) => ({ ...report, validationStatus })),
+      });
+      expect(
+        rows.reduce(
+          (sum, row) => sum + row.jumlahTemuan + row.jumlahSesuai + row.jumlahTidakSesuai,
+          0,
+        ),
+      ).toBe(0);
     }
-    const rows = hitungRekapKategori({ ...input, reports: reports.map((report) => ({ ...report, handlingStatus: "Completed" })) });
+    const rows = hitungRekapKategori({
+      ...input,
+      reports: reports.map((report) => ({ ...report, handlingStatus: "Completed" })),
+    });
     expect(rows.reduce((sum, row) => sum + row.jumlahTemuan, 0)).toBe(0);
   });
 });
 
 describe("kategoriOfFinding", () => {
   test("field langsung diutamakan; fallback relasi indikator; lalu Belum dipetakan", () => {
-    const direct = { reportId: "RPT-0004", indicator: "IND-K3L-002", categoryId: "KAT-LINGKUNGAN" } as RiskFinding;
+    const direct = {
+      reportId: "RPT-0004",
+      indicator: "IND-K3L-002",
+      categoryId: "KAT-LINGKUNGAN",
+    } as RiskFinding;
     expect(kategoriOfFinding(direct, SEED.instrumentVersions)).toBe("KAT-LINGKUNGAN");
     const viaIndicator = { reportId: "RPT-0004", indicator: "IND-K3L-002" } as RiskFinding;
     expect(kategoriOfFinding(viaIndicator, SEED.instrumentVersions)).toBe("KAT-KESELAMATAN");
-    const unmapped = { reportId: "RPT-0003", indicator: "Tidak menggunakan instrumen" } as RiskFinding;
+    const unmapped = {
+      reportId: "RPT-0003",
+      indicator: "Tidak menggunakan instrumen",
+    } as RiskFinding;
     expect(kategoriOfFinding(unmapped, SEED.instrumentVersions)).toBeNull();
   });
 });
 
 describe("level Ekstrem", () => {
   test("kartu tindakan segera mencakup Tinggi dan Ekstrem yang belum Terverifikasi", () => {
-    expect(hitungRisikoPrioritas([
-      { level: "Tinggi", status: "Berjalan" },
-      { level: "Ekstrem", status: "Belum ditindaklanjuti" },
-      { level: "Ekstrem", status: "Terverifikasi" },
-      { level: "Sedang", status: "Berjalan" },
-    ] as RiskFinding[])).toBe(2);
+    expect(
+      hitungRisikoPrioritas([
+        { level: "Tinggi", status: "Berjalan" },
+        { level: "Ekstrem", status: "Belum ditindaklanjuti" },
+        { level: "Ekstrem", status: "Terverifikasi" },
+        { level: "Sedang", status: "Berjalan" },
+      ] as RiskFinding[]),
+    ).toBe(2);
   });
   test("prioritas: Ekstrem di atas Tinggi", () => {
     const items = [
@@ -147,7 +179,11 @@ describe("level Ekstrem", () => {
       { id: "b", level: "Ekstrem", status: "Berjalan", observedAt: "2026-09-01T00:00:00.000Z" },
       { id: "c", level: "Tinggi", status: "Berjalan", observedAt: "2026-09-01T00:00:00.000Z" },
     ] as RiskFinding[];
-    expect(pilihTemuanPrioritas(items, 3).map((f) => f.level)).toEqual(["Ekstrem", "Tinggi", "Rendah"]);
+    expect(pilihTemuanPrioritas(items, 3).map((f) => f.level)).toEqual([
+      "Ekstrem",
+      "Tinggi",
+      "Rendah",
+    ]);
   });
 });
 
