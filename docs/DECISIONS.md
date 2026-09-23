@@ -390,3 +390,24 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `Kembalikan data demo` (hapus kunci `ishas-mock-v*` lalu muat ulang) agar
   loop galat akibat penyimpanan rusak dapat dipulihkan pengguna. Sesi login
   tidak ikut dihapus.
+
+## D-16.g — Peneliti membuat entri dokumen indikator baru (23 September 2026)
+
+- Arahan pemilik: halaman `Dokumen instrumen` baru dapat *memelihara* berkas
+  yang sudah ada; Peneliti juga perlu tombol untuk *membuat* entri dokumen
+  instrumen baru. Permintaan ini memperluas D-16.a — sebelumnya entri hanya
+  tersedia untuk indikator yang sudah ada di katalog versi.
+- **D-16.g.a — Entri baru:** Peneliti menekan `Tambah dokumen` → mengisi kode,
+  judul, kategori (wajib), aspek (opsional), dan memilih PDF → entri tampil
+  sebagai baris pustaka seperti indikator lain. Metadata indikator
+  di-denormalisasi pada `InstrumentDoc` (`indicatorCode`, `indicatorTitle`,
+  `manual: true`), bukan ditulis ke `InstrumentVersion`.
+- **D-16.g.b — Batas:** tetap independen dari versioning; entri manual tidak
+  muncul sebagai soal `penilaian-mandiri` dan tidak mengubah versi `Published`
+  (aturan instrumen terkunci tetap berlaku). Default visibilitas `Privat`
+  (D-16.b).
+- **D-16.g.c — Revisi:** skema tetap `v7` (field opsional aditif, tanpa migrasi
+  baru). Ganti/hapus/ubah visibilitas entri manual memakai alur D-16 yang sama;
+  audit mencatat `Menambahkan dokumen indikator`. Ini catatan prototipe, bukan
+  perubahan struktur ilmiah instrumen.
+- Dokumen terdampak: WIREFRAMES §9, FLOWS §8, DATA_MODEL §0, TODO.

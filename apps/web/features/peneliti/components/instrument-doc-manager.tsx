@@ -2,9 +2,10 @@
 // Independen dari versioning instrumen; default unggahan = Privat.
 
 import { useMemo, useRef, useState } from "react";
-import { Download, Eye, Lock, Trash2, Upload } from "lucide-react";
+import { Download, Eye, Lock, Plus, Trash2, Upload } from "lucide-react";
 import { mockRepository } from "~/mocks/adapters/mock-repository";
-import { K3_CATEGORIES } from "~/mocks/kategori-k3";
+import { K3_CATEGORIES, aspectsOfCategory } from "~/mocks/kategori-k3";
+import type { InstrumentDocVisibility } from "~/mocks/types";
 import {
   filterDocRows,
   formatFileSize,
@@ -22,6 +23,23 @@ function ActorOf(user: { id: string; name: string; role: string }) {
   return { id: user.id, name: user.name, role: user.role };
 }
 
+// D-16.g: entri dokumen indikator baru (kode/judul/kategori/aspek + PDF).
+type CreateForm = {
+  code: string;
+  title: string;
+  categoryId: string;
+  aspectId: string;
+  visibility: InstrumentDocVisibility;
+};
+
+const EMPTY_CREATE: CreateForm = {
+  code: "",
+  title: "",
+  categoryId: "",
+  aspectId: "",
+  visibility: "Privat",
+};
+
 export function InstrumentDocManager() {
   const state = useMockState();
   const user = useCurrentUser();
@@ -31,7 +49,12 @@ export function InstrumentDocManager() {
   const [busyId, setBusyId] = useState("");
   const [pending, setPending] = useState<IndicatorDocRow | null>(null);
   const [deleting, setDeleting] = useState<IndicatorDocRow | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE);
+  const [createFile, setCreateFile] = useState<File | null>(null);
+  const [createError, setCreateError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const createFileRef = useRef<HTMLInputElement>(null);
 
   const rows = useMemo(() => selectIndicatorDocRows(state), [state]);
   const visible = useMemo(() => filterDocRows(rows, filter), [rows, filter]);
@@ -114,9 +137,48 @@ export function InstrumentDocManager() {
     else setError(result.error);
   };
 
+  const closeCreate = () => {
+    setCreating(false);
+    setCreateForm(EMPTY_CREATE);
+    setCreateFile(null);
+    setCreateError("");
+    if (createFileRef.current) createFileRef.current.value = "";
+  };
+
+  const submitCreate = async () => {
+    if (!user) return;
+    if (!createFile) {
+      setCreateError("Pilih berkas PDF terlebih dahulu.");
+      return;
+    }
+    setBusyId("create");
+    setCreateError("");
+    setNote("");
+    const result = await mockRepository.createInstrumentDoc(
+      ActorOf(user),
+      {
+        code: createForm.code,
+        title: createForm.title,
+        categoryId: createForm.categoryId,
+        aspectId: createForm.aspectId || undefined,
+        visibility: createForm.visibility,
+      },
+      createFile,
+    );
+    setBusyId("");
+    if (result.ok) {
+      const label = createForm.visibility;
+      const code = createForm.code.trim();
+      closeCreate();
+      setNote(`Dokumen ${code} ditambahkan sebagai ${label}.`);
+    } else {
+      setCreateError(result.error);
+    }
+  };
+
   return (
     <section aria-label="Berkas detail indikator" className="surface flex min-w-0 flex-col gap-3 p-4">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="mr-auto">
           <h2 className="font-bold text-heading">Berkas detail indikator</h2>
           <p className="text-xs text-secondary-text">
@@ -124,6 +186,20 @@ export function InstrumentDocManager() {
             Berkas baru default Privat; mengganti berkas tidak mengubah soal penilaian mandiri.
           </p>
         </div>
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() => {
+            setError("");
+            setNote("");
+            setCreateError("");
+            setCreating(true);
+          }}
+        >
+          <Plus size={16} aria-hidden />Tambah dokumen
+        </button>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
         <label className="min-w-44 flex-1 text-xs font-bold sm:max-w-56">
           Cari
           <input
@@ -279,6 +355,91 @@ export function InstrumentDocManager() {
           <button type="button" className="secondary-button" onClick={() => setDeleting(null)}>Batal</button>
           <button type="button" className="primary-button" disabled={busyId !== ""} onClick={() => deleting && void doDelete(deleting)}>
             Hapus permanen
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={creating} onClose={closeCreate} label="Tambah dokumen indikator">
+        <h3 className="font-bold text-heading">Tambah dokumen indikator</h3>
+        <p className="mt-1 text-sm text-secondary-text">
+          Entri baru masuk pustaka dokumen dan tidak mengubah soal penilaian mandiri. Isi nama indikator
+          lalu pilih PDF-nya. Berkas tersimpan default Privat.
+        </p>
+        <div className="mt-3 grid gap-3">
+          <label className="text-xs font-bold">
+            Kode indikator <span className="text-primary">*</span>
+            <input
+              className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+              value={createForm.code}
+              onChange={(e) => setCreateForm((f) => ({ ...f, code: e.target.value }))}
+              placeholder="IND-XXX-000"
+              maxLength={40}
+            />
+          </label>
+          <label className="text-xs font-bold">
+            Judul indikator <span className="text-primary">*</span>
+            <input
+              className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+              value={createForm.title}
+              onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))}
+              maxLength={160}
+            />
+          </label>
+          <label className="text-xs font-bold">
+            Kategori <span className="text-primary">*</span>
+            <select
+              className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-2 font-normal"
+              value={createForm.categoryId}
+              onChange={(e) => setCreateForm((f) => ({ ...f, categoryId: e.target.value, aspectId: "" }))}
+            >
+              <option value="">Pilih kategori</option>
+              {K3_CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-bold">
+            Aspek (opsional)
+            <select
+              className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-2 font-normal disabled:bg-strip"
+              value={createForm.aspectId}
+              onChange={(e) => setCreateForm((f) => ({ ...f, aspectId: e.target.value }))}
+              disabled={!createForm.categoryId}
+            >
+              <option value="">Tanpa aspek</option>
+              {aspectsOfCategory(createForm.categoryId).map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="text-xs font-bold">
+            Visibilitas
+            <select
+              className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-2 font-normal"
+              value={createForm.visibility}
+              onChange={(e) => setCreateForm((f) => ({ ...f, visibility: e.target.value as InstrumentDocVisibility }))}
+            >
+              <option value="Privat">Privat</option>
+              <option value="Public">Public</option>
+            </select>
+          </label>
+          <label className="text-xs font-bold">
+            Berkas PDF <span className="text-primary">*</span>
+            <input
+              ref={createFileRef}
+              type="file"
+              accept="application/pdf,.pdf"
+              className="mt-1 w-full text-xs font-normal"
+              onChange={(e) => setCreateFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+        </div>
+        <p className="mt-2 text-xs text-faint">Hanya PDF · maksimal 10 MB.</p>
+        {createError ? <p role="alert" className="mt-2 text-sm font-semibold text-primary">{createError}</p> : null}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" className="secondary-button" onClick={closeCreate}>Batal</button>
+          <button type="button" className="primary-button" disabled={busyId === "create"} onClick={() => void submitCreate()}>
+            {busyId === "create" ? "Menyimpan…" : "Simpan dokumen"}
           </button>
         </div>
       </Modal>

@@ -23,6 +23,7 @@ import type {
 } from "../types";
 import { loadState, resetState, saveState } from "./state";
 import { selectRegisteredInstitutions } from "./selectors";
+import { K3_ASPECT_MAP, K3_CATEGORY_MAP } from "../kategori-k3";
 import type { IshasState } from "../types";
 import { snapshotLocation, validateMapLocation } from "../processors/campus-map";
 
@@ -894,7 +895,8 @@ export const storeActions = {
       v.dimensions.flatMap((d) => d.indicators.map((i) => ({ dim: d, ind: i }))),
     );
     const found = catalog.find((entry) => entry.ind.id === indicatorId);
-    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    const existing = currentState.instrumentDocs.find((item) => item.indicatorId === indicatorId);
+    if (!found && !existing) return { ok: false, error: "Indikator tidak ditemukan." };
     if (!fileName.toLowerCase().endsWith(".pdf") || fileName.length > 200) {
       return { ok: false, error: "Hanya berkas PDF yang didukung." };
     }
@@ -910,8 +912,11 @@ export const storeActions = {
       const doc: InstrumentDoc = {
         id,
         indicatorId,
-        categoryId: input.categoryId ?? found.ind.categoryId ?? found.dim.categoryId,
-        aspectId: input.aspectId ?? found.ind.aspectId,
+        categoryId: input.categoryId ?? found?.ind.categoryId ?? found?.dim.categoryId ?? existing?.categoryId,
+        aspectId: input.aspectId ?? found?.ind.aspectId ?? existing?.aspectId,
+        indicatorCode: existing?.indicatorCode,
+        indicatorTitle: existing?.indicatorTitle,
+        manual: existing?.manual,
         fileName,
         fileSize: input.fileSize,
         mime: "application/pdf",
@@ -924,6 +929,85 @@ export const storeActions = {
       if (at >= 0) draft.instrumentDocs[at] = doc;
       else draft.instrumentDocs.push(doc);
       audit(draft, account, { objectType: "InstrumentDoc", objectId: id, action: "Mengunggah berkas indikator", note: `${fileName} · ${visibility}` });
+    });
+    return { ok: true, id };
+  },
+
+  // D-16.g: Peneliti membuat entri dokumen indikator baru di luar katalog versi.
+  // Metadata indikator di-denormalisasi; InstrumentVersion tidak diubah.
+  createInstrumentDocEntry(
+    actor: { id?: string; name: string; role?: string },
+    input: {
+      code: string;
+      title: string;
+      categoryId: string;
+      aspectId?: string;
+      visibility?: InstrumentDocVisibility;
+      fileName: string;
+      fileSize: number;
+      assetId: string;
+    },
+  ): ActionResult {
+    const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+      return { ok: false, error: "Hanya akun Peneliti aktif yang dapat menambah dokumen indikator." };
+    }
+    const code = input.code.trim();
+    const title = input.title.trim();
+    const categoryId = input.categoryId.trim();
+    if (code.length < 3) return { ok: false, error: "Kode indikator minimal 3 karakter." };
+    if (title.length < 5) return { ok: false, error: "Judul indikator minimal 5 karakter." };
+    if (!K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]) {
+      return { ok: false, error: "Kategori wajib dipilih." };
+    }
+    const aspectId = input.aspectId?.trim() ?? "";
+    if (aspectId && (!K3_ASPECT_MAP[aspectId] || K3_ASPECT_MAP[aspectId].categoryId !== categoryId)) {
+      return { ok: false, error: "Aspek tidak sesuai kategori." };
+    }
+    const fileName = input.fileName.trim();
+    if (!fileName.toLowerCase().endsWith(".pdf") || fileName.length > 200) {
+      return { ok: false, error: "Hanya berkas PDF yang didukung." };
+    }
+    if (!Number.isSafeInteger(input.fileSize) || input.fileSize <= 0 || input.fileSize > 10 * 1024 * 1024) {
+      return { ok: false, error: "Ukuran PDF harus lebih dari 0 dan maksimal 10 MB." };
+    }
+    if (typeof input.assetId !== "string" || !input.assetId) {
+      return { ok: false, error: "Berkas belum tersimpan. Unggah ulang PDF." };
+    }
+    const catalogCodes = currentState.instrumentVersions.flatMap((v) =>
+      v.dimensions.flatMap((d) => d.indicators.map((i) => i.code.toLowerCase())),
+    );
+    const manualCodes = currentState.instrumentDocs.filter((doc) => doc.manual).map((doc) => (doc.indicatorCode ?? "").toLowerCase());
+    if (catalogCodes.includes(code.toLowerCase()) || manualCodes.includes(code.toLowerCase())) {
+      return { ok: false, error: "Kode indikator sudah digunakan." };
+    }
+    const visibility: InstrumentDocVisibility = input.visibility === "Public" ? "Public" : "Privat";
+    let id = "";
+    setState((draft) => {
+      let n = draft.instrumentDocs.filter((doc) => doc.manual).length + 1;
+      let indicatorId = `IND-DOC-${String(n).padStart(3, "0")}`;
+      while (draft.instrumentDocs.some((doc) => doc.indicatorId === indicatorId)) {
+        n += 1;
+        indicatorId = `IND-DOC-${String(n).padStart(3, "0")}`;
+      }
+      id = `DOC-${indicatorId}`;
+      draft.instrumentDocs.push({
+        id,
+        indicatorId,
+        categoryId,
+        aspectId: aspectId || undefined,
+        indicatorCode: code,
+        indicatorTitle: title,
+        manual: true,
+        fileName,
+        fileSize: input.fileSize,
+        mime: "application/pdf",
+        assetId: input.assetId,
+        visibility,
+        updatedBy: account.name,
+        updatedAt: nowIso(),
+      });
+      audit(draft, account, { objectType: "InstrumentDoc", objectId: id, action: "Menambahkan dokumen indikator", note: `${code} · ${fileName} · ${visibility}` });
     });
     return { ok: true, id };
   },

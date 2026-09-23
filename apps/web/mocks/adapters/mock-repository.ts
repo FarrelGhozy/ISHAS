@@ -130,6 +130,43 @@ export const mockRepository = {
     }
   },
 
+  // D-16.g: buat entri dokumen indikator baru (di luar katalog versi).
+  async createInstrumentDoc(
+    actor: ReportActor,
+    input: { code: string; title: string; categoryId: string; aspectId?: string; visibility?: "Public" | "Privat" },
+    file: File,
+  ): Promise<ActionResult> {
+    const epoch = assetEpoch;
+    const assetId = `instrument-doc-${crypto.randomUUID()}`;
+    try {
+      if (resettingAssets) return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      const state = getState();
+      const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
+      if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+        return { ok: false, error: "Hanya akun Peneliti aktif yang dapat menambah dokumen." };
+      }
+      const invalid = validateInstrumentDocFile(file);
+      if (invalid) return { ok: false, error: invalid };
+      if (!(await hasPdfHeader(file))) return { ok: false, error: "Berkas bukan PDF yang valid." };
+      if (resettingAssets || epoch !== assetEpoch) return { ok: false, error: "Demo telah direset. Pilih berkas kembali." };
+      // indicatorId penampung; selector memakai metadata dokumen untuk entri manual.
+      await putInstrumentDocAsset(assetId, { indicatorId: "manual", name: file.name.trim(), blob: file });
+      if (resettingAssets || epoch !== assetEpoch) {
+        await deleteInstrumentDocAsset(assetId);
+        return { ok: false, error: "Demo telah direset. Pilih berkas kembali." };
+      }
+      const result = storeActions.createInstrumentDocEntry(
+        { id: account.id, name: account.name, role: account.role },
+        { ...input, fileName: file.name.trim(), fileSize: file.size, assetId },
+      );
+      if (!result.ok) await deleteInstrumentDocAsset(assetId);
+      return result;
+    } catch {
+      await deleteInstrumentDocAsset(assetId).catch(() => undefined);
+      return { ok: false, error: "Berkas gagal dibaca atau disimpan. Pilih PDF yang valid dan periksa penyimpanan browser." };
+    }
+  },
+
   // D-16/D-02: blob privat tidak pernah disajikan ke publik — diperiksa di sini,
   // bukan hanya dengan menyembunyikan tombol.
   async openInstrumentDoc(

@@ -148,6 +148,9 @@ Draft → tambah dimensi/indikator (pertanyaan, jenis jawaban, bobot dummy, bukt
    indikator (`INS-v1.1`) → **Unggah PDF** (hanya `.pdf`/`application/pdf` +
    header `%PDF`, maks 10 MB; default `Privat`) → simpan blob lokal + metadata
    + audit `Mengunggah berkas indikator`.
+   → D-16.g: tombol **Tambah dokumen** untuk entri baru (kode, judul, kategori
+   wajib, aspek opsional, PDF) → baris pustaka baru tanpa mengubah
+   `InstrumentVersion`; audit `Menambahkan dokumen indikator`.
    → Sistem: satu indikator = satu berkas; unggah baru mengganti dengan
    konfirmasi; `Public/Privat` dapat diubah tanpa unggah ulang; hapus memakai
    konfirmasi + audit dan menghapus blob.

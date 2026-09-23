@@ -43,6 +43,8 @@ test("halaman /peneliti/dokumen-instrumen ter-render saat login peneliti", () =>
   expect(html).toContain("Berkas detail indikator");
   expect(html).toContain("detail-instalasi-listrik.pdf");
   expect(html).toContain("Jadikan Public"); // toggle visibilitas ada
+  expect(html).toContain("Tambah dokumen"); // D-16.g: buat entri baru
+  expect(html).toContain("Tambah dokumen indikator"); // modal
 });
 
 test("panel dashboard ter-render tanpa crash", () => {

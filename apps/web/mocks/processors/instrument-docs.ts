@@ -1,7 +1,7 @@
 // Processor pustaka detail indikator (D-16): gabungan katalog indikator aktif +
 // metadata dokumen. Murni, tanpa akses storage/browser.
 
-import { K3_ASPECT_MAP, K3_CATEGORY_MAP } from "../kategori-k3";
+import { K3_ASPECT_MAP, K3_CATEGORY_MAP, KATEGORI_BELUM_DIPETAKAN } from "../kategori-k3";
 import type { InstrumentDoc, InstrumentDocVisibility, IshasState } from "../types";
 
 export type IndicatorDocRow = {
@@ -31,24 +31,44 @@ export function selectIndicatorDocRows(state: {
     state.instrumentVersions.find((v) => v.id === state.activeInstrumentVersionId) ??
     state.instrumentVersions.find((v) => v.status === "Published") ??
     state.instrumentVersions[0];
-  if (!version) return [];
   const docs = new Map((state.instrumentDocs ?? []).map((d) => [d.indicatorId, d]));
-  return version.dimensions.flatMap((dim) =>
-    dim.indicators.map((ind) => {
-      const categoryId = ind.categoryId ?? dim.categoryId ?? "";
-      const aspectId = ind.aspectId ?? "";
+  const catalogRows = version
+    ? version.dimensions.flatMap((dim) =>
+        dim.indicators.map((ind) => {
+          const categoryId = ind.categoryId ?? dim.categoryId ?? "";
+          const aspectId = ind.aspectId ?? "";
+          return {
+            indicatorId: ind.id,
+            code: ind.code,
+            title: ind.title,
+            categoryId,
+            categoryName: (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) || dim.name,
+            aspectId,
+            aspectName: (aspectId && K3_ASPECT_MAP[aspectId]?.name) || "",
+            doc: docs.get(ind.id) ?? null,
+          } satisfies IndicatorDocRow;
+        }),
+      )
+    : [];
+  // D-16.g: entri dokumen buatan Peneliti (tidak ada di katalog versi) tetap tampil.
+  const known = new Set(catalogRows.map((row) => row.indicatorId));
+  const manualRows = (state.instrumentDocs ?? [])
+    .filter((doc) => doc.manual && !known.has(doc.indicatorId))
+    .map((doc) => {
+      const categoryId = doc.categoryId ?? "";
+      const aspectId = doc.aspectId ?? "";
       return {
-        indicatorId: ind.id,
-        code: ind.code,
-        title: ind.title,
+        indicatorId: doc.indicatorId,
+        code: doc.indicatorCode ?? doc.indicatorId,
+        title: doc.indicatorTitle ?? doc.fileName,
         categoryId,
-        categoryName: (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) || dim.name,
+        categoryName: (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) || KATEGORI_BELUM_DIPETAKAN,
         aspectId,
         aspectName: (aspectId && K3_ASPECT_MAP[aspectId]?.name) || "",
-        doc: docs.get(ind.id) ?? null,
+        doc,
       } satisfies IndicatorDocRow;
-    }),
-  );
+    });
+  return [...catalogRows, ...manualRows];
 }
 
 /** Bacaan publik: hanya indikator yang sudah mempunyai berkas. */

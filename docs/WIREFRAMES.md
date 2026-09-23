@@ -118,6 +118,8 @@ Pesan alasan tombol nonaktif harus terbaca juga pada ponsel dan keyboard, bukan 
 - Panel ringkas di `/` setelah rekap kategori, sebelum temuan prioritas:
   ringkasan jumlah Public/Privat + 5 baris teratas + link `Buka semua dokumen →`
   ke `/dokumen`. Filter pesantren tidak memfilter dokumen (tulis hint kecil).
-- `/peneliti/dokumen-instrumen` (menu `Dokumen instrumen`, D-16.e): tabel per indikator
+- `/peneliti/dokumen-instrumen` (menu `Dokumen instrumen`, D-16.e): tombol
+  `Tambah dokumen` (D-16.g) membuka modal (kode, judul, kategori, aspek opsional,
+  pilih PDF, visibilitas default Privat) + tabel per indikator
   (Indikator | Status | Berkas + ukuran/tgl | Aksi: Unggah/Ganti, Lihat,
   Unduh, Jadikan Public/Privat, Hapus) + search/filter + konfirmasi ganti/hapus.

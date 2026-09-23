@@ -41,6 +41,48 @@ test("unggah, ubah visibilitas, dan hapus berkas teraudit", () => {
   expect(getState().auditEvents[0].objectType).toBe("InstrumentDoc");
 });
 
+const MANUAL_INPUT = {
+  code: "IND-DOC-001",
+  title: "Dokumen tambahan peneliti",
+  categoryId: "KAT-KESELAMATAN",
+  aspectId: "ASP-KES-001",
+  fileName: "tambahan.pdf",
+  fileSize: 2048,
+  assetId: "instrument-doc-123e4567-e89b-12d3-a456-426614174001",
+};
+
+test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () => {
+  expect(storeActions.createInstrumentDocEntry(PENGELOLA, MANUAL_INPUT).ok).toBe(false);
+  expect(storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, categoryId: "" }).ok).toBe(false);
+  expect(storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, title: "abc" }).ok).toBe(false);
+  expect(
+    storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, categoryId: "KAT-KESEHATAN" }).ok,
+  ).toBe(false); // aspek tidak sesuai kategori
+  expect(storeActions.createInstrumentDocEntry(PENELITI, { ...MANUAL_INPUT, code: "IND-K3L-001" }).ok).toBe(false); // kode katalog
+
+  const created = storeActions.createInstrumentDocEntry(PENELITI, MANUAL_INPUT);
+  expect(created.ok).toBe(true);
+  let doc = getState().instrumentDocs.find((d) => d.manual)!;
+  expect(doc.indicatorId).toBe("IND-DOC-001");
+  expect(doc.indicatorCode).toBe("IND-DOC-001");
+  expect(doc.indicatorTitle).toBe("Dokumen tambahan peneliti");
+  expect(doc.visibility).toBe("Privat"); // default aman
+  expect(doc.assetId).toBe(MANUAL_INPUT.assetId);
+  expect(getState().auditEvents[0].action).toBe("Menambahkan dokumen indikator");
+
+  const replaced = storeActions.upsertInstrumentDoc(PENELITI, {
+    indicatorId: "IND-DOC-001",
+    fileName: "tambahan-v2.pdf",
+    fileSize: 4096,
+    assetId: "instrument-doc-123e4567-e89b-12d3-a456-426614174002",
+  });
+  expect(replaced.ok).toBe(true);
+  doc = getState().instrumentDocs.find((d) => d.indicatorId === "IND-DOC-001")!;
+  expect(doc.fileName).toBe("tambahan-v2.pdf");
+  expect(doc.manual).toBe(true);
+  expect(doc.indicatorTitle).toBe("Dokumen tambahan peneliti");
+});
+
 test("migrasi v6 ke v7 mempertahankan record dan menambah instrumentDocs", () => {
   const v6 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 6, instrumentDocs: undefined });
   Object.defineProperty(globalThis, "localStorage", {

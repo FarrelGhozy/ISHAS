@@ -33,6 +33,10 @@ export type InstrumentDoc = {
   mime: "application/pdf";
   assetId: string; // blob di IndexedDB perangkat-lokal
   visibility: InstrumentDocVisibility; // default 'Privat'
+  // D-16.g: entri dokumen buatan Peneliti (tidak ada di katalog versi).
+  indicatorCode?: string;
+  indicatorTitle?: string;
+  manual?: boolean;
   updatedBy: string;
   updatedAt: string;
 };

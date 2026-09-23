@@ -12,6 +12,9 @@ menyusul. Keputusan D-16; stage: [STAGE_DOKUMEN_INDIKATOR.md](../planning/STAGE_
 - [x] Mocks schema v7 + adapter IndexedDB + seed + actions + selector publik.
 - [x] UI Peneliti (`/peneliti/instrumen` seksi tabel) + UI publik (`/dokumen` + panel `/`).
 - [x] Verifikasi: lint + typecheck + 115 test + build + 3 viewport + alur utama lulus (23 Sep 2026; uji klik workspace peneliti + unduh PDF bahan review).
+- [ ] D-16.g revisi pemilik: tombol `Tambah dokumen` di `/peneliti/dokumen-instrumen` membuat entri dokumen indikator baru (kode/judul/kategori/aspek + PDF), metadata denormalisasi pada `InstrumentDoc`, tanpa mengubah `InstrumentVersion`; default `Privat`.
+  - [x] Sinkron docs (DECISIONS D-16.g, WIREFRAMES §9, FLOWS §8, DATA_MODEL §0) + kode store/repository/prosesor/UI + test.
+  - [ ] Verifikasi lint + typecheck + test + build + cek visual 3 viewport.
 - [ ] Review pemilik; DONE hanya setelah disetujui. Stage: `REVIEW`.
 
 ## Infrastruktur Docker Compose + `.env` — 21 September 2026 — `IN PROGRESS`

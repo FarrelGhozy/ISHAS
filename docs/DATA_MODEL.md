@@ -48,9 +48,15 @@ type InstrumentDoc = {
   mime: 'application/pdf';
   assetId: string; // blob di IndexedDB perangkat-lokal
   visibility: InstrumentDocVisibility; // default 'Privat'
+  indicatorCode?: string; // D-16.g: denormalisasi entri manual
+  indicatorTitle?: string; // D-16.g: denormalisasi entri manual
+  manual?: boolean; // true = entri dokumen buatan Peneliti (bukan katalog versi)
   updatedBy: string; updatedAt: string;
 };
 ```
+- D-16.g: entri dokumen buatan Peneliti memakai field opsional
+  `indicatorCode/indicatorTitle/manual`; skema tetap `v7` (aditif, tanpa migrasi
+  baru) dan tidak mengubah `instrumentVersions`.
 - Migrasi v5→v6 mempertahankan seluruh record/ID; hanya menambah field
   (`categoryId/aspectId` fallback, `level` tetap valid). Snapshot `INS-v1.0` tidak dihitung ulang.
 
