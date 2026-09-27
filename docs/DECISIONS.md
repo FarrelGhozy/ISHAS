@@ -427,6 +427,18 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Dokumen terdampak: FLOWS §2/§4, DATA_MODEL (schema v8→v9), KATEGORI_K3 §7,
   WIREFRAMES §2/§4, TODO. D-02 tetap berlaku: kontak/usulan internal tidak publik.
 
+## D-20 — Slider progres tindak lanjut 5 titik — DISETUJUI 27 September 2026
+
+- Arahan pemilik: input `Progres (%)` pada tindak lanjut Pesantren memakai
+  slider dengan titik `0/25/50/75/100` (bukan ketikan bebas).
+- **D-20.a — Titik dan label:** `0% Belum mulai · 25% Dimulai · 50% Setengah
+  jalan · 75% Hampir selesai · 100% Selesai` (label tahap usulan prototipe).
+- **D-20.b — Pembulatan:** nilai lama yang bukan kelipatan 25 ditampilkan dan
+  disimpan ke titik terdekat; store menormalisasi (bukan menolak). Seed tidak
+  dimigrasi sehingga agregat dashboard tidak bergeser.
+- Aturan `100% wajib bukti + catatan` dan alur verifikasi tidak berubah.
+- Dokumen terdampak: FLOWS §6, WIREFRAMES §5, TODO. Scope Stage 07.
+
 ## D-17 — Rename peran Peneliti → Validator dan Pengelola Pesantren → Pesantren — DISETUJUI 27 September 2026
 
 - Arahan pemilik: sebutan `Peneliti` terlalu mewah; ganti menjadi `Validator`

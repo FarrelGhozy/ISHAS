@@ -4,6 +4,7 @@ import type { Recommendation } from "~/mocks/types";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { selectRecommendationsForManager } from "~/mocks/store/selectors";
 import { EmptyState } from "~/shared/components/empty-state";
+import { ProgressSlider, progressLabel, snapProgress } from "~/shared/components/progress-slider";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
@@ -77,7 +78,7 @@ function Card({ item }: { item: Recommendation }) {
   const user = useCurrentUser()!;
   const [pic, setPic] = useState(item.owner);
   const [due, setDue] = useState(item.dueDate);
-  const [progress, setProgress] = useState(String(item.progress));
+  const [progress, setProgress] = useState(() => snapProgress(item.progress));
   const [note, setNote] = useState(item.lastNote ?? "");
   const [evidence, setEvidence] = useState(item.completionEvidence ?? "");
   const [message, setMessage] = useState("");
@@ -85,7 +86,7 @@ function Card({ item }: { item: Recommendation }) {
     const r = storeActions.updateRecommendation(user, item.id, {
       owner: pic,
       dueDate: due,
-      progress: Number(progress),
+      progress,
       note,
       evidenceName: evidence,
       verify,
@@ -123,18 +124,22 @@ function Card({ item }: { item: Recommendation }) {
             onChange={(e) => setDue(e.target.value)}
           />
         </label>
-        <label className="text-sm font-bold">
-          Progres (%)
-          <input
-            type="number"
-            min="0"
-            max="100"
-            className="mt-1 min-h-10 w-full rounded border border-line-soft px-3"
-            value={progress}
-            disabled={item.status === "Belum ditindaklanjuti" || locked}
-            onChange={(e) => setProgress(e.target.value)}
-          />
-        </label>
+        <div className="text-sm font-bold">
+          <span id={`progres-label-${item.id}`}>Progres (%)</span>
+          <div className="mt-1" role="group" aria-labelledby={`progres-label-${item.id}`}>
+            {item.status === "Belum ditindaklanjuti" || locked ? (
+              <p className="py-2 text-sm font-normal text-secondary-text">
+                {progress}% · {progressLabel(progress)}
+              </p>
+            ) : (
+              <ProgressSlider
+                id={`progres-${item.id}`}
+                value={progress}
+                onChange={setProgress}
+              />
+            )}
+          </div>
+        </div>
       </div>
       {item.status === "Berjalan" && (
         <label className="mt-3 block text-sm font-bold">

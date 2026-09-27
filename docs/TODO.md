@@ -1,5 +1,20 @@
 # TODO — Kontrol Kerja Aktif
 
+## Slider progres tindak lanjut 5 titik (D-20) — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: `Progres (%)` pada kartu tindak lanjut
+Pesantren memakai slider titik `0/25/50/75/100` + label tahap; nilai lama
+dibulatkan ke titik terdekat saat tampil/simpan. Keputusan D-20. Cakupan:
+docs + shared `ProgressSlider` + kartu tindak lanjut + normalisasi store +
+test. Scope Stage 07; status stage lain tidak berubah sepihak.
+
+- [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-20, FLOWS, WIREFRAMES, TODO).
+- [x] Kode + test.
+- [x] Verifikasi: lint + typecheck + 133 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard slider di browser: belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## Revisi lapor-cepat + validasi (D-19) — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik: `/lapor` tanpa `Indikator terkait`

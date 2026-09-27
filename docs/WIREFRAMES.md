@@ -75,7 +75,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 ## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`
 
 - Struktur dan copy mengikuti lama (hasil per dimensi/periode; Daftar Area default + Daftar Temuan; rekomendasi + PIC + tenggat; tindak lanjut + status; laporan pimpinan + metadata versi), dengan perubahan wajib : (a) tambah **filter pesantren** di tiap halaman, (b) sumber temuan menunjuk `reportId` + nama validator (nama validator publik sesuai D-02; nama pelapor dan bukti internal), (c) area tanpa temuan aktif tampil netral (bukan marker hijau), (d) tampilan Denah Bangunan dan bukti penyelesaian hanya di workspace Pesantren, tidak di halaman publik (D-02).
-- Tombol kelola (buat rencana, ubah status, unggah bukti) hanya render bila login sebagai Pesantren pemilik scope; publik melihat mode baca + ajakan "Masuk sebagai Pesantren untuk mengelola."
+- Tombol kelola (buat rencana, ubah status, unggah bukti) hanya render bila login sebagai Pesantren pemilik scope; publik melihat mode baca + ajakan "Masuk sebagai Pesantren untuk mengelola." Input progres pada kartu kelola memakai slider titik `0/25/50/75/100` + label tahap (D-20).
 
 ## 6. `/login`, `/admin/*`, `/validator/*`, `/pesantren/*`
 

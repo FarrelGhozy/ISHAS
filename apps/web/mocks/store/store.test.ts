@@ -226,6 +226,18 @@ describe("lokasi dan tindak lanjut V2-07", () => {
       "Completed",
     );
   });
+
+  test("progres dinormalisasi ke titik slider terdekat (D-20)", () => {
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Progres dibulatkan ke titik slider.",
+        progress: 30,
+      }).ok,
+    ).toBe(true);
+    expect(getState().recommendations.find((item) => item.id === "REC-RPT-0003-1")?.progress).toBe(
+      25,
+    );
+  });
 });
 
 describe("lapor-cepat V2-03", () => {

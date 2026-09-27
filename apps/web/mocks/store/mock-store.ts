@@ -868,10 +868,12 @@ export const storeActions = {
         report.handlingStatus = "Proses";
       } else {
         const progress = input.progress;
-        if (progress === undefined || progress < 0 || progress > 100)
+        if (progress === undefined || !Number.isFinite(progress) || progress < 0 || progress > 100)
           return { ok: false, error: "Progres harus antara 0 dan 100." };
-        target.progress = progress;
-        if (progress === 100) {
+        // D-20: normalisasi ke titik slider terdekat (0/25/50/75/100).
+        const snapped = Math.min(100, Math.max(0, Math.round(progress / 25) * 25));
+        target.progress = snapped;
+        if (snapped === 100) {
           if (!input.evidenceName?.trim())
             return { ok: false, error: "Bukti penyelesaian wajib diisi saat mengajukan selesai." };
           target.completionEvidence = input.evidenceName.trim();

@@ -129,7 +129,7 @@ tidak boleh disamakan tanpa aturan penghubung tersebut.
 ## 6. Tindak lanjut dan laporan pimpinan (Aktor: Pesantren)
 
 1. Dari rekomendasi `Belum ditindaklanjuti` → **Buat rencana tindakan** (PIC + tenggat + catatan) → status rekomendasi `Berjalan`, laporan induk `Proses`.
-2. Perbarui progres + catatan + bukti penyelesaian dummy → ajukan selesai → akun Pesantren memverifikasi → `Completed`/`Terverifikasi`.
+2. Perbarui progres (slider titik `0/25/50/75/100` + label tahap; nilai lama dibulatkan ke titik terdekat — D-20) + catatan + bukti penyelesaian dummy → ajukan selesai → akun Pesantren memverifikasi → `Completed`/`Terverifikasi`.
 3. `/pesantren/laporan`: pratinjau ringkasan pimpinan dalam scope Pesantren + dimensi + status tindak lanjut + metadata (periode, versi instrumen, waktu buat, pembuat) + simulasi unduh PDF/Excel berlabel dummy. `/laporan` adalah versi baca publik dengan bidang sesuai D-02 (ringkasan + nama validator/PIC; tanpa nama pelapor, bukti, jawaban mentah) dan tidak otomatis sama dengan versi internal.
 
 ## 7. Siklus instrumen (Aktor: Validator — tujuan peran dipertahankan, D-17)
