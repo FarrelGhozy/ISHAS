@@ -114,7 +114,7 @@ Perubahan arah produk tidak mengesahkan rumus, skala, atau kategori ilmiah.
 
 - Semua angka, skor, kategori, severity, priority, dan rekomendasi adalah **data dummy** berlabel jelas (`Data ilustrasi` / `data dummy` / `Simulasi prototipe`). Dilarang menyajikannya sebagai ketentuan ilmiah final.
 - Instrumen Published dikunci; perubahan lewat versi baru (clone snapshot).
-- Laporan yang tampil di dashboard selalu tertelusur ke: versi instrumen (untuk penilaian mandiri), bukti, area/lokasi, pelapor, validator, dan audit event.
+- Laporan yang tampil di dashboard selalu tertelusur ke: snapshot beku bank instrumen (untuk penilaian mandiri: soal + opsi + bobot + skor %, D-24), bukti, area/lokasi, pelapor, validator, dan audit event.
 - Ketertelusuran internal berbeda dari keterbukaan publik. Batas bidang publik sudah diputuskan (D-02, 8 September 2026): ringkasan saja + nama validator/PIC; matriks bidang di `DATA_REQUIREMENTS.md` §6.
 - `Diterima` berarti diterima pengelola melalui moderasi, bukan sertifikasi keselamatan atau validasi ilmiah instrumen. `Completed` adalah status penanganan, bukan skor K3L baru.
 - Guard frontend hanya simulasi UX; otorisasi nyata wajib di backend nanti.

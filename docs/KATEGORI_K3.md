@@ -110,7 +110,7 @@ DIM-001 → Keselamatan; DIM-002 → campuran (dipetakan per indikator, bukan pe
 
 Untuk setiap kategori (ditambah baris `Belum dipetakan` untuk lapor-cepat tanpa indikator):
 
-- jumlah indikator (katalog instrumen Published (`INS-v1.1` pada seed), bukan jumlah jawaban)
+- jumlah indikator (katalog bank live D-24 (turunan `INS-v1.1` pada seed), bukan jumlah jawaban)
 - jumlah temuan (temuan `Diterima` + belum arsip + scope filter)
 - jumlah sesuai / tidak sesuai (dari snapshot `Diterima`; sesuai = jawaban tidak memicu temuan)
 - jumlah risiko Rendah / Sedang / Tinggi / Ekstrem (satu hitung per ID temuan)
@@ -147,7 +147,10 @@ Lokasi → Kategori → Aspek (tanpa Indikator)
   record/ID, hanya menambah field (`categoryId/aspectId` fallback, `level` tetap valid).
 - `INS-v1.0` → `Archived`; `INS-v1.1` (4 kategori, 10 indikator) → `Published` + aktif.
   Snapshot lama tetap merujuk `INS-v1.0` dan tidak dihitung ulang.
-- `resetMockData` kembali ke seed `INS-v1.1` + histori `INS-v1.0`.
+- **Amendemen D-24 (schema `10 → 11`):** bank live `INS-LIVE` diturunkan dari
+  `INS-v1.1` (tipe warisan dipetakan, nilai lama tetap sah); `instrumentVersions`
+  lama hanya bacaan legacy; snapshot baru membeku (soal + opsi + bobot +
+  `scorePercent`); `resetMockData` kembali ke seed bank live.
 
 ## 9. Responsif & non-tujuan
 

@@ -62,22 +62,45 @@ setelah pesantren/akun nonaktif juga perlu keputusan; jangan menghapusnya otomat
 
 ## 3. Penilaian mandiri / self-assessment (Aktor: Publik, tanpa login)
 
-**Prasyarat:** sama seperti §2 + ada versi instrumen `Published` aktif. Jika tidak ada Published → halaman menampilkan pesan "Belum ada instrumen yang dipublikasikan" dan form terkunci (bukan form kosong).
+**Amendemen D-24 (28 September 2026):** versioning dihapus; prasyarat versi
+`Published`, banner kunci versi, dan aturan D-10 historis di bawah diganti.
+Berlaku: bank instrumen live `INS-LIVE` + registrasi penilai + draft checksum
++ snapshot beku + skor % + PDF per laporan (tampil publik setelah `Diterima`).
 
-1. Buka `/penilaian-mandiri` → pilih pesantren terdaftar (wajib, dropdown sama seperti §2) → isi nama pelapor (aturan sama seperti §2, tanpa opsi anonim — D-02).
-2. Sistem mengikat sesi pengisian ke **versi Published aktif** dan menampilkannya sebagai banner terkunci: "Menggunakan ISHAS vX.Y · terkunci selama pengisian". Pelapor TIDAK dapat memilih versi lain.
+**Prasyarat:** sama seperti §2 + bank instrumen live mempunyai minimal satu
+indikator. Jika kosong → halaman menampilkan pesan "Belum ada instrumen" dan
+form terkunci (bukan form kosong).
+
+1. Buka `/penilaian-mandiri` → registrasi penilai (nama penilai* 2–100,
+kontak opsional) + pilih pesantren terdaftar (wajib, dropdown sama seperti §2);
+aturan nama sama seperti §2, tanpa opsi anonim — D-02.
+2. Sistem memakai **bank instrumen live** dan menampilkannya sebagai banner:
+"Bank instrumen live · perubahan soal membuat draft harus mengulang". Draft
+menyimpan `instrumentChecksum`; checksum beda = kirim dikunci + wajib mulai
+baru. Pelapor TIDAK dapat memilih versi (tidak ada versi).
 3. Isi per indikator (navigasi dimensi di kiri, pertanyaan di tengah, kelengkapan di kanan — mengikuti alur penilaian mandiri tanpa panel penugasan):
  - Jawaban (wajib semua indikator `required`).
  - Catatan observasi (bebas; **wajib** bila jawaban `N/A` — min 10 karakter alasan).
  - Bukti (wajib bila indikator `evidenceRequired`; simpan nama file dummy).
  - Lokasi observasi (wajib bila indikator `locationRequired`; pilih area + tandai titik denah `x/y` 0–100 bila denah tersedia; bila tanpa denah, area saja cukup).
-4. **Simpan draft** kapan saja (tombol eksplisit + tersimpan otomatis per perubahan ke localStorage; bertahan saat refresh; lanjutkan dari indikator terakhir via `activeIndex`).
+4. **Simpan draft** otomatis per perubahan tanpa menunggu nama (nama + pesantren
+wajib baru saat kirim); pesantren terakhir diingat per perangkat sehingga reload
+tanpa param tetap memuat draft yang benar; tulis hanya bila isi berubah (anti
+loop save-render-save); lanjutkan dari indikator terakhir via `activeIndex`.
 5. **Tinjau** → ringkasan 4 kelompok: jawaban wajib, bukti wajib, catatan N/A, lokasi → klik item bermasalah melompat ke indikatornya.
 6. **Kirim untuk validasi** (aktif hanya bila 4 kelompok lengkap) → dialog konfirmasi "Setelah dikirim tidak dapat diubah; koreksi lewat laporan baru atau hubungi akun Pesantren." → Ya.
- → Sistem: simpan snapshot seluruh jawaban/bukti/lokasi yang terkirim, hubungkan ke satu `Report` kanal `penilaian-mandiri`, lalu kunci kiriman. Kandidat temuan mengikuti konfigurasi ilustratif versi; `1/2/Tidak` hanya contoh seed, bukan aturan universal. Status `Menunggu validasi`; audit; notifikasi akun Pesantren. Layar sukses sama seperti §2. Rincian snapshot ada di `DATA_REQUIREMENTS.md` §2.
+ → Sistem: simpan snapshot beku (copy soal + opsi + bobot + jawaban +
+bukti + lokasi + `scorePercent` + `byDimension`), hubungkan ke satu `Report`
+kanal `penilaian-mandiri` (`scorePercent` + `pdfGeneratedAt`), lalu kunci
+kiriman. Kandidat temuan mengikuti flag `isFinding` per opsi (ilustratif;
+bukan ambang ilmiah final). Status `Menunggu validasi`; audit; notifikasi akun
+Pesantren. PDF laporan dibuat saat kirim dan baru tampil publik setelah
+`Diterima`. Layar sukses sama seperti §2. Rincian snapshot ada di
+`DATA_REQUIREMENTS.md` §2.
 
-**Kasus yang belum diputuskan:** versi Published berubah ketika draft masih berjalan (D-10),
-seluruh jawaban N/A dan arti periode penilaian (D-04), serta penilaian lengkap tanpa temuan (D-05).
+**Kasus yang belum diputuskan:** seluruh jawaban N/A dan arti periode
+penilaian (D-04), serta penilaian lengkap tanpa temuan (D-05). Aturan draft
+versi lama (D-10) diganti aturan checksum D-24: soal berubah = ulang dari awal.
 
 ## 4. Validasi oleh Pesantren (Aktor: Pesantren, login)
 
@@ -138,9 +161,15 @@ tidak boleh disamakan tanpa aturan penghubung tersebut.
  2b. **Tingkat risiko temuan** (D-23.b): `severity/priority` laporan tetap `Tinggi/Sedang/Rendah`; level tiap temuan (`Rendah/Sedang/Tinggi/Ekstrem`) diubah eksplisit per baris oleh Pesantren + teraudit `Mengubah tingkat risiko temuan`. Tanpa rumus turunan otomatis.
 3. `/pesantren/laporan`: pratinjau ringkasan pimpinan dalam scope Pesantren (tanpa arsip) + dimensi katalog aktif (ilustrasi) + status tindak lanjut + progres rata-rata non-`Dibatalkan` + metadata (periode berjalan, versi instrumen per laporan pada riwayat, waktu data terbaru, pembuat) + tautan silang ke Validasi/Tindak lanjut + simulasi unduh PDF/Excel berlabel dummy. `/laporan` adalah versi baca publik dengan bidang sesuai D-02 (ringkasan + nama validator/PIC; tanpa nama pelapor, bukti, jawaban mentah) dan tidak otomatis sama dengan versi internal.
 
-## 7. Siklus instrumen (Aktor: Validator — tujuan peran dipertahankan, D-17)
+## 7. Siklus instrumen (Aktor: Validator — tujuan peran dipertahankan, D-17; amendemen D-24)
 
-Draft → tambah dimensi/indikator (pertanyaan, jenis jawaban, bobot dummy, bukti, lokasi, referensi, rubric, rekomendasi) → simpan → validasi checklist → Published (kunci; arsipkan yang lama) → otomatis menjadi sumber `/penilaian-mandiri`. Perubahan setelah publish hanya lewat versi baru (clone snapshot). Bobot/ambang/rumus tetap dummy sampai keputusan ilmiah final.
+Bank live → tambah/edit/hapus dimensi/indikator (pertanyaan, tipe jawaban
+`ya-tidak/kualitas-1-5/frekuensi/keparahan`, opsi + bobot 0–100 per opsi,
+flag temuan, bobot pengali indikator, bukti, lokasi) → simpan langsung →
+otomatis menjadi sumber `/penilaian-mandiri`. Tanpa Draft/Published/Archived;
+perubahan langsung aktif + peringatan draft berjalan harus mengulang. Skor
+lama dibekukan pada snapshot (tidak dihitung ulang). Bobot/ambang/rumus tetap
+dummy ilustratif sampai keputusan ilmiah final.
 
  Keterhubungan dataset, status hasil , impor dummy, serta akses jawaban mentah perlu dipetakan
  sebelum dianggap sama dengan lama; lihat `DATA_REQUIREMENTS.md` §9. Moderasi laporan oleh akun Pesantren

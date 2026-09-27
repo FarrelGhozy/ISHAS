@@ -1,5 +1,25 @@
 # TODO — Kontrol Kerja Aktif
 
+## Bank instrumen live + bobot + PDF per laporan (D-24) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): hapus versioning, bank
+instrumen live edit-penuh Validator, 4 tipe jawaban + bobot per opsi,
+draft checksum (berubah = ulang), snapshot beku + skor % + PDF per laporan
+penilaian (tampil publik setelah Diterima), registrasi penilai.
+Keputusan D-24. Cakupan: docs + schema v10→v11 + store/processor + UI
+validator/penilaian-mandiri/laporan publik + seed + test. Scope Stage 08 +
+sentuhan baca laporan; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-24 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-24, FLOWS §3/§7, DATA_MODEL schema v11, ROLES, ROUTES, WIREFRAMES §3/§5/§6, KATEGORI §6/§8, REQUIREMENTS §1/§4, TEST_PLAN §3/§7, README, STAGE_08).
+- [x] Kode + migrasi v10→v11 + seed bank live + snapshot beku + skor % + PDF artifact (`/laporan/:id`).
+- [x] Verifikasi: lint + typecheck + 157 test + build lulus (28 Sep 2026).
+- [x] Perbaikan lanjutan (28 Sep 2026): anti loop autosave (dep checksum + skip bila sama),
+  draft tersimpan tanpa nama + pesantren terakhir diingat, hint kurang-apa per soal,
+  panel Acuan bobot di atas Bank instrumen. Verifikasi: lint + typecheck + 163 test lulus.
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (bank CRUD, isi→kirim→validasi→PDF, panel bobot, reload draft): belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
 ## Validasi ruang kerja Pesantren + perbaikan alur (D-23) — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan`): bandingkan `main` vs

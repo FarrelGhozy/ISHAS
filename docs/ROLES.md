@@ -14,7 +14,7 @@
 - Membuka `/`, `/lapor`, `/penilaian-mandiri`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut` (mode baca), `/laporan`, `/pesantren/[kode]`.
 - Menggunakan pemilih pesantren (hanya berisi pesantren terdaftar) dan filter periode/tingkat/status pada tampilan publik.
 - Mengirim laporan cepat: wajib isi **nama pelapor** (teks bebas, maks 100 karakter), pesantren (pilih dari daftar), lokasi/area, deskripsi. Foto dan kontak opsional.
-- Mengisi penilaian mandiri: wajib isi nama + pesantren, lalu seluruh indikator wajib instrumen Published aktif.
+- Mengisi penilaian mandiri: registrasi nama penilai + pesantren, lalu seluruh indikator wajib bank live (D-24).
 - Menyimpan draft penilaian mandiri di perangkat sendiri (localStorage) dan melanjutkannya setelah refresh.
 - Melihat nomor laporan + status `Menunggu validasi` sebagai konfirmasi kirim.
 
@@ -89,7 +89,11 @@
 
 **Definisi dan akun demo** (M. Ridwan, `validator@ishas.demo`, `demo1234`; D-17 melepas gelar `Dr.`).
 
-**BOLEH:** instrumen (builder dimensi/indikator), versioning Draft/Published/Archived, konfigurasi scoring, validasi & publikasi, data penelitian. Versi Published aktif otomatis menjadi sumber soal penilaian mandiri.
+**BOLEH (D-24):** bank instrumen live (tambah/edit/hapus dimensi/indikator,
+tipe jawaban `ya-tidak/kualitas-1-5/frekuensi/keparahan`, opsi + bobot 0–100
+per opsi via Atur Bobot, pengali indikator), audit skor beku, validasi &
+publikasi, data penelitian. Bank live otomatis menjadi sumber soal penilaian
+mandiri; tanpa versioning Draft/Published/Archived.
 
 **TIDAK BOLEH:** melihat antrean validasi, memvalidasi laporan, mengelola pesantren/akun, mengirim laporan/penilaian saat login (D-03); jika ingin melapor, keluar dari akun dan gunakan mode publik.
 

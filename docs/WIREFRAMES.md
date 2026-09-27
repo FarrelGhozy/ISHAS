@@ -58,9 +58,14 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 - Error inline per field (contoh: "Nama minimal 2 karakter.", "Deskripsi minimal 20 karakter.", "Pilih pesantren terdaftar.").
 - Layar sukses: ikon centang hijau + `Laporan terkirim` + nomor `RPT-XXXX` + chip `Menunggu validasi` (`status-neutral`) + teks "Belum tampil di dashboard sebelum divalidasi." + tombol **Kembali ke dashboard**.
 
-## 3. `/penilaian-mandiri` Self-assessment
+## 3. `/penilaian-mandiri` Self-assessment (amendemen D-24)
 
-- Header halaman: kicker `Penilaian mandiri` + H1 `Penilaian mandiri K3L` + banner kunci versi: "Menggunakan [ISHAS vX.Y] · terkunci selama pengisian" + pemilih pesantren* + nama pelapor* (aturan sama seperti lapor).
+- Header halaman: kicker `Penilaian mandiri` + H1 `Periksa kondisi K3L pesantren` +
+  banner bank live ("Bank instrumen live · perubahan soal membuat draft harus mengulang") +
+  seksi `Registrasi penilai`: pesantren* + nama penilai* + kontak (opsional).
+  Satu penilai = satu laporan PDF.
+- Tiap soal menampilkan hint kurangnya ("Kurang: jawaban/bukti/area-lokasi/catatan N/A")
+  + status tersimpan ("Draft tersimpan otomatis · HH:MM"); autosave tanpa menunggu nama.
 - Tiga kolom (desktop; menumpuk vertikal di ponsel): kiri navigasi dimensi (tombol per dimensi: nomor + nama + "x/y terisi" + centang bila penuh + kunci versi di bawah), tengah panel pertanyaan (kode + "Indikator n dari N" + chip `Wajib`/`Bukti wajib` + judul + prompt + lokasi observasi + opsi radio + catatan + bukti + sumber instrumen + tombol Sebelumnya/Berikutnya), kanan panel kelengkapan (4 statistik: jawaban/bukti/catatan N/A/lokasi + tombol `Lihat ringkasan` + catatan "Draft tersimpan di perangkat ini").
 - Dialog Tinjau: daftar semua indikator (ikon lengkap/belum + kode + judul + jawaban) + klik melompat ke indikator + tombol **Kirim untuk validasi** (disabled bila ada yang kurang) + dialog konfirmasi final ("Setelah dikirim tidak dapat diubah…") → layar sukses seperti lapor.
 
@@ -72,7 +77,15 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 - Detail: seluruh isi laporan (hanya-baca: identitas, kontak internal, kategori/aspek, usulan pelapor, lokasi + teks denah, bukti gambar, waktu, jejak keputusan) + untuk penilaian mandiri: jawaban per indikator (hanya-baca) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` placeholder `Pilih…` + pre-fill dari usulan sah + catatan opsional + tombol konfirmasi; ganti Terima/Tolak membersihkan error) dan **Tolak** (textarea alasan wajib min 10 + counter + konfirmasi). Arsip tidak tampil di antrean.
 - Setelah terima: tidak ada kontrol status manual di halaman ini; status bergerak lewat `/pesantren/tindak-lanjut` (D-23.a). Arsip `Completed` via `/pesantren/laporan` (konfirmasi + alasan min 5).
 
-## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`
+## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`, `/laporan/:id`
+
+- Amendemen D-24 (PDF per laporan): `/hasil` seksi `Laporan PDF penilaian`
+  (kartu per laporan: pesantren, periode, skor %, validator + tautan
+  `Lihat PDF laporan`); `/laporan` memuat daftar PDF penilaian mandiri (satu
+  penilai = satu PDF) + ringkasan pimpinan; `/laporan/:id` = halaman cetak
+  satu PDF (skor % beku, dimensi, temuan tervalidasi, validator + tombol
+  `Cetak / simpan PDF`); hanya `Diterima`; tanpa nama pelapor/kontak/bukti/
+  jawaban mentah (D-02).
 
 - Struktur dan copy mengikuti lama (hasil per dimensi/periode; Daftar Area default + Daftar Temuan; rekomendasi + PIC + tenggat; tindak lanjut + status; laporan pimpinan + metadata versi), dengan perubahan wajib : (a) tambah **filter pesantren** di tiap halaman, (b) sumber temuan menunjuk `reportId` + nama validator (nama validator publik sesuai D-02; nama pelapor dan bukti internal), (c) area tanpa temuan aktif tampil netral (bukan marker hijau), (d) tampilan Denah Bangunan dan bukti penyelesaian hanya di workspace Pesantren, tidak di halaman publik (D-02).
 - Tombol kelola (buat rencana, ubah status, unggah bukti) hanya render bila login sebagai Pesantren pemilik scope; publik melihat mode baca + ajakan "Masuk sebagai Pesantren untuk mengelola." Input progres pada kartu kelola memakai slider titik `0/25/50/75/100` + label tahap (D-20).
@@ -86,7 +99,13 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 - Login: panel kiri sama seperti lama (gradien marun + alur), panel kanan hanya 3 kartu: `Masuk sebagai Super Admin` ("Mengelola pesantren, akun, audit."), `Masuk sebagai Validator` ("Mengelola instrumen dan penilaian."), `Masuk sebagai Pesantren` ("Memvalidasi laporan dan mengelola tindak lanjut."). Tanpa kartu asesor; tanpa link "Kembali ke beranda".
 - Admin: halaman sama lama minus semua opsi Asesor; tambah aksi verifikasi pesantren `Persiapan → Aktif` dan alur buat akun Pesantren.
-- Validator: tidak berubah fungsi dari Peneliti lama (D-17).
+- Validator (D-24): `/validator/instrumen` = Bank live (tambah/edit/hapus dimensi +
+  indikator, pilih tipe jawaban 4 opsi, tombol `Atur bobot` per indikator +
+  pengali; tanpa kunci versi). Panel `Acuan bobot jawaban` di paling atas
+  menampilkan opsi + bobot + flag temuan tiap indikator + tombol `Atur` per baris.
+  Menu `Versioning` dihapus; route lama
+  `/validator/versioning` menampilkan pengalihan. `/validator/scoring` = audit
+  skor % beku; `/validator/validasi-publikasi` = kesiapan publikasi + status PDF.
 
 Catatan review: tujuan Validator dipertahankan dari Peneliti, tetapi kontrak dataset/hasil harus menyesuaikan
  (`DATA_REQUIREMENTS.md` §9). Layar lama belum otomatis menjadi spesifikasi lengkap .

@@ -1,5 +1,12 @@
 # Stage Stage 08 — Penilaian Mandiri (Self-Assessment)
 
+**Revisi D-24 — 28 September 2026 — `IN PROGRESS`:** bank instrumen live tanpa
+versioning (edit penuh Validator + 4 tipe jawaban + bobot per opsi), registrasi
+penilai + kontak, draft checksum (berubah = ulang), snapshot beku + skor % +
+PDF per laporan (`/laporan/:id`, tampil publik setelah Diterima). Cakupan:
+docs + schema v11 + store/processor + UI validator/penilaian/laporan + seed +
+test. Status stage lain tidak berubah sepihak.
+
 **Pembaruan 18 September 2026:** frontend telah diimplementasikan; catatan izin/
 keputusan terbuka pada rancangan awal di bawah bersifat historis. D-06/D-07/D-08/
 D-10/D-11 yang terjawab pada 9 September serta D-14/D-15 dibaca dari DECISIONS.md.

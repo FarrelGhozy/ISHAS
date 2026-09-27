@@ -26,13 +26,19 @@ terkirim, hasil/periode, akun sesi, audit/notifikasi, dan riwayat denah belum le
 `DATA_REQUIREMENTS.md` sebelum memakai skema di bawah. D-01–D-03 telah dijawab (8 September 2026);
 keputusan D-04–D-11 masih memengaruhi isinya.
 
-## 0. Versi schema 
+## 0. Versi schema
 
-- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v10`. Aplikasi ISHAS
-- `MOCK_SCHEMA_VERSION`: `10` (v10 menambah pembatalan tindak lanjut + bukti
-  upload D-21: `completionEvidenceAssetId`, status `Dibatalkan`,
-  `canceledReason/canceledBy/canceledAt` pada rekomendasi/temuan).
-- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 10`, pulihkan seed.
+- **Amendemen D-24 (28 September 2026):** bank instrumen live `INS-LIVE`
+  menggantikan versioning `Draft/Published/Archived`; snapshot penilaian
+  membeku (copy soal + opsi + bobot + jawaban + `scorePercent`); `Report`
+  menyimpan `scorePercent` + `pdfGeneratedAt`; draft memakai
+  `instrumentChecksum` (berubah = ulang).
+
+- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v11`. Aplikasi ISHAS
+- `MOCK_SCHEMA_VERSION`: `11` (v11 bank live D-24: `instrument` +
+  `instrumentChecksum` + opsi/bobot per jawaban + snapshot beku + skor % +
+  PDF artifact; `instrumentVersions` lama hanya bacaan legacy).
+- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 11`, pulihkan seed.
 - Migrasi v6→v7 mempertahankan seluruh record/ID; hanya menambah
   `instrumentDocs` (seed 2 Public + 2 Privat ilustrasi). Snapshot/temuan lama
   tidak dihitung ulang.
@@ -124,9 +130,12 @@ type Report = {
  planPoint?: { x: number; y: number } | null; // 0-100
  evidenceName?: string; // nama lampiran; data lama bisa hanya berupa nama dummy
  evidenceAssetId?: string; // ID blob bukti privat di IndexedDB perangkat-lokal (/lapor)
- contact?: string;
- instrumentVersionId?: string; // wajib bila channel penilaian-mandiri
-   validationStatus: ValidationStatus;
+  contact?: string;
+  instrumentVersionId?: string; // warisan versioning (bacaan legacy)
+  instrumentChecksum?: string; // D-24: checksum bank live saat kirim
+  scorePercent?: number | null; // D-24: skor % beku (sumber agregat + PDF)
+  pdfGeneratedAt?: string; // D-24: waktu PDF dibuat (publik setelah Diterima)
+    validationStatus: ValidationStatus;
    severity: Severity; // default 'Belum ditentukan', hanya akun Pesantren yang mengubah (keputusan final, D-19)
    priority: Priority; // idem
  handlingStatus: HandlingStatus;
@@ -137,12 +146,20 @@ type Report = {
 };
 
 type SelfAssessmentDraft = { // belum dikirim; per perangkat (localStorage)
- id: string; // 'SELF-0001'
- institutionCode: string; reporterName: string;
- instrumentVersionId: string; // terkunci ke Published aktif
- answers: Record<string, { value: string; note: string; evidenceName: string;
- areaId: string; planPoint: { x: number; y: number } | null }>;
- activeIndex: number; updatedAt: string;
+  id: string; // 'SELF-0001'
+  institutionCode: string; reporterName: string; // nama penilai (D-24)
+  contact?: string; // kontak penilai opsional (D-24)
+  instrumentVersionId: string; // warisan ('INS-LIVE' untuk kiriman baru)
+  instrumentChecksum?: string; // D-24: checksum bank (beda = ulang dari awal)
+  answers: Record<string, { value: string; note: string; evidenceName: string;
+  areaId: string; planPoint: { x: number; y: number } | null }>;
+  activeIndex: number; updatedAt: string;
+};
+type SelfAssessmentSnapshot = { // D-24: beku saat kirim
+  reportId: string; instrumentVersionId: string; instrumentChecksum?: string;
+  submittedAt: string; answers: Record<string, {...}>;
+  frozenIndicators?: { id, code, title, answerType, options[{value,label,weight,isFinding}], weight }[];
+  scorePercent?: number | null; byDimension?: Record<string, number | null>;
 };
 // Saat kirim perlu snapshot permanen seluruh jawaban yang terkait Report.
 // Sketsa ini belum memuat entitas snapshot/status kirim; lihat DATA_REQUIREMENTS §2.
@@ -215,6 +232,9 @@ nonaktif menunggu D-08.
 | `savePlanVersion` | denah per lantai | Deprecated lembut (D-23.c): tetap berfungsi + warn; jalur utama `publishCampusPlan` gambaran besar |
 | `deleteCompletedReport` | `id` + alasan | Alias `archiveCompletedReport` (D-07: arsip, bukan hapus) |
 | `addUser` / `addInstitution` | sama tanpa peran asesor | + pesantren baru TIDAK otomatis tampil sebelum `Aktif` + punya akun Pesantren |
+| `addBankDimension` / `updateBankDimension` / `deleteBankDimension` | nama + kategori | dimensi bank live + checksum baru + audit (D-24) |
+| `addBankIndicator` / `updateBankIndicator` / `deleteBankIndicator` | kode/judul/prompt/tipe/wajib/bukti/lokasi/kategori/aspek | indikator bank live + opsi bawaan tipe + checksum baru + audit (D-24); ganti tipe = opsi kembali bawaan |
+| `setBankIndicatorOptions` | opsi[] + pengali | bobot 0–100/opsi + flag temuan + pengali + checksum baru + audit (D-24) |
 | `resetMockData` | — | kembali ke seed |
 
 Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAssessmentDraft(assignmentId)`, `finalizeAssessment(assignmentId)`, dsb).
@@ -222,7 +242,7 @@ Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAsse
 ## 5. Seed kaya demo (agar setiap halaman dapat didemo ke dosen)
 
 Komposisi minimum §5 lama telah diperkaya (September 2026) menjadi data demo
-penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v10, D-21):
+penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v11, D-24):
 
 - 3 pesantren `Aktif` (`PSN-0018` PP Al-Hikmah Malang, `PSN-0019` PP Nurul Iman
   Batu, `PSN-0020` PP Darussalam Kediri) + 1 `Persiapan` (`PSN-0021`, tidak tampil
@@ -254,6 +274,8 @@ penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v10, D-21):
   12 area; 15 audit event + 3 notifikasi antrean; counter laporan `17`.
 - D-15: seed aktif `INS-v1.1` (4 kategori K3, 10 indikator termasuk Psikososial;
   `INS-v1.0` diarsipkan untuk reproduksi snapshot lama). Mapping lama→baru di `KATEGORI_K3.md` §4.
+- D-24: bank live `INS-LIVE` turunan `INS-v1.1` (10 indikator + opsi/bobot bawaan);
+  kiriman baru membeku (`frozenIndicators` + `scorePercent` + `pdfGeneratedAt`).
 
 **Catatan validasi seed:** komposisi di atas baru menjamin dua pesantren terdaftar, bukan tiga,
 karena akun Pesantren aktif baru tersedia untuk dua pesantren. Pilih skenario seed setelah D-09;

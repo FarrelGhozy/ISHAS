@@ -567,3 +567,44 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Dokumen terdampak: FLOWS §4–§6, DATA_MODEL §0/§4, WIREFRAMES §4–§5, TODO,
   STAGE_07 (+ catatan lintas Stage 05–06 tanpa mengubah status stage lain).
   Scope Stage 07 + sentuhan baca Validasi; status stage lain tidak berubah sepihak.
+
+## D-24 — Bank instrumen live tanpa versioning + bobot per opsi + PDF per laporan — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan`): versioning dihapus. Sekali isi langsung selesai;
+  ganti soal di tengah jalan berarti penilai mengulang dari awal. Instrumen
+  kurang jelas karena tidak bisa tambah/edit isi; Validator harus bisa mengubah
+  penuh. Tambah jawaban frekuensi + tingkat keparahan; Validator mengatur tipe
+  jawaban per indikator (ya-tidak, kualitas, frekuensi kejadian, tingkat
+  keparahan) + bobot tiap opsi. Sistem memakai bank data.
+- **D-24.a — Bank live:** satu instrumen live `INS-LIVE` yang langsung diedit
+  Validator (tambah/edit/hapus dimensi + indikator, atur kategori/aspek, tipe
+  jawaban, opsi + bobot). Tanpa `Draft/Published/Archived`, tanpa halaman
+  Versioning, tanpa kunci versi D-10. Perubahan langsung aktif untuk pengisian
+  baru + peringatan `draft berjalan harus mengulang`.
+- **D-24.b — Draft checksum:** draft penilaian tetap tersimpan di browser per
+  pesantren (`SELF-<kode>`, lanjutkan via `activeIndex`). Draft menyimpan
+  `instrumentChecksum`; checksum beda = draft basi: kirim dikunci, autosave
+  berhenti, pelapor wajib buang draft dan mulai baru. Default ter-record di
+  browser; reload normal tidak menghilangkan draft yang checksum-nya sama.
+- **D-24.c — Tipe + bobot:** tiap indikator punya `options[]` (`value, label,
+  weight 0–100, isFinding`) + `weight` pengali indikator (default 1). Skor
+  laporan = persentase rata-rata terbobot (N/A dilewati, bukan nol). Opsi lama
+  (`likert-1-5`, `boolean-ya-tidak`, `likert-1-2-tidak`) hanya dibaca untuk
+  snapshot lama; indikator baru memakai 4 tipe D-24.
+- **D-24.d — Snapshot beku + PDF:** tiap kirim membekukan copy soal + opsi +
+  bobot + jawaban + `scorePercent` + `byDimension` pada snapshot; `Report`
+  menyimpan `scorePercent` + `pdfGeneratedAt`. PDF laporan dibuat saat kirim
+  (render cetak browser, frontend-only) dan baru tampil publik setelah
+  `Diterima` Pesantren (moderasi D-02/D-03 tetap). Satu pondok dengan N penilai
+  = N PDF pada `/laporan`; agregat memakai rata-rata `%` per pesantren.
+  Registrasi penilai di atas `/penilaian-mandiri` (nama penilai + pesantren +
+  kontak opsional).
+- **D-24.e — Migrasi:** schema mock `v10 → v11`; bank live dibangun dari
+  `INS-v1.1` (opsi/bobot default per tipe); `instrumentVersions` lama
+  dipertahankan sebagai bacaan legacy + deprecasi lembut agar snapshot lama
+  tetap tampil; fungsi versioning lama tidak dipakai UI baru. Reset demo
+  kembali ke seed bank live.
+- Dokumen terdampak: FLOWS §3/§7, DATA_MODEL (schema v11), ROLES §4,
+  ROUTES (hapus menu Versioning), WIREFRAMES §3/§6, KATEGORI_K3 §8,
+  DATA_REQUIREMENTS §2/§4, TEST_PLAN, TODO, STAGE_08. Scope Stage 08 +
+  sentuhan baca laporan; status stage lain tidak berubah sepihak.

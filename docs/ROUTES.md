@@ -11,13 +11,14 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 |---|---|---|---|
 | `/` | Dashboard publik | Agregat semua pesantren terdaftar + pemilih pesantren + tren + prioritas + CTA lapor/nilai | Pengganti landing; tanpa guard login |
 | `/lapor` | Laporan cepat | Form ringan satu langkah | Bisa juga dibuka sebagai dialog dari `/`, tapi URL kanonis tetap `/lapor` |
-| `/penilaian-mandiri` | Penilaian mandiri | Instrumen Published penuh + draft lokal + kirim validasi | Satu-satunya tempat isi indikator |
+| `/penilaian-mandiri` | Penilaian mandiri | Bank live + registrasi penilai + draft lokal checksum + kirim validasi (D-24) | Satu-satunya tempat isi indikator |
 | `/hasil` | Hasil assessment | Per dimensi + antarperiode, mengikuti filter pesantren | Hanya data `Diterima` |
 | `/peta-risiko` | Peta bahaya & risiko | D-14: pilih satu pesantren untuk denah gambaran besar + titik temuan Diterima yang aktif; daftar temuan termasuk tanpa titik | Filter URL: pesantren, `denah`, `risiko`, `statusPeta`; lantai berupa keterangan. Frontend REVIEW |
 | `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId` |
 | `/tindak-lanjut` | Tindak lanjut (baca) | Progres + status + nama PIC; bukti penyelesaian tidak publik (D-02) | Tombol kelola hanya muncul bila login Pesantren pemilik scope |
 | `/dokumen` | Dokumen indikator (D-16) | Pustaka PDF per indikator: search + filter kategori/status; Public = Lihat tab baru + Unduh; Privat = nama + terkunci tanpa tombol | Global (filter pesantren tidak memfilter dokumen); guard publik `allowed` semua sesi |
-| `/laporan` | Laporan pimpinan | Ringkasan + dimensi + status + metadata versi instrumen | Simulasi unduh PDF/Excel (label dummy) |
+| `/laporan` | Laporan pimpinan | Ringkasan + dimensi + status + daftar PDF penilaian (D-24) | Satu penilai = satu PDF; unduh Excel simulasi (label dummy) |
+| `/laporan/:id` | PDF laporan penilaian (D-24) | Skor % beku + dimensi + temuan tervalidasi + validator; tombol cetak/simpan PDF browser | Hanya `Diterima`; tanpa nama pelapor/kontak/bukti/jawaban mentah (D-02) |
 | `/pesantren/[kode]` | Profil ringkas lembaga | Sama seperti `/` dengan filter terkunci ke `[kode]` | `[kode]` = `institutionCode` mis. `PSN-0018`; kode tak dikenal → empty state, bukan crash |
 | `/login` | Masuk | 3 kartu akun: Super Admin, Validator, Pesantren | Tanpa kartu asesor; tanpa link "kembali ke beranda" (beranda = `/` itu sendiri) |
 | `/akses-ditolak` | Akses ditolak | Pesan + tombol kembali kontekstual | Lihat §3 |
@@ -47,11 +48,11 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/admin/audit-log` | admin | Jejak global (baca) |
 | `/admin/pengaturan` | admin | Preferensi + reset data demo |
 | `/validator/dashboard` | validator | Dashboard validator |
-| `/validator/instrumen` | validator | Builder |
+| `/validator/instrumen` | validator | Bank live: builder penuh + Atur Bobot (D-24) |
 | `/validator/dokumen-instrumen` | validator | Pustaka PDF per indikator (D-16) |
-| `/validator/versioning` | validator | Draft/Published/Archived |
-| `/validator/scoring` | validator | Konfigurasi scoring |
-| `/validator/validasi-publikasi` | validator | Checklist + kunci publish |
+| `/validator/versioning` | validator | Dihapus (D-24): halaman pengalihan ke Bank instrumen |
+| `/validator/scoring` | validator | Audit skor % beku (D-24) |
+| `/validator/validasi-publikasi` | validator | Kesiapan publikasi snapshot |
 | `/validator/data-penelitian` | validator | Dataset + impor/ekspor dummy |
 | `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi (halaman kelola utama)** |
 | `/pesantren/lokasi` | pesantren | Gedung & denah |

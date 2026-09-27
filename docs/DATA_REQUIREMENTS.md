@@ -9,8 +9,8 @@ calon nama agar diskusi konkret. Keputusan perilaku yang belum jelas mengacu [DE
 | Objek | Arti | Hubungan yang perlu dapat ditelusuri |
 |---|---|---|
 | Kiriman / Report | Satu laporan cepat atau satu pengiriman instrumen penuh | Pesantren, pelapor, kanal, waktu, keputusan moderasi |
-| Draft | Isian yang belum dikirim pada perangkat | Pemilik/konteks perangkat, pesantren, versi instrumen jika ada, waktu simpan |
-| Penilaian terkirim | Seluruh jawaban yang menjadi dasar satu Report penilaian mandiri | Report, snapshot instrumen dan jawaban, periode observasi |
+| Draft | Isian yang belum dikirim pada perangkat | Pemilik/konteks perangkat, pesantren, checksum bank (D-24), waktu simpan |
+| Penilaian terkirim | Seluruh jawaban yang menjadi dasar satu Report penilaian mandiri | Report, snapshot beku (copy soal + opsi + bobot + `scorePercent`, D-24), periode observasi |
 | Hasil penilaian | Nilai per dimensi/total dari penilaian yang diterima | Kiriman sumber, versi aturan ilustratif, periode, waktu proses, status data |
 | Temuan | Satu masalah yang terkait laporan dan lokasi | Report; indikator opsional pada kanal cepat; area dan bukti jika tersedia |
 | Rekomendasi dan tindak lanjut | Anjuran serta rencana/progres penanganan | Temuan/report induk, PIC, tenggat, catatan dan pemeriksa |
@@ -70,11 +70,13 @@ Enam indikator seed adalah contoh demo, bukan jumlah indikator ilmiah final.
 
 Kebutuhan sebelum kontrak dapat dianggap lengkap:
 
-1. Struktur versi yang menyimpan dimensi, indikator, opsi jawaban, aturan wajib, N/A,
- bukti/lokasi, arah skor, referensi, dan konfigurasi ilustratif. Published bersifat tetap;
- hasil lama tidak dihitung ulang saat versi baru terbit.
-2. Penanda versi aktif untuk memulai penilaian baru. Draft mengikat satu versi dan menampilkan versi
- itu setelah refresh; boleh/tidaknya mengirim draft dari versi yang sudah diarsipkan menunggu D-10.
+1. Bank live tunggal (D-24) yang menyimpan dimensi, indikator, opsi jawaban +
+ bobot 0–100 per opsi + flag temuan + pengali indikator, aturan wajib, N/A,
+ bukti/lokasi, dan konfigurasi ilustratif. Edit langsung aktif; hasil lama
+ dibekukan pada snapshot (tidak dihitung ulang).
+2. Checksum bank untuk memulai penilaian baru. Draft mengikat satu checksum dan
+ menampilkan statusnya setelah refresh; draft basi (checksum beda) wajib
+ dibuang dan mulai baru (D-24 menggantikan D-10).
 3. Periode memakai identitas stabil, label, serta rentang waktu yang jelas. Waktu laporan dikirim
  belum tentu periode kondisi yang dinilai. Sumber dan pemilih periode menunggu D-04.
 4. Hasil mempunyai ID, sumber report, versi instrumen/aturan ilustratif, dimensi yang dihitung,

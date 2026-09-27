@@ -57,7 +57,7 @@ dengan role sama untuk memastikan sesi menunjuk ID akun, bukan role saja.
 5. **Lifecycle:** Pending→Proses tanpa PIC/tenggat DITOLAK → lengkap → Proses→Completed tanpa bukti DITOLAK → lengkap → hapus/arsip hanya sesuai D-07. Audit tidak ikut penghapusan laporan biasa; reset demo adalah tindakan berbeda.
 6. **Scope isolation:** akun Pesantren A tidak melihat laporan pesantren B di antrean, filter, maupun notifikasi.
 7. **Pesantren tak terdaftar:** tidak muncul di pemilih; lapor langsung via URL dengan kode tak valid DITOLAK dengan pesan.
-8. **Self-assessment:** tanpa Published → form terkunci + pesan; kirim tak lengkap DITOLAK; refresh melanjutkan draft; kirim → antrean → terima → hasil berlabel kanal.
+8. **Self-assessment (D-24):** bank kosong → form terkunci + pesan; registrasi penilai wajib; kirim tak lengkap DITOLAK; refresh melanjutkan draft (checksum sama); bank berubah → kirim DITOLAK + wajib ulang; kirim → snapshot beku + skor % + PDF → antrean → terima → tampil publik sebagai PDF + agregat %.
 
 ## 4. Visual dan aksesibilitas (3 viewport: 1440×900, 834×1112, 390×844)
 
@@ -104,10 +104,11 @@ Skenario berikut menjadi calon acceptance test setelah keputusan terkait disetuj
 | U-03 | Kirim, hapus draft, lalu buka kiriman untuk validasi | Seluruh jawaban/bukti/lokasi yang terkirim masih dapat ditelusuri dari snapshot |
 | U-04 | Kirim dua kali atau ulang setelah respons terputus | Satu kiriman dan satu set temuan/audit kirim; jika gagal, draft tidak hilang |
 | U-05 | Dua akun Pesantren memutuskan laporan sama | Keputusan lama tidak menimpa keputusan yang sudah tersimpan tanpa deteksi |
-| U-06 | Instrumen baru terbit saat draft versi lama belum dikirim | Versi tidak berubah diam-diam; kebijakan kirim mengikuti D-10 |
+| U-06 | Bank berubah saat draft belum dikirim (D-24) | Checksum beda = kirim ditolak + wajib ulang; skor/PDF lama tetap beku (pengganti D-10) |
 | U-07 | Satu penilaian menghasilkan dua temuan, satu selesai | Status induk/progres mengikuti D-05, tidak otomatis menutup seluruh laporan |
 | U-08 | Penilaian diterima tanpa temuan / seluruh jawaban N/A | Tidak memaksakan severity fiktif atau skor nol; kebijakan D-04/D-05 |
-| U-09 | Banyak kiriman untuk pesantren/periode sama, termasuk versi berbeda | Agregat, tren, dan dataset mengikuti D-04; unit/versi sumber jelas |
+| U-09 | Banyak kiriman untuk pesantren/periode sama, termasuk bobot berbeda (D-24) | Agregat memakai rata-rata skor % beku per pesantren; tiap laporan = satu PDF |
+| U-09b | Validator tambah/edit/hapus indikator + atur bobot (D-24) | Perubahan langsung aktif; validasi kode unik/bobot 0–100; draft basi wajib ulang; snapshot lama tidak berubah |
 | U-10 | Unggah denah baru atau ubah nama area | Titik dan sumber penilaian historis tetap menunjuk versi/ID semula |
 | U-11 | Nonaktifkan pesantren atau akun Pesantren terakhir saat form terbuka | Kirim memeriksa ulang kelayakan; arsip/antrean/sesi mengikuti D-08 |
 | U-12 | Buka kembali atau hapus/arsip laporan Completed | Status rekomendasi, progres, bukti, hasil, dan audit mengikuti D-05/D-07; tidak ada relasi yatim |
