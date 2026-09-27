@@ -1,63 +1,23 @@
-import { useState } from "react";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
-import { StatusChip } from "~/shared/components/status-chip";
+// Versioning dihapus (D-24). Berkas dipertahankan agar route lama tidak 404;
+// pengelolaan instrumen pindah ke Bank instrumen.
+
+import { Link } from "react-router";
 
 export function Page() {
-  const state = useMockState();
-  const [note, setNote] = useState("");
-
-  const create = () => {
-    const r = storeActions.createInstrumentDraft();
-    setNote(r.ok ? `Draft ${r.id} berhasil dibuat.` : r.error);
-  };
-
-  const publish = (id: string) => {
-    const r = storeActions.publishInstrument(id);
-    setNote(r.ok ? `${id} dipublikasikan dan versi sebelumnya diarsipkan.` : r.error);
-  };
-
   return (
     <section className="flex flex-col gap-4">
-      <header className="flex flex-wrap items-end gap-3">
-        <div className="mr-auto">
-          <p className="kicker">Metodologi</p>
-          <h1 className="text-2xl font-extrabold text-heading">Versioning instrumen</h1>
-          <p className="text-sm text-secondary-text">
-            Setiap publikasi mengunci versi lama agar snapshot tetap dapat direproduksi.
-          </p>
-        </div>
-        <button type="button" className="primary-button" onClick={create}>
-          Buat draft dari versi aktif
-        </button>
-      </header>
-      {note ? (
-        <p role="status" className="text-sm">
-          {note}
+      <header>
+        <p className="kicker">Metodologi</p>
+        <h1 className="text-2xl font-extrabold text-heading">Versioning dihapus</h1>
+        <p className="text-sm text-secondary-text">
+          Sejak D-24 instrumen memakai satu bank live tanpa Draft/Published/Archived.
+          Kelola soal, tipe jawaban, dan bobot langsung di Bank instrumen.
         </p>
-      ) : null}
-      <div className="surface divide-y divide-line">
-        {[...state.instrumentVersions].reverse().map((x) => (
-          <article className="flex flex-wrap items-center gap-3 p-4" key={x.id}>
-            <div className="mr-auto">
-              <strong className="text-heading">{x.label}</strong>
-              <p className="text-xs text-secondary-text">
-                {x.id} · {x.dimensions.length} dimensi ·{" "}
-                {x.dimensions.flatMap((d) => d.indicators).length} indikator
-              </p>
-              <p className="text-xs text-faint">
-                {x.publishedAt
-                  ? `Dipublikasikan ${new Date(x.publishedAt).toLocaleDateString("id-ID")}`
-                  : "Belum dipublikasikan"}
-              </p>
-            </div>
-            <StatusChip value={x.status} />
-            {x.status === "Draft" ? (
-              <button type="button" className="secondary-button" onClick={() => publish(x.id)}>
-                Publikasikan
-              </button>
-            ) : null}
-          </article>
-        ))}
+      </header>
+      <div className="surface p-4">
+        <Link className="text-button" to="/validator/instrumen">
+          Buka Bank instrumen
+        </Link>
       </div>
     </section>
   );

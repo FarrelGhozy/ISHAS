@@ -56,13 +56,14 @@ test("panel dashboard ter-render tanpa crash", () => {
   expect(html).toContain("Buka semua dokumen");
 });
 
-test("halaman /validator/instrumen ter-render setelah rapihan format", () => {
+test("halaman /validator/instrumen ter-render sebagai bank live (D-24)", () => {
   const html = renderToString(
     <MemoryRouter initialEntries={["/validator/instrumen"]}>
       <InstrumenPage />
     </MemoryRouter>,
   ).replace(/<!-- -->/g, "");
-  expect(html).toContain("Instrumen penelitian");
+  expect(html).toContain("Bank instrumen");
   expect(html).toContain("IND-K3L-001");
-  expect(html).toContain("Versi Published terkunci");
+  expect(html).toContain("Atur bobot");
+  expect(html).toContain("Acuan bobot jawaban");
 });

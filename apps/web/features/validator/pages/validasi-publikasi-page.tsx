@@ -21,10 +21,9 @@ export function Page() {
       <div className="surface divide-y divide-line">
         {assessments.map((x) => {
           const snapshot = state.selfAssessmentSnapshots.find((s) => s.reportId === x.id);
-          const version = state.instrumentVersions.find(
-            (v) => v.id === snapshot?.instrumentVersionId,
-          );
-          const expected = version?.dimensions.flatMap((d) => d.indicators).length ?? 0;
+          const expected =
+            snapshot?.frozenIndicators?.length ??
+            state.instrument.dimensions.flatMap((d) => d.indicators).length;
           const answered = snapshot
             ? Object.values(snapshot.answers).filter((a) => a.value).length
             : 0;
@@ -36,8 +35,11 @@ export function Page() {
                   {x.id} · {state.institutions.find((i) => i.code === x.institutionCode)?.name}
                 </strong>
                 <p className="text-xs text-secondary-text">
-                  {snapshot?.instrumentVersionId ?? "Tanpa snapshot"} · {answered}/{expected}{" "}
-                  jawaban terisi
+                  Bank live · {answered}/{expected} jawaban terisi
+                  {x.scorePercent !== undefined && x.scorePercent !== null
+                    ? ` · skor ${Math.round(x.scorePercent)}%`
+                    : ""}
+                  {x.pdfGeneratedAt ? " · PDF tersedia" : ""}
                 </p>
                 <p className="text-xs text-faint">
                   {x.validationStatus === "Diterima" && complete

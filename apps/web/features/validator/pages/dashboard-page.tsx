@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import { useMockState } from "~/mocks/store/mock-store";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { hitungIndexSummary } from "~/mocks/processors/dashboard-aggregate";
-import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
   const state = useMockState();
@@ -10,7 +9,7 @@ export function Page() {
     state,
     selectRegisteredInstitutions(state).map((x) => x.code),
   );
-  const published = state.instrumentVersions.find((x) => x.id === state.activeInstrumentVersionId);
+  const bank = state.instrument;
   const waiting = state.reports.filter(
     (x) => x.channel === "penilaian-mandiri" && x.validationStatus === "Menunggu validasi",
   );
@@ -33,10 +32,10 @@ export function Page() {
           <p className="text-xs text-faint">{summary.periode} · ilustrasi</p>
         </article>
         <article className="stat-card">
-          <p className="text-xs font-bold text-secondary-text">Instrumen aktif</p>
-          <p className="mt-2 text-xl font-extrabold text-heading">{published?.label ?? "—"}</p>
+          <p className="text-xs font-bold text-secondary-text">Bank instrumen</p>
+          <p className="mt-2 text-xl font-extrabold text-heading">{bank?.label ?? "—"}</p>
           <p className="text-xs text-faint">
-            {published?.dimensions.flatMap((x) => x.indicators).length ?? 0} indikator
+            {bank?.dimensions.flatMap((x) => x.indicators).length ?? 0} indikator live
           </p>
         </article>
         <article className="stat-card">
@@ -74,18 +73,19 @@ export function Page() {
         </div>
         <div className="surface overflow-hidden">
           <div className="flex justify-between border-b border-line p-4">
-            <h2 className="font-bold text-heading">Versi instrumen</h2>
-            <Link className="text-button" to="/validator/versioning">
+            <h2 className="font-bold text-heading">Dimensi bank live</h2>
+            <Link className="text-button" to="/validator/instrumen">
               Kelola
             </Link>
           </div>
-          {state.instrumentVersions.map((x) => (
+          {(bank?.dimensions ?? []).map((x) => (
             <div className="flex items-center gap-3 border-b border-line p-4" key={x.id}>
               <div className="mr-auto">
-                <strong>{x.label}</strong>
-                <p className="text-xs text-faint">{x.id}</p>
+                <strong>{x.name}</strong>
+                <p className="text-xs text-faint">
+                  {x.id} · {x.indicators.length} indikator
+                </p>
               </div>
-              <StatusChip value={x.status} />
             </div>
           ))}
         </div>

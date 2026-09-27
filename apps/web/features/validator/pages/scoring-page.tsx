@@ -1,3 +1,5 @@
+// Audit skor beku tiap snapshot (D-24). Hanya data diterima masuk indeks publik.
+
 import { useMockState } from "~/mocks/store/mock-store";
 import { skorSnapshot } from "~/mocks/processors/dashboard-aggregate";
 import { StatusChip } from "~/shared/components/status-chip";
@@ -11,12 +13,11 @@ export function Page() {
         <p className="kicker">Analisis</p>
         <h1 className="text-2xl font-extrabold text-heading">Scoring</h1>
         <p className="text-sm text-secondary-text">
-          Audit hasil normalisasi setiap snapshot. Hanya data diterima yang masuk indeks publik.
+          Skor % dibekukan saat kirim dari bobot bank. Hanya data diterima yang masuk indeks publik.
         </p>
       </header>
       <div className="scope-banner">
-        Aturan ilustrasi: skala 1–5 dinormalisasi menjadi 20–100; Ya = 100; Tidak = 20; N/A tidak
-        dihitung.
+        Aturan ilustrasi: skor tiap opsi 0–100 sesuai bobot bank; N/A tidak dihitung.
       </div>
       <div className="surface overflow-x-auto">
         <table className="w-full min-w-[680px] text-left text-sm">
@@ -24,9 +25,8 @@ export function Page() {
             <tr>
               <th className="p-3">Laporan</th>
               <th className="p-3">Pesantren</th>
-              <th className="p-3">Versi</th>
+              <th className="p-3">Skor %</th>
               <th className="p-3">Validasi</th>
-              <th className="p-3 text-right">Skor</th>
               <th className="p-3">Dimensi</th>
             </tr>
           </thead>
@@ -41,12 +41,11 @@ export function Page() {
                 <tr key={s.reportId}>
                   <td className="p-3 font-bold text-heading">{s.reportId}</td>
                   <td className="p-3">{institution?.name ?? "—"}</td>
-                  <td className="p-3">{s.instrumentVersionId}</td>
-                  <td className="p-3">
-                    <StatusChip value={report?.validationStatus ?? "Tidak diketahui"} />
-                  </td>
                   <td className="p-3 text-right text-lg font-extrabold">
                     {score.index === null ? "—" : Math.round(score.index)}
+                  </td>
+                  <td className="p-3">
+                    <StatusChip value={report?.validationStatus ?? "Tidak diketahui"} />
                   </td>
                   <td className="p-3 text-xs text-secondary-text">
                     {Object.entries(score.byDimension)
