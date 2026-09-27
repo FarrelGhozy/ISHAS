@@ -7,6 +7,7 @@ import {
   selectValidationQueue,
   selectValidatedReports,
   selectReportsByInstitution,
+  selectReportsForManager,
 } from "./selectors";
 
 describe("selector", () => {
@@ -512,6 +513,60 @@ describe("lapor-cepat V2-03", () => {
     const report = getState().reports.find((r) => r.id === result.id);
     expect(report?.reporterName).toBe("Nama diubah manual");
     expect(report?.reporterAccountEmail).toBe("pesantren@ishas.demo");
+  });
+});
+
+describe("perbaikan pesantren D-23", () => {
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
+  const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
+
+  beforeEach(() => storeActions.resetMockData());
+
+  test("kelola tidak memuat arsip Completed", () => {
+    expect(
+      selectReportsForManager(getState(), "PSN-0019").some((r) => r.id === "RPT-0005"),
+    ).toBe(true);
+    expect(
+      storeActions.archiveCompletedReport(otherManager, "RPT-0005", "Arsip laporan lama").ok,
+    ).toBe(true);
+    expect(
+      selectReportsForManager(getState(), "PSN-0019").some((r) => r.id === "RPT-0005"),
+    ).toBe(false);
+  });
+
+  test("level Ekstrem eksplisit per temuan + teraudit + scope", () => {
+    expect(storeActions.setFindingLevel(manager, "RSK-RPT-0003-1", "Ekstrem").ok).toBe(true);
+    expect(getState().findings.find((f) => f.id === "RSK-RPT-0003-1")?.level).toBe("Ekstrem");
+    expect(
+      getState().auditEvents.some(
+        (e) => e.objectId === "RSK-RPT-0003-1" && e.action === "Mengubah tingkat risiko temuan",
+      ),
+    ).toBe(true);
+    expect(storeActions.setFindingLevel(otherManager, "RSK-RPT-0003-1", "Tinggi").ok).toBe(false);
+    expect(storeActions.setFindingLevel(manager, "RSK-RPT-0003-1", "Kritis" as never).ok).toBe(
+      false,
+    );
+  });
+
+  test("progres tepi dinormalisasi ke titik slider (12→0, 88→100)", () => {
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Progres kecil dibulatkan ke nol.",
+        progress: 12,
+      }).ok,
+    ).toBe(true);
+    expect(getState().recommendations.find((r) => r.id === "REC-RPT-0003-1")?.progress).toBe(0);
+    storeActions.resetMockData();
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Progres besar dibulatkan ke seratus dengan bukti.",
+        progress: 88,
+        evidenceName: "tangga.jpg",
+      }).ok,
+    ).toBe(true);
+    const rec = getState().recommendations.find((r) => r.id === "REC-RPT-0003-1");
+    expect(rec?.progress).toBe(100);
+    expect(rec?.status).toBe("Menunggu verifikasi");
   });
 });
 

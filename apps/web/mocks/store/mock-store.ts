@@ -11,6 +11,7 @@ import type {
   InstrumentDocVisibility,
   Report,
   RiskFinding,
+  RiskLevel,
   SelfAssessmentDraft,
   Severity,
   Priority,
@@ -598,11 +599,22 @@ export const storeActions = {
     });
   },
 
+  // D-23.c: jalur legacy. Tetap berfungsi agar test lama hijau; jalur utama
+  // verifikasi adalah updateRecommendation(verify:true).
   verifyFinding(
     actor: { id?: string; name: string; role?: string },
     findingId: string,
     note: string,
   ): ActionResult {
+    if (
+      typeof console !== "undefined" &&
+      typeof process !== "undefined" &&
+      process.env?.NODE_ENV !== "production"
+    ) {
+      console.warn(
+        "[ISHAS] verifyFinding usang — pakai updateRecommendation(verify:true) (D-23.c).",
+      );
+    }
     if (!note.trim()) return { ok: false, error: "Catatan verifikasi wajib diisi." };
     const finding = currentState.findings.find((item) => item.id === findingId);
     if (!finding) return { ok: false, error: "Temuan tidak ditemukan." };
@@ -626,6 +638,39 @@ export const storeActions = {
         institutionCode: report.institutionCode,
         action: "Memverifikasi temuan selesai",
         note: note.trim(),
+      });
+      return { ok: true };
+    });
+  },
+
+  // D-23.b: ubah tingkat risiko per temuan (termasuk Ekstrem) secara eksplisit.
+  // Severity laporan tetap Tinggi/Sedang/Rendah; tanpa rumus turunan otomatis.
+  setFindingLevel(
+    actor: { id?: string; name: string; role?: string },
+    findingId: string,
+    level: RiskLevel,
+  ): ActionResult {
+    const allowed: RiskLevel[] = ["Rendah", "Sedang", "Tinggi", "Ekstrem"];
+    if (!allowed.includes(level)) return { ok: false, error: "Tingkat risiko tidak dikenal." };
+    const finding = currentState.findings.find((item) => item.id === findingId);
+    if (!finding) return { ok: false, error: "Temuan tidak ditemukan." };
+    return setStateReport(actor, finding.reportId, (draft, report) => {
+      if (report.validationStatus !== "Diterima" || report.archivedAt) {
+        return {
+          ok: false,
+          error: "Tingkat risiko hanya untuk temuan laporan Diterima yang belum diarsipkan.",
+        };
+      }
+      const target = draft.findings.find((item) => item.id === findingId);
+      if (!target) return { ok: false, error: "Temuan tidak ditemukan." };
+      target.level = level;
+      target.severityText = level;
+      audit(draft, actor, {
+        objectType: "RiskFinding",
+        objectId: findingId,
+        institutionCode: report.institutionCode,
+        action: "Mengubah tingkat risiko temuan",
+        note: level,
       });
       return { ok: true };
     });
@@ -769,12 +814,23 @@ export const storeActions = {
     return { ok: true, id };
   },
 
+  // D-23.c: denah per lantai legacy (historis). Jalur utama adalah
+  // publishCampusPlan gambaran besar. Tetap berfungsi + warn.
   savePlanVersion(
     actor: { id?: string; name: string; role?: string },
     buildingId: string,
     floorId: string,
     fileName: string,
   ): ActionResult {
+    if (
+      typeof console !== "undefined" &&
+      typeof process !== "undefined" &&
+      process.env?.NODE_ENV !== "production"
+    ) {
+      console.warn(
+        "[ISHAS] savePlanVersion usang — pakai publishCampusPlan gambaran besar (D-23.c).",
+      );
+    }
     const account = currentState.users.find((item) => item.id === actor.id);
     const building = currentState.buildings.find((item) => item.id === buildingId);
     if (

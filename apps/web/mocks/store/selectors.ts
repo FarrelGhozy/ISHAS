@@ -47,15 +47,16 @@ export function selectValidationQueue(
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-// Bacaan kelola Pesantren (internal, bukan publik): seluruh laporan milik satu
-// pesantren, terbaru dulu. Filter status dilakukan di UI; mutasi tetap lewat
+// Bacaan kelola Pesantren (internal, bukan publik): laporan milik satu
+// pesantren yang belum diarsip, terbaru dulu (D-23.d). Arsip Completed dibaca
+// di /pesantren/laporan. Filter status dilakukan di UI; mutasi tetap lewat
 // setStateReport (cek scope + akun aktif).
 export function selectReportsForManager(
   state: { reports: Report[] },
   institutionCode: string,
 ): Report[] {
   return state.reports
-    .filter((r) => r.institutionCode === institutionCode)
+    .filter((r) => r.institutionCode === institutionCode && !r.archivedAt)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 

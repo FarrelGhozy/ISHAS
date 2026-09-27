@@ -15,7 +15,7 @@ export function Page() {
   const [floor, setFloor] = useState("Lantai 1");
   const [area, setArea] = useState("");
   const [zone, setZone] = useState("");
-  const [newFloor, setNewFloor] = useState("");
+  const [newFloorByBuilding, setNewFloorByBuilding] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   if (!user || user.roleId !== "pesantren" || user.institutionCodes.length !== 1)
     return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
@@ -132,15 +132,28 @@ export function Page() {
               </div>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
-                  aria-label="Nama lantai baru"
+                  aria-label={`Nama lantai baru ${building.code}`}
                   className="min-h-10 min-w-0 flex-1 rounded border border-line-soft px-3"
-                  value={newFloor}
-                  onChange={(e) => setNewFloor(e.target.value)}
+                  value={newFloorByBuilding[building.id] ?? ""}
+                  onChange={(e) =>
+                    setNewFloorByBuilding((old) => ({ ...old, [building.id]: e.target.value }))
+                  }
                   placeholder="Nama lantai baru"
                 />
                 <button
                   className="secondary-button"
-                  onClick={() => run(() => storeActions.addFloor(user, building.id, newFloor))}
+                  onClick={() =>
+                    run(() => {
+                      const result = storeActions.addFloor(
+                        user,
+                        building.id,
+                        newFloorByBuilding[building.id] ?? "",
+                      );
+                      if (result.ok)
+                        setNewFloorByBuilding((old) => ({ ...old, [building.id]: "" }));
+                      return result;
+                    })
+                  }
                 >
                   Tambah lantai
                 </button>

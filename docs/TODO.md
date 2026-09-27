@@ -1,5 +1,22 @@
 # TODO — Kontrol Kerja Aktif
 
+## Validasi ruang kerja Pesantren + perbaikan alur (D-23) — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): bandingkan `main` vs
+cabang `validator` untuk bagian Pesantren, evaluasi kekurangan data flow, dan
+perbaiki. Keputusan D-23 (sumber status, Ekstrem eksplisit per temuan,
+deprecasi lembut, arsip keluar dari kelola, filter validasi lengkap).
+Cakupan: docs + schema tetap v10 (tanpa migrasi) + store/selector + UI
+validasi/lokasi/tindak-lanjut/laporan + test. Scope Stage 07 + sentuhan baca
+Validasi; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-23 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-23, FLOWS §4–§6, DATA_MODEL §4, WIREFRAMES §4–§5, TODO, STAGE_07).
+- [x] Kode + test (selector arsip, `setFindingLevel` Ekstrem, filter validasi, lantai per-gedung, sync kartu, progres non-Dibatalkan).
+- [x] Verifikasi: lint + typecheck + 149 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard di browser: belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
 ## Denah pratinjau kecil + klik perbesar (D-22) — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik: denah baca tampil satu layar penuh; jadikan

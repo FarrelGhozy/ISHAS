@@ -92,7 +92,10 @@ export function Page() {
       {items.length ? (
         <div className="grid gap-3">
           {items.map((item) => (
-            <TindakLanjutCard key={`${item.id}-${item.status}-${item.progress}`} item={item} />
+            <TindakLanjutCard
+              key={`${item.id}-${item.status}-${item.progress}-${item.updatedAt ?? ""}`}
+              item={item}
+            />
           ))}
         </div>
       ) : (

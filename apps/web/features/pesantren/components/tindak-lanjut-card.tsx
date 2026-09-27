@@ -1,7 +1,7 @@
 // Kartu kelola satu rekomendasi — rencana/progres/bukti/verifikasi/batal (D-20, D-21).
 // Panel baca relasi laporan induk dirender lewat TindakLanjutDetail.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { storeActions, useMockState } from "~/mocks/store/mock-store";
 import { mockRepository } from "~/mocks/adapters/mock-repository";
 import type { Recommendation } from "~/mocks/types";
@@ -30,6 +30,15 @@ export function TindakLanjutCard({ item }: { item: Recommendation }) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelError, setCancelError] = useState("");
+  // Sinkron form saat data berubah dari tempat lain (D-23).
+  useEffect(() => {
+    setPic(item.owner);
+    setDue(item.dueDate);
+    setProgress(snapProgress(item.progress));
+    setNote(item.lastNote ?? "");
+    setEvidenceName(item.completionEvidence ?? "");
+    setEvidenceAssetId(item.completionEvidenceAssetId);
+  }, [item.id, item.status, item.progress, item.updatedAt]);
   const report = state.reports.find((x) => x.id === item.reportId);
   const findings = state.findings.filter((x) => x.recommendationId === item.id);
   const areas = selectAreasByInstitution(state, report?.institutionCode ?? "");
@@ -100,6 +109,45 @@ export function TindakLanjutCard({ item }: { item: Recommendation }) {
           plans={plans}
         />
       </div>
+      {findings.length ? (
+        <div className="mt-3 rounded-lg border border-line-soft p-3">
+          <h3 className="text-sm font-bold text-heading">Tingkat risiko temuan</h3>
+          <div className="mt-2 space-y-2">
+            {findings.map((finding) => (
+              <label key={finding.id} className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="min-w-0 flex-1 text-secondary-text">
+                  {finding.id} · {finding.issue}
+                </span>
+                <select
+                  aria-label={`Tingkat risiko ${finding.id}`}
+                  className="min-h-10 rounded border border-line-soft px-3"
+                  value={finding.level}
+                  onChange={(e) => {
+                    const result = storeActions.setFindingLevel(user, finding.id, e.target.value as never);
+                    setMessage(result.ok ? "Tingkat risiko tersimpan." : result.error);
+                  }}
+                >
+                  <option>Rendah</option>
+                  <option>Sedang</option>
+                  <option>Tinggi</option>
+                  <option>Ekstrem</option>
+                </select>
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-secondary-text">
+            Termasuk Ekstrem (prototipe D-15); perubahan teraudit.
+          </p>
+        </div>
+      ) : null}
+      {state.recommendations.some(
+        (x) => x.reportId === item.reportId && x.status === "Dibatalkan",
+      ) ? (
+        <p role="note" className="mt-3 rounded-lg bg-strip p-3 text-sm text-secondary-text">
+          Ada rekomendasi Dibatalkan pada laporan ini sehingga Completed otomatis terhalangi.
+          Lanjutkan rekomendasi tersisa atau buat laporan baru sebagai pengganti.
+        </p>
+      ) : null}
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <label className="text-sm font-bold">
           PIC

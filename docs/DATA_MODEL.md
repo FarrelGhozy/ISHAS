@@ -207,9 +207,13 @@ nonaktif menunggu D-08.
 | `submitSelfAssessment` | draft lengkap | snapshot jawaban terkirim + 1 `Report` + kandidat temuan + audit + notifikasi; ulang percobaan yang sama tidak menggandakan kiriman |
 | `acceptReport` | `id` + `severity` + `priority` (+ catatan) | `Diterima/Pending`; wajib keduanya terisi |
 | `rejectReport` | `id` + alasan min 10 | `Ditolak`; arsip + validator/waktu/alasan |
-| `updateHandlingStatus` | `id` + status baru + syarat per transisi (PIC/tenggat/bukti) | status baru + audit |
-| `cancelRecommendation` | `id` rekomendasi + alasan min 10 (D-21) | `Dibatalkan` + temuan tertaut ikut + audit; laporan induk tetap `Proses` |
-| `deleteCompletedReport` | `id` + alasan | rancangan hapus report/temuan masih menunggu D-07; harus menetapkan dampak ke seluruh relasi dan riwayat |
+| `updateHandlingStatus` | `id` + status baru + syarat per transisi (PIC/tenggat/bukti) | status baru + audit; jalur utama maju lewat `updateRecommendation`, manual untuk tanpa-rekomendasi/mundur/arsip (D-23.a) |
+| `updateRecommendation` | `id` + PIC/tenggat/progres/bukti/catatan/`verify` | rekomendasi maju + laporan otomatis `Proses`/`Completed`; progres dinormalisasi D-20 |
+| `setFindingLevel` | `id` temuan + level (`Rendah/Sedang/Tinggi/Ekstrem`) | level baru + audit `Mengubah tingkat risiko temuan`; scope Pesantren pemilik (D-23.b) |
+| `cancelRecommendation` | `id` rekomendasi + alasan min 10 (D-21) | `Dibatalkan` + temuan tertaut ikut + audit; laporan induk tetap status berjalan (`Pending/Proses`) |
+| `verifyFinding` | `id` temuan + catatan | Deprecated lembut (D-23.c): tetap berfungsi + warn; pakai `updateRecommendation(verify:true)` |
+| `savePlanVersion` | denah per lantai | Deprecated lembut (D-23.c): tetap berfungsi + warn; jalur utama `publishCampusPlan` gambaran besar |
+| `deleteCompletedReport` | `id` + alasan | Alias `archiveCompletedReport` (D-07: arsip, bukan hapus) |
 | `addUser` / `addInstitution` | sama tanpa peran asesor | + pesantren baru TIDAK otomatis tampil sebelum `Aktif` + punya akun Pesantren |
 | `resetMockData` | — | kembali ke seed |
 

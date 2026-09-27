@@ -535,3 +535,35 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   (`Pengelola Pesantren → Pesantren`); reset demo kembali ke seed baru.
 - Dokumen terdampak: AGENTS (istilah), README, ROLES, ROUTES, FLOWS, DATA_MODEL,
   WIREFRAMES, TEST_PLAN, TODO, planning stage, dan seluruh `apps/web/` role-aware.
+
+## D-23 — Validasi ruang kerja Pesantren + perbaikan alur — DISETUJUI 27 September 2026
+
+- Arahan pemilik: `ok kerjakan` atas evaluasi perbandingan `main` vs cabang
+  `validator` untuk bagian Pesantren (validasi isi, data flow, kekurangan,
+  rancangan perbaikan).
+- **D-23.a — Sumber status:** jalur utama `Pending/Proses/Completed` bergerak
+  lewat kartu tindak lanjut (`updateRecommendation` otomatis menutup laporan bila
+  seluruh rekomendasi `Terverifikasi`). `updateHandlingStatus` manual tetap sah
+  untuk laporan tanpa rekomendasi + langkah mundur/arsip; UI Validasi hanya
+  `Terima/Tolak`, tidak ada kontrol status manual di sana.
+- **D-23.b — Ekstrem terjangkau:** `severity/priority` tetap
+  `Tinggi/Sedang/Rendah` (tanpa `Ekstrem`). Level temuan `Ekstrem` diubah
+  eksplisit per temuan oleh Pesantren (`setFindingLevel`, teraudit); bukan rumus
+  turunan otomatis. Seed 1 Ekstrem tetap ilustrasi, bukan ambang ilmiah final.
+- **D-23.c — Deprecasi lembut:** `verifyFinding` dan `savePlanVersion` (denah
+  per lantai) tetap berfungsi + peringatan konsol, tetapi bukan jalur utama.
+  Jalur utama verifikasi = `updateRecommendation(verify:true)`; jalur utama
+  denah = `publishCampusPlan` gambaran besar. Tidak ada hapus mendadak agar
+  test lama tetap hijau.
+- **D-23.d — Arsip vs kelola:** `selectReportsForManager` tidak memuat laporan
+  yang sudah `archivedAt`. Progres laporan Pesantren = rata-rata rekomendasi
+  non-`Dibatalkan` (0 bila kosong). Laporan induk yang rekomendasinya
+  `Dibatalkan` tetap pada status berjalan (`Pending/Proses`); `Dibatalkan`
+  menghalangi `Completed` otomatis + ada hint next-step di UI.
+- **D-23.e — Filter validasi:** antrean mendukung filter status + kanal
+  (`lapor-cepat/penilaian-mandiri`) + severity + pencarian
+  (nomor/judul/pelapor/deskripsi); baris memuat chip kanal + lokasi +
+  handling agar konteks jelas sebelum `Periksa`.
+- Dokumen terdampak: FLOWS §4–§6, DATA_MODEL §0/§4, WIREFRAMES §4–§5, TODO,
+  STAGE_07 (+ catatan lintas Stage 05–06 tanpa mengubah status stage lain).
+  Scope Stage 07 + sentuhan baca Validasi; status stage lain tidak berubah sepihak.
