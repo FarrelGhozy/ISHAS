@@ -106,7 +106,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
   });
 });
 
-describe("lokasi manual + scope/versi draft (D-10/D-11)", () => {
+describe("lokasi manual + scope/checksum draft (D-24/D-11)", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("jawaban locationRequired boleh memakai manualLocation tanpa areaId", () => {
@@ -127,29 +127,38 @@ describe("lokasi manual + scope/versi draft (D-10/D-11)", () => {
     expect(r.ok).toBe(true);
   });
 
-  test("draft scope tak terdaftar / versi non-Published ditolak", () => {
+  test("draft scope tak terdaftar ditolak; kirim memakai bank live", () => {
     expect(
       storeActions.saveSelfAssessmentDraft(
         draftLengkap("SELF-PSN-9999", { institutionCode: "PSN-9999" }),
       ).ok,
     ).toBe(false);
+    // Versioning dihapus (D-24): nilai instrumentVersionId warisan diabaikan,
+    // draft tersimpan dengan checksum bank live.
     expect(
       storeActions.saveSelfAssessmentDraft(
         draftLengkap("SELF-PSN-0018", { instrumentVersionId: "INS-tak-ada" }),
       ).ok,
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  test("draft versi lama yang sudah diarsip tidak boleh dikirim (D-10)", () => {
+  test("draft tanpa nama tetap tersimpan (nama divalidasi saat kirim)", () => {
+    const r = storeActions.saveSelfAssessmentDraft(
+      draftLengkap("SELF-PSN-0018", { reporterName: "" }),
+    );
+    expect(r.ok).toBe(true);
+    const kirim = storeActions.submitSelfAssessment({ name: "Warga" }, "SELF-PSN-0018");
+    expect(kirim.ok).toBe(false);
+  });
+
+  test("draft basi (soal berubah) tidak boleh dikirim, wajib ulang dari awal (D-24)", () => {
     simpan("SELF-PSN-0018");
-    const created = storeActions.createInstrumentDraft();
-    expect(created.ok).toBe(true);
-    if (!created.ok || !created.id) return;
-    expect(storeActions.publishInstrument(created.id).ok).toBe(true);
+    const added = storeActions.addBankDimension("Dimensi Uji Basi");
+    expect(added.ok).toBe(true);
     const r = storeActions.submitSelfAssessment({ name: "Warga" }, "SELF-PSN-0018");
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toContain("diarsipkan");
-    // Draft lama bisa dibuang agar pelapor mulai baru.
+    if (!r.ok) expect(r.error).toContain("berubah");
+    // Draft basi bisa dibuang agar pelapor mulai baru.
     expect(storeActions.deleteSelfAssessmentDraft("SELF-PSN-0018").ok).toBe(true);
   });
 });
@@ -307,5 +316,83 @@ describe("seed D-02", () => {
     expect(SEED.reports.some((r) => r.reporterName.trim().toLowerCase().startsWith("anonim"))).toBe(
       false,
     );
+  });
+});
+
+describe("bank live + snapshot beku + PDF (D-24)", () => {
+  beforeEach(() => storeActions.resetMockData());
+
+  test("kirim membekukan soal + skor % + waktu PDF pada laporan", () => {
+    simpan("SELF-PSN-0018");
+    const r = storeActions.submitSelfAssessment({ name: "Warga" }, "SELF-PSN-0018");
+    expect(r.ok).toBe(true);
+    if (!r.ok || !r.id) return;
+    const report = getState().reports.find((x) => x.id === r.id)!;
+    expect(report.instrumentVersionId).toBe("INS-LIVE");
+    expect(report.instrumentChecksum).toBe(getState().instrument.checksum);
+    expect(typeof report.scorePercent).toBe("number");
+    expect(report.pdfGeneratedAt).toBeTruthy();
+    const snapshot = getState().selfAssessmentSnapshots.find((s) => s.reportId === r.id)!;
+    expect(snapshot.frozenIndicators?.length).toBe(10);
+    expect(snapshot.scorePercent).toBe(report.scorePercent);
+    // Beku: ubah bank tidak mengubah skor tersimpan.
+    expect(storeActions.deleteBankIndicator("IND-K3L-010").ok).toBe(true);
+    const sesudah = getState().selfAssessmentSnapshots.find((s) => s.reportId === r.id)!;
+    expect(sesudah.scorePercent).toBe(report.scorePercent);
+    expect(sesudah.frozenIndicators?.length).toBe(10);
+  });
+
+  test("validator kelola penuh: tambah/edit/hapus dimensi + indikator + atur bobot", () => {
+    const dim = storeActions.addBankDimension("Dimensi Uji", "KAT-KESELAMATAN");
+    expect(dim.ok).toBe(true);
+    if (!dim.ok || !dim.id) return;
+    expect(storeActions.addBankDimension("x").ok).toBe(false);
+    const ind = storeActions.addBankIndicator(dim.id, {
+      code: "IND-UJI-001",
+      title: "Indikator uji coba bobot",
+      prompt: "Apakah kondisi uji sudah memenuhi standar minimal?",
+      answerType: "frekuensi",
+      required: true,
+      evidenceRequired: false,
+      locationRequired: false,
+    });
+    expect(ind.ok).toBe(true);
+    if (!ind.ok || !ind.id) return;
+    expect(
+      storeActions.addBankIndicator(dim.id, {
+        code: "IND-UJI-001",
+        title: "Duplikat kode indikator",
+        prompt: "Prompt duplikat yang cukup panjang.",
+        answerType: "ya-tidak",
+        required: true,
+        evidenceRequired: false,
+        locationRequired: false,
+      }).ok,
+    ).toBe(false);
+    // Atur bobot: tolak bobot di luar 0–100 dan opsi ganda.
+    expect(
+      storeActions.setBankIndicatorOptions(ind.id, [
+        { value: "Ya", label: "Ya", weight: 101, isFinding: false },
+        { value: "Tidak", label: "Tidak", weight: 20, isFinding: true },
+      ]).ok,
+    ).toBe(false);
+    expect(
+      storeActions.setBankIndicatorOptions(
+        ind.id,
+        [
+          { value: "Ya", label: "Ya", weight: 100, isFinding: false },
+          { value: "Tidak", label: "Tidak", weight: 10, isFinding: true },
+        ],
+        2,
+      ).ok,
+    ).toBe(true);
+    const live = getState().instrument.dimensions
+      .flatMap((d) => d.indicators)
+      .find((i) => i.id === ind.id)!;
+    expect(live.options.find((o) => o.value === "Tidak")?.weight).toBe(10);
+    expect(live.weight).toBe(2);
+    expect(storeActions.updateBankIndicator(ind.id, { title: "Judul diubah" }).ok).toBe(true);
+    expect(storeActions.deleteBankIndicator(ind.id).ok).toBe(true);
+    expect(storeActions.deleteBankDimension(dim.id).ok).toBe(true);
   });
 });

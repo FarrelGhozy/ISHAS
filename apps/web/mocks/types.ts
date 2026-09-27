@@ -63,6 +63,75 @@ export type User = {
   lastActive: string;
 };
 
+export type InstrumentAnswerType =
+  | "ya-tidak"
+  | "kualitas-1-5"
+  | "frekuensi"
+  | "keparahan"
+  // Warisan versioning lama (D-24: hanya dibaca untuk snapshot lama,
+  // indikator baru memakai 4 tipe di atas).
+  | "likert-1-5"
+  | "boolean-ya-tidak"
+  | "likert-1-2-tidak";
+
+// D-24: bank data — tiap opsi jawaban punya bobot 0–100 + flag temuan.
+export type InstrumentOption = {
+  value: string;
+  label: string;
+  weight: number; // 0–100, diatur Validator lewat tombol Atur Bobot
+  isFinding: boolean; // true = jawaban ini memicu kandidat temuan ilustratif
+};
+
+export type InstrumentIndicator = {
+  id: string; // 'IND-K3L-001' stabil
+  code: string;
+  title: string;
+  prompt: string;
+  categoryId?: K3CategoryId;
+  aspectId?: string;
+  answerType: InstrumentAnswerType;
+  required: boolean;
+  evidenceRequired: boolean;
+  locationRequired: boolean;
+  weight: number; // pengali indikator, default 1
+  options: InstrumentOption[];
+  // Warisan versioning lama (bacaan legacy).
+  findingTrigger?: string;
+};
+
+export type InstrumentDimension = {
+  id: string;
+  name: string;
+  categoryId?: K3CategoryId;
+  description?: string;
+  aspects?: { id: string; name: string }[];
+  indicators: InstrumentIndicator[];
+};
+
+// D-24: satu bank instrumen live (tanpa Draft/Published/Archived).
+export type Instrument = {
+  id: string; // 'INS-LIVE'
+  label: string;
+  updatedAt: string;
+  checksum: string;
+  dimensions: InstrumentDimension[];
+};
+
+// Copy beku soal saat kirim (audit + PDF + skor tidak berubah bila bank diedit).
+export type FrozenIndicator = {
+  id: string;
+  code: string;
+  title: string;
+  prompt: string;
+  dimensionId: string;
+  dimensionName: string;
+  categoryId?: K3CategoryId;
+  aspectId?: string;
+  answerType: InstrumentAnswerType;
+  weight: number;
+  options: InstrumentOption[];
+};
+
 export type Report = {
   locationSnapshot?: LocationSnapshot;
   id: string; // 'RPT-0001', berurutan
@@ -84,7 +153,10 @@ export type Report = {
   evidenceName?: string; // nama lampiran; data lama dapat hanya berupa nama dummy
   evidenceAssetId?: string; // blob bukti privat di IndexedDB perangkat-lokal
   contact?: string;
-  instrumentVersionId?: string; // wajib bila kanal penilaian-mandiri
+  instrumentVersionId?: string; // warisan versioning (bacaan legacy); kiriman baru memakai snapshot beku
+  instrumentChecksum?: string; // D-24: checksum bank live saat kirim
+  scorePercent?: number | null; // D-24: skor % beku penilaian-mandiri (sumber agregat + PDF)
+  pdfGeneratedAt?: string; // D-24: waktu PDF laporan dibuat (tampil publik setelah Diterima)
   validationStatus: ValidationStatus;
   severity: Severity; // keputusan final, 'Belum ditentukan' sampai akun Pesantren menerima (D-19)
   priority: Priority;
@@ -116,18 +188,24 @@ export type IndicatorAnswer = {
 
 export type SelfAssessmentSnapshot = {
   reportId: string; // FK Report
-  instrumentVersionId: string;
+  instrumentVersionId: string; // warisan versioning (bacaan legacy; kiriman baru = 'INS-LIVE')
+  instrumentChecksum?: string; // D-24: checksum bank live saat kirim
   submittedAt: string;
   answers: Record<string, IndicatorAnswer>; // key = indicatorId
+  frozenIndicators?: FrozenIndicator[]; // D-24: copy beku soal + opsi + bobot
+  scorePercent?: number | null; // D-24: skor % beku (sumber agregat + PDF)
+  byDimension?: Record<string, number | null>; // D-24: skor % per dimensi
 };
 
 export type SelfAssessmentDraft = {
-  // belum dikirim; per perangkat — kebijakan D-10 (draft lama terkunci kirim)
+  // belum dikirim; per perangkat — D-24: checksum beda = ulang dari awal
   id: string; // 'SELF-0001'
   institutionCode: string;
-  reporterName: string;
-  reporterUserId?: string; // pemilik draft pada perangkat bersama (D-10)
-  instrumentVersionId: string; // terkunci ke Published aktif
+  reporterName: string; // nama penilai (registrasi di atas form)
+  contact?: string; // kontak penilai opsional (klarifikasi, maks 100)
+  reporterUserId?: string; // pemilik draft pada perangkat bersama
+  instrumentVersionId: string; // warisan versioning (kiriman baru = 'INS-LIVE')
+  instrumentChecksum?: string; // D-24: checksum bank saat draft dibuat
   answers: Record<string, Partial<IndicatorAnswer>>;
   activeIndex: number;
   updatedAt: string;
@@ -223,6 +301,7 @@ export type Area = {
   height: number;
 };
 
+// Warisan versioning (D-24: hanya bacaan legacy + migrasi; UI baru memakai `Instrument`).
 export type InstrumentVersion = {
   id: string; // 'INS-v1.0'
   label: string;
@@ -241,7 +320,7 @@ export type InstrumentVersion = {
       prompt: string;
       categoryId?: K3CategoryId; // D-15
       aspectId?: string; // D-15
-      answerType: "likert-1-5" | "boolean-ya-tidak" | "likert-1-2-tidak";
+      answerType: InstrumentAnswerType;
       required: boolean;
       evidenceRequired: boolean;
       locationRequired: boolean;
@@ -291,8 +370,9 @@ export type IshasState = {
   recommendations: Recommendation[];
   buildings: Building[];
   areas: Area[];
-  instrumentVersions: InstrumentVersion[];
-  activeInstrumentVersionId: string | null;
+  instrument: Instrument; // D-24: bank live (sumber pengisian baru)
+  instrumentVersions: InstrumentVersion[]; // warisan versioning (bacaan legacy)
+  activeInstrumentVersionId: string | null; // warisan versioning (bacaan legacy)
   instrumentDocs: InstrumentDoc[]; // D-16: pustaka PDF per indikator
   auditEvents: AuditEvent[];
   notifications: Notification[];

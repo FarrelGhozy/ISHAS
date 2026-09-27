@@ -40,7 +40,7 @@ test("state entri instrumen null tidak melempar dan pulih ke seed", () => {
   expect(loadState()).toEqual(SEED);
 });
 
-test("state v6 tanpa instrumentDocs dimigrasi ke v10 berisi seed docs", () => {
+test("state v6 tanpa instrumentDocs dimigrasi ke v11 berisi seed docs", () => {
   const v6 = structuredClone(SEED) as unknown as Record<string, unknown>;
   delete v6["instrumentDocs"];
   v6["schemaVersion"] = 6;
@@ -53,11 +53,12 @@ test("state v6 tanpa instrumentDocs dimigrasi ke v10 berisi seed docs", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(10);
+  expect(loaded.schemaVersion).toBe(11);
   expect(loaded.instrumentDocs).toEqual(SEED.instrumentDocs);
+  expect(loaded.instrument.dimensions.length).toBeGreaterThan(0);
 });
 
-test("state v5 valid dimigrasi ke v10 tanpa kehilangan record", () => {
+test("state v5 valid dimigrasi ke v11 tanpa kehilangan record", () => {
   const v5 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 5 });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
@@ -68,11 +69,11 @@ test("state v5 valid dimigrasi ke v10 tanpa kehilangan record", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(10);
+  expect(loaded.schemaVersion).toBe(11);
   expect(loaded.reports.length).toBe(SEED.reports.length);
 });
 
-test("state v8 tanpa usulan dimigrasi ke v10 dengan default Belum ditentukan", () => {
+test("state v8 tanpa usulan dimigrasi ke v11 dengan default Belum ditentukan", () => {
   const v8 = structuredClone(SEED) as unknown as Record<string, unknown>;
   v8["schemaVersion"] = 8;
   for (const report of (v8["reports"] as Record<string, unknown>[])) {
@@ -88,7 +89,7 @@ test("state v8 tanpa usulan dimigrasi ke v10 dengan default Belum ditentukan", (
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(10);
+  expect(loaded.schemaVersion).toBe(11);
   expect(
     loaded.reports.every(
       (report) =>
@@ -98,7 +99,7 @@ test("state v8 tanpa usulan dimigrasi ke v10 dengan default Belum ditentukan", (
   ).toBe(true);
 });
 
-test("state v9 valid dimigrasi ke v10 tanpa kehilangan record/ID", () => {
+test("state v9 valid dimigrasi ke v11 tanpa kehilangan record/ID", () => {
   const v9 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 9 });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
@@ -109,10 +110,30 @@ test("state v9 valid dimigrasi ke v10 tanpa kehilangan record/ID", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(10);
+  expect(loaded.schemaVersion).toBe(11);
   expect(loaded.reports.length).toBe(SEED.reports.length);
   expect(loaded.recommendations.length).toBe(SEED.recommendations.length);
   expect(loaded.recommendations.map((item) => item.id)).toEqual(
     SEED.recommendations.map((item) => item.id),
   );
+});
+
+test("state v10 tanpa bank dibangunkan bank live dari versi aktif warisan", () => {
+  const v10 = structuredClone(SEED) as unknown as Record<string, unknown>;
+  v10["schemaVersion"] = 10;
+  delete v10["instrument"];
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem() {
+        return JSON.stringify(v10);
+      },
+    },
+  });
+  const loaded = loadState();
+  expect(loaded.schemaVersion).toBe(11);
+  expect(loaded.instrument.id).toBe("INS-LIVE");
+  expect(
+    loaded.instrument.dimensions.flatMap((d) => d.indicators).length,
+  ).toBe(10);
 });

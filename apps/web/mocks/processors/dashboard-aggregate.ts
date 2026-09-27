@@ -6,8 +6,10 @@
 import type {
   Area,
   Building,
+  FrozenIndicator,
   IndexPoint,
   Institution,
+  Instrument,
   InstrumentVersion,
   Recommendation,
   Report,
@@ -16,6 +18,7 @@ import type {
   SelfAssessmentSnapshot,
   User,
 } from "../types";
+import { isJawabanTemuan } from "../instrument-bank";
 import {
   K3_CATEGORIES,
   K3_CATEGORY_MAP,
@@ -74,10 +77,20 @@ export type SnapshotSkor = {
   submittedAt: string;
 };
 
+// D-24: snapshot beku diutamakan (skor % tersimpan, tidak dihitung ulang);
+// snapshot lama tanpa beku memakai lookup versi warisan.
 export function skorSnapshot(
   versions: InstrumentVersion[],
   snapshot: SelfAssessmentSnapshot,
 ): SnapshotSkor {
+  if (snapshot.frozenIndicators && snapshot.scorePercent !== undefined) {
+    return {
+      index: snapshot.scorePercent,
+      byDimension: snapshot.byDimension ?? {},
+      instrumentVersionId: snapshot.instrumentVersionId,
+      submittedAt: snapshot.submittedAt,
+    };
+  }
   const version = versions.find((v) => v.id === snapshot.instrumentVersionId);
   if (!version) {
     return {
@@ -151,6 +164,7 @@ export type IndexInput = {
   selfAssessmentSnapshots: SelfAssessmentSnapshot[];
   instrumentVersions: InstrumentVersion[];
   indexHistory: Record<string, IndexPoint[]> | undefined;
+  instrument?: Instrument; // D-24: bank live (nama dimensi baru)
 };
 
 export function hitungIndexSummary(input: IndexInput, institutionCodes: string[]): IndexSummary {
@@ -161,23 +175,28 @@ export function hitungIndexSummary(input: IndexInput, institutionCodes: string[]
         input.selfAssessmentSnapshots,
         code,
       );
-      return snapshot ? skorSnapshot(input.instrumentVersions, snapshot) : null;
+      return snapshot ? { snapshot, skor: skorSnapshot(input.instrumentVersions, snapshot) } : null;
     })
-    .filter((s): s is SnapshotSkor => s !== null && s.index !== null);
+    .filter((s): s is { snapshot: SelfAssessmentSnapshot; skor: SnapshotSkor } => s !== null && s.skor.index !== null);
 
-  const currentIndex = perLembaga.length ? mean(perLembaga.map((s) => s.index as number)) : null;
+  const currentIndex = perLembaga.length ? mean(perLembaga.map((s) => s.skor.index as number)) : null;
 
   // Dimensi: rata-rata antarlembaga yang punya skor untuk dimensi sama (bobot sama per lembaga).
+  // Nama dimensi dari snapshot beku dulu, lalu bank live, lalu versi warisan.
   const dimMap = new Map<string, { name: string; scores: number[] }>();
-  for (const skor of perLembaga) {
-    const version = input.instrumentVersions.find((v) => v.id === skor.instrumentVersionId);
-    if (!version) continue;
-    for (const dim of version.dimensions) {
-      const score = skor.byDimension[dim.id];
+  for (const { snapshot, skor } of perLembaga) {
+    for (const [dimId, score] of Object.entries(skor.byDimension)) {
       if (score === null || score === undefined) continue;
-      const entry = dimMap.get(dim.id) ?? { name: dim.name, scores: [] };
+      const name =
+        snapshot.frozenIndicators?.find((f) => f.dimensionId === dimId)?.dimensionName ??
+        input.instrument?.dimensions.find((d) => d.id === dimId)?.name ??
+        input.instrumentVersions
+          .find((v) => v.id === skor.instrumentVersionId)
+          ?.dimensions.find((d) => d.id === dimId)?.name ??
+        dimId;
+      const entry = dimMap.get(dimId) ?? { name, scores: [] };
       entry.scores.push(score);
-      dimMap.set(dim.id, entry);
+      dimMap.set(dimId, entry);
     }
   }
   const dimensions: DimensiSkor[] = [...dimMap.entries()].map(([id, v]) => ({
@@ -227,7 +246,7 @@ export function hitungIndexSummary(input: IndexInput, institutionCodes: string[]
     series,
     dimensions,
     periode: PERIODE_BERJALAN,
-    instrumentVersionIds: [...new Set(perLembaga.map((s) => s.instrumentVersionId))],
+    instrumentVersionIds: [...new Set(perLembaga.map((s) => s.skor.instrumentVersionId))],
   };
 }
 
@@ -422,12 +441,24 @@ export type RekapKategoriInput = {
   findings: RiskFinding[];
   snapshots: SelfAssessmentSnapshot[];
   versions: InstrumentVersion[];
+  instrument?: Instrument; // D-24: bank live (katalog + definisi baru)
 };
 
 function kategoriOfIndicator(
   versions: InstrumentVersion[],
   indicatorId: string,
+  instrument?: Instrument,
 ): { categoryId: K3CategoryId | null; aspectId?: string } {
+  if (instrument) {
+    for (const dim of instrument.dimensions) {
+      const ind = dim.indicators.find((i) => i.id === indicatorId);
+      if (ind)
+        return {
+          categoryId: (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null,
+          aspectId: ind.aspectId,
+        };
+    }
+  }
   for (const version of versions) {
     for (const dim of version.dimensions) {
       const ind = dim.indicators.find((i) => i.id === indicatorId);
@@ -462,13 +493,24 @@ function memicuTemuan(
   indicatorId: string,
   value: string,
 ): boolean {
+  // D-24: snapshot beku diutamakan (flag per opsi).
+  const frozen = snapshot.frozenIndicators?.find((f) => f.id === indicatorId);
+  if (frozen) return isJawabanTemuan(frozen, value);
   const version = versions.find((item) => item.id === snapshot.instrumentVersionId);
-  const answerType = version?.dimensions
+  const indicator = version?.dimensions
     .flatMap((dimension) => dimension.indicators)
-    .find((indicator) => indicator.id === indicatorId)?.answerType;
-  if (answerType === "likert-1-5") return ["1", "2"].includes(value);
+    .find((item) => item.id === indicatorId);
+  if (indicator && "options" in indicator && Array.isArray((indicator as { options?: unknown }).options))
+    return isJawabanTemuan(
+      indicator as unknown as Pick<FrozenIndicator, "options" | "answerType">,
+      value,
+    );
+  const answerType = indicator?.answerType;
+  if (answerType === "likert-1-5" || answerType === "kualitas-1-5") return ["1", "2"].includes(value);
   if (answerType === "likert-1-2-tidak") return ["1", "Tidak"].includes(value);
-  if (answerType === "boolean-ya-tidak") return value === "Tidak";
+  if (answerType === "boolean-ya-tidak" || answerType === "ya-tidak") return value === "Tidak";
+  if (answerType === "frekuensi") return ["Sering", "Selalu"].includes(value);
+  if (answerType === "keparahan") return ["Berat", "Kritis"].includes(value);
   return false;
 }
 
@@ -507,41 +549,66 @@ export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] 
     risiko: { Ekstrem: 0, Tinggi: 0, Sedang: 0, Rendah: 0 },
   });
 
-  // Katalog Published saja; Draft/Archived tidak memperbesar katalog aktif.
+  // D-24: katalog = bank live; fallback Published warisan bila bank kosong.
   const seenIndicator = new Set<string>();
-  for (const version of input.versions.filter((item) => item.status === "Published")) {
-    for (const dim of version.dimensions) {
-      for (const ind of dim.indicators) {
-        if (seenIndicator.has(ind.id)) continue;
-        seenIndicator.add(ind.id);
-        const catId = (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null;
-        const row =
-          rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
-        row.jumlahIndikator += 1;
-      }
+  const katalogDims =
+    input.instrument && input.instrument.dimensions.length
+      ? input.instrument.dimensions
+      : input.versions
+          .filter((item) => item.status === "Published")
+          .flatMap((item) => item.dimensions);
+  for (const dim of katalogDims) {
+    for (const ind of dim.indicators) {
+      if (seenIndicator.has(ind.id)) continue;
+      seenIndicator.add(ind.id);
+      const catId = (ind.categoryId ?? dim.categoryId ?? null) as K3CategoryId | null;
+      const row =
+        rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
+      row.jumlahIndikator += 1;
     }
   }
 
   // Sesuai / tidak sesuai dari snapshot laporan Diterima.
   for (const snapshot of input.snapshots) {
     if (!acceptedIds.has(snapshot.reportId)) continue;
+    const frozenById = new Map((snapshot.frozenIndicators ?? []).map((f) => [f.id, f]));
     const version = input.versions.find((item) => item.id === snapshot.instrumentVersionId);
-    if (!version) continue;
     for (const [indicatorId, answer] of Object.entries(snapshot.answers)) {
       const value = answer.value?.trim() ?? "";
       if (!value || value === "N/A") continue;
-      const indicator = version.dimensions
+      const frozen = frozenById.get(indicatorId);
+      const legacy = version?.dimensions
         .flatMap((dimension) => dimension.indicators)
         .find((item) => item.id === indicatorId);
+      const live = input.instrument?.dimensions
+        .flatMap((d) => d.indicators)
+        .find((item) => item.id === indicatorId);
+      const indicator = frozen ?? legacy ?? live;
       if (!indicator) continue;
+      const validOptions =
+        frozen?.options.map((o) => o.value) ??
+        ("options" in indicator && Array.isArray((indicator as { options?: unknown }).options)
+          ? ((indicator as unknown as FrozenIndicator).options.map((o) => o.value) as string[])
+          : null);
       const valid =
-        indicator.answerType === "boolean-ya-tidak"
-          ? ["Ya", "Tidak"].includes(value)
-          : indicator.answerType === "likert-1-2-tidak"
-            ? ["1", "2", "Tidak"].includes(value)
-            : ["1", "2", "3", "4", "5"].includes(value);
+        validOptions !== null && validOptions !== undefined
+          ? validOptions.includes(value)
+          : indicator.answerType === "boolean-ya-tidak" || indicator.answerType === "ya-tidak"
+            ? ["Ya", "Tidak"].includes(value)
+            : indicator.answerType === "likert-1-2-tidak"
+              ? ["1", "2", "Tidak"].includes(value)
+              : indicator.answerType === "frekuensi"
+                ? ["Tidak pernah", "Jarang", "Kadang", "Sering", "Selalu"].includes(value)
+                : indicator.answerType === "keparahan"
+                  ? ["Ringan", "Sedang", "Berat", "Kritis"].includes(value)
+                  : ["1", "2", "3", "4", "5"].includes(value);
       if (!valid) continue;
-      const { categoryId } = kategoriOfIndicator([version], indicatorId);
+      // Definisi jawaban historis milik versi asal snapshot (draft tidak menimpa).
+      const asal = version ? [version] : input.versions;
+      const { categoryId } =
+        frozen?.categoryId
+          ? { categoryId: frozen.categoryId }
+          : kategoriOfIndicator(asal, indicatorId, input.instrument);
       const row =
         rows.get(categoryId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
       if (memicuTemuan(input.versions, snapshot, indicatorId, value)) row.jumlahTidakSesuai += 1;

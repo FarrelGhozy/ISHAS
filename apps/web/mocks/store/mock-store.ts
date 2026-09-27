@@ -6,9 +6,14 @@
 import { useSyncExternalStore } from "react";
 import type {
   Area,
+  FrozenIndicator,
+  IndicatorAnswer,
   Institution,
+  InstrumentAnswerType,
   InstrumentDoc,
   InstrumentDocVisibility,
+  InstrumentIndicator,
+  InstrumentOption,
   Report,
   RiskFinding,
   RiskLevel,
@@ -27,6 +32,13 @@ import { selectRegisteredInstitutions } from "./selectors";
 import { K3_ASPECT_MAP, K3_CATEGORY_MAP } from "../kategori-k3";
 import type { IshasState } from "../types";
 import { snapshotLocation, validateMapLocation } from "../processors/campus-map";
+import {
+  BANK_ID,
+  defaultOptionsForType,
+  hitungChecksumInstrument,
+  isJawabanTemuan,
+  skorLaporanBeku,
+} from "../instrument-bank";
 
 type Listener = () => void;
 
@@ -108,6 +120,23 @@ function notify(
 export type ActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
 export type ReportActor = { id?: string; name: string; email?: string; role?: string };
+
+// D-24: setiap perubahan bank memperbarui waktu + checksum (draft basi = ulang).
+function touchBank(bank: IshasState["instrument"]): void {
+  bank.updatedAt = nowIso();
+  bank.checksum = hitungChecksumInstrument(bank.dimensions);
+}
+
+function findBankIndicator(
+  state: IshasState,
+  id: string,
+): { dimensionId: string; indicator: InstrumentIndicator } | null {
+  for (const dim of state.instrument.dimensions) {
+    const indicator = dim.indicators.find((i) => i.id === id);
+    if (indicator) return { dimensionId: dim.id, indicator };
+  }
+  return null;
+}
 
 // Idempotency kirim-ganda (V2-03): requestId yang sama mengembalikan id yang sama
 // tanpa membuat record kedua. Disimpan di memori (sesi halaman); draft dibersihkan
@@ -278,23 +307,26 @@ export const storeActions = {
     if (input.areaId && !ownedAreas.some((a) => a.id === input.areaId)) {
       return { ok: false, error: "Lokasi/area tidak sah untuk pesantren ini." };
     }
-    // D-19: lapor-cepat baru tanpa indikator; cascading kategori → aspek dicek di
-    // versi Published aktif; tanpa pilihan tetap sah.
-    const activeVersion = currentState.instrumentVersions.find(
-      (v) => v.id === currentState.activeInstrumentVersionId && v.status === "Published",
-    );
+    // D-19/D-24: lapor-cepat baru tanpa indikator; cascading kategori → aspek
+    // dicek di bank live; tanpa pilihan tetap sah.
+    const bankDims = currentState.instrument?.dimensions ?? [];
+    const legacyDims =
+      currentState.instrumentVersions.find(
+        (v) => v.id === currentState.activeInstrumentVersionId && v.status === "Published",
+      )?.dimensions ?? [];
+    const refDims = bankDims.length ? bankDims : legacyDims;
     const categoryId = input.categoryId?.trim() || undefined;
     const aspectId = input.aspectId?.trim() || undefined;
     if (aspectId && !categoryId) return { ok: false, error: "Pilih kategori terlebih dahulu." };
     if (
       categoryId &&
-      activeVersion &&
-      !activeVersion.dimensions.some((d) => (d.categoryId ?? d.id) === categoryId)
+      refDims.length &&
+      !refDims.some((d) => (d.categoryId ?? d.id) === categoryId)
     ) {
       return { ok: false, error: "Kategori tidak dikenal." };
     }
-    if (aspectId && activeVersion) {
-      const dim = activeVersion.dimensions.find((d) => (d.categoryId ?? d.id) === categoryId);
+    if (aspectId && refDims.length) {
+      const dim = refDims.find((d) => (d.categoryId ?? d.id) === categoryId);
       if (!dim || !(dim.aspects ?? []).some((a) => a.id === aspectId)) {
         return { ok: false, error: "Kategori/aspek tidak konsisten." };
       }
@@ -1026,8 +1058,9 @@ export const storeActions = {
   },
 
   saveSelfAssessmentDraft(draftInput: SelfAssessmentDraft): ActionResult {
-    // Boundary validation (D-10/D-11): tolak scope tak terdaftar / versi non-Published.
-    // Nama dibiarkan fleksibel saat autosave; validasi panjang final ada di submit.
+    // Boundary validation (D-24/D-11): tolak scope tak terdaftar.
+    // Checksum dicatat apa adanya (UI menilai basi/tidaknya); nama fleksibel
+    // saat autosave, validasi panjang final ada di submit.
     if (
       draftInput.institutionCode &&
       !selectRegisteredInstitutions(currentState).some(
@@ -1036,15 +1069,15 @@ export const storeActions = {
     ) {
       return { ok: false, error: "Pesantren tidak tersedia untuk pelaporan." };
     }
-    const version = currentState.instrumentVersions.find(
-      (item) => item.id === draftInput.instrumentVersionId,
-    );
-    if (!version || version.status !== "Published") {
-      return { ok: false, error: "Instrumen Published tidak tersedia." };
+    if (!currentState.instrument || !currentState.instrument.dimensions.length) {
+      return { ok: false, error: "Belum ada instrumen." };
     }
     setState((draft) => {
       draft.selfAssessmentDrafts[draftInput.id] = {
         ...draftInput,
+        instrumentVersionId: draftInput.instrumentVersionId || BANK_ID,
+        instrumentChecksum:
+          draftInput.instrumentChecksum ?? currentState.instrument.checksum,
         updatedAt: nowIso(),
       };
     });
@@ -1090,17 +1123,17 @@ export const storeActions = {
         result = { ok: false, error: "Draft tidak ditemukan." };
         return;
       }
-      const instrument = draft.instrumentVersions.find((item) => item.id === d.instrumentVersionId);
-      // D-10: draft terikat versi lama yang sudah diarsip tidak boleh dikirim.
-      if (!instrument) {
-        result = { ok: false, error: "Instrumen Published tidak tersedia." };
+      const instrument = draft.instrument;
+      if (!instrument || !instrument.dimensions.length) {
+        result = { ok: false, error: "Belum ada instrumen." };
         return;
       }
-      if (instrument.status !== "Published") {
+      // D-24: soal berubah di tengah jalan = draft basi, wajib ulang dari awal.
+      if (d.instrumentChecksum && d.instrumentChecksum !== instrument.checksum) {
         result = {
           ok: false,
           error:
-            "Versi instrumen draft sudah diarsipkan. Mulai penilaian baru dengan versi Published terbaru.",
+            "Instrumen berubah saat Anda mengisi. Buang draft lama dan mulai penilaian baru.",
         };
         return;
       }
@@ -1116,13 +1149,19 @@ export const storeActions = {
         result = { ok: false, error: "Nama maksimal 100 karakter." };
         return;
       }
+      if ((d.contact?.trim().length ?? 0) > 100) {
+        result = { ok: false, error: "Kontak maksimal 100 karakter." };
+        return;
+      }
       const indicators = instrument.dimensions.flatMap((dimension) => dimension.indicators);
       for (const indicator of indicators) {
         const answer = d.answers[indicator.id];
         const manualLocation = answer?.manualLocation?.trim() ?? "";
         const hasLocation = Boolean(answer?.areaId) || manualLocation.length >= 3;
+        const nilaiSah = indicator.options.map((o) => o.value);
         if (
           !answer?.value ||
+          (indicator.required !== false && !nilaiSah.includes(answer.value)) ||
           (indicator.evidenceRequired && !answer.evidenceName?.trim()) ||
           (indicator.locationRequired && !hasLocation) ||
           (answer.value === "N/A" && (answer.note?.trim().length ?? 0) < 10)
@@ -1149,6 +1188,41 @@ export const storeActions = {
           return;
         }
       }
+      // D-24: bekukan soal + opsi + bobot + hitung skor % saat kirim.
+      const frozen: FrozenIndicator[] = instrument.dimensions.flatMap((dimension) =>
+        dimension.indicators.map((indicator) => ({
+          id: indicator.id,
+          code: indicator.code,
+          title: indicator.title,
+          prompt: indicator.prompt,
+          dimensionId: dimension.id,
+          dimensionName: dimension.name,
+          categoryId: indicator.categoryId,
+          aspectId: indicator.aspectId,
+          answerType: indicator.answerType,
+          weight: indicator.weight ?? 1,
+          options: structuredClone(indicator.options),
+        })),
+      );
+      const builtAnswers: Record<string, IndicatorAnswer> = {};
+      for (const [k, v] of Object.entries(d.answers)) {
+        builtAnswers[k] = {
+          value: v.value ?? "",
+          note: v.note ?? "",
+          evidenceName: v.evidenceName ?? "",
+          areaId: v.areaId ?? "",
+          manualLocation: v.manualLocation?.trim() || undefined,
+          planPoint: v.planPoint ?? null,
+          locationSnapshot: snapshotLocation(
+            draft,
+            d.institutionCode,
+            v.areaId,
+            v.manualLocation,
+            v.locationSnapshot,
+          ),
+        };
+      }
+      const { scorePercent, byDimension } = skorLaporanBeku(frozen, builtAnswers);
       const n = draft.counters.report;
       draft.counters.report = n + 1;
       const id = `RPT-${String(n).padStart(4, "0")}`;
@@ -1161,9 +1235,13 @@ export const storeActions = {
         reporterName,
         reporterUserId: sender.id,
         reporterAccountEmail: sender.email ?? undefined,
+        contact: d.contact?.trim() || undefined,
         title: "Penilaian mandiri K3L",
         description: "Ringkasan jawaban penilaian mandiri terkirim.",
-        instrumentVersionId: d.instrumentVersionId,
+        instrumentVersionId: BANK_ID,
+        instrumentChecksum: instrument.checksum,
+        scorePercent,
+        pdfGeneratedAt: stampedAt,
         validationStatus: "Menunggu validasi",
         severity: "Belum ditentukan",
         priority: "Belum ditentukan",
@@ -1174,28 +1252,13 @@ export const storeActions = {
       });
       draft.selfAssessmentSnapshots.push({
         reportId: id,
-        instrumentVersionId: d.instrumentVersionId,
+        instrumentVersionId: BANK_ID,
+        instrumentChecksum: instrument.checksum,
         submittedAt: nowIso(),
-        answers: Object.fromEntries(
-          Object.entries(d.answers).map(([k, v]) => [
-            k,
-            {
-              value: v.value ?? "",
-              note: v.note ?? "",
-              evidenceName: v.evidenceName ?? "",
-              areaId: v.areaId ?? "",
-              manualLocation: v.manualLocation?.trim() || undefined,
-              planPoint: v.planPoint ?? null,
-              locationSnapshot: snapshotLocation(
-                draft,
-                d.institutionCode,
-                v.areaId,
-                v.manualLocation,
-                v.locationSnapshot,
-              ),
-            },
-          ]),
-        ),
+        answers: builtAnswers,
+        frozenIndicators: frozen,
+        scorePercent,
+        byDimension,
       });
       delete draft.selfAssessmentDrafts[draftId];
       audit(draft, sender, {
@@ -1469,6 +1532,8 @@ export const storeActions = {
   },
 
   publishInstrument(id: string): ActionResult {
+    // Warisan versioning (D-24: tidak dipakai UI baru; dipertahankan agar
+    // test/migrasi lama tetap hijau — deprecasi lembut).
     const target = currentState.instrumentVersions.find((item) => item.id === id);
     if (!target) return { ok: false, error: "Versi instrumen tidak ditemukan." };
     if (target.status !== "Draft")
@@ -1490,6 +1555,287 @@ export const storeActions = {
         draft,
         { name: "Validator" },
         { objectType: "InstrumentVersion", objectId: id, action: "Mempublikasikan instrumen" },
+      );
+    });
+    return { ok: true };
+  },
+
+  // ---- D-24: bank instrumen live (edit penuh, langsung aktif) ----
+
+  addBankDimension(name: string, categoryId?: string): ActionResult {
+    const clean = name.trim();
+    if (clean.length < 3) return { ok: false, error: "Nama dimensi minimal 3 karakter." };
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    let id = "";
+    setState((draft) => {
+      const bank = draft.instrument;
+      let n = bank.dimensions.length + 1;
+      id = `DIM-${String(n).padStart(2, "0")}`;
+      while (bank.dimensions.some((d) => d.id === id)) {
+        n += 1;
+        id = `DIM-${String(n).padStart(2, "0")}`;
+      }
+      bank.dimensions.push({
+        id,
+        name: clean,
+        categoryId: (categoryId || undefined) as InstrumentIndicator["categoryId"],
+        indicators: [],
+      });
+      touchBank(bank);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Menambah dimensi", note: clean },
+      );
+    });
+    return { ok: true, id };
+  },
+
+  updateBankDimension(id: string, patch: { name?: string; categoryId?: string }): ActionResult {
+    const target = currentState.instrument.dimensions.find((d) => d.id === id);
+    if (!target) return { ok: false, error: "Dimensi tidak ditemukan." };
+    const name = patch.name?.trim() ?? target.name;
+    if (name.length < 3) return { ok: false, error: "Nama dimensi minimal 3 karakter." };
+    const categoryId = patch.categoryId?.trim() || undefined;
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    setState((draft) => {
+      const dim = draft.instrument.dimensions.find((d) => d.id === id)!;
+      dim.name = name;
+      dim.categoryId = (categoryId || undefined) as InstrumentIndicator["categoryId"];
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Mengubah dimensi", note: name },
+      );
+    });
+    return { ok: true };
+  },
+
+  deleteBankDimension(id: string): ActionResult {
+    const target = currentState.instrument.dimensions.find((d) => d.id === id);
+    if (!target) return { ok: false, error: "Dimensi tidak ditemukan." };
+    const used = currentState.selfAssessmentSnapshots.some((s) =>
+      Object.keys(s.answers ?? {}).some((key) =>
+        target.indicators.some((i) => i.id === key),
+      ),
+    );
+    setState((draft) => {
+      draft.instrument.dimensions = draft.instrument.dimensions.filter((d) => d.id !== id);
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        {
+          objectType: "Instrument",
+          objectId: id,
+          action: "Menghapus dimensi",
+          note: used ? `${target.name} (punya riwayat snapshot beku)` : target.name,
+        },
+      );
+    });
+    return { ok: true };
+  },
+
+  addBankIndicator(
+    dimensionId: string,
+    input: {
+      code: string;
+      title: string;
+      prompt: string;
+      answerType: InstrumentAnswerType;
+      required: boolean;
+      evidenceRequired: boolean;
+      locationRequired: boolean;
+      categoryId?: string;
+      aspectId?: string;
+    },
+  ): ActionResult {
+    const code = input.code.trim();
+    const title = input.title.trim();
+    const prompt = input.prompt.trim();
+    if (!code) return { ok: false, error: "Kode indikator wajib diisi." };
+    if (title.length < 5) return { ok: false, error: "Judul indikator minimal 5 karakter." };
+    if (prompt.length < 10) return { ok: false, error: "Prompt minimal 10 karakter." };
+    if (!["ya-tidak", "kualitas-1-5", "frekuensi", "keparahan"].includes(input.answerType))
+      return { ok: false, error: "Tipe jawaban tidak dikenal." };
+    const dim = currentState.instrument.dimensions.find((d) => d.id === dimensionId);
+    if (!dim) return { ok: false, error: "Dimensi tidak ditemukan." };
+    if (
+      currentState.instrument.dimensions
+        .flatMap((d) => d.indicators)
+        .some((i) => i.code.toLowerCase() === code.toLowerCase())
+    )
+      return { ok: false, error: "Kode indikator sudah digunakan." };
+    const categoryId = input.categoryId?.trim() || undefined;
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    const aspectId = input.aspectId?.trim() || undefined;
+    if (
+      aspectId &&
+      (!K3_ASPECT_MAP[aspectId] ||
+        (categoryId ?? dim.categoryId) !== K3_ASPECT_MAP[aspectId].categoryId)
+    )
+      return { ok: false, error: "Aspek tidak sesuai kategori." };
+    let id = "";
+    setState((draft) => {
+      const bank = draft.instrument;
+      const target = bank.dimensions.find((d) => d.id === dimensionId)!;
+      let n = bank.dimensions.flatMap((d) => d.indicators).length + 1;
+      id = `IND-K3L-${String(n).padStart(3, "0")}`;
+      while (bank.dimensions.flatMap((d) => d.indicators).some((i) => i.id === id)) {
+        n += 1;
+        id = `IND-K3L-${String(n).padStart(3, "0")}`;
+      }
+      target.indicators.push({
+        id,
+        code,
+        title,
+        prompt,
+        categoryId: (categoryId ?? target.categoryId) as InstrumentIndicator["categoryId"],
+        aspectId,
+        answerType: input.answerType,
+        required: input.required,
+        evidenceRequired: input.evidenceRequired,
+        locationRequired: input.locationRequired,
+        weight: 1,
+        options: defaultOptionsForType(input.answerType),
+      });
+      touchBank(bank);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Menambah indikator", note: `${code} · ${title}` },
+      );
+    });
+    return { ok: true, id };
+  },
+
+  updateBankIndicator(
+    id: string,
+    patch: {
+      code?: string;
+      title?: string;
+      prompt?: string;
+      answerType?: InstrumentAnswerType;
+      required?: boolean;
+      evidenceRequired?: boolean;
+      locationRequired?: boolean;
+      categoryId?: string;
+      aspectId?: string;
+    },
+  ): ActionResult {
+    const found = findBankIndicator(currentState, id);
+    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    const code = patch.code?.trim() ?? found.indicator.code;
+    const title = patch.title?.trim() ?? found.indicator.title;
+    const prompt = patch.prompt?.trim() ?? found.indicator.prompt;
+    if (!code) return { ok: false, error: "Kode indikator wajib diisi." };
+    if (title.length < 5) return { ok: false, error: "Judul indikator minimal 5 karakter." };
+    if (prompt.length < 10) return { ok: false, error: "Prompt minimal 10 karakter." };
+    if (
+      patch.answerType &&
+      !["ya-tidak", "kualitas-1-5", "frekuensi", "keparahan"].includes(patch.answerType)
+    )
+      return { ok: false, error: "Tipe jawaban tidak dikenal." };
+    if (
+      currentState.instrument.dimensions
+        .flatMap((d) => d.indicators)
+        .some((i) => i.id !== id && i.code.toLowerCase() === code.toLowerCase())
+    )
+      return { ok: false, error: "Kode indikator sudah digunakan." };
+    const categoryId = patch.categoryId?.trim() || found.indicator.categoryId;
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    const aspectId = patch.aspectId?.trim() || undefined;
+    if (aspectId && (!K3_ASPECT_MAP[aspectId] || K3_ASPECT_MAP[aspectId].categoryId !== categoryId))
+      return { ok: false, error: "Aspek tidak sesuai kategori." };
+    setState((draft) => {
+      const live = findBankIndicator(draft, id)!;
+      const nextType = patch.answerType ?? live.indicator.answerType;
+      const typeChanged = nextType !== live.indicator.answerType;
+      Object.assign(live.indicator, {
+        code,
+        title,
+        prompt,
+        answerType: nextType,
+        required: patch.required ?? live.indicator.required,
+        evidenceRequired: patch.evidenceRequired ?? live.indicator.evidenceRequired,
+        locationRequired: patch.locationRequired ?? live.indicator.locationRequired,
+        categoryId: (categoryId || undefined) as InstrumentIndicator["categoryId"],
+        aspectId,
+      });
+      // Ganti tipe = opsi kembali ke bawaan (bobot lama tidak lagi bermakna).
+      if (typeChanged) live.indicator.options = defaultOptionsForType(nextType);
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Mengubah indikator", note: `${code} · ${title}` },
+      );
+    });
+    return { ok: true };
+  },
+
+  deleteBankIndicator(id: string): ActionResult {
+    const found = findBankIndicator(currentState, id);
+    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    setState((draft) => {
+      for (const dim of draft.instrument.dimensions)
+        dim.indicators = dim.indicators.filter((i) => i.id !== id);
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        {
+          objectType: "Instrument",
+          objectId: id,
+          action: "Menghapus indikator",
+          note: `${found.indicator.code} (snapshot lama tetap beku)`,
+        },
+      );
+    });
+    return { ok: true };
+  },
+
+  // Tombol Atur Bobot: bobot tiap opsi 0–100 + flag temuan + pengali indikator.
+  setBankIndicatorOptions(
+    id: string,
+    options: InstrumentOption[],
+    weight?: number,
+  ): ActionResult {
+    const found = findBankIndicator(currentState, id);
+    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    if (options.length < 2) return { ok: false, error: "Minimal 2 opsi jawaban." };
+    const seen = new Set<string>();
+    for (const o of options) {
+      const value = o.value.trim();
+      const label = o.label.trim();
+      if (!value) return { ok: false, error: "Nilai opsi tidak boleh kosong." };
+      if (!label) return { ok: false, error: "Label opsi tidak boleh kosong." };
+      if (!Number.isFinite(o.weight) || o.weight < 0 || o.weight > 100)
+        return { ok: false, error: "Bobot opsi harus 0–100." };
+      if (seen.has(value.toLowerCase())) return { ok: false, error: "Nilai opsi tidak boleh ganda." };
+      seen.add(value.toLowerCase());
+    }
+    if (weight !== undefined && (!Number.isFinite(weight) || weight <= 0 || weight > 10))
+      return { ok: false, error: "Pengali indikator harus 0–10." };
+    setState((draft) => {
+      const live = findBankIndicator(draft, id)!;
+      live.indicator.options = options.map((o) => ({
+        value: o.value.trim(),
+        label: o.label.trim(),
+        weight: Math.round(o.weight),
+        isFinding: Boolean(o.isFinding),
+      }));
+      if (weight !== undefined) live.indicator.weight = weight;
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Mengatur bobot jawaban" },
       );
     });
     return { ok: true };
@@ -1625,9 +1971,14 @@ export const storeActions = {
     if (typeof input.assetId !== "string" || !input.assetId) {
       return { ok: false, error: "Berkas belum tersimpan. Unggah ulang PDF." };
     }
-    const catalogCodes = currentState.instrumentVersions.flatMap((v) =>
-      v.dimensions.flatMap((d) => d.indicators.map((i) => i.code.toLowerCase())),
-    );
+    const catalogCodes = [
+      ...currentState.instrument.dimensions.flatMap((d) =>
+        d.indicators.map((i) => i.code.toLowerCase()),
+      ),
+      ...currentState.instrumentVersions.flatMap((v) =>
+        v.dimensions.flatMap((d) => d.indicators.map((i) => i.code.toLowerCase())),
+      ),
+    ];
     const manualCodes = currentState.instrumentDocs
       .filter((doc) => doc.manual)
       .map((doc) => (doc.indicatorCode ?? "").toLowerCase());
@@ -1744,14 +2095,25 @@ function ensureDerivedWork(
     return;
   }
   const snapshot = draft.selfAssessmentSnapshots.find((s) => s.reportId === report.id);
-  // Pemicu ilustratif per tipe jawaban; bukan ambang ilmiah final.
-  const indicators =
-    draft.instrumentVersions
+  // D-24: pemicu dari opsi beku dulu; fallback bank live; terakhir versi warisan.
+  const frozenById = new Map((snapshot?.frozenIndicators ?? []).map((f) => [f.id, f]));
+  const liveById = new Map(
+    draft.instrument.dimensions.flatMap((d) => d.indicators.map((i) => [i.id, i] as const)),
+  );
+  const legacyById = new Map(
+    (draft.instrumentVersions
       .find((version) => version.id === report.instrumentVersionId)
-      ?.dimensions.flatMap((dimension) => dimension.indicators) ?? [];
+      ?.dimensions.flatMap((dimension) => dimension.indicators) ?? []
+    ).map((i) => [i.id, i] as const),
+  );
   const candidates = snapshot
     ? Object.entries(snapshot.answers).filter(([id, answer]) => {
-        const type = indicators.find((entry) => entry.id === id)?.answerType;
+        const frozen = frozenById.get(id);
+        if (frozen) return isJawabanTemuan(frozen, answer.value);
+        const live = liveById.get(id);
+        if (live) return isJawabanTemuan(live, answer.value);
+        const legacy = legacyById.get(id);
+        const type = legacy?.answerType;
         return type === "likert-1-5"
           ? ["1", "2"].includes(answer.value)
           : type === "likert-1-2-tidak"
@@ -1774,17 +2136,20 @@ function ensureDerivedWork(
       snapshotLocation(draft, report.institutionCode, area?.id, manualLocation);
     const building = draft.buildings.find((b) => b.id === area?.buildingId);
     const location = `${locationSnapshot.locationText}${locationSnapshot.floorNote ? ` · ${locationSnapshot.floorNote}` : ""}`;
-    const indicator = indicators.find((entry) => entry.id === sourceAnswerId);
+    const indicator =
+      frozenById.get(sourceAnswerId) ?? liveById.get(sourceAnswerId) ?? legacyById.get(sourceAnswerId);
     const issue = indicator ? indicator.title : report.title;
     const n = draft.findings.filter((f) => f.reportId === report.id).length + 1;
     const recommendationId = `REC-${report.id}-${n}`;
     const level = severity === "Belum ditentukan" ? "Sedang" : severity;
-    // D-15: wariskan relasi kategori/aspek dari indikator; lapor-cepat memakai
-    // pilihan pelapor bila ada (tanpa menebak dari judul).
+    // D-15/D-24: wariskan relasi kategori/aspek dari indikator; lapor-cepat
+    // memakai pilihan pelapor bila ada (tanpa menebak dari judul).
+    const liveDims = draft.instrument.dimensions;
     const versionDims =
       draft.instrumentVersions.find((v) => v.id === report.instrumentVersionId)?.dimensions ?? [];
     const dimOfIndicator = indicator
-      ? versionDims.find((d) => d.indicators.some((i) => i.id === indicator.id))
+      ? (liveDims.find((d) => d.indicators.some((i) => i.id === indicator.id)) ??
+        versionDims.find((d) => d.indicators.some((i) => i.id === indicator.id)))
       : undefined;
     draft.findings.push({
       id: `RSK-${report.id}-${n}`,

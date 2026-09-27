@@ -19,14 +19,17 @@
 // - Admin: 4 pesantren (Aktif/Persiapan + Aktif-tanpa-akun-Pesantren), 5 pengguna.
 // - Validator: INS-v1.0 arsip (riwayat) + INS-v1.1 Published aktif (10 indikator).
 
-import type { IshasState } from "../types";
+import type { Instrument, IshasState } from "../types";
+import { buildBankLiveDariVersi } from "../instrument-bank";
 
 const T = {
   now: "2026-09-08T09:00:00.000Z",
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 10,
+  schemaVersion: 11,
+  // D-24: bank live diisi setelah objek (diturunkan dari INS-v1.1, tanpa duplikasi).
+  instrument: {} as Instrument,
   campusPlans: [
     {
       id: "CAMPUS-PSN-0018-v1",
@@ -2367,6 +2370,11 @@ export const SEED: IshasState = {
   ],
   counters: { report: 17, institution: 22 },
 };
+
+// D-24: bank instrumen live = turunan INS-v1.1 (sumber tunggal soal + bobot bawaan).
+SEED.instrument = buildBankLiveDariVersi(
+  SEED.instrumentVersions.find((v) => v.id === "INS-v1.1") ?? SEED.instrumentVersions[0],
+);
 
 // Explicit fictional observations for the campus illustration, not migrated floor coordinates.
 for (const finding of SEED.findings.filter((item) => item.locationSnapshot)) {

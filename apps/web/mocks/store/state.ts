@@ -3,10 +3,11 @@
 // Dilarang menyimpan kata sandi/token.
 
 import { SEED } from "../seed/seed";
+import { buildBankLiveDariVersi } from "../instrument-bank";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 10;
-export const MOCK_STORAGE_KEY = "ishas-mock-v10";
+export const MOCK_SCHEMA_VERSION = 11;
+export const MOCK_STORAGE_KEY = "ishas-mock-v11";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -150,6 +151,25 @@ export function migrateV9(value: unknown): unknown {
     return value;
   const migrated = structuredClone(value) as IshasState;
   migrated.schemaVersion = 10;
+  return migrateV10(migrated);
+}
+
+// D-24: v10 → v11 bank instrumen live tanpa versioning.
+// Mempertahankan seluruh record/ID; bank dibangun dari versi aktif warisan
+// (atau Published pertama bila aktif hilang); snapshot lama tetap dibaca
+// lewat instrumentVersions (fallback legacy) tanpa penulisan ulang.
+export function migrateV10(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 10)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 11;
+  if (!migrated.instrument || typeof migrated.instrument !== "object") {
+    const source =
+      migrated.instrumentVersions.find((v) => v.id === migrated.activeInstrumentVersionId) ??
+      migrated.instrumentVersions.find((v) => v.status === "Published") ??
+      migrated.instrumentVersions[0];
+    if (source) migrated.instrument = buildBankLiveDariVersi(source);
+  }
   return migrated;
 }
 
@@ -171,9 +191,29 @@ function isValidState(value: unknown): value is IshasState {
     state.auditEvents,
     state.notifications,
   ];
+  const bank = state.instrument;
+  const bankValid =
+    bank &&
+    typeof bank === "object" &&
+    typeof bank.checksum === "string" &&
+    Array.isArray(bank.dimensions) &&
+    bank.dimensions.every(
+      (d) =>
+        d &&
+        typeof d === "object" &&
+        Array.isArray(d.indicators) &&
+        d.indicators.every(
+          (i) =>
+            i &&
+            typeof i === "object" &&
+            Array.isArray(i.options) &&
+            i.options.every((o) => o && typeof o.value === "string"),
+        ),
+    );
   return (
     state.schemaVersion === MOCK_SCHEMA_VERSION &&
     arrays.every(Array.isArray) &&
+    bankValid &&
     state.users.every((u) => u && typeof u.id === "string" && Array.isArray(u.institutionCodes)) &&
     state.instrumentVersions.every(
       (v) =>
@@ -199,6 +239,7 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v10") ??
       localStorage.getItem("ishas-mock-v9") ??
       localStorage.getItem("ishas-mock-v8") ??
       localStorage.getItem("ishas-mock-v7") ??
@@ -206,8 +247,8 @@ export function loadState(): IshasState {
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV9(
-        migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw)))))),
+      const parsed: unknown = migrateV10(
+        migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
       );
       if (isValidState(parsed)) return parsed;
     }

@@ -364,9 +364,11 @@ export const mockRepository = {
     if (!canOpen) return { ok: false, error: "Berkas Privat hanya dapat dibuka oleh Validator." };
     try {
       if (isSeedInstrumentDocAssetId(doc.assetId)) {
-        const found = state.instrumentVersions
-          .flatMap((v) => v.dimensions.flatMap((d) => d.indicators))
-          .find((i) => i.id === indicatorId);
+        const found =
+          state.instrument.dimensions.flatMap((d) => d.indicators).find((i) => i.id === indicatorId) ??
+          state.instrumentVersions
+            .flatMap((v) => v.dimensions.flatMap((d) => d.indicators))
+            .find((i) => i.id === indicatorId);
         return {
           ok: true,
           blob: buildSeedPdfBlob(found?.code ?? indicatorId, found?.title ?? "", doc.fileName),
@@ -446,7 +448,9 @@ export const mockRepository = {
     id: string;
     institutionCode: string;
     reporterName: string;
+    contact?: string;
     instrumentVersionId: string;
+    instrumentChecksum?: string;
     answers: Record<string, Partial<import("../types").IndicatorAnswer>>;
     activeIndex: number;
     updatedAt: string;
