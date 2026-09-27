@@ -51,9 +51,9 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/validator/instrumen` | validator | Bank live: builder penuh + Atur Bobot (D-24) |
 | `/validator/dokumen-instrumen` | validator | Pustaka PDF per indikator (D-16) |
 | `/validator/versioning` | validator | Dihapus (D-24): halaman pengalihan ke Bank instrumen |
-| `/validator/scoring` | validator | Audit skor % beku (D-24) |
-| `/validator/validasi-publikasi` | validator | Kesiapan publikasi snapshot |
-| `/validator/data-penelitian` | validator | Dataset + impor/ekspor dummy |
+| `/validator/scoring` | validator | Audit skor % beku (D-24, D-25: filter + nama dimensi + link PDF) |
+| `/validator/validasi-publikasi` | validator | Audit publikasi: checklist 5 kriteria kesiapan snapshot, label menu `Audit publikasi` (D-25; route tetap) |
+| `/validator/data-penelitian` | validator | Dataset + ekspor CSV/JSON whitelist D-02 + impor validasi→pratinjau→terapkan sebagai `Menunggu validasi` (D-25) |
 | `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi (halaman kelola utama)** |
 | `/pesantren/lokasi` | pesantren | Gedung & denah |
 | `/pesantren/tindak-lanjut` | pesantren | Kelola (PIC, tenggat, progres, bukti) |

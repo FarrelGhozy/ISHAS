@@ -205,6 +205,11 @@ ke form mandiri; snapshot kiriman diterima ke hasil; hasil ke dataset; serta dat
 Status Final dan relasi penugasan dari lama tidak boleh diwarisi sebagai syarat tersembunyi.
 
 Hak melihat jawaban mentah/identitas dan pemilihan kiriman untuk penelitian mengikuti D-02
-(jawaban mentah/identitas internal; ringkasan + nama validator publik) dan D-04.
-Simulasi import tidak boleh menjadi jalur yang membuat laporan publik tampil tanpa moderasi.
-Jika import hanya pratinjau dummy tanpa mutasi, sebutkan demikian dalam spesifikasi akhir.
+(jawaban mentah/identitas internal; ringkasan + nama validator Pesantren publik) dan D-04.
+Impor D-25: upload CSV/JSON → validasi (kolom wajib, pesantren harus terdaftar,
+skor 0–100) → pratinjau valid/error tanpa mutasi → terapkan membuat laporan
+`Menunggu validasi` + snapshot beku + audit (masuk antrean Pesantren, tidak
+langsung publik). Ekspor memakai whitelist D-02 (tanpa nama/kontak pelapor,
+bukti, jawaban mentah, alasan tolak, audit mentah). Filter dataset utama hanya
+pesantren terdaftar; non-terdaftar hanya via toggle audit internal dengan chip
+status dan pesan tidak-masuk-agregat.

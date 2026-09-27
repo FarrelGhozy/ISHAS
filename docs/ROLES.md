@@ -89,11 +89,14 @@
 
 **Definisi dan akun demo** (M. Ridwan, `validator@ishas.demo`, `demo1234`; D-17 melepas gelar `Dr.`).
 
-**BOLEH (D-24):** bank instrumen live (tambah/edit/hapus dimensi/indikator,
+**BOLEH (D-24, D-25):** bank instrumen live (tambah/edit/hapus dimensi/indikator,
 tipe jawaban `ya-tidak/kualitas-1-5/frekuensi/keparahan`, opsi + bobot 0–100
-per opsi via Atur Bobot, pengali indikator), audit skor beku, validasi &
-publikasi, data penelitian. Bank live otomatis menjadi sumber soal penilaian
-mandiri; tanpa versioning Draft/Published/Archived.
+per opsi via Atur Bobot, pengali indikator), audit skor beku (`Scoring`),
+audit kesiapan publikasi (`Audit publikasi`, bukan moderasi laporan), dataset
+penelitian + ekspor/impor dummy aman (`Data penelitian`). Bank live otomatis
+menjadi sumber soal penilaian mandiri; tanpa versioning Draft/Published/Archived.
+Keputusan `Terima/Tolak` laporan tetap milik akun Pesantren; `Divalidasi oleh`
+= akun Pesantren penerima, bukan peran Validator.
 
 **TIDAK BOLEH:** melihat antrean validasi, memvalidasi laporan, mengelola pesantren/akun, mengirim laporan/penilaian saat login (D-03); jika ingin melapor, keluar dari akun dan gunakan mode publik.
 

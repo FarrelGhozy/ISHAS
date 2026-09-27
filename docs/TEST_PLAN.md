@@ -57,7 +57,7 @@ dengan role sama untuk memastikan sesi menunjuk ID akun, bukan role saja.
 5. **Lifecycle:** Pending→Proses tanpa PIC/tenggat DITOLAK → lengkap → Proses→Completed tanpa bukti DITOLAK → lengkap → hapus/arsip hanya sesuai D-07. Audit tidak ikut penghapusan laporan biasa; reset demo adalah tindakan berbeda.
 6. **Scope isolation:** akun Pesantren A tidak melihat laporan pesantren B di antrean, filter, maupun notifikasi.
 7. **Pesantren tak terdaftar:** tidak muncul di pemilih; lapor langsung via URL dengan kode tak valid DITOLAK dengan pesan.
-8. **Self-assessment (D-24):** bank kosong → form terkunci + pesan; registrasi penilai wajib; kirim tak lengkap DITOLAK; refresh melanjutkan draft (checksum sama); bank berubah → kirim DITOLAK + wajib ulang; kirim → snapshot beku + skor % + PDF → antrean → terima → tampil publik sebagai PDF + agregat %.
+8. **Self-assessment (D-24, D-25):** bank kosong → form terkunci + pesan; registrasi penilai wajib; kirim tak lengkap DITOLAK; refresh melanjutkan draft (checksum sama); bank berubah → kirim DITOLAK + wajib ulang; kirim → snapshot beku + skor % + PDF → antrean → terima → tampil publik sebagai PDF + agregat %; Scoring/Audit/Dataset membaca beku yang sama + filter terdaftar + ekspor whitelist + impor hanya jadi `Menunggu validasi`.
 
 ## 4. Visual dan aksesibilitas (3 viewport: 1440×900, 834×1112, 390×844)
 

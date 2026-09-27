@@ -1,5 +1,21 @@
 # TODO — Kontrol Kerja Aktif
 
+## Audit publikasi + dataset maksimal Validator (D-25) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan` Opsi B): rapikan Scoring +
+Audit publikasi (ex Validasi & publikasi) + Data penelitian sekaligus —
+tampilan konsisten + alur jelas + istilah Validator vs Pesantren diluruskan.
+Keputusan D-25. Cakupan: docs + UI validator + selector/ekspor/impor aman +
+test. Schema tetap v11 (tanpa migrasi). Scope Stage 08 + sentuhan baca
+laporan/dashboard validator; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-25 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-25, ROLES §4, ROUTES §2, FLOWS §7, WIREFRAMES §6, REQUIREMENTS §9, TEST_PLAN §3, STAGE_08).
+- [x] Kode + test (label Audit publikasi, filter terdaftar, nama dimensi, link PDF, checklist 5 kriteria, provenance, ekspor whitelist, impor→Menunggu validasi).
+- [x] Verifikasi teknis: lint + typecheck + 175 test + build lulus (28 Sep 2026; naik dari 163).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (Scoring filter/link, Audit checklist, Dataset ekspor/impor, dashboard alur): belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
 ## Bank instrumen live + bobot + PDF per laporan (D-24) — 28 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan`): hapus versioning, bank

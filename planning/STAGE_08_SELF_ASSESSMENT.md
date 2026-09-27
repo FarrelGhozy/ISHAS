@@ -1,5 +1,12 @@
 # Stage Stage 08 — Penilaian Mandiri (Self-Assessment)
 
+**Revisi D-25 — 28 September 2026 — `IN PROGRESS`:** rapikan Validator
+sekaligus (Scoring + Audit publikasi ex Validasi & publikasi + Data penelitian
+maksimal). Label `Audit publikasi` (route tetap), filter terdaftar + toggle
+non-terdaftar audit, nama dimensi + link PDF, checklist 5 kriteria, provenance
+penuh, ekspor whitelist D-02, impor → `Menunggu validasi`. Schema tetap v11.
+Scope Stage 08 + sentuhan baca; status stage lain tidak berubah sepihak.
+
 **Revisi D-24 — 28 September 2026 — `IN PROGRESS`:** bank instrumen live tanpa
 versioning (edit penuh Validator + 4 tipe jawaban + bobot per opsi), registrasi
 penilai + kontak, draft checksum (berubah = ulang), snapshot beku + skor % +
@@ -71,6 +78,10 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 
 ## Hasil Pemeriksaan
 
+- Revisi D-25 (28 Sep 2026): lint + typecheck + 175 test + build lulus.
+  Render SSR 4 halaman (Scoring, Audit publikasi, Data penelitian, dashboard
+  validator) lulus via test. Cek visual 3 viewport + keyboard browser belum
+  dijalankan (Chromium tidak tersedia di lingkungan ini).
 - (Template `TEST_PLAN.md` §6.)
 - Tambahan navbar 18 September: siap REVIEW untuk perubahan terbatas ini;
   stage lainnya belum dinyatakan selesai. Typecheck, lint, 82 test dan build lulus.

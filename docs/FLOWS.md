@@ -171,9 +171,17 @@ perubahan langsung aktif + peringatan draft berjalan harus mengulang. Skor
 lama dibekukan pada snapshot (tidak dihitung ulang). Bobot/ambang/rumus tetap
 dummy ilustratif sampai keputusan ilmiah final.
 
- Keterhubungan dataset, status hasil , impor dummy, serta akses jawaban mentah perlu dipetakan
- sebelum dianggap sama dengan lama; lihat `DATA_REQUIREMENTS.md` §9. Moderasi laporan oleh akun Pesantren
- berbeda dari validasi ilmiah instrumen oleh tim penelitian.
+Alur baca Validator (D-25): snapshot beku + `scorePercent` → antrean
+Pesantren (`Terima/Tolak`, FLOWS §4) → `Diterima` → agregat % + PDF
+`/laporan/:id` → `Scoring` (audit skor) → `Audit publikasi` (checklist 5
+kriteria: lengkap + `Diterima` + skor ada + PDF ada + checksum cocok; tanpa
+aksi moderasi) → `Data penelitian` (filter terdaftar + toggle non-terdaftar
+audit, ekspor whitelist D-02, impor → `Menunggu validasi`, tidak langsung
+publik).
+
+ Moderasi laporan oleh akun Pesantren berbeda dari audit ilmiah oleh peran
+ Validator. `Divalidasi oleh` = akun Pesantren penerima, bukan peran
+ Validator. Impor tidak boleh bypass moderasi; lihat `DATA_REQUIREMENTS.md` §9.
 
 ## 8. Pustaka detail indikator — PDF Public/Privat (Aktor: Validator, D-16—D-17)
 

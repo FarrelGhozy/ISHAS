@@ -608,3 +608,33 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   ROUTES (hapus menu Versioning), WIREFRAMES §3/§6, KATEGORI_K3 §8,
   DATA_REQUIREMENTS §2/§4, TEST_PLAN, TODO, STAGE_08. Scope Stage 08 +
   sentuhan baca laporan; status stage lain tidak berubah sepihak.
+
+## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator
+  sekaligus (Scoring, Validasi & publikasi, Data penelitian) karena tampilan
+  beda dari halaman lain dan alurnya membingungkan.
+- **D-25.a — Istilah:** `Validator` = ex-`Peneliti` (kelola bank, bobot,
+  audit skor, audit publikasi, dataset). `Pesantren` = ex-`Pengelola`
+  pondok (satu-satunya yang `Terima/Tolak` laporan + isi
+  `severity/priority`). `Divalidasi oleh / nama validator` pada publik =
+  akun Pesantren penerima, bukan peran Validator (D-17.c tetap berlaku).
+- **D-25.b — Rename label:** menu `Validasi & publikasi` menjadi
+  `Audit publikasi`. Route `/validator/validasi-publikasi` tetap (kompatibel
+  + redirect lama) — hanya label, H1, dan docs yang berubah. Alasan: hindari
+  tabrakan dengan `Validasi laporan` milik Pesantren. Kriteria layak publik
+  eksplisit 5 poin: snapshot lengkap + `Diterima` + `scorePercent` ada +
+  `pdfGeneratedAt` ada + checksum cocok (beda = label bank berubah, snapshot
+  tetap beku).
+- **D-25.c — Dataset maksimal:** filter utama hanya pesantren terdaftar
+  (konsisten pemilih publik + D-08) + toggle `Sertakan non-terdaftar (audit
+  internal)` dengan chip status. Ekspor CSV/JSON memakai whitelist D-02
+  (tanpa nama/kontak pelapor, bukti, jawaban mentah, alasan tolak, audit
+  mentah). Impor = upload → validasi → pratinjau → terapkan sebagai
+  `Menunggu validasi` (masuk antrean Pesantren, tidak langsung publik;
+  DATA_REQUIREMENTS §9 tetap). Staging in-memory, tanpa migrasi schema
+  (tetap v11).
+- Dokumen terdampak: ROLES §4, ROUTES §2, FLOWS §7, WIREFRAMES §6,
+  DATA_REQUIREMENTS §9, TEST_PLAN §3/§7, TODO, STAGE_08. Scope Stage 08 +
+  sentuhan baca laporan/dashboard validator; status stage lain tidak berubah
+  sepihak.

@@ -103,12 +103,20 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
   indikator, pilih tipe jawaban 4 opsi, tombol `Atur bobot` per indikator +
   pengali; tanpa kunci versi). Panel `Acuan bobot jawaban` di paling atas
   menampilkan opsi + bobot + flag temuan tiap indikator + tombol `Atur` per baris.
-  Menu `Versioning` dihapus; route lama
-  `/validator/versioning` menampilkan pengalihan. `/validator/scoring` = audit
-  skor % beku; `/validator/validasi-publikasi` = kesiapan publikasi + status PDF.
+   Menu `Versioning` dihapus; route lama
+   `/validator/versioning` menampilkan pengalihan ke Bank + Audit. `/validator/scoring` = audit
+   skor % beku (filter pesantren terdaftar + validasi + cari, nama dimensi,
+   link PDF, empty state, tabel desktop/kartu ponsel). `/validator/validasi-publikasi`
+   berlabel `Audit publikasi` (D-25, route tetap) = checklist 5 kriteria
+   (lengkap + Diterima + skor + PDF + checksum) + link silang Scoring/Dataset/PDF,
+   tanpa tombol Terima/Tolak. `/validator/data-penelitian` = provenance penuh
+   (validator Pesantren + waktu, versi/checksum, skor %, PDF) + filter terdaftar
+   + toggle non-terdaftar audit + ekspor CSV/JSON whitelist + impor
+   validasi→pratinjau→terapkan sebagai `Menunggu validasi`.
 
-Catatan review: tujuan Validator dipertahankan dari Peneliti, tetapi kontrak dataset/hasil harus menyesuaikan
- (`DATA_REQUIREMENTS.md` §9). Layar lama belum otomatis menjadi spesifikasi lengkap .
+ Catatan D-25: label `Audit publikasi` menghilangkan tabrakan dengan
+ `Validasi laporan` milik Pesantren. `Divalidasi oleh` = akun Pesantren,
+ bukan peran Validator (`DATA_REQUIREMENTS.md` §9).
 
 ## 7. Responsif (wajib diperiksa)
 
