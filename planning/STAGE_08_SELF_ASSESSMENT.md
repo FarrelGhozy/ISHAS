@@ -23,8 +23,9 @@ checklist yang belum diverifikasi tetap terbuka.
 
 
 **Status:** IN PROGRESS
-**Acuan terkini:** D-03 membatasi pengirim publik/pengelola; D-10 mengunci kirim
-draft versi lama, hasil terkirim tetap snapshot; D-11 menyediakan lokasi manual
+**Acuan terkini:** D-03 membatasi pengirim publik/pengelola; D-24 menggantikan
+D-10 (draft checksum bank live: checksum beda = buang draft dan mulai baru;
+hasil terkirim tetap snapshot beku); D-11 menyediakan lokasi manual
 bila area kosong; D-14.b menjaga lineage titik per jawaban; D-15 memakai empat
 kategori. D-04 tetap ilustratif. Stage belum selesai uji penerimaan penuh.
 **Dependensi:** Stage 01 (model), Stage 03 (pola kirim), Stage 05 (antrean penerima) `DONE`;
@@ -34,7 +35,11 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 
 ## Ruang lingkup
 
-### 1. Salin-adaptasi komponen penilaian dari lama (aplikasi ISHAS.
+### 1. Salin-adaptasi komponen penilaian dari lama (HISTORIS — sudah lewat D-24)
+
+> Catatan 27 Sep 2026: implementasi sudah memakai `self-assessment-flow`
+> baru di aplikasi ISHAS + bank live `INS-LIVE` (bukan salinan asesor, tanpa
+> versioning). Checklist salin di bawah historis; acuan berlaku = §2 + D-24.
 
 - [ ] Salin pola `features/asesor/components/assessment-flow.tsx` lama menjadi
  `features/publik/`… `self-assessment-flow.tsx` di aplikasi ISHAS
@@ -48,9 +53,9 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 - [x] Arahan 18 September: akses `Penilaian mandiri` melalui navbar publik
   dashboard (desktop dan menu ponsel); konteks pesantren/periode tetap terbawa.
 
-- [x] Pemilih pesantren* + nama pelapor* (aturan sama Stage 03) SEBELUM pertanyaan; banner kunci versi
- `Menggunakan [ISHAS vX.Y] · terkunci selama pengisian` (versi = Published aktif; tanpa Published →
- halaman terkunci + pesan `Belum ada instrumen yang dipublikasikan.`).
+- [x] Pemilih pesantren* + registrasi penilai* (aturan sama Stage 03) SEBELUM pertanyaan; banner bank live
+ `Bank instrumen live · perubahan soal membuat draft harus mengulang` (D-24; tanpa indikator →
+ halaman terkunci + pesan `Belum ada instrumen.`).
 - [x] Tiga kolom (navigasi dimensi | pertanyaan | kelengkapan);
  ponsel menumpuk (navigasi menjadi accordion).
 - [ ] Per indikator: jawaban* (semua required) + catatan (wajib bila N/A, min 10) +
@@ -72,7 +77,7 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 
 ## Acceptance criteria
 
-- [ ] Skenario TEST_PLAN §3 nomor 8 lulus penuh (termasuk tanpa-Published, tak-lengkap, refresh, kirim).
+- [ ] Skenario TEST_PLAN §3 nomor 8 lulus penuh (termasuk bank kosong, tak-lengkap, refresh, checksum basi, kirim).
 - [ ] Tidak ada sisa istilah penugasan/asesor/finalisasi di halaman ini (grep bersih).
 - [ ] Copy WIREFRAMES §3; visual 3 viewport; keyboard; lint, typecheck, test, build lulus.
 

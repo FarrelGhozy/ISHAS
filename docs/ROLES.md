@@ -76,7 +76,7 @@
 **BOLEH:**
 
 - Pesantren: tambah (status awal `Persiapan`), verifikasi menjadi `Aktif`, nonaktifkan menjadi `Nonaktif`. Hanya `Aktif` + punya akun Pesantren aktif yang tampil di pemilih publik.
-- Pengguna: buat akun `Pesantren` (wajib pilih tepat satu pesantren), nonaktifkan akun, lihat detail. Tidak ada pembuatan akun Asesor (peran dihapus).
+- Pengguna: buat akun via popup (nama/email/sandi + konfirmasi + peran; Pesantren wajib tepat satu pesantren Aktif; status awal `Menunggu`), ubah data (peran tidak diganti), reset sandi demo (teraudit), hapus dengan konfirmasi (admin terakhir/demo tunggal/akun sendiri diproteksi), nonaktifkan akun, lihat detail. Tidak ada pembuatan akun Asesor (peran dihapus).
 - Membaca dashboard publik (mode baca, tidak memvalidasi), matriks hak akses (baca), audit log global (baca), pengaturan non-ilmiah + reset data demo.
 
 **TIDAK BOLEH:**

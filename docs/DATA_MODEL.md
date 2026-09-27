@@ -79,6 +79,8 @@ type Severity = 'Belum ditentukan' | 'Tinggi' | 'Sedang' | 'Rendah';
 type Priority = 'Belum ditentukan' | 'Tinggi' | 'Sedang' | 'Rendah';
 type HandlingStatus =
  | 'Menunggu validasi' | 'Pending' | 'Proses' | 'Completed' | 'Ditolak';
+// Arsip = flag `archivedAt` (+ `archivedReason`) pada Report yang tetap
+// `Completed`, bukan nilai HandlingStatus. Lihat FLOWS §5.
 // 'Dihapus' (FLOWS §5) bukan nilai tersimpan: record dihapus beserta temuan + audit tetap ada;
 // alternatif arsip alih-alih hapus menunggu D-07.
 type InstrumentStatus = 'Draft' | 'Published' | 'Archived';
@@ -94,7 +96,8 @@ type RecommendationStatus =
 type Institution = {
  code: string; // 'PSN-0018', unik, dibuat berurutan PSN-XXXX
  name: string; // unik, maks 120
- location: string; // 'Kota Malang'
+ location: string; // 'Kota Malang' (kota/kabupaten; tampil publik, D-02)
+ address?: string; // alamat lengkap onboarding (FLOWS §1, wajib min 10 di form); internal, tidak tampil publik (D-02)
   manager: string; // nama penanggung jawab utama (teks)
  users: number; // count turunan, bukan input
  assessment: 'Belum dimulai' | 'Berjalan' | 'Draft' | 'Selesai'; // field lama (tidak dipakai sebagai status resmi); hubungan dengan hasil/periode belum dipetakan (D-04)

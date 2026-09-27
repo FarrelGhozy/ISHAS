@@ -70,4 +70,14 @@ adalah dokumen milik proyek ISHAS yang baru.
 
 ## Hasil Pemeriksaan
 
+- 27 September 2026 (pematangan Super Admin, IN PROGRESS): deadlock onboarding
+  diperbaiki mengikuti FLOWS §1 (Persiapan → Aktif bebas → akun Pesantren
+  Menunggu → Aktif = terdaftar); form pesantren wajib 4 field + detail +
+  konfirmasi efek pemilih; akun baru default Menunggu; dashboard bedakan
+  terdaftar-vs-Aktif dan internal-vs-publik; hak-akses jadi matriks baca;
+  audit tambah filter pelaku; pengaturan betulkan seed v11. Test store
+  end-to-end (termasuk hilang-terdaftar saat akun terakhir nonaktif) ditulis.
+  Lanjutan: kelola akun via popup (buat + sandi/konfirmasi → Menunggu, ubah,
+  reset sandi demo teraudit, hapus + proteksi diri/admin terakhir).
+  Verifikasi lint/typecheck/test/build + cek visual browser menyusul.
 - 9 September 2026: lint, typecheck, 52 test, build, dan pemeriksaan whitespace lulus.

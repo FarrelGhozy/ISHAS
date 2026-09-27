@@ -98,7 +98,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 ## 6. `/login`, `/admin/*`, `/validator/*`, `/pesantren/*`
 
 - Login: panel kiri sama seperti lama (gradien marun + alur), panel kanan hanya 3 kartu: `Masuk sebagai Super Admin` ("Mengelola pesantren, akun, audit."), `Masuk sebagai Validator` ("Mengelola instrumen dan penilaian."), `Masuk sebagai Pesantren` ("Memvalidasi laporan dan mengelola tindak lanjut."). Tanpa kartu asesor; tanpa link "Kembali ke beranda".
-- Admin: halaman sama lama minus semua opsi Asesor; tambah aksi verifikasi pesantren `Persiapan → Aktif` dan alur buat akun Pesantren.
+- Admin: halaman sama lama minus semua opsi Asesor; tambah aksi verifikasi pesantren `Persiapan → Aktif` dan alur buat akun Pesantren via popup (`Buat akun` → modal nama/email/sandi + konfirmasi/peran/pesantren → `Menunggu` → aktivasi) + ubah + reset sandi demo + hapus berkonfirmasi dengan proteksi akun sendiri/admin terakhir.
 - Validator (D-24): `/validator/instrumen` = Bank live (tambah/edit/hapus dimensi +
   indikator, pilih tipe jawaban 4 opsi, tombol `Atur bobot` per indikator +
   pengali; tanpa kunci versi). Panel `Acuan bobot jawaban` di paling atas

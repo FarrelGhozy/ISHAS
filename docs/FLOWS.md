@@ -29,15 +29,17 @@ Status alur: rancangan untuk review, bukan instruksi kode. Keputusan terbuka ada
   → Sistem membuat record status `Persiapan` + audit `Membuat data pesantren` + ID `PSN-XXXX` berurutan.
 2. Verifikasi data → ubah status menjadi `Aktif` (aksi eksplisit per baris; tidak otomatis).
   → Audit `Memverifikasi pesantren`. Pesantren `Persiapan` tetap TIDAK muncul di pemilih publik.
-3. Buka `/admin/pengguna` → **Tambah pengguna** → peran hanya tiga pilihan: `Super Admin`, `Validator`, `Pesantren` (tidak ada Asesor) → untuk Pesantren wajib pilih tepat satu pesantren `Aktif`.
+ 3. Buka `/admin/pengguna` → **Buat akun** (popup) → isi nama*, email* (unik), kata sandi* + konfirmasi (simulasi form; tidak disimpan di browser — login demo memakai kartu akun), peran tiga pilihan: `Super Admin`, `Validator`, `Pesantren` (tidak ada Asesor) → untuk Pesantren wajib pilih tepat satu pesantren `Aktif`.
   → Sistem membuat akun status `Menunggu`, audit `Membuat akun pengguna`, notifikasi ke admin. Email duplikat DITOLAK dengan pesan "Email sudah digunakan pada data demo."
-  → **Belum lengkap (D-09):** pilihan peran bertentangan dengan ROLES yang hanya memberi hak membuat Pesantren. Aktor, aksi, dan syarat mengaktifkan akun `Menunggu → Aktif` juga belum ditentukan.
-4. Sejak akun Pesantren aktif: nama pesantren muncul di **pemilih pesantren** publik dan dapat dilaporkan. Menghapus/menonaktifkan akun Pesantren terakhir suatu pesantren → pesantren hilang dari pemilih (laporan lama yang sudah `Diterima` tetap tampil sebagai arsip dengan label scope-nya).
+  → Akun dapat **diubah** (nama/email/scope; peran tidak diganti — ganti peran = buat akun baru), **reset sandi** (kembali ke kredensial demo + audit `Mereset kata sandi`), **dihapus** (konfirmasi + audit; admin terakhir, akun demo tunggal, dan akun sendiri diproteksi).
+  → **Belum lengkap (D-09):** syarat mengaktifkan akun `Menunggu → Aktif` oleh siapa masih menunggu keputusan; sementara dilakukan Super Admin lewat dropdown status.
+ 4. Sejak akun Pesantren aktif: nama pesantren muncul di **pemilih pesantren** publik dan dapat dilaporkan. Menghapus/menonaktifkan akun Pesantren terakhir suatu pesantren → pesantren hilang dari pemilih (D-08: hasil lama pesantren nonaktif/kehilangan akun tidak tampil publik; data tetap tersimpan untuk pembacaan internal sesuai scope yang masih tersedia).
 5. Menonaktifkan pesantren (`Aktif → Nonaktif`): butuh konfirmasi; pesantren hilang dari pemilih; form lapor ke pesantren itu DITOLAK dengan pesan "Pesantren tidak tersedia untuk pelaporan."
 
-**Menunggu D-08:** pernyataan arsip lama tetap tampil pada langkah 4 belum konsisten dengan
-agregat yang hanya mencakup pesantren terdaftar. Status laporan menunggu dan pekerjaan berjalan
-setelah pesantren/akun nonaktif juga perlu keputusan; jangan menghapusnya otomatis.
+**Menunggu D-08 (terjawab 9 September 2026, lihat D-08):** agregat publik hanya
+mencakup pesantren terdaftar; hasil lama pesantren nonaktif tidak tampil publik.
+Status laporan menunggu dan pekerjaan berjalan setelah pesantren/akun nonaktif
+tetap tersimpan internal sesuai scope; jangan menghapusnya otomatis.
 
 ## 2. Laporan cepat bahaya (Aktor: Publik, tanpa login)
 
@@ -119,7 +121,7 @@ versi lama (D-10) diganti aturan checksum D-24: soal berubah = ulang dari awal.
 
 ```
 Menunggu validasi → Ditolak (terminal)
-Menunggu validasi → Pending → Proses → Completed → Diarsipkan (terminal, teraudit — D-07)
+Menunggu validasi → Pending → Proses → Completed → arsip via `archivedAt` (terminal, teraudit — D-07)
 Proses → Pending (mundur dengan alasan)
 Completed → Proses (dibuka kembali dengan alasan)
 Rekomendasi: Belum ditindaklanjuti → Berjalan → Menunggu verifikasi → Terverifikasi
@@ -135,7 +137,7 @@ Temuan: level Rendah/Sedang/Tinggi/Ekstrem diubah eksplisit per temuan oleh Pesa
 | `Menunggu validasi → Ditolak` | Hanya lewat aksi Tolak + alasan |
 | `Pending → Proses` | Jalur utama lewat kartu tindak lanjut: PIC + tenggat (tanggal, tidak masa lalu) + catatan rencana; `updateHandlingStatus` manual tetap sah untuk laporan tanpa rekomendasi + arsip/mundur |
 | `Proses → Completed` | Jalur utama otomatis bila seluruh rekomendasi non-`Dibatalkan` sudah `Terverifikasi` (progres 100% + bukti upload + verifikasi); manual hanya untuk laporan tanpa rekomendasi |
-| `Completed → Diarsipkan` | Hanya `Completed` yang belum diarsip; alasan arsip min 5; audit `Mengarsipkan laporan selesai`; arsip hilang dari kelola Validasi + publik, tetap dibaca di `/pesantren/laporan` |
+| `Completed → arsip` (`archivedAt`) | Hanya `Completed` yang belum diarsip; alasan arsip min 5; audit `Mengarsipkan laporan selesai`; arsip hilang dari kelola Validasi + publik, tetap dibaca di `/pesantren/laporan`. `Diarsipkan` bukan nilai `HandlingStatus` — arsip = flag `archivedAt` (+ `archivedReason`) pada laporan yang tetap `Completed` |
 | Mundur (`Proses → Pending`, `Completed → Proses`) | Hanya dengan catatan alasan wajib min 10; teraudit sebagai `Mengembalikan status`; tombol mundur diberi gaya sekunder + peringatan |
 
 **Belum final:** D-05 menentukan penggabungan status bila satu report mempunyai beberapa
