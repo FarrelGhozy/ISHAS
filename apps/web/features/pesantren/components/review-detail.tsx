@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { K3_ASPECT_MAP, K3_CATEGORY_MAP } from "~/mocks/kategori-k3";
 import type { IshasState, Report } from "~/mocks/types";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
-import { SavedLocation } from "~/shared/components/campus-plan";
+import { SavedLocation } from "~/shared/components/denah-preview";
 import { StatusChip } from "~/shared/components/status-chip";
 
 function formatWaktu(value?: string): string {

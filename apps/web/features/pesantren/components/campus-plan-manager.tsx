@@ -4,6 +4,7 @@ import type { User } from "~/mocks/types";
 import { useMockState } from "~/mocks/store/mock-store";
 import { mockRepository } from "~/mocks/adapters/mock-repository";
 import { CampusPlan } from "~/shared/components/campus-plan";
+import { TombolDenahBesar } from "~/shared/components/denah-preview";
 import { Modal } from "~/shared/components/modal";
 
 export function CampusPlanManager({ user }: { user: User }) {
@@ -28,6 +29,7 @@ export function CampusPlanManager({ user }: { user: User }) {
   const [acknowledged, setAcknowledged] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [denahBesar, setDenahBesar] = useState(false);
   useEffect(() => {
     if (!candidate) {
       setPreview("");
@@ -145,7 +147,20 @@ export function CampusPlanManager({ user }: { user: User }) {
           </h3>
           {activePlan ? (
             <>
-              <CampusPlan key={activePlan.id} plan={activePlan} />
+              {denahBesar ? (
+                <>
+                  <CampusPlan key={activePlan.id} plan={activePlan} />
+                  <button
+                    type="button"
+                    className="secondary-button mt-3"
+                    onClick={() => setDenahBesar(false)}
+                  >
+                    Tutup denah besar
+                  </button>
+                </>
+              ) : (
+                <TombolDenahBesar plan={activePlan} onBuka={() => setDenahBesar(true)} />
+              )}
               <p className="mt-2 text-sm text-secondary-text">
                 {activePlan.illustration
                   ? "Ilustrasi denah · bukan lokasi sebenarnya"

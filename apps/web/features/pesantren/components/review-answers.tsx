@@ -6,7 +6,7 @@ import type {
   InstrumentVersion,
   SelfAssessmentSnapshot,
 } from "~/mocks/types";
-import { SavedLocation } from "~/shared/components/campus-plan";
+import { SavedLocation } from "~/shared/components/denah-preview";
 
 export function ReviewAnswers({
   snapshot,
