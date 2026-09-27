@@ -1,18 +1,29 @@
+// Halaman kelola akun — FLOWS §1 + D-09: buat lewat popup sebagai Menunggu,
+// ubah data, reset sandi (demo), nonaktif/hapus dengan konfirmasi efek.
+// Akun sendiri yang sedang login dan admin terakhir diproteksi.
+
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { KeyRound, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { storeActions, useMockState } from "~/mocks/store/mock-store";
+import type { User } from "~/mocks/types";
+import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
+import { DialogBuatAkun, DialogResetSandi, DialogUbahAkun } from "../components/user-dialogs";
+
+type DialogState =
+  | { kind: "buat" }
+  | { kind: "ubah"; user: User }
+  | { kind: "reset"; user: User }
+  | null;
 
 export function Page() {
   const state = useMockState();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [roleId, setRoleId] = useState<"admin" | "validator" | "pesantren">("pesantren");
-  const [institutionCode, setInstitutionCode] = useState("");
+  const saya = useCurrentUser();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Semua");
   const [note, setNote] = useState("");
+  const [dialog, setDialog] = useState<DialogState>(null);
   const users = useMemo(
     () =>
       state.users.filter(
@@ -24,121 +35,112 @@ export function Page() {
       ),
     [state.users, status, query],
   );
-  const roleLabel =
-    roleId === "admin" ? "Super Admin" : roleId === "validator" ? "Validator" : "Pesantren";
-  const add = () => {
+  const pesantrenAktif = useMemo(
+    () => state.institutions.filter((x) => x.status === "Aktif"),
+    [state.institutions],
+  );
+  const akunAktifPerPesantren = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const u of state.users) {
+      if (u.roleId !== "pesantren" || u.status !== "Aktif") continue;
+      for (const code of u.institutionCodes) map.set(code, (map.get(code) ?? 0) + 1);
+    }
+    return map;
+  }, [state.users]);
+  const buat = (nilai: { name: string; email: string; roleId: User["roleId"]; institutionCode: string }) => {
     const n = Math.max(0, ...state.users.map((x) => Number(x.id.replace(/\D/g, "")))) + 1;
-    const institution = state.institutions.find((x) => x.code === institutionCode);
-    const scopeName =
-      roleId === "pesantren"
-        ? (institution?.name ?? "")
-        : roleId === "admin"
-          ? "Seluruh sistem"
-          : "Seluruh sistem";
+    const lembaga = state.institutions.find((x) => x.code === nilai.institutionCode);
+    const label = nilai.roleId === "admin" ? "Super Admin" : nilai.roleId === "validator" ? "Validator" : "Pesantren";
     const r = storeActions.addUser({
       id: `USR-${String(n).padStart(3, "0")}`,
-      name,
-      email,
-      initials: name
+      name: nilai.name,
+      email: nilai.email,
+      initials: nilai.name
         .split(" ")
         .filter(Boolean)
         .map((x) => x[0])
         .join("")
         .slice(0, 2)
         .toUpperCase(),
-      role: roleLabel as "Super Admin" | "Validator" | "Pesantren",
-      roleId,
-      institution: scopeName,
-      institutionCodes: roleId === "pesantren" ? (institutionCode ? [institutionCode] : []) : [],
-      status: "Aktif",
+      role: label as User["role"],
+      roleId: nilai.roleId,
+      institution: nilai.roleId === "pesantren" ? (lembaga?.name ?? "") : "Seluruh sistem",
+      institutionCodes: nilai.roleId === "pesantren" ? (nilai.institutionCode ? [nilai.institutionCode] : []) : [],
+      status: "Menunggu",
       lastActive: new Date().toISOString(),
     });
-    setNote(r.ok ? `Akun ${roleLabel} berhasil dibuat.` : r.error);
-    if (r.ok) {
-      setName("");
-      setEmail("");
-      setInstitutionCode("");
-    }
+    setNote(
+      r.ok
+        ? `Akun ${label} dibuat sebagai Menunggu. Aktifkan lewat dropdown status agar bisa dipakai.`
+        : (r.error ?? "Gagal membuat akun."),
+    );
+    return r.ok ? { ok: true } : { ok: false, error: r.error };
   };
-  const changeStatus = (id: string, value: "Aktif" | "Menunggu" | "Nonaktif", label: string) => {
-    const result = storeActions.setUserStatus(id, value);
-    setNote(result.ok ? `Status ${label} diperbarui.` : result.error);
+  const gantiStatus = (target: User, value: User["status"]) => {
+    if (target.status === value) return;
+    if (saya && target.id === saya.id) {
+      setNote("Kamu tidak dapat mengubah status akun sendiri yang sedang login.");
+      return;
+    }
+    if (
+      target.roleId === "pesantren" &&
+      value === "Nonaktif" &&
+      !window.confirm(
+        `${target.name} dinonaktifkan?\n\nBila ini akun Pesantren aktif terakhir di pesantrennya, pesantren hilang dari pemilih publik (D-08).`,
+      )
+    ) {
+      return;
+    }
+    const r = storeActions.setUserStatus(target.id, value);
+    setNote(r.ok ? `Status ${target.name} diperbarui menjadi ${value}.` : (r.error ?? "Gagal."));
+  };
+  const hapus = (target: User) => {
+    if (saya && target.id === saya.id) {
+      setNote("Tidak dapat menghapus akun sendiri yang sedang login.");
+      return;
+    }
+    const code = target.institutionCodes[0];
+    const terakhir =
+      target.roleId === "pesantren" && code && (akunAktifPerPesantren.get(code) ?? 0) <= 1 && target.status === "Aktif";
+    if (
+      !window.confirm(
+        `Hapus akun ${target.name} (${target.email})?\n\nRiwayat validasi yang sudah tercatat tidak ikut berubah (nama tersimpan sebagai snapshot).` +
+          (terakhir ? `\n\nIni akun Pesantren aktif terakhir di ${code}: pesantren hilang dari pemilih publik.` : ""),
+      )
+    ) {
+      return;
+    }
+    const r = storeActions.deleteUser(target.id);
+    setNote(r.ok ? `Akun ${target.name} dihapus.` : (r.error ?? "Gagal menghapus."));
   };
   return (
     <section className="flex flex-col gap-4">
-      <header>
-        <p className="kicker">Administrasi</p>
-        <h1 className="text-2xl font-extrabold text-heading">Pengguna</h1>
-        <p className="text-sm text-secondary-text">
-          Buat akun Super Admin, Validator, dan Pesantren (D-09). Pesantren wajib satu
-          pesantren aktif.
-        </p>
-      </header>
-      <div className="surface p-4">
-        <h2 className="mb-3 font-bold text-heading">Akun baru</h2>
-        <div className="grid gap-3 md:grid-cols-5">
-          <label className="text-xs font-bold">
-            Nama
-            <input
-              className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <label className="text-xs font-bold">
-            Email
-            <input
-              type="email"
-              className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-          <label className="text-xs font-bold">
-            Peran
-            <select
-              className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
-              value={roleId}
-              onChange={(e) => setRoleId(e.target.value as typeof roleId)}
-            >
-              <option value="pesantren">Pesantren</option>
-              <option value="validator">Validator</option>
-              <option value="admin">Super Admin</option>
-            </select>
-          </label>
-          <label className="text-xs font-bold">
-            Pesantren aktif
-            <select
-              className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
-              value={institutionCode}
-              disabled={roleId !== "pesantren"}
-              onChange={(e) => setInstitutionCode(e.target.value)}
-            >
-              <option value="">
-                {roleId === "pesantren" ? "Pilih pesantren" : "Tanpa scope lembaga"}
-              </option>
-              {state.institutions
-                .filter((x) => x.status === "Aktif")
-                .map((x) => (
-                  <option key={x.code} value={x.code}>
-                    {x.name}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <button type="button" className="primary-button self-end" onClick={add}>
-            Buat akun
-          </button>
-        </div>
-        {note && (
-          <p
-            role={note.includes("berhasil") || note.includes("diperbarui") ? "status" : "alert"}
-            className="mt-3 text-sm"
-          >
-            {note}
+      <header className="flex flex-wrap items-end gap-3">
+        <div className="mr-auto">
+          <p className="kicker">Administrasi</p>
+          <h1 className="text-2xl font-extrabold text-heading">Pengguna</h1>
+          <p className="text-sm text-secondary-text">
+            Akun baru dibuat sebagai Menunggu lalu diaktifkan. Peran tidak dapat diganti —
+            ganti peran berarti buat akun baru.
           </p>
-        )}
-      </div>
+        </div>
+        <button
+          type="button"
+          className="primary-button w-full sm:w-auto"
+          onClick={() => setDialog({ kind: "buat" })}
+        >
+          <Plus size={16} aria-hidden />
+          Buat akun
+        </button>
+      </header>
+      {note && (
+        <p
+          role={note.includes("dibuat") || note.includes("diperbarui") || note.includes("dihapus") || note.includes("disimpan") || note.includes("kembali") ? "status" : "alert"}
+          className="text-sm"
+        >
+          {note}
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         <label className="relative min-w-60 flex-1">
           <Search className="absolute left-3 top-3" size={18} />
@@ -164,28 +166,66 @@ export function Page() {
       </div>
       {users.length ? (
         <div className="surface divide-y divide-line">
-          {users.map((x) => (
-            <article key={x.id} className="flex flex-wrap items-center gap-3 p-4 text-sm">
-              <div className="mr-auto min-w-48">
-                <strong className="text-heading">{x.name}</strong>
-                <p className="text-xs text-secondary-text">
-                  {x.email} · {x.role}
-                </p>
-                <p className="text-xs text-faint">{x.institution}</p>
-              </div>
-              <StatusChip value={x.status} />
-              <select
-                aria-label={`Status ${x.name}`}
-                className="min-h-11 rounded border border-line-soft px-2"
-                value={x.status}
-                onChange={(e) => changeStatus(x.id, e.target.value as typeof x.status, x.name)}
-              >
-                <option>Aktif</option>
-                <option>Menunggu</option>
-                <option>Nonaktif</option>
-              </select>
-            </article>
-          ))}
+          {users.map((x) => {
+            const milikSendiri = saya?.id === x.id;
+            return (
+              <article key={x.id} className="flex flex-col gap-3 p-4 text-sm sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="sm:mr-auto sm:min-w-48">
+                  <strong className="text-heading">{x.name}</strong>
+                  <p className="text-xs text-secondary-text">
+                    {x.email} · {x.role}
+                  </p>
+                  <p className="text-xs text-faint">{x.institution}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusChip value={x.status} />
+                  <select
+                    aria-label={`Status ${x.name}`}
+                    title={milikSendiri ? "Status akun sendiri tidak dapat diubah" : undefined}
+                    className="min-h-11 flex-1 rounded border border-line-soft px-2 disabled:opacity-50 sm:flex-none"
+                    value={x.status}
+                    disabled={milikSendiri}
+                    onChange={(e) => gantiStatus(x, e.target.value as User["status"])}
+                  >
+                    <option>Aktif</option>
+                    <option>Menunggu</option>
+                    <option>Nonaktif</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap">
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    aria-label={`Ubah akun ${x.name}`}
+                    onClick={() => setDialog({ kind: "ubah", user: x })}
+                  >
+                    <Pencil size={14} aria-hidden />
+                    Ubah
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    aria-label={`Reset kata sandi ${x.name}`}
+                    onClick={() => setDialog({ kind: "reset", user: x })}
+                  >
+                    <KeyRound size={14} aria-hidden />
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    title={milikSendiri ? "Tidak dapat menghapus akun sendiri" : "Hapus akun"}
+                    aria-label={`Hapus akun ${x.name}`}
+                    disabled={milikSendiri}
+                    onClick={() => hapus(x)}
+                  >
+                    <Trash2 size={14} aria-hidden />
+                    Hapus
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <EmptyState
@@ -193,6 +233,37 @@ export function Page() {
           description="Ubah kata pencarian atau filter status."
         />
       )}
+      <DialogBuatAkun
+        open={dialog?.kind === "buat"}
+        pesantrenAktif={pesantrenAktif}
+        onClose={() => setDialog(null)}
+        onCreate={buat}
+      />
+      <DialogUbahAkun
+        open={dialog?.kind === "ubah"}
+        user={dialog?.kind === "ubah" ? dialog.user : null}
+        pesantrenAktif={pesantrenAktif}
+        onClose={() => setDialog(null)}
+        onSave={(id, nilai) => {
+          const r = storeActions.updateUser(id, nilai);
+          setNote(r.ok ? "Data akun disimpan." : (r.error ?? "Gagal menyimpan."));
+          return r.ok ? { ok: true } : { ok: false, error: r.error };
+        }}
+      />
+      <DialogResetSandi
+        open={dialog?.kind === "reset"}
+        user={dialog?.kind === "reset" ? dialog.user : null}
+        onClose={() => setDialog(null)}
+        onReset={(id) => {
+          const r = storeActions.resetUserPassword(id);
+          setNote(
+            r.ok
+              ? "Kata sandi dikembalikan ke kredensial demo dan tercatat di audit."
+              : (r.error ?? "Gagal mereset sandi."),
+          );
+          return r.ok ? { ok: true } : { ok: false, error: r.error };
+        }}
+      />
     </section>
   );
 }

@@ -1314,12 +1314,20 @@ export const storeActions = {
   addInstitution(institution: Institution): ActionResult {
     const name = institution.name.trim();
     const location = institution.location.trim();
+    const address = (institution.address ?? "").trim();
+    const manager = (institution.manager ?? "").trim();
     if (name.length < 3) return { ok: false, error: "Nama pesantren minimal 3 karakter." };
-    if (location.length < 3) return { ok: false, error: "Lokasi minimal 3 karakter." };
+    if (name.length > 120) return { ok: false, error: "Nama pesantren maksimal 120 karakter." };
+    if (location.length < 3) return { ok: false, error: "Kota/kabupaten minimal 3 karakter." };
+    // FLOWS §1: alamat lengkap + penanggung jawab wajib saat tambah pesantren.
+    if (address.length < 10) return { ok: false, error: "Alamat lengkap minimal 10 karakter." };
+    if (manager.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
     if (currentState.institutions.some((item) => item.name.toLowerCase() === name.toLowerCase()))
       return { ok: false, error: "Nama pesantren sudah digunakan." };
+    if (currentState.institutions.some((item) => item.code === institution.code))
+      return { ok: false, error: "Kode pesantren sudah digunakan." };
     setState((draft) => {
-      draft.institutions.push({ ...institution, name, location });
+      draft.institutions.push({ ...institution, name, location, address, manager });
       draft.counters.institution += 1;
       audit(
         draft,
@@ -1356,19 +1364,114 @@ export const storeActions = {
     return { ok: true };
   },
 
+  updateUser(
+    userId: string,
+    patch: { name: string; email: string; institutionCode: string },
+  ): ActionResult {
+    const target = currentState.users.find((item) => item.id === userId);
+    if (!target) return { ok: false, error: "Pengguna tidak ditemukan." };
+    const name = patch.name.trim();
+    const email = patch.email.trim().toLowerCase();
+    if (name.length < 2) return { ok: false, error: "Nama pengguna minimal 2 karakter." };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return { ok: false, error: "Format email tidak valid." };
+    if (
+      getState().users.some((u) => u.id !== userId && u.email.toLowerCase() === email)
+    ) {
+      return { ok: false, error: "Email sudah digunakan pada data demo." };
+    }
+    // Peran tidak diubah di sini (ganti peran = buat akun baru) agar scope
+    // lembaga tidak tertukar diam-diam. Pesantren tetap wajib satu pesantren Aktif.
+    if (target.roleId === "pesantren") {
+      const institution = currentState.institutions.find((x) => x.code === patch.institutionCode);
+      if (!institution || institution.status !== "Aktif")
+        return { ok: false, error: "Pesantren wajib terhubung ke satu pesantren aktif." };
+    }
+    setState((draft) => {
+      const user = draft.users.find((item) => item.id === userId)!;
+      user.name = name;
+      user.email = email;
+      user.initials = name
+        .split(" ")
+        .filter(Boolean)
+        .map((x) => x[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+      if (user.roleId === "pesantren") {
+        const institution = draft.institutions.find((x) => x.code === patch.institutionCode)!;
+        user.institution = institution.name;
+        user.institutionCodes = [institution.code];
+      }
+      audit(
+        draft,
+        { name: "Super Admin" },
+        { objectType: "User", objectId: userId, action: "Mengubah data pengguna" },
+      );
+    });
+    return { ok: true };
+  },
+
+  deleteUser(userId: string): ActionResult {
+    const target = currentState.users.find((item) => item.id === userId);
+    if (!target) return { ok: false, error: "Pengguna tidak ditemukan." };
+    // Akun terakhir yang ditunjuk kartu login demo tidak boleh hilang agar
+    // tiap peran tetap bisa masuk; proteksi akun sendiri ada di UI.
+    if (
+      target.roleId === "admin" &&
+      currentState.users.filter((item) => item.roleId === "admin").length === 1
+    )
+      return { ok: false, error: "Super Admin terakhir tidak dapat dihapus." };
+    if (
+      ["USR-001", "USR-002", "USR-003"].includes(userId) &&
+      currentState.users.filter((item) => item.roleId === target.roleId).length === 1
+    )
+      return { ok: false, error: "Akun demo peran ini tidak dapat dihapus." };
+    setState((draft) => {
+      const index = draft.users.findIndex((item) => item.id === userId)!;
+      const [removed] = draft.users.splice(index, 1);
+      audit(
+        draft,
+        { name: "Super Admin" },
+        {
+          objectType: "User",
+          objectId: userId,
+          action: "Menghapus akun pengguna",
+          note: `${removed.name} · ${removed.email} · ${removed.role}`,
+        },
+      );
+    });
+    return { ok: true };
+  },
+
+  resetUserPassword(userId: string): ActionResult {
+    const target = currentState.users.find((item) => item.id === userId);
+    if (!target) return { ok: false, error: "Pengguna tidak ditemukan." };
+    // Prototipe tidak menyimpan kata sandi di browser (login demo memakai
+    // kartu akun); reset dicatat sebagai jejak administrasi + akun kembali
+    // memakai kredensial demo. Backend nyata wajib menyimpan hash, bukan teks.
+    setState((draft) => {
+      audit(
+        draft,
+        { name: "Super Admin" },
+        {
+          objectType: "User",
+          objectId: userId,
+          action: "Mereset kata sandi",
+          note: "Demo: kembali ke kredensial demo; sandi tidak disimpan di browser.",
+        },
+      );
+    });
+    return { ok: true };
+  },
+
   setInstitutionStatus(code: string, status: Institution["status"]): ActionResult {
     const target = currentState.institutions.find((item) => item.code === code);
     if (!target) return { ok: false, error: "Pesantren tidak ditemukan." };
-    if (
-      status === "Aktif" &&
-      !currentState.users.some(
-        (item) =>
-          item.roleId === "pesantren" &&
-          item.status === "Aktif" &&
-          item.institutionCodes.includes(code),
-      )
-    )
-      return { ok: false, error: "Tetapkan minimal satu akun Pesantren aktif sebelum aktivasi." };
+    // FLOWS §1 + D-08/D-09: pesantren boleh Persiapan → Aktif tanpa akun dulu.
+    // Syarat "terdaftar" (muncul di pemilih publik) tetap Aktif + punya akun
+    // Pesantren aktif — diperiksa di selector, bukan di aktivasi ini.
+    // Akun Pesantren baru justru wajib memilih pesantren Aktif (lihat addUser).
     setState((draft) => {
       const institution = draft.institutions.find((item) => item.code === code)!;
       institution.status = status;

@@ -229,6 +229,13 @@ svg {
 .app-dialog::backdrop {
   background: rgb(16 42 53 / 45%);
 }
+/* Ponsel sempit: dialog lebih ramping agar isi popup tidak overflow. */
+@media (max-width: 480px) {
+  .app-dialog {
+    width: calc(100% - 1rem);
+    padding: 1rem;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

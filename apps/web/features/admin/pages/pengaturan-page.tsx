@@ -1,5 +1,5 @@
-// `/admin/pengaturan` — V2-01: tombol reset data demo ke seed V2 (DATA_MODEL §4).
-// Halaman preferensi non-ilmiah lengkap menyusul di V2-09.
+// `/admin/pengaturan` — reset data demo ke seed schema v11 (DATA_MODEL §0).
+// Sesi login dan draft perangkat tidak ikut terhapus (penyimpanan terpisah).
 
 import { useState } from "react";
 import { RotateCcw } from "lucide-react";
@@ -16,6 +16,10 @@ export function AdminPengaturanPage() {
       <header>
         <p className="kicker">Pengaturan</p>
         <h1 className="text-lg font-extrabold text-heading">Pengaturan sistem (demo)</h1>
+        <p className="mt-1 text-xs text-secondary-text">
+          Preferensi non-ilmiah prototipe + tindakan berisiko. Pengaturan ilmiah
+          (bobot, ambang, rumus) milik Validator dan menunggu keputusan ilmiah final.
+        </p>
       </header>
       {error ? (
         <p role="alert" className="text-sm text-[#b91c1c]">
@@ -26,10 +30,10 @@ export function AdminPengaturanPage() {
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-heading">Reset data demo</p>
           <p className="text-[10px] text-secondary-text">
-            Mengembalikan data domain, aset denah dan gambar bukti pada perangkat ini ke seed v5.
-            Sesi dan draft laporan cepat tetap tersimpan terpisah; titik usang perlu dipilih ulang
-            dan gambar bukti perlu diunggah kembali. Riwayat demo sebelumnya hilang; audit kembali
-            mengikuti seed.
+            Mengembalikan data domain, aset denah, dokumen indikator, dan gambar bukti pada
+            perangkat ini ke seed schema v11. Sesi login (sessionStorage) dan draft laporan
+            (localStorage) tetap tersimpan terpisah. Riwayat demo sebelumnya hilang; audit
+            kembali mengikuti seed.
           </p>
           {done ? (
             <p className="mt-1 text-[10px] font-bold status status-green inline-flex">
