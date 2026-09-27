@@ -412,6 +412,21 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   perubahan struktur ilmiah instrumen.
 - Dokumen terdampak: WIREFRAMES §9, FLOWS §8, DATA_MODEL §0, TODO.
 
+## D-19 — Lapor-cepat tanpa indikator + usulan mandiri + detail validasi lengkap — DISETUJUI 27 September 2026
+
+- Arahan pemilik: form `/lapor` tidak memakai `Indikator terkait`; pelapor hanya
+  memilih `Kategori` → `Aspek` (opsional) lalu menilai mandiri `Tingkat keparahan`
+  dan `Prioritas perbaikan` (opsional, default `Belum ditentukan`).
+- **D-19.a — Usulan vs keputusan:** nilai pelapor disimpan sebagai usulan
+  (`reporterSeverity/reporterPriority`); `severity/priority` final tetap diisi
+  akun Pesantren saat Terima (tanpa default). Halaman validasi menampilkan usulan
+  sebagai pre-fill yang wajib ditinjau/diubah sebelum konfirmasi.
+- **D-19.b — Detail validasi:** modal `/pesantren/validasi-laporan` menampilkan
+  seluruh isi kiriman publik (identitas, kontak internal, kategori/aspek,
+  lokasi + teks denah, bukti gambar, waktu, jejak keputusan).
+- Dokumen terdampak: FLOWS §2/§4, DATA_MODEL (schema v8→v9), KATEGORI_K3 §7,
+  WIREFRAMES §2/§4, TODO. D-02 tetap berlaku: kontak/usulan internal tidak publik.
+
 ## D-17 — Rename peran Peneliti → Validator dan Pengelola Pesantren → Pesantren — DISETUJUI 27 September 2026
 
 - Arahan pemilik: sebutan `Peneliti` terlalu mewah; ganti menjadi `Validator`

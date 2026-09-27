@@ -24,7 +24,7 @@ const T = {
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 8,
+  schemaVersion: 9,
   campusPlans: [
     {
       id: "CAMPUS-PSN-0018-v1",
@@ -152,6 +152,10 @@ export const SEED: IshasState = {
       id: "RPT-0001",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      categoryId: "KAT-KESELAMATAN",
+      aspectId: "ASP-KES-001",
+      reporterSeverity: "Tinggi",
+      reporterPriority: "Sedang",
       reporterName: "Santri Blok A",
       title: "Kabel terbuka di koridor lantai 2",
       description:
@@ -188,6 +192,8 @@ export const SEED: IshasState = {
       id: "RPT-0003",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Tinggi",
       reporterName: "Ustaz Rahmat",
       title: "Slip lantai tangga asrama putra",
       description:
@@ -299,6 +305,8 @@ export const SEED: IshasState = {
       categoryId: "KAT-KESELAMATAN",
       aspectId: "ASP-KES-002",
       indicatorId: "IND-K3L-003",
+      reporterSeverity: "Tinggi",
+      reporterPriority: "Tinggi",
       reporterName: "Takmir Musala",
       title: "APAR kedaluwarsa dan kabel terkelupas di musala",
       description:
@@ -326,6 +334,8 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0018",
       categoryId: "KAT-LINGKUNGAN",
       aspectId: "ASP-LING-001",
+      reporterSeverity: "Rendah",
+      reporterPriority: "Sedang",
       reporterName: "Pustakawan — Ruang Baca",
       title: "Sampah dedaunan menumpuk di sisi perpustakaan",
       description:
@@ -370,6 +380,8 @@ export const SEED: IshasState = {
       id: "RPT-0011",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      reporterSeverity: "Rendah",
+      reporterPriority: "Rendah",
       reporterName: "Santri Blok B",
       title: "Keran wudu bocor di musala lantai 1",
       description:
@@ -394,6 +406,8 @@ export const SEED: IshasState = {
       id: "RPT-0012",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Rendah",
       reporterName: "Warga Sekitar — Jl. Mangga",
       title: "Lampu taman mati di gerbang depan",
       description: "Lampu taman depan gerbang mati dan area menjadi gelap pada malam hari.",
@@ -418,6 +432,8 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       categoryId: "KAT-KESEHATAN",
       aspectId: "ASP-SEH-003",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Tinggi",
       reporterName: "Musyrifah Asrama Putri",
       title: "Ventilasi kamar santri pengap dan berdebu",
       description:
@@ -466,6 +482,8 @@ export const SEED: IshasState = {
       categoryId: "KAT-KESEHATAN",
       aspectId: "ASP-SEH-001",
       indicatorId: "IND-K3L-004",
+      reporterSeverity: "Tinggi",
+      reporterPriority: "Tinggi",
       reporterName: "Petugas Dapur Utama",
       title: "Air keran dapur keruh dan berbau sejak dua hari",
       description:
@@ -493,6 +511,8 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       categoryId: "KAT-KESELAMATAN",
       aspectId: "ASP-KES-004",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Sedang",
       reporterName: "Santriwati Kamar 3",
       title: "Lantai toilet asrama putri licin dan berlumut",
       description:

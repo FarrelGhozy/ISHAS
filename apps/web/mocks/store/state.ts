@@ -5,8 +5,8 @@
 import { SEED } from "../seed/seed";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 8;
-export const MOCK_STORAGE_KEY = "ishas-mock-v8";
+export const MOCK_SCHEMA_VERSION = 9;
+export const MOCK_STORAGE_KEY = "ishas-mock-v9";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -116,6 +116,32 @@ export function migrateV7(value: unknown): unknown {
   return migrated;
 }
 
+// D-19: v8 → v9 usulan mandiri lapor-cepat + lapor-cepat baru tanpa indikator.
+// Mempertahankan seluruh record/ID; usulan lama yang kosong menjadi 'Belum ditentukan'.
+export function migrateV8(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 8)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 9;
+  migrated.reports?.forEach((report) => {
+    if (
+      report.reporterSeverity !== "Tinggi" &&
+      report.reporterSeverity !== "Sedang" &&
+      report.reporterSeverity !== "Rendah"
+    ) {
+      report.reporterSeverity = "Belum ditentukan";
+    }
+    if (
+      report.reporterPriority !== "Tinggi" &&
+      report.reporterPriority !== "Sedang" &&
+      report.reporterPriority !== "Rendah"
+    ) {
+      report.reporterPriority = "Belum ditentukan";
+    }
+  });
+  return migrated;
+}
+
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
@@ -162,12 +188,15 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v8") ??
       localStorage.getItem("ishas-mock-v7") ??
       localStorage.getItem("ishas-mock-v6") ??
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw)))));
+      const parsed: unknown = migrateV8(
+        migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))),
+      );
       if (isValidState(parsed)) return parsed;
     }
   } catch {

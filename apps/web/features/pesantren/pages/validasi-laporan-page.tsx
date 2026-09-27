@@ -1,16 +1,30 @@
+// Antrean validasi Pesantren — daftar + modal periksa (FLOWS §4, D-19).
+// Detail hanya-baca tinggal di komponen review; halaman ini mengatur
+// filter, keputusan Terima/Tolak, dan pre-fill usulan pelapor.
+
 import { useMemo, useState } from "react";
 import { useMockState, storeActions } from "~/mocks/store/mock-store";
 import { selectAreasByInstitution } from "~/mocks/store/lapor-selectors";
 import { selectInstitutionByCode, selectReportsForManager } from "~/mocks/store/selectors";
 import { StatusChip } from "~/shared/components/status-chip";
 import { EmptyState } from "~/shared/components/empty-state";
-import { SavedLocation } from "~/shared/components/campus-plan";
-import { EvidencePreview } from "~/shared/components/evidence-preview";
 import { Modal } from "~/shared/components/modal";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import type { Priority, Report, Severity } from "~/mocks/types";
+import { ReviewDetail } from "../components/review-detail";
+import { ReviewAnswers } from "../components/review-answers";
 
 const levels = ["Tinggi", "Sedang", "Rendah"] as const;
+
+function usulanKeputusan(value?: string): Severity {
+  if (value === "Tinggi" || value === "Sedang" || value === "Rendah") return value;
+  return "Belum ditentukan";
+}
+
+function usulanPrioritas(value?: string): Priority {
+  if (value === "Tinggi" || value === "Sedang" || value === "Rendah") return value;
+  return "Belum ditentukan";
+}
 
 export function ValidasiLaporanPage() {
   const state = useMockState();
@@ -122,25 +136,29 @@ function Review({
   close: () => void;
 }) {
   const [accept, setAccept] = useState(true);
-  const [severity, setSeverity] = useState<Severity>("Belum ditentukan");
-  const [priority, setPriority] = useState<Priority>("Belum ditentukan");
+  const [severity, setSeverity] = useState<Severity>(() => usulanKeputusan(report?.reporterSeverity));
+  const [priority, setPriority] = useState<Priority>(() => usulanPrioritas(report?.reporterPriority));
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   if (!report) return null;
   const live = state.reports.find((item) => item.id === report.id) ?? report;
   const decided = live.validationStatus !== "Menunggu validasi";
-  const area = selectAreasByInstitution(state, report.institutionCode).find(
-    (item) => item.id === report.areaId,
-  );
-  const areaLabel = new Map(
-    selectAreasByInstitution(state, report.institutionCode).map((item) => [item.id, item.label]),
-  );
+  const areas = selectAreasByInstitution(state, report.institutionCode);
+  const areaLabel = areas.find((item) => item.id === report.areaId)?.label
+    ?? report.manualLocation
+    ?? "Tidak tersedia";
+  const areaLabelMap = new Map(areas.map((item) => [item.id, item.label]));
+  const institutionName = selectInstitutionByCode(state, report.institutionCode)?.name
+    ?? report.institutionCode;
   const snapshot =
     report.channel === "penilaian-mandiri"
       ? state.selfAssessmentSnapshots.find((item) => item.reportId === report.id)
       : undefined;
   const version = state.instrumentVersions.find(
     (item) => item.id === (snapshot?.instrumentVersionId ?? report.instrumentVersionId),
+  );
+  const plans = state.campusPlans.filter(
+    (plan) => plan.institutionCode === report.institutionCode,
   );
   const submit = () => {
     const result = accept
@@ -157,162 +175,100 @@ function Review({
   };
   return (
     <Modal open={true} onClose={close} label={`Periksa ${report.id}`}>
-      <div className="max-w-xl">
-        <div className="flex flex-wrap gap-2">
-          <StatusChip value={report.channel} />
-          <StatusChip value={live.validationStatus} />
-        </div>
-        <h2 className="mt-3 text-xl font-extrabold text-heading">{report.title}</h2>
-        <p className="mt-2 text-sm text-secondary-text">
-          Pelapor: {report.reporterName}
-          <br />
-          Lokasi: {area?.label ?? report.manualLocation ?? "Tidak tersedia"}
-          <br />
-          {report.description}
-          {report.evidenceName ? (
-            <>
-              <br />
-              Bukti: {report.evidenceName}
-            </>
-          ) : null}
-          {report.instrumentVersionId ? (
-            <>
-              <br />
-              Versi instrumen: {report.instrumentVersionId}
-            </>
-          ) : null}
-        </p>
-        <EvidencePreview
-          assetId={report.evidenceAssetId}
-          institutionCode={report.institutionCode}
-          name={report.evidenceName}
+      <ReviewDetail
+        report={report}
+        live={live}
+        state={state}
+        institutionName={institutionName}
+        areaLabel={areaLabel}
+      />
+      {snapshot && version ? (
+        <ReviewAnswers
+          snapshot={snapshot}
+          version={version}
+          areaLabel={areaLabelMap}
+          plans={plans}
         />
-        <SavedLocation
-          plans={state.campusPlans.filter(
-            (plan) => plan.institutionCode === report.institutionCode,
-          )}
-          location={report.locationSnapshot}
-        />
-        {decided ? (
-          <p role="alert" className="mt-2 text-sm text-[#b91c1c]">
-            Laporan ini sudah {live.validationStatus}; keputusan baru ditolak sistem.
-          </p>
-        ) : null}
-        {snapshot && version ? (
-          <section className="mt-4 rounded-lg border border-line p-3">
-            <h3 className="text-sm font-bold text-heading">
-              Jawaban penilaian mandiri · {version.label} (hanya-baca)
-            </h3>
-            <div className="mt-3 space-y-3">
-              {version.dimensions.map((dim) => (
-                <div key={dim.id}>
-                  <p className="text-xs font-extrabold uppercase tracking-wide text-secondary-text">
-                    {dim.name}
-                  </p>
-                  <ul className="mt-1 space-y-2">
-                    {dim.indicators.map((ind) => {
-                      const a = snapshot.answers[ind.id];
-                      return (
-                        <li key={ind.id} className="rounded border border-line-soft p-3 text-sm">
-                          <strong className="block text-heading">
-                            {ind.code} · {ind.title}
-                          </strong>
-                          <span className="text-secondary-text">Jawaban: {a?.value || "—"}</span>
-                          {a?.note ? (
-                            <span className="block text-secondary-text">Catatan: {a.note}</span>
-                          ) : null}
-                          {a?.evidenceName ? (
-                            <span className="block text-secondary-text">
-                              Bukti: {a.evidenceName}
-                            </span>
-                          ) : null}
-                          {a?.areaId || a?.manualLocation ? (
-                            <span className="block text-secondary-text">
-                              Lokasi:{" "}
-                              {a.areaId ? (areaLabel.get(a.areaId) ?? a.areaId) : a.manualLocation}
-                            </span>
-                          ) : null}
-                          <SavedLocation
-                            plans={state.campusPlans.filter(
-                              (plan) => plan.institutionCode === report.institutionCode,
-                            )}
-                            location={a?.locationSnapshot}
-                          />
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-        <div className="mt-4 flex gap-2">
-          <button
-            className={accept ? "primary-button" : "secondary-button"}
-            onClick={() => setAccept(true)}
-          >
-            Terima
-          </button>
-          <button
-            className={!accept ? "primary-button" : "secondary-button"}
-            onClick={() => setAccept(false)}
-          >
-            Tolak
-          </button>
-        </div>
-        {accept ? (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="text-sm font-bold">
-              Tingkat keparahan
-              <select
-                className="mt-1 min-h-11 w-full rounded border border-line-soft px-3"
-                value={severity}
-                onChange={(e) => setSeverity(e.target.value as Severity)}
-              >
-                <option>Belum ditentukan</option>
-                {levels.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm font-bold">
-              Prioritas perbaikan
-              <select
-                className="mt-1 min-h-11 w-full rounded border border-line-soft px-3"
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as Priority)}
-              >
-                <option>Belum ditentukan</option>
-                {levels.map((item) => (
-                  <option key={item}>{item}</option>
-                ))}
-              </select>
-            </label>
+      ) : null}
+      {decided ? null : (
+        <>
+          <div className="mt-4 flex gap-2">
+            <button
+              className={accept ? "primary-button" : "secondary-button"}
+              onClick={() => setAccept(true)}
+            >
+              Terima
+            </button>
+            <button
+              className={!accept ? "primary-button" : "secondary-button"}
+              onClick={() => setAccept(false)}
+            >
+              Tolak
+            </button>
           </div>
-        ) : null}
-        <label className="mt-4 block text-sm font-bold">
-          {accept ? "Catatan validasi (opsional)" : "Alasan penolakan (minimal 10 karakter)"}
-          <textarea
-            className="mt-1 min-h-24 w-full rounded border border-line-soft p-3 font-normal"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-          <span className="text-secondary-text">{note.length} karakter</span>
-        </label>
-        {error ? (
-          <p role="alert" className="mt-2 text-sm text-[#b91c1c]">
-            {error}
+          <p className="mt-2 text-sm text-secondary-text">
+            Usulan pelapor:
+            {" "}
+            {report.reporterSeverity ?? "Belum ditentukan"}
+            {" / "}
+            {report.reporterPriority ?? "Belum ditentukan"}
+            {" — tinjau ulang sebelum konfirmasi."}
           </p>
-        ) : null}
-        <div className="mt-4 flex gap-2">
-          <button className="primary-button" onClick={submit} disabled={decided}>
+          {accept ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm font-bold">
+                Tingkat keparahan
+                <select
+                  className="mt-1 min-h-11 w-full rounded border border-line-soft px-3"
+                  value={severity}
+                  onChange={(e) => setSeverity(e.target.value as Severity)}
+                >
+                  <option>Belum ditentukan</option>
+                  {levels.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-bold">
+                Prioritas perbaikan
+                <select
+                  className="mt-1 min-h-11 w-full rounded border border-line-soft px-3"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as Priority)}
+                >
+                  <option>Belum ditentukan</option>
+                  {levels.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          ) : null}
+          <label className="mt-4 block text-sm font-bold">
+            {accept ? "Catatan validasi (opsional)" : "Alasan penolakan (minimal 10 karakter)"}
+            <textarea
+              className="mt-1 min-h-24 w-full rounded border border-line-soft p-3 font-normal"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+            <span className="text-secondary-text">{note.length} karakter</span>
+          </label>
+          {error ? (
+            <p role="alert" className="mt-2 text-sm text-[#b91c1c]">
+              {error}
+            </p>
+          ) : null}
+        </>
+      )}
+      <div className="mt-4 flex gap-2">
+        {decided ? null : (
+          <button className="primary-button" onClick={submit}>
             Konfirmasi {accept ? "terima" : "tolak"}
           </button>
-          <button className="secondary-button" onClick={close}>
-            Batal
-          </button>
-        </div>
+        )}
+        <button className="secondary-button" onClick={close}>
+          {decided ? "Tutup" : "Batal"}
+        </button>
       </div>
     </Modal>
   );

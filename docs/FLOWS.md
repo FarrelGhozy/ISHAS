@@ -49,7 +49,8 @@ setelah pesantren/akun nonaktif juga perlu keputusan; jangan menghapusnya otomat
  |---|---|
  | Nama pelapor | Wajib, 2–100 karakter. Boleh nama asli atau nama kelompok ("Santri Blok A"). Bukan email, bukan username. Nama selalu tampil apa adanya secara internal; tidak ada opsi anonim (D-02). Publik tidak menampilkan nama pelapor. |
   | Pesantren | Wajib, dropdown HANYA pesantren terdaftar (`kode — nama`). Tidak ada opsi isi manual. |
- | Kategori / Aspek / Indikator terkait | Opsional (D-15). Cascading: pilih Kategori (Keselamatan/Kesehatan/Lingkungan/Psikosial) → Aspek terfilter → Indikator terfilter. Laporan tanpa pilihan ini tetap sah. `aspectId` harus milik `categoryId`; `indicatorId` harus milik `aspectId`. Field risiko (Likelihood/Severity/Risk Score/Rekomendasi) TIDAK ada di form publik; diisi akun Pesantren saat validasi (§4). |
+  | Kategori / Aspek | Opsional (D-15, D-19). Cascading: pilih Kategori (Keselamatan/Kesehatan/Lingkungan/Psikososial) → Aspek terfilter. Tanpa pilihan tetap sah. `aspectId` harus milik `categoryId`. Lapor-cepat baru tidak memakai `Indikator terkait` (data lama tetap dibaca). Field risiko final (Likelihood/Severity/Risk Score/Rekomendasi) TIDAK ada di form publik; diisi akun Pesantren saat validasi (§4). |
+  | Usulan mandiri | Opsional (D-19). `Tingkat keparahan` + `Prioritas perbaikan` usulan pelapor (default `Belum ditentukan`). Disimpan sebagai usulan, bukan keputusan; Pesantren meninjau ulang saat validasi. |
  | Lokasi/area | Wajib, dropdown area milik pesantren terpilih (format "Gedung · Lantai · Area"). Jika area belum ada → pesan "Belum ada area terdaftar; hubungi akun Pesantren." |
  | Judul temuan | Wajib, 10–140 karakter. Contoh: "Kabel terbuka di koridor lantai 2". |
  | Deskripsi | Wajib, min 20 karakter: apa, di mana tepatnya, sejak kapan, siapa terdampak. |
@@ -82,8 +83,8 @@ seluruh jawaban N/A dan arti periode penilaian (D-04), serta penilaian lengkap t
 
 **Prasyarat:** login Pesantren; antrean hanya berisi laporan `institutionCode` miliknya, diurutkan terbaru dulu.
 
-1. Buka `/pesantren/validasi-laporan` → pilih item `Menunggu validasi` → baca: pelapor (nama; label `Publik` bila tanpa login atau label akun bila login), pesantren, lokasi/area (+ titik denah bila ada), judul, deskripsi, bukti, waktu kirim, versi instrumen (untuk penilaian mandiri: seluruh jawaban per indikator, hanya-baca).
-2. Keputusan A — **Terima**: wajib pilih `severity` (`Tinggi/Sedang/Rendah`, tanpa default) + wajib pilih `priority` (`Tinggi/Sedang/Rendah`, tanpa default) + opsional catatan validasi → konfirmasi.
+1. Buka `/pesantren/validasi-laporan` → pilih item `Menunggu validasi` → baca seluruh isi kiriman: pelapor (nama; label `Publik` bila tanpa login atau label akun bila login), kontak internal, pesantren, lokasi/area (+ titik denah bila ada), kategori/aspek (+ indikator lama bila ada), usulan keparahan/prioritas pelapor, judul, deskripsi, bukti gambar, waktu kirim, versi instrumen (untuk penilaian mandiri: seluruh jawaban per indikator, hanya-baca).
+2. Keputusan A — **Terima**: tinjau usulan pelapor lalu wajib pilih `severity` (`Tinggi/Sedang/Rendah`, tanpa default, pre-fill dari usulan) + wajib pilih `priority` (`Tinggi/Sedang/Rendah`, tanpa default, pre-fill dari usulan) + opsional catatan validasi → konfirmasi.
  → Sistem: `validationStatus: Diterima`, `handlingStatus: Pending`, simpan validator/waktu; data masuk sumber tervalidasi dengan bidang publik sesuai D-02 (ringkasan saja; nama validator publik). Untuk penilaian mandiri, hasil memakai snapshot dan konfigurasi ilustratif; lapor cepat tidak mempunyai skor instrumen. Audit `Memvalidasi laporan` + notifikasi internal. Notifikasi status ke pelapor login masih usulan `SUGGESTIONS.md` §5, bukan fitur yang otomatis disetujui.
 3. Keputusan B — **Tolak**: wajib isi alasan min 10 karakter → konfirmasi.
  → Sistem: `validationStatus: Ditolak`, `handlingStatus: Ditolak` (terminal pada rancangan awal, tidak tampil publik); simpan validator, waktu, dan alasan; audit `Menolak laporan`. Arsip dapat dibuka akun Pesantren pemilik scope melalui filter "Ditolak".

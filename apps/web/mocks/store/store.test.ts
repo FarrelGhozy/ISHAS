@@ -103,7 +103,7 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(8);
+    expect(state.schemaVersion).toBe(9);
     expect(selectRegisteredInstitutions(state).length).toBe(2);
   });
 });
@@ -319,6 +319,38 @@ describe("lapor-cepat V2-03", () => {
     if (!first.ok || !second.ok) return;
     expect(second.id).toBe(first.id);
     expect(getState().reports.filter((r) => r.id === first.id).length).toBe(1);
+  });
+
+  test("usulan mandiri tersimpan terpisah; keputusan final tetap Belum ditentukan", () => {
+    const result = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, reporterSeverity: "Tinggi", reporterPriority: "Sedang" },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const report = getState().reports.find((r) => r.id === result.id);
+    expect(report?.reporterSeverity).toBe("Tinggi");
+    expect(report?.reporterPriority).toBe("Sedang");
+    expect(report?.severity).toBe("Belum ditentukan");
+    expect(report?.priority).toBe("Belum ditentukan");
+  });
+
+  test("usulan tak dikenal ditolak dengan pesan persis", () => {
+    const result = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, reporterSeverity: "Kritis" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("Usulan tingkat keparahan tidak dikenal.");
+  });
+
+  test("aspek di luar kategori ditolak tanpa menyebut indikator", () => {
+    const result = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, categoryId: "KAT-KESEHATAN", aspectId: "ASP-KES-001" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("Kategori/aspek tidak konsisten.");
   });
 
   test("pesantren yang mengirim → email akun tersimpan, nama laporan tetap editable", () => {

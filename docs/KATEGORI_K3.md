@@ -122,19 +122,24 @@ di [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md).
 
 ## 7. Kontrak form (D-15.c)
 
-Alur lapor-cepat (opsional, tidak wajib — laporan tanpa kategori tetap sah):
+Alur lapor-cepat (opsional, tidak wajib — laporan tanpa kategori tetap sah; D-19):
 
 ```
-Lokasi → Kategori → Aspek → Indikator terkait (opsional)
+Lokasi → Kategori → Aspek (tanpa Indikator)
+  → Usulan mandiri (Tingkat keparahan + Prioritas, opsional)
   → Kondisi/Judul → Temuan/Deskripsi → Potensi bahaya (deskripsi)
-  → Foto → Kirim (risiko diisi akun Pesantren saat validasi)
+  → Foto → Kirim (keputusan risiko final oleh akun Pesantren saat validasi)
 ```
 
-- Memilih kategori memfilter aspek; memilih aspek memfilter indikator (cascading).
+- Memilih kategori memfilter aspek. `Indikator terkait` tidak tampil pada
+  lapor-cepat baru; data lama yang masih menyimpan `indicatorId` tetap dibaca.
 - Penilaian-mandiri: navigasi dikelompokkan Kategori → Aspek → Indikator;
   versi Published terkunci; draft lama terkunci kirim (D-10).
-- Validasi: `aspectId` harus milik `categoryId`; `indicatorId` harus milik `aspectId`.
-  Pelanggaran ditolak dengan pesan "Kategori/aspek/indikator tidak konsisten."
+- Validasi: `aspectId` harus milik `categoryId`. Usulan pelapor
+  (`reporterSeverity/reporterPriority`) ditinjau ulang; `severity/priority`
+  final tetap **hanya akun Pesantren saat Terima** (FLOWS §4, D-15.c, D-19).
+  Pelanggaran konsistensi ditolak dengan pesan "Kategori/aspek tidak konsisten."
+  Form publik tidak berisi Likelihood/Risk Score/Rekomendasi final.
 
 ## 8. Migrasi & seed
 

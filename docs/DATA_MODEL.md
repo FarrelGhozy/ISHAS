@@ -28,10 +28,10 @@ keputusan D-04–D-11 masih memengaruhi isinya.
 
 ## 0. Versi schema 
 
-- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v7`. Aplikasi ISHAS
-- `MOCK_SCHEMA_VERSION`: `7` (v7 menambah pustaka detail indikator D-16:
-  `instrumentDocs` + blob PDF di IndexedDB `ishas-instrument-docs-v1`).
-- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 7`, pulihkan seed.
+- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v9`. Aplikasi ISHAS
+- `MOCK_SCHEMA_VERSION`: `9` (v9 menambah usulan mandiri lapor-cepat D-19:
+  `reporterSeverity/reporterPriority`; lapor-cepat baru tanpa `indicatorId`).
+- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 9`, pulihkan seed.
 - Migrasi v6→v7 mempertahankan seluruh record/ID; hanya menambah
   `instrumentDocs` (seed 2 Public + 2 Privat ilustrasi). Snapshot/temuan lama
   tidak dihitung ulang.
@@ -110,9 +110,11 @@ type Report = {
   id: string; // 'RPT-0001', berurutan
   channel: ReportChannel;
   institutionCode: string; // FK Institution.code
-  categoryId?: string; // kategori pilihan pelapor (opsional, D-15); validasi konsistensi di store
-  aspectId?: string; // aspek pilihan pelapor (opsional, D-15)
-  indicatorId?: string; // indikator terkait pilihan pelapor (opsional, D-15)
+   categoryId?: string; // kategori pilihan pelapor (opsional, D-15/D-19); validasi konsistensi di store
+   aspectId?: string; // aspek pilihan pelapor (opsional, D-15/D-19)
+   indicatorId?: string; // warisan lapor-cepat lama + penilaian-mandiri; lapor-cepat baru tidak mengisi (D-19)
+   reporterSeverity?: Severity; // usulan pelapor, opsional (D-19); default 'Belum ditentukan'
+   reporterPriority?: Priority; // usulan pelapor, opsional (D-19); default 'Belum ditentukan'
  reporterName: string; // 2-100 karakter, wajib; selalu tampil apa adanya secara internal (tanpa opsi anonim, D-02)
   reporterAccountEmail?: string; // terisi bila dikirim saat login (Pesantren)
  title: string; // 10-140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
@@ -123,9 +125,9 @@ type Report = {
  evidenceAssetId?: string; // ID blob bukti privat di IndexedDB perangkat-lokal (/lapor)
  contact?: string;
  instrumentVersionId?: string; // wajib bila channel penilaian-mandiri
- validationStatus: ValidationStatus;
-  severity: Severity; // default 'Belum ditentukan', hanya akun Pesantren yang mengubah
-  priority: Priority; // idem
+   validationStatus: ValidationStatus;
+   severity: Severity; // default 'Belum ditentukan', hanya akun Pesantren yang mengubah (keputusan final, D-19)
+   priority: Priority; // idem
  handlingStatus: HandlingStatus;
  rejectionReason?: string; // wajib bila Ditolak, min 10
  validationNote?: string;

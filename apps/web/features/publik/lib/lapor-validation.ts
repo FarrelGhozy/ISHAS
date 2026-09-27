@@ -1,4 +1,4 @@
-// Validasi murni form lapor-cepat — FLOWS §2 + WIREFRAMES §2.
+// Validasi murni form lapor-cepat — FLOWS §2 + WIREFRAMES §2 + D-19.
 // Dipakai halaman `/lapor` untuk error inline; store mengulang pemeriksaan yang sama
 // di sisi data (bukan pengganti). Pesan error memakai kalimat persis dokumen.
 
@@ -10,9 +10,10 @@ export type LaporValues = {
   institutionCode: string;
   areaId: string;
   manualLocation: string;
-  categoryId: string; // D-15: KAT-* opsional ("" = tidak memilih)
-  aspectId: string; // D-15: ASP-* opsional, harus milik categoryId
-  indicatorId: string; // D-15: IND-* opsional, harus milik aspectId
+  categoryId: string; // D-19: KAT-* opsional ("" = tidak memilih)
+  aspectId: string; // D-19: ASP-* opsional, harus milik categoryId
+  reporterSeverity: string; // D-19: usulan mandiri opsional ("Belum ditentukan" = kosong)
+  reporterPriority: string; // D-19: usulan mandiri opsional ("Belum ditentukan" = kosong)
   title: string;
   description: string;
   evidenceName: string;
@@ -27,7 +28,8 @@ export const EMPTY_LAPOR_VALUES: LaporValues = {
   manualLocation: "",
   categoryId: "",
   aspectId: "",
-  indicatorId: "",
+  reporterSeverity: "Belum ditentukan",
+  reporterPriority: "Belum ditentukan",
   title: "",
   description: "",
   evidenceName: "",
@@ -44,7 +46,6 @@ export function validateLapor(
     selectedHasNoAreas: boolean;
     categoryIds?: string[];
     aspectIdsOfCategory?: string[];
-    indicatorIdsOfAspect?: string[];
   },
 ): LaporErrors {
   const errors: LaporErrors = {};
@@ -78,8 +79,8 @@ export function validateLapor(
     errors.contact = "Kontak maksimal 100 karakter.";
   }
 
-  // D-15 cascading opsional: aspek butuh kategori; indikator butuh aspek; semua
-  // harus konsisten dengan opsi yang tersedia (konsistensi penuh dicek di store).
+  // D-19: cascading opsional kategori → aspek; usulan mandiri opsional dengan
+  // nilai tetap; konsistensi penuh dicek di store.
   if (values.aspectId && !values.categoryId) {
     errors.aspectId = "Pilih kategori terlebih dahulu.";
   } else if (
@@ -95,14 +96,12 @@ export function validateLapor(
   ) {
     errors.aspectId = "Aspek tidak termasuk kategori ini.";
   }
-  if (values.indicatorId && !values.aspectId) {
-    errors.indicatorId = "Pilih aspek terlebih dahulu.";
-  } else if (
-    values.indicatorId &&
-    context.indicatorIdsOfAspect &&
-    !context.indicatorIdsOfAspect.includes(values.indicatorId)
-  ) {
-    errors.indicatorId = "Indikator tidak termasuk aspek ini.";
+  const levels = ["Belum ditentukan", "Tinggi", "Sedang", "Rendah"];
+  if (!levels.includes(values.reporterSeverity)) {
+    errors.reporterSeverity = "Usulan tingkat keparahan tidak dikenal.";
+  }
+  if (!levels.includes(values.reporterPriority)) {
+    errors.reporterPriority = "Usulan prioritas perbaikan tidak dikenal.";
   }
 
   return errors;

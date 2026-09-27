@@ -313,7 +313,8 @@ export const mockRepository = {
       manualLocation?: string;
       categoryId?: string;
       aspectId?: string;
-      indicatorId?: string;
+      reporterSeverity?: string;
+      reporterPriority?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;

@@ -53,7 +53,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 ## 2. `/lapor` Laporan cepat
 
 - Judul: kicker `Laporan publik` + H1 `Laporkan temuan bahaya` + deskripsi "Laporan Anda tidak langsung tampil; akun Pesantren memvalidasi dan menentukan tingkat bahaya terlebih dahulu."
-- Field berurutan: Nama pelapor* → Pesantren* (dropdown terdaftar) → Lokasi/area* (dropdown mengikuti pesantren; bila kosong tampilkan pesan hubungi akun Pesantren) → Judul temuan* → Deskripsi* (dengan hint "Tulis apa, di mana tepatnya, sejak kapan, siapa terdampak") → Foto (tombol unggah, label "Opsional · tersimpan sebagai nama file pada prototipe") → Kontak (opsional). Checkbox anonim dihapus (D-02); nama selalu tampil apa adanya secara internal.
+- Field berurutan: Nama pelapor* → Pesantren* (dropdown terdaftar) → Lokasi/area* (dropdown mengikuti pesantren; bila kosong tampilkan pesan hubungi akun Pesantren) → Kategori K3 (opsional) → Aspek (opsional, terfilter kategori) → Usulan mandiri: Tingkat keparahan (opsional) + Prioritas perbaikan (opsional) → Judul temuan* → Deskripsi* (dengan hint "Tulis apa, di mana tepatnya, sejak kapan, siapa terdampak") → Foto (tombol unggah, label "Opsional · tersimpan sebagai nama file pada prototipe") → Kontak (opsional). Tanpa field Indikator terkait (D-19). Checkbox anonim dihapus (D-02); nama selalu tampil apa adanya secara internal.
 - Tombol: **Kirim laporan** (`primary-button`, disabled sampai semua wajib valid) + **Batal** (kembali, dengan konfirmasi bila sudah mengetik).
 - Error inline per field (contoh: "Nama minimal 2 karakter.", "Deskripsi minimal 20 karakter.", "Pilih pesantren terdaftar.").
 - Layar sukses: ikon centang hijau + `Laporan terkirim` + nomor `RPT-XXXX` + chip `Menunggu validasi` (`status-neutral`) + teks "Belum tampil di dashboard sebelum divalidasi." + tombol **Kembali ke dashboard**.
@@ -69,7 +69,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 - Judul: kicker `Moderasi` + H1 `Validasi laporan` + deskripsi "Hanya laporan milik [nama pesantren]. Laporan yang diterima tampil di dashboard publik."
 - Filter: status (`Menunggu validasi/Pending/Proses/Completed/Ditolak/Semua`) + kanal (`lapor-cepat/penilaian-mandiri`) + severity + pencarian teks.
 - Kartu/baris antrean: nomor + kanal + pelapor (nama apa adanya, tanpa opsi anonim — D-02) + judul + lokasi + waktu + chip status + tombol **Periksa**.
-- Detail: seluruh isi laporan (hanya-baca) + untuk penilaian mandiri: jawaban per indikator (hanya-baca) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` + catatan opsional + tombol konfirmasi) dan **Tolak** (textarea alasan wajib min 10 + konfirmasi).
+- Detail: seluruh isi laporan (hanya-baca: identitas, kontak internal, kategori/aspek, usulan pelapor, lokasi + teks denah, bukti gambar, waktu, jejak keputusan) + untuk penilaian mandiri: jawaban per indikator (hanya-baca) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` pre-fill dari usulan + catatan opsional + tombol konfirmasi) dan **Tolak** (textarea alasan wajib min 10 + konfirmasi).
 - Setelah terima: kontrol status `Pending → Proses → Completed` + tombol hapus (hanya saat `Completed`, konfirmasi + alasan).
 
 ## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`

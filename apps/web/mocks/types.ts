@@ -68,9 +68,11 @@ export type Report = {
   id: string; // 'RPT-0001', berurutan
   channel: ReportChannel;
   institutionCode: string; // FK Institution.code
-  categoryId?: K3CategoryId; // D-15: kategori pilihan pelapor (opsional, cascading)
-  aspectId?: string; // D-15: aspek pilihan pelapor (opsional)
-  indicatorId?: string; // D-15: indikator terkait pilihan pelapor (opsional)
+  categoryId?: K3CategoryId; // D-15/D-19: kategori pilihan pelapor (opsional, cascading)
+  aspectId?: string; // D-15/D-19: aspek pilihan pelapor (opsional)
+  indicatorId?: string; // D-19: warisan lapor-cepat lama; lapor-cepat baru tidak mengisi
+  reporterSeverity?: Severity; // D-19: usulan mandiri pelapor (opsional, default 'Belum ditentukan')
+  reporterPriority?: Priority; // D-19: usulan mandiri pelapor (opsional, default 'Belum ditentukan')
   reporterName: string; // 2–100 karakter, wajib; tanpa opsi anonim (D-02)
   reporterUserId?: string; // FK User.id bila dikirim saat login (DATA_REQUIREMENTS §2); email bukan kunci relasi
   reporterAccountEmail?: string; // terisi bila dikirim saat login (pengelola)
@@ -84,7 +86,7 @@ export type Report = {
   contact?: string;
   instrumentVersionId?: string; // wajib bila kanal penilaian-mandiri
   validationStatus: ValidationStatus;
-  severity: Severity; // 'Belum ditentukan', hanya akun Pesantren yang mengubah
+  severity: Severity; // keputusan final, 'Belum ditentukan' sampai akun Pesantren menerima (D-19)
   priority: Priority;
   handlingStatus: HandlingStatus;
   rejectionReason?: string; // wajib bila Ditolak, min 10

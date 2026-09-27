@@ -1,5 +1,6 @@
-// Form satu langkah lapor-cepat — presentasional murni (FLOWS §2, WIREFRAMES §2).
-// Urutan field tetap: Nama → Pesantren → Lokasi/area → Judul → Deskripsi → Foto → Kontak.
+// Form satu langkah lapor-cepat — presentasional murni (FLOWS §2, WIREFRAMES §2, D-19).
+// Urutan field tetap: Nama → Pesantren → Lokasi/area → Kategori/Aspek → Usulan mandiri
+// → Judul → Deskripsi → Foto → Kontak.
 // Logika (draft, kirim, pesantren terpilih) tinggal di halaman; komponen ini hanya render.
 
 import { AlertTriangle } from "lucide-react";
@@ -21,7 +22,6 @@ type Props = {
   areasEmpty: boolean;
   categories: KategoriOption[];
   aspects: KategoriOption[];
-  indicators: KategoriOption[];
   readOnly: boolean;
   submitting: boolean;
   submitDisabled: boolean;
@@ -188,7 +188,7 @@ export function LaporForm(props: Props) {
       </div>
 
       {props.locationPicker}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="lapor-kategori" className={LABEL}>
             Kategori K3
@@ -241,39 +241,71 @@ export function LaporForm(props: Props) {
           </select>
           {errors.aspectId ? <FieldError id="lapor-aspek-error" message={errors.aspectId} /> : null}
         </div>
+      </div>
+      <p className={HINT}>
+        Opsional: memilih kategori memfilter aspek. Usulan di bawah ini membantu akun Pesantren;
+        keputusan final tetap ditentukan saat validasi.
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="lapor-indikator" className={LABEL}>
-            Indikator terkait
+          <label htmlFor="lapor-usulan-severity" className={LABEL}>
+            Tingkat keparahan (usulan mandiri)
           </label>
           <select
-            id="lapor-indikator"
-            ref={(el) => props.registerField("indicatorId", el)}
-            className={`${INPUT} ${errors.indicatorId ? INPUT_ERROR : ""}`}
-            value={values.indicatorId}
-            disabled={readOnly || !values.aspectId}
-            aria-invalid={Boolean(errors.indicatorId)}
-            aria-describedby={errors.indicatorId ? "lapor-indikator-error" : undefined}
-            onChange={(e) => props.onChange("indicatorId", e.target.value)}
-            onBlur={() => props.onBlur("indicatorId")}
+            id="lapor-usulan-severity"
+            ref={(el) => props.registerField("reporterSeverity", el)}
+            className={`${INPUT} ${errors.reporterSeverity ? INPUT_ERROR : ""}`}
+            value={values.reporterSeverity}
+            disabled={readOnly}
+            aria-invalid={Boolean(errors.reporterSeverity)}
+            aria-describedby={
+              errors.reporterSeverity ? "lapor-usulan-severity-error" : undefined
+            }
+            onChange={(e) => props.onChange("reporterSeverity", e.target.value)}
+            onBlur={() => props.onBlur("reporterSeverity")}
           >
-            <option value="">
-              {values.aspectId ? "Pilih indikator (opsional)" : "Pilih aspek dahulu"}
-            </option>
-            {props.indicators.map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.name}
-              </option>
-            ))}
+            <option>Belum ditentukan</option>
+            <option>Tinggi</option>
+            <option>Sedang</option>
+            <option>Rendah</option>
           </select>
-          {errors.indicatorId ? (
-            <FieldError id="lapor-indikator-error" message={errors.indicatorId} />
+          {errors.reporterSeverity ? (
+            <FieldError
+              id="lapor-usulan-severity-error"
+              message={errors.reporterSeverity}
+            />
+          ) : null}
+        </div>
+        <div>
+          <label htmlFor="lapor-usulan-priority" className={LABEL}>
+            Prioritas perbaikan (usulan mandiri)
+          </label>
+          <select
+            id="lapor-usulan-priority"
+            ref={(el) => props.registerField("reporterPriority", el)}
+            className={`${INPUT} ${errors.reporterPriority ? INPUT_ERROR : ""}`}
+            value={values.reporterPriority}
+            disabled={readOnly}
+            aria-invalid={Boolean(errors.reporterPriority)}
+            aria-describedby={
+              errors.reporterPriority ? "lapor-usulan-priority-error" : undefined
+            }
+            onChange={(e) => props.onChange("reporterPriority", e.target.value)}
+            onBlur={() => props.onBlur("reporterPriority")}
+          >
+            <option>Belum ditentukan</option>
+            <option>Tinggi</option>
+            <option>Sedang</option>
+            <option>Rendah</option>
+          </select>
+          {errors.reporterPriority ? (
+            <FieldError
+              id="lapor-usulan-priority-error"
+              message={errors.reporterPriority}
+            />
           ) : null}
         </div>
       </div>
-      <p className={HINT}>
-        Opsional: memilih kategori memfilter aspek; memilih aspek memfilter indikator. Tingkat
-        risiko tetap ditentukan akun Pesantren saat validasi.
-      </p>
       <div>
         <label htmlFor="lapor-judul" className={LABEL}>
           Judul temuan*

@@ -35,7 +35,8 @@ const FOCUS_ORDER: (keyof LaporValues)[] = [
   "manualLocation",
   "categoryId",
   "aspectId",
-  "indicatorId",
+  "reporterSeverity",
+  "reporterPriority",
   "title",
   "description",
   "contact",
@@ -142,14 +143,6 @@ function LaporPageContent() {
     return (dim?.aspects ?? []).map((a) => ({ id: a.id, name: a.name }));
   }, [activeVersion, values.categoryId]);
   const aspectIds = useMemo(() => aspectOptions.map((a) => a.id), [aspectOptions]);
-  const indicatorOptions = useMemo(() => {
-    if (!activeVersion || !values.aspectId) return [];
-    return activeVersion.dimensions
-      .flatMap((d) => d.indicators)
-      .filter((i) => i.aspectId === values.aspectId)
-      .map((i) => ({ id: i.id, name: `${i.code} · ${i.title}` }));
-  }, [activeVersion, values.aspectId]);
-  const indicatorIds = useMemo(() => indicatorOptions.map((i) => i.id), [indicatorOptions]);
 
   const errors = useMemo(
     () =>
@@ -159,9 +152,8 @@ function LaporPageContent() {
         selectedHasNoAreas,
         categoryIds,
         aspectIdsOfCategory: aspectIds,
-        indicatorIdsOfAspect: indicatorIds,
       }),
-    [values, registeredCodes, areaIds, selectedHasNoAreas, categoryIds, aspectIds, indicatorIds],
+    [values, registeredCodes, areaIds, selectedHasNoAreas, categoryIds, aspectIds],
   );
   const visibleErrors = useMemo(() => {
     const out: typeof errors = {};
@@ -251,8 +243,7 @@ function LaporPageContent() {
       ...v,
       [field]: value,
       ...(field === "areaId" ? { locationSnapshot: undefined } : {}),
-      ...(field === "categoryId" ? { aspectId: "", indicatorId: "" } : {}),
-      ...(field === "aspectId" ? { indicatorId: "" } : {}),
+      ...(field === "categoryId" ? { aspectId: "" } : {}),
     }));
   }
 
@@ -270,7 +261,8 @@ function LaporPageContent() {
       manualLocation: true,
       categoryId: true,
       aspectId: true,
-      indicatorId: true,
+      reporterSeverity: true,
+      reporterPriority: true,
       title: true,
       description: true,
       contact: true,
@@ -301,7 +293,8 @@ function LaporPageContent() {
         manualLocation: values.manualLocation.trim() || undefined,
         categoryId: values.categoryId || undefined,
         aspectId: values.aspectId || undefined,
-        indicatorId: values.indicatorId || undefined,
+        reporterSeverity: values.reporterSeverity,
+        reporterPriority: values.reporterPriority,
         evidenceName: values.evidenceName.trim() || undefined,
         evidenceAssetId: values.evidenceAssetId,
         contact: values.contact.trim() || undefined,
@@ -335,7 +328,7 @@ function LaporPageContent() {
         <h1 className="text-xl font-extrabold text-heading">Laporkan temuan bahaya</h1>
         <p className="mt-1 text-sm text-secondary-text">
           Laporan Anda tidak langsung tampil; akun Pesantren memvalidasi dan menentukan tingkat
-          bahaya terlebih dahulu.
+          bahaya final terlebih dahulu. Usulan Anda di bawah membantu penilaian awal.
         </p>
       </header>
 
@@ -421,7 +414,6 @@ function LaporPageContent() {
         areasEmpty={selectedHasNoAreas}
         categories={categoryOptions}
         aspects={aspectOptions}
-        indicators={indicatorOptions}
         readOnly={blocked || submitting || evidenceUploading}
         submitting={submitting}
         submitDisabled={blocked || submitting || !canSubmit}

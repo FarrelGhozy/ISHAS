@@ -1,5 +1,22 @@
 # TODO — Kontrol Kerja Aktif
 
+## Revisi lapor-cepat + validasi (D-19) — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: `/lapor` tanpa `Indikator terkait`
+(hanya `Kategori → Aspek` opsional + usulan mandiri `Tingkat keparahan` /
+`Prioritas perbaikan` opsional); `severity/priority` final tetap diputus
+Pesantren; detail `/pesantren/validasi-laporan` dilengkapi. Keputusan D-19.
+Cakupan: docs + `apps/web/` (types, store v8→v9, repository, validasi
+lapor-cepat, draft, form `/lapor`, detail validasi) + test. Status stage lain
+tidak berubah sepihak.
+
+- [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-19, FLOWS, DATA_MODEL, KATEGORI_K3, WIREFRAMES, TODO).
+- [x] Kode + migrasi v8→v9 + seed usulan.
+- [x] Verifikasi: lint + typecheck + 128 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + alur klik browser (/lapor tanpa indikator + usulan, validasi detail lengkap + gambar bukti): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## Rename peran Peneliti→Validator + Pengelola→Pesantren — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik: `Peneliti` menjadi `Validator` (fungsi tetap),

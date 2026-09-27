@@ -211,7 +211,8 @@ export const storeActions = {
       manualLocation?: string;
       categoryId?: string;
       aspectId?: string;
-      indicatorId?: string;
+      reporterSeverity?: string;
+      reporterPriority?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;
@@ -276,16 +277,14 @@ export const storeActions = {
     if (input.areaId && !ownedAreas.some((a) => a.id === input.areaId)) {
       return { ok: false, error: "Lokasi/area tidak sah untuk pesantren ini." };
     }
-    // D-15 cascading opsional: konsistensi kategori → aspek → indikator dicek di
+    // D-19: lapor-cepat baru tanpa indikator; cascading kategori → aspek dicek di
     // versi Published aktif; tanpa pilihan tetap sah.
     const activeVersion = currentState.instrumentVersions.find(
       (v) => v.id === currentState.activeInstrumentVersionId && v.status === "Published",
     );
     const categoryId = input.categoryId?.trim() || undefined;
     const aspectId = input.aspectId?.trim() || undefined;
-    const indicatorId = input.indicatorId?.trim() || undefined;
     if (aspectId && !categoryId) return { ok: false, error: "Pilih kategori terlebih dahulu." };
-    if (indicatorId && !aspectId) return { ok: false, error: "Pilih aspek terlebih dahulu." };
     if (
       categoryId &&
       activeVersion &&
@@ -296,16 +295,18 @@ export const storeActions = {
     if (aspectId && activeVersion) {
       const dim = activeVersion.dimensions.find((d) => (d.categoryId ?? d.id) === categoryId);
       if (!dim || !(dim.aspects ?? []).some((a) => a.id === aspectId)) {
-        return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
+        return { ok: false, error: "Kategori/aspek tidak konsisten." };
       }
-      if (
-        indicatorId &&
-        !dim.indicators.some((i) => i.id === indicatorId && i.aspectId === aspectId)
-      ) {
-        return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
-      }
-    } else if (indicatorId && activeVersion) {
-      return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
+    }
+    // D-19: usulan mandiri opsional; nilai tak dikenal ditolak agar konsisten.
+    const levels = ["Belum ditentukan", "Tinggi", "Sedang", "Rendah"];
+    const reporterSeverity = input.reporterSeverity?.trim() || "Belum ditentukan";
+    const reporterPriority = input.reporterPriority?.trim() || "Belum ditentukan";
+    if (!levels.includes(reporterSeverity)) {
+      return { ok: false, error: "Usulan tingkat keparahan tidak dikenal." };
+    }
+    if (!levels.includes(reporterPriority)) {
+      return { ok: false, error: "Usulan prioritas perbaikan tidak dikenal." };
     }
     const mapError = validateMapLocation(
       currentState,
@@ -343,7 +344,8 @@ export const storeActions = {
           reporterAccountEmail: actor.email ?? undefined,
           categoryId: categoryId as Report["categoryId"],
           aspectId,
-          indicatorId,
+          reporterSeverity: reporterSeverity as Report["reporterSeverity"],
+          reporterPriority: reporterPriority as Report["reporterPriority"],
           title,
           description,
           areaId: input.areaId,
