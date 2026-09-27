@@ -16,6 +16,15 @@ Pemeriksaan rilis/route semua peran belum lengkap; stage tetap IN PROGRESS.
 **Tujuan:** melengkapi sisi Super Admin, menyinkronkan seluruh dokumen,
 dan menjalankan uji rilis penuh sebelum meminta persetujuan.
 
+## Revisi aktif — identitas biru (D-18, 27 September 2026)
+
+- [x] Ganti token dan pemakaian identitas marun menjadi biru pada antarmuka,
+  grafik, halaman masuk, serta ikon browser; status bahaya tetap merah.
+- [x] Sinkronkan dokumen warna yang terdampak dan jalankan lint, typecheck,
+  test, build, serta pemeriksaan visual. Pemeriksaan 27 September: desktop
+  1440×900, tablet 834×1112, dan ponsel pada viewport bawaan tampil tanpa
+  overflow; lint, typecheck, 123 test, dan build lulus.
+
 ## Ruang lingkup
 
 ### 1. Super Admin (`/admin/*`, login admin)

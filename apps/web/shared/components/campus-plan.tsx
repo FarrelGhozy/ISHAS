@@ -147,7 +147,7 @@ export function LocationPicker({
         </p>
       </div>
       {stale ? (
-        <p role="alert" className="rounded bg-marun-bg p-3 text-sm text-primary">
+        <p role="alert" className="rounded bg-brand-bg p-3 text-sm text-primary">
           Denah telah berubah. Pilih ulang titik pada versi terbaru atau hapus titik lama sebelum
           mengirim.
         </p>

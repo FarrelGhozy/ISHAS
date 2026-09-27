@@ -20,7 +20,7 @@ export function IshasMark({ inverse = false, variant = "default" }: IshasMarkPro
         />
       </span>
       <span>
-        <b className={inverse ? "text-white" : "text-[#4a0710]"}>ISHAS</b>
+        <b className={inverse ? "text-white" : "text-[#2A3F54]"}>ISHAS</b>
         <small className={inverse ? "text-white/55" : "text-slate-500"}>
           Integrated Safety &amp; Health
           <br />

@@ -8,8 +8,8 @@ Aturan kerja: `AGENTS.md`. Status harian: `../docs/TODO.md`. Verifikasi: `../doc
 ## Revisi utama terkini — 18 September 2026
 
 [STAGE_DASHBOARD_POLISH.md](STAGE_DASHBOARD_POLISH.md) adalah revisi utama untuk REVIEW
-atas arahan pemilik: responsivitas, visualisasi, dokumentasi/alur data, dan status,
-dengan tema/warna tetap. Tabel stage mencatat kematangan pekerjaan sebelumnya;
+atas arahan pemilik: responsivitas, visualisasi, dokumentasi/alur data, dan status.
+Identitas biru D-18 menggantikan batas tema/warna pada catatan historis ini. Tabel stage mencatat kematangan pekerjaan sebelumnya;
 IN PROGRESS pada Stage 00/07/08/09 menandakan pekerjaan atau verifikasi belum
 lengkap, bukan izin mengerjakan semuanya sekaligus. Tidak ada stage DONE yang
 baru ditetapkan tanpa persetujuan. Rincian pemeriksaan yang belum dilakukan tetap

@@ -85,7 +85,7 @@ export function CampusPlanManager({ user }: { user: User }) {
       </div>
       <div
         role="note"
-        className="flex items-start gap-2 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm text-primary"
+        className="flex items-start gap-2 rounded-lg border border-brand-border bg-brand-bg p-3 text-sm text-primary"
       >
         <AlertTriangle size={20} className="shrink-0" />
         <p>
@@ -181,7 +181,7 @@ export function CampusPlanManager({ user }: { user: User }) {
             <p className="text-sm text-secondary-text">
               {candidate.width} × {candidate.height} piksel · {candidate.file.name}
             </p>
-            <p className="rounded bg-marun-bg p-3 text-sm text-primary">
+            <p className="rounded bg-brand-bg p-3 text-sm text-primary">
               Titik lama tidak dipindahkan otomatis. Laporan lama tetap menggunakan versi denah
               asal. Pastikan tata letak gambar baru benar sebelum menerbitkan.
             </p>

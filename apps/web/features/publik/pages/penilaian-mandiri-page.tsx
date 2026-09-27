@@ -389,7 +389,7 @@ export function PenilaianMandiriPage() {
                         type="button"
                         key={indicator.id}
                         aria-current={selected ? "step" : undefined}
-                        className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 text-left text-sm font-semibold transition ${selected ? "bg-marun-bg text-primary ring-1 ring-marun-border" : "text-body-text hover:bg-strip"}`}
+                        className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 text-left text-sm font-semibold transition ${selected ? "bg-brand-bg text-primary ring-1 ring-brand-border" : "text-body-text hover:bg-strip"}`}
                         onClick={() => {
                           setActive(index);
                           setNotice("");
@@ -462,7 +462,7 @@ export function PenilaianMandiriPage() {
                     {answerOptions(current.answerType).map((option) => (
                       <label
                         key={option.value}
-                        className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-semibold transition ${answer.value === option.value ? "border-primary bg-marun-bg text-primary ring-1 ring-primary" : "border-line-soft bg-white text-heading hover:border-primary"}`}
+                        className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-semibold transition ${answer.value === option.value ? "border-primary bg-brand-bg text-primary ring-1 ring-primary" : "border-line-soft bg-white text-heading hover:border-primary"}`}
                       >
                         <input
                           type="radio"
@@ -604,7 +604,7 @@ export function PenilaianMandiriPage() {
           {draftStale ? (
             <p
               role="alert"
-              className="flex flex-wrap items-center gap-2 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-border bg-brand-bg p-3 text-sm font-semibold text-primary"
             >
               <AlertCircle size={18} />
               Draft ini terikat {effectiveVersionId} yang sudah diarsip. Kirim dikunci —{" "}
@@ -617,7 +617,7 @@ export function PenilaianMandiriPage() {
           {mapError ? (
             <p
               role="alert"
-              className="rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"
+              className="rounded-lg border border-brand-border bg-brand-bg p-3 text-sm font-semibold text-primary"
             >
               {mapError} Periksa kembali titik pada jawaban sebelum mengirim penilaian.
             </p>
@@ -653,7 +653,7 @@ export function PenilaianMandiriPage() {
             {notice ? (
               <p
                 role="alert"
-                className="mt-4 flex items-start gap-2 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"
+                className="mt-4 flex items-start gap-2 rounded-lg border border-brand-border bg-brand-bg p-3 text-sm font-semibold text-primary"
               >
                 <AlertCircle size={18} />
                 {notice}

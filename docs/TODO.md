@@ -66,7 +66,8 @@ Stage 01–06 tetap `REVIEW`).
 
 Revisi dashboard untuk REVIEW: [STAGE_DASHBOARD_POLISH.md](../planning/STAGE_DASHBOARD_POLISH.md).
 Arahan pemilik sudah menetapkan dashboard publik mengikuti referensi pertama,
-tema/warna tetap, empat kategori dipertahankan, fokus penyempurnaan.
+empat kategori dipertahankan, fokus penyempurnaan. D-18 kemudian mengganti
+identitas marun menjadi biru.
 Checklist pada stage revisi menjadi kontrol pekerjaan sesi ini. Bagian historis
 “tanpa kode”, “BACKLOG”, dan “menunggu jawaban D-13” di bawah tidak lagi membatasi
 izin implementasi ini. Stage 03 dan 04 berstatus REVIEW sesuai file stage dan

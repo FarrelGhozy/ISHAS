@@ -53,7 +53,7 @@ export function ScoreSummary({
         <div
           className="relative grid size-36 shrink-0 place-items-center rounded-full"
           style={{
-            background: `conic-gradient(#9f1239 ${percentage}%, #eef2f6 ${percentage}% 100%)`,
+            background: `conic-gradient(#007EFF ${percentage}%, #eef2f6 ${percentage}% 100%)`,
           }}
         >
           <span className="grid size-24 place-items-center rounded-full bg-white text-center">
@@ -184,7 +184,7 @@ export function AspectAndRecap({
                     width="50"
                     height={height}
                     rx="3"
-                    fill={row.categoryId ? "#9f1239" : "#94a3b8"}
+                    fill={row.categoryId ? "#007EFF" : "#94a3b8"}
                   />
                   <text
                     x={index * 100 + 50}
@@ -502,7 +502,7 @@ export function CategoryGuide() {
               key={category.id}
               className="flex items-start gap-3 rounded-lg border border-line bg-strip/50 p-3"
             >
-              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-marun-bg text-primary">
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-bg text-primary">
                 <Icon size={20} aria-hidden />
               </span>
               <div className="min-w-0">

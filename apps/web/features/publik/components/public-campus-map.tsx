@@ -264,7 +264,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
               pada versi lain · {unplaced.length} tanpa titik
             </p>
             {other.length ? (
-              <p role="status" className="rounded bg-marun-bg p-3 text-sm text-primary">
+              <p role="status" className="rounded bg-brand-bg p-3 text-sm text-primary">
                 Ada {other.length} temuan pada versi denah sebelumnya/lain. Pilih versinya untuk
                 melihat titik; titik tidak dipindahkan otomatis.
               </p>
@@ -285,7 +285,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
             ) : null}
             {detail.length ? (
               <div
-                className="space-y-2 rounded-lg border border-marun-border bg-marun-bg p-3"
+                className="space-y-2 rounded-lg border border-brand-border bg-brand-bg p-3"
                 aria-live="polite"
               >
                 <div className="flex items-center justify-between gap-2">
@@ -316,7 +316,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
                 {filtered.map((item) => (
                   <div
                     key={item.key}
-                    className={`rounded-lg border p-3 ${opened.includes(item.key) ? "border-primary bg-marun-bg" : "border-line"}`}
+                    className={`rounded-lg border p-3 ${opened.includes(item.key) ? "border-primary bg-brand-bg" : "border-line"}`}
                   >
                     <MapDetail item={item} />
                     <p className="mt-2 text-sm text-secondary-text">

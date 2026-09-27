@@ -68,7 +68,7 @@ export function EvidencePreview({
     return (
       <div
         role="alert"
-        className="mt-3 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm text-primary"
+        className="mt-3 rounded-lg border border-brand-border bg-brand-bg p-3 text-sm text-primary"
       >
         <p>{current.error}</p>
         <button

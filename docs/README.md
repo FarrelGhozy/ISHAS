@@ -4,8 +4,8 @@
 
 Frontend tersedia di `apps/web/`. Revisi utama untuk REVIEW:
 [penyempurnaan dashboard](../planning/STAGE_DASHBOARD_POLISH.md), diizinkan pemilik
-untuk responsivitas, visualisasi, dokumentasi/alur data, dan sinkronisasi stage,
-tanpa perubahan tema/warna. Kontrak:
+untuk responsivitas, visualisasi, dokumentasi/alur data, dan sinkronisasi stage.
+Identitas biru D-18 menggantikan batas tema/warna pada catatan ini. Kontrak:
 [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md). Status tiap stage di
 [planning/README.md](../planning/README.md); DONE hanya setelah persetujuan.
 

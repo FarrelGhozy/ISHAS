@@ -143,7 +143,7 @@ export default function WorkspaceLayout() {
                 aria-expanded={profileOpen}
                 onClick={() => setProfileOpen((open) => !open)}
               >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-marun-bg text-xs font-extrabold text-primary">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-brand-bg text-xs font-extrabold text-primary">
                   {user.initials}
                 </span>
                 <span className="hidden min-w-0 flex-1 text-xs leading-snug sm:block">
@@ -162,7 +162,7 @@ export default function WorkspaceLayout() {
                   className="absolute right-0 top-[calc(100%+8px)] z-40 w-[min(270px,calc(100vw-24px))] overflow-hidden rounded-lg border border-line-soft bg-white shadow-lg"
                 >
                   <div className="flex items-center gap-3 p-4">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-marun-bg text-xs font-extrabold text-primary">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-brand-bg text-xs font-extrabold text-primary">
                       {user.initials}
                     </span>
                     <span className="min-w-0 text-xs leading-relaxed">
@@ -177,7 +177,7 @@ export default function WorkspaceLayout() {
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex min-h-14 w-full items-center gap-2 px-4 text-left text-xs font-bold text-[#b91c1c] hover:bg-[#fff7f8]"
+                    className="flex min-h-14 w-full items-center gap-2 px-4 text-left text-xs font-bold text-[#b91c1c] hover:bg-[#fef2f2]"
                     onClick={() => {
                       try {
                         sessionStore.logout();

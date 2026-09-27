@@ -10,7 +10,7 @@ const RISK_COLORS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   "Belum ditindaklanjuti": "#64748b",
-  Berjalan: "#be123c",
+  Berjalan: "#3498db",
   "Menunggu verifikasi": "#d97706",
   Terverifikasi: "#047857",
 };
@@ -26,7 +26,7 @@ function PanelHeading({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-marun-bg text-primary">
+      <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-md bg-brand-bg text-primary">
         <Icon size={16} aria-hidden />
       </span>
       <div>

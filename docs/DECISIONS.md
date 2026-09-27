@@ -418,6 +418,22 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   dengan fungsi tetap sama (kelola instrumen, versioning, scoring, validasi &
   publikasi, data dan dokumen indikator). Sebutan `Peneliti` tidak dipakai lagi
   untuk peran login.
+
+## D-18 — Identitas visual biru — DISETUJUI 27 September 2026
+
+- Arahan pemilik: identitas utama aplikasi berubah dari marun menjadi biru.
+  Palet contoh yang diberikan (`#000000`, `#F5F5F5`, `#E74C3C`, `#2A3F54`,
+  `#3498DB`, `#007EFF`) menjadi arah visual, bukan kewajiban memakai setiap
+  nilai persis.
+- Token identitas baru memakai biru utama `#007EFF`, biru aksen `#3498DB`,
+  teks judul `#2A3F54`, dan turunan biru lembut untuk latar/border interaksi.
+  Warna bahaya tetap merah dan tidak menjadi warna merek.
+- Ruang lingkup: tombol utama, navigasi aktif, fokus, banner, grafik,
+  halaman login, logo browser, dan komponen yang sebelumnya memakai aksen
+  marun. Struktur, copy, data, hak akses, serta pemetaan status tidak berubah.
+- Dokumen terdampak: `DESIGN_SYSTEM.md`, `README.md`, `TODO.md`, planning,
+  serta implementasi frontend. Verifikasi visual dan teknis dicatat pada
+  Stage 09 sebelum status REVIEW diminta.
 - Arahan lanjutan pemilik: `Pengelola Pesantren` disingkat menjadi `Pesantren`
   untuk peran akun lokal pondok. Fungsi tetap sama (validasi laporan, kelola
   lokasi/denah, tindak lanjut, laporan scope-nya). Contoh: `/pengelola/tindak-lanjut`
