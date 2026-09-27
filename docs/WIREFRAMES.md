@@ -76,6 +76,9 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 - Struktur dan copy mengikuti lama (hasil per dimensi/periode; Daftar Area default + Daftar Temuan; rekomendasi + PIC + tenggat; tindak lanjut + status; laporan pimpinan + metadata versi), dengan perubahan wajib : (a) tambah **filter pesantren** di tiap halaman, (b) sumber temuan menunjuk `reportId` + nama validator (nama validator publik sesuai D-02; nama pelapor dan bukti internal), (c) area tanpa temuan aktif tampil netral (bukan marker hijau), (d) tampilan Denah Bangunan dan bukti penyelesaian hanya di workspace Pesantren, tidak di halaman publik (D-02).
 - Tombol kelola (buat rencana, ubah status, unggah bukti) hanya render bila login sebagai Pesantren pemilik scope; publik melihat mode baca + ajakan "Masuk sebagai Pesantren untuk mengelola." Input progres pada kartu kelola memakai slider titik `0/25/50/75/100` + label tahap (D-20).
+- Kartu kelola Pesantren `/pesantren/tindak-lanjut` (D-21): panel baca relasi laporan induk (nomor + kanal + judul + deskripsi + kategori/aspek + usulan + severity/priority final + lokasi + bukti pelapor privat + validator/waktu + temuan tertaut) + tautan ke `/pesantren/validasi-laporan`; blok kelola (PIC/tenggat, slider, upload bukti penyelesaian + pratinjau + lepas/ganti, catatan, verifikasi, Batalkan + dialog alasan min 10); filter status memuat `Dibatalkan`; empty state menjelaskan penyebab kosong (menunggu validasi / filter / arsip / beda scope).
+- Halaman baca publik `/tindak-lanjut` (D-21): status `Dibatalkan` + alasan pembatalan tampil; bukti/tenggat/catatan internal tetap tidak tampil.
+- Denah baca tampil sebagai pratinjau kecil dulu (tombol `Lihat denah besar` → penuh + `Tutup`) pada peta publik, detail laporan/temuan, dan pratinjau denah aktif Pesantren (D-22). Form penandaan titik (`LocationPicker`) tetap penuh agar presisi.
 
 ## 6. `/login`, `/admin/*`, `/validator/*`, `/pesantren/*`
 
@@ -96,7 +99,7 @@ Catatan review: tujuan Validator dipertahankan dari Peneliti, tetapi kontrak dat
 |---|---|
 | Dashboard/hasil | Definisi unit setiap kartu, sumber periode, beberapa hasil pada periode sama, versi berbeda, tidak ada hasil, seluruh jawaban N/A, dan tren yang belum bisa dibandingkan (D-04) |
 | Peta risiko | Bidang publik vs internal mengikuti matriks D-02 (DATA_REQUIREMENTS §6): denah/titik tidak publik; tidak ada area vs area tanpa denah (D-11), versi denah historis, daftar temuan tanpa titik, dan filter yang tidak menemukan data |
-| Rekomendasi/tindak lanjut | Hubungan banyak tindakan ke satu laporan (D-05), pemeriksa penyelesaian (D-06); PIC publik, bukti/catatan internal (D-02); status setelah dibuka kembali |
+| Rekomendasi/tindak lanjut | Hubungan banyak tindakan ke satu laporan (D-05), pemeriksa penyelesaian (D-06); PIC publik, bukti/catatan internal (D-02); status setelah dibuka kembali; batal per rekomendasi + alasan publik (D-21) |
 | Laporan publik/Pesantren | Perbedaan isi mengikuti matriks D-02 (DATA_REQUIREMENTS §6), filter yang terbawa ke pratinjau, data sumber, pembuat/waktu, serta efek arsip pada laporan periode lama (D-07/D-08) |
 | Form kirim | Salah kode pesantren tanpa penggantian otomatis, gagal simpan/kirim, kirim ganda, pindah pesantren, dan identitas akun yang berbeda dari nama pelapor |
 | Draft penilaian | Cara melanjutkan/memulai baru, versi sudah diarsipkan, berganti akun/perangkat, serta bukti yang hanya menyimpan nama file (D-10) |

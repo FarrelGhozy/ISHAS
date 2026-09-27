@@ -37,7 +37,7 @@ record/draft menyimpan ID, bukan file server atau kredensial produksi.
 | Katalog kategori | Indikator unik instrumen Published | Draft/Archived tidak menambah katalog; tidak berubah saat filter pesantren |
 | Sesuai/tidak sesuai | Jawaban snapshot laporan publik | Definisi tipe/kategori dari versi snapshot asal; kosong/N/A/nilai di luar skala tidak diklasifikasi |
 | Distribusi risiko/kategori/lokasi | Temuan terkait laporan publik | Satu record temuan; jumlah per kategori dan per lokasi sama dengan donat |
-| Risiko tinggi / ekstrem | Temuan Tinggi atau Ekstrem belum Terverifikasi | Subset aktif; tidak wajib sama dengan penjumlahan seluruh kategori donat |
+| Risiko tinggi / ekstrem | Temuan Tinggi atau Ekstrem belum Terverifikasi/Dibatalkan (D-21) | Subset aktif; tidak wajib sama dengan penjumlahan seluruh kategori donat |
 | Kanal dan aktivitas | Laporan publik | Jumlah kiriman; aktivitas berdasarkan createdAt, bukan tanggal validasi |
 | Status/progres tindak lanjut | Rekomendasi terkait laporan publik | Jumlah pekerjaan; progres rata-rata, null bila kosong |
 | Peta | Proyeksi publik temuan/lokasi | Satu pesantren; pin asli per versi denah, tanpa titik centroid otomatis |

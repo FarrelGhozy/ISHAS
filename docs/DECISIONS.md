@@ -439,6 +439,54 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Aturan `100% wajib bukti + catatan` dan alur verifikasi tidak berubah.
 - Dokumen terdampak: FLOWS §6, WIREFRAMES §5, TODO. Scope Stage 07.
 
+## D-21 — Pembatalan tindak lanjut + bukti upload + detail relasi — DISETUJUI 27 September 2026
+
+- Arahan pemilik pada evaluasi `/pesantren/tindak-lanjut`: halaman terlihat kosong,
+  detail kurang, belum bisa upload bukti, dan butuh aksi batal.
+  Jawaban pemilik atas tiga pertanyaan klarifikasi: hapus = batalkan perbaikan
+  (bukan hapus permanen/arsip); upload bukti samakan dengan `/lapor`;
+  detail kartu memakai panel relasi penuh laporan induk.
+- **D-21.a — Batal per rekomendasi:** `Dibatalkan` adalah status terminal per
+  `Recommendation` (baris tidak dihapus). Boleh dari `Belum ditindaklanjuti /
+  Berjalan / Menunggu verifikasi`; tidak dari `Terverifikasi / Dibatalkan`.
+  Wajib alasan min 10 karakter + `canceledBy/canceledAt` + audit
+  `Membatalkan tindak lanjut`. Temuan tertaut ikut `Dibatalkan`.
+  Laporan induk tetap `Proses`; `Completed` hanya bila seluruh rekomendasi
+  `Terverifikasi` (D-05 tetap; `Dibatalkan` menghalangi `Completed` otomatis).
+  Tanpa buka-kembali pada prototipe ini.
+- **D-21.b — Bukti penyelesaian:** pola sama dengan `/lapor` (PNG/JPEG/WebP,
+  5 MB/20 megapiksel, blob privat IndexedDB, pratinjau + lepas/ganti).
+  Wajib saat progres 100%. Disimpan sebagai `completionEvidence` (nama) +
+  `completionEvidenceAssetId` (blob). Seed lama hanya nama = label `Bukti lama`.
+- **D-21.c — Publik:** status `Dibatalkan` tampil publik beserta
+  `alasan pembatalan` (amendemen D-02 terbatas untuk transparansi penanganan).
+  Bukti penyelesaian, tenggat, dan catatan internal tetap tidak publik.
+  Nama PIC/validator tetap publik sesuai D-02.
+- **D-21.d — Detail kelola:** kartu Pesantren menampilkan panel baca relasi
+  laporan induk (nomor, kanal, judul, deskripsi, kategori/aspek + usulan,
+  severity/priority final, lokasi, bukti pelapor privat, validator/waktu,
+  temuan tertaut) + tautan ke `/pesantren/validasi-laporan`.
+  Empty state menjelaskan penyebab kosong (menunggu validasi / filter / arsip /
+  beda scope).
+- Dokumen terdampak: FLOWS §5–§6, DATA_MODEL (schema v9→v10), ROLES §2/§6,
+  WIREFRAMES §5/§8, DATA_REQUIREMENTS §6, DESIGN_SYSTEM §2, TODO, STAGE_07.
+  Scope Stage 07; status stage lain tidak berubah sepihak.
+
+## D-22 — Denah tampil pratinjau kecil, klik untuk besar — DISETUJUI 27 September 2026
+
+- Arahan pemilik: denah tampil terlalu besar (satu layar penuh); tampilkan kecil
+  dulu, klik baru menjadi besar agar enak dilihat.
+- **D-22.a — Pratinjau:** denah baca (peta publik `/peta-risiko` + panel dashboard,
+  `SavedLocation` pada detail validasi/jawaban/tindak lanjut, pratinjau denah aktif
+  `/pesantren/lokasi`) tampil sebagai tombol pratinjau kecil (tinggi terbatas) +
+  label `Lihat denah besar`; klik membuka tampilan penuh + tombol `Tutup`.
+  Pin/isi tetap sama, hanya ukurannya yang bertahap.
+- **D-22.b — Batas:** form penandaan titik (`LocationPicker` pada `/lapor` dan
+  `/penilaian-mandiri`) tetap tampil penuh agar titik presisi; tidak termasuk
+  pratinjau. Tanpa perubahan data, hak akses, atau status stage lain.
+- Dokumen terdampak: WIREFRAMES §5, TODO. Scope lintas Stage 04/07 baca-saja;
+  status stage lain tidak berubah sepihak.
+
 ## D-17 — Rename peran Peneliti → Validator dan Pengelola Pesantren → Pesantren — DISETUJUI 27 September 2026
 
 - Arahan pemilik: sebutan `Peneliti` terlalu mewah; ganti menjadi `Validator`

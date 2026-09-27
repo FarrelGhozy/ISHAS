@@ -52,7 +52,7 @@
 - **Menolak** laporan: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
 - Mengubah status penanganan `Pending → Proses → Completed` (tidak boleh mundur tanpa catatan audit; aturan mundur lihat FLOWS §5).
 - **Menghapus** laporan berstatus `Completed` saja, dengan dialog konfirmasi + alasan; penghapusan menambah audit event (data audit tidak ikut terhapus).
-- Mengelola gedung/lantai/area/denah, membuat rencana tindak lanjut (PIC + tenggat + catatan), memperbarui progres, mengunggah bukti penyelesaian dummy, membaca laporan pimpinan.
+- Mengelola gedung/lantai/area/denah, membuat rencana tindak lanjut (PIC + tenggat + catatan), memperbarui progres, mengunggah bukti penyelesaian (upload gambar pola `/lapor` — D-21), membatalkan perbaikan dengan alasan wajib min 10 karakter (status `Dibatalkan` per rekomendasi, baris tidak dihapus — D-21), membaca laporan pimpinan.
 
 **TIDAK BOLEH:**
 
@@ -113,6 +113,7 @@ Daftar hapus eksplisit (agar tidak ada sisa tafsir "asesor masih ada di balik la
 | Isi severity/priority | ❌ | ✅ miliknya | ❌ | ❌ |
 | Status Pending/Proses/Completed + hapus Completed | ❌ | ✅ miliknya | ❌ | ❌ |
 | Gedung/area/denah + tindak lanjut kelola | ❌ | ✅ miliknya | ❌ | ❌ |
+| Batalkan perbaikan (`Dibatalkan` + alasan, D-21) | ❌ | ✅ miliknya | ❌ | ❌ |
 | Daftar pesantren + buat/verifikasi/nonaktif | ❌ | ❌ | ✅ | ❌ |
 | Buat/nonaktifkan akun Pesantren | ❌ | ❌ | ✅ | ❌ |
 | Audit log + pengaturan + reset demo | ❌ | ❌ | ✅ | ❌ |

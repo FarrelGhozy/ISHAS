@@ -35,6 +35,13 @@ tindak lanjut yang menggerakkan status, dan laporan pimpinan scope sendiri.
 - [x] Perbarui progres (0–100) + catatan + bukti penyelesaian dummy → ajukan selesai →
  verifikasi pengelola → `Completed`/`Terverifikasi` (terhubung Stage 06).
 - [x] Filter status/prioritas + pencarian; bedakan visual `Berjalan`/`Menunggu verifikasi`/`Terverifikasi`.
+- [ ] Revisi D-21 (IN PROGRESS 27 Sep 2026): panel relasi laporan induk penuh +
+ upload bukti penyelesaian (pola `/lapor`: PNG/JPEG/WebP 5MB/20MP + pratinjau +
+ lepas/ganti, wajib saat 100%) + batal per rekomendasi (`Dibatalkan` terminal,
+ alasan min 10 + tampil publik, baris tidak dihapus, temuan tertaut ikut,
+ laporan induk tetap `Proses`) + filter `Dibatalkan` + empty state penjelas +
+ publik `/tindak-lanjut` tampil `Dibatalkan` + alasan (bukti/tenggat/catatan
+ tetap privat). Schema v9→v10 + migrasi + seed contoh + test.
 
 ### 3. Laporan pengelola (`/pengelola/laporan`)
 

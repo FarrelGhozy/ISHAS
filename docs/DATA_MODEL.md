@@ -28,10 +28,11 @@ keputusan D-04–D-11 masih memengaruhi isinya.
 
 ## 0. Versi schema 
 
-- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v9`. Aplikasi ISHAS
-- `MOCK_SCHEMA_VERSION`: `9` (v9 menambah usulan mandiri lapor-cepat D-19:
-  `reporterSeverity/reporterPriority`; lapor-cepat baru tanpa `indicatorId`).
-- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 9`, pulihkan seed.
+- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v10`. Aplikasi ISHAS
+- `MOCK_SCHEMA_VERSION`: `10` (v10 menambah pembatalan tindak lanjut + bukti
+  upload D-21: `completionEvidenceAssetId`, status `Dibatalkan`,
+  `canceledReason/canceledBy/canceledAt` pada rekomendasi/temuan).
+- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 10`, pulihkan seed.
 - Migrasi v6→v7 mempertahankan seluruh record/ID; hanya menambah
   `instrumentDocs` (seed 2 Public + 2 Privat ilustrasi). Snapshot/temuan lama
   tidak dihitung ulang.
@@ -78,7 +79,7 @@ type InstrumentStatus = 'Draft' | 'Published' | 'Archived';
 type KategoriK3Id = 'KAT-KESELAMATAN' | 'KAT-KESEHATAN' | 'KAT-LINGKUNGAN' | 'KAT-PSIKOSOSIAL';
 type RiskLevel = 'Rendah' | 'Sedang' | 'Tinggi' | 'Ekstrem'; // D-15.b, asumsi prototipe
 type RecommendationStatus =
- | 'Belum ditindaklanjuti' | 'Berjalan' | 'Menunggu verifikasi' | 'Terverifikasi';
+  | 'Belum ditindaklanjuti' | 'Berjalan' | 'Menunggu verifikasi' | 'Terverifikasi' | 'Dibatalkan'; // D-21: terminal per rekomendasi, wajib alasan
 ```
 
 ## 2. Entitas
@@ -166,6 +167,10 @@ type Recommendation = {
  action: string; status: RecommendationStatus; owner: string; dueDate: string;
  progress: number; // 0-100
  lastNote?: string; completionEvidence?: string;
+ completionEvidenceAssetId?: string; // D-21: blob bukti upload (privat, IndexedDB)
+ canceledReason?: string; // D-21: wajib min 10 bila Dibatalkan (tampil publik)
+ canceledBy?: string; // FK User.id pembatal
+ canceledAt?: string;
 };
 
 type Building = { id: string; institutionCode: string; code: string;
@@ -203,6 +208,7 @@ nonaktif menunggu D-08.
 | `acceptReport` | `id` + `severity` + `priority` (+ catatan) | `Diterima/Pending`; wajib keduanya terisi |
 | `rejectReport` | `id` + alasan min 10 | `Ditolak`; arsip + validator/waktu/alasan |
 | `updateHandlingStatus` | `id` + status baru + syarat per transisi (PIC/tenggat/bukti) | status baru + audit |
+| `cancelRecommendation` | `id` rekomendasi + alasan min 10 (D-21) | `Dibatalkan` + temuan tertaut ikut + audit; laporan induk tetap `Proses` |
 | `deleteCompletedReport` | `id` + alasan | rancangan hapus report/temuan masih menunggu D-07; harus menetapkan dampak ke seluruh relasi dan riwayat |
 | `addUser` / `addInstitution` | sama tanpa peran asesor | + pesantren baru TIDAK otomatis tampil sebelum `Aktif` + punya akun Pesantren |
 | `resetMockData` | — | kembali ke seed |
@@ -212,7 +218,7 @@ Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAsse
 ## 5. Seed kaya demo (agar setiap halaman dapat didemo ke dosen)
 
 Komposisi minimum §5 lama telah diperkaya (September 2026) menjadi data demo
-penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v8, D-17):
+penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v10, D-21):
 
 - 3 pesantren `Aktif` (`PSN-0018` PP Al-Hikmah Malang, `PSN-0019` PP Nurul Iman
   Batu, `PSN-0020` PP Darussalam Kediri) + 1 `Persiapan` (`PSN-0021`, tidak tampil
@@ -231,10 +237,11 @@ penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v8, D-17):
   `Sedang` 7, `Rendah` 3; seluruh 4 kategori K3 + baris `Belum dipetakan`
   (lapor-cepat tanpa kategori); 1 temuan tanpa titik (demo "tanpa titik") dan
   1 temuan non-fisik Psikososial tanpa titik; 1 temuan `Terverifikasi` di dalam
-  laporan `Proses` (demo penyelesaian sebagian, D-05: satu laporan banyak temuan).
-- 15 rekomendasi: `Belum ditindaklanjuti` 3, `Berjalan` 8,
-  `Menunggu verifikasi` 1, `Terverifikasi` 3 (progres 0–100, PIC, tenggat,
-  bukti penyelesaian bervariasi).
+  laporan `Proses` (demo penyelesaian sebagian, D-05: satu laporan banyak temuan);
+  1 temuan `Dibatalkan` (RPT-0009, demo D-21).
+- 15 rekomendasi: `Belum ditindaklanjuti` 3, `Berjalan` 7,
+  `Menunggu verifikasi` 1, `Terverifikasi` 3, `Dibatalkan` 1 (RPT-0009 +
+  alasan publik, demo D-21; progres 0–100, PIC, tenggat, bukti bervariasi).
 - 2 snapshot `INS-v1.1` terbaru sebagai sumber indeks (kontras demo: PSN-0018
   ≈ 58 perlu perhatian vs PSN-0019 ≈ 70 baik) + 3 snapshot `INS-v1.0` historis
   (tidak dihitung ulang); tren 6 periode ilustratif (Mar–Agu 2026) + periode

@@ -130,6 +130,8 @@ publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/lapor
 | Denah rinci ruangan/per lantai | ❌ (tidak termasuk rancangan Risk Map baru) | Historis sesuai scope |
 | Nama pelapor / kontak / identitas akun | ❌ | ✅ |
 | Bukti/foto (nama file) | ❌ | ✅ |
+| Bukti penyelesaian tindak lanjut (gambar upload) | ❌ | ✅ (pratinjau privat) |
+| Alasan pembatalan tindak lanjut (D-21) | ✅ (status `Dibatalkan` + alasan) | ✅ |
 | Jawaban mentah per indikator | ❌ (hanya skor/kategori ringkasan) | ✅ |
 | Severity/priority | ✅ (sebagai chip ringkasan) | ✅ |
 | Status penanganan + progres | ✅ | ✅ |

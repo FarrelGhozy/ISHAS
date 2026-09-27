@@ -99,6 +99,8 @@ Menunggu validasi → Ditolak (terminal)
 Menunggu validasi → Pending → Proses → Completed → Dihapus (terminal, teraudit)
 Proses → Pending (mundur dengan alasan)
 Completed → Proses (dibuka kembali dengan alasan)
+Rekomendasi: Belum ditindaklanjuti → Berjalan → Menunggu verifikasi → Terverifikasi
+Rekomendasi: Belum ditindaklanjuti/Berjalan/Menunggu verifikasi → Dibatalkan (terminal per rekomendasi, wajib alasan — D-21)
 ```
 
 **Aturan transisi:**
@@ -108,7 +110,7 @@ Completed → Proses (dibuka kembali dengan alasan)
 | `Menunggu validasi → Pending` | Hanya lewat aksi Terima (§4.2) + severity & priority terisi |
 | `Menunggu validasi → Ditolak` | Hanya lewat aksi Tolak + alasan |
 | `Pending → Proses` | Wajib isi PIC + tenggat (tanggal) + catatan rencana |
-| `Proses → Completed` | Wajib progres 100% + bukti penyelesaian (nama file dummy) + catatan; menjadi `Terverifikasi` di tampilan |
+| `Proses → Completed` | Wajib progres 100% + bukti penyelesaian (upload gambar PNG/JPEG/WebP 5 MB/20 MP, bukan ketikan nama — D-21) + catatan; menjadi `Terverifikasi` di tampilan |
 | `Completed → Dihapus` | Hanya `Completed`; dialog konfirmasi + alasan hapus; audit `Menghapus laporan selesai`; record audit TIDAK ikut terhapus |
 | Mundur (`Proses → Pending`, `Completed → Proses`) | Hanya dengan catatan alasan wajib; teraudit sebagai `Mengembalikan status`; tombol mundur diberi gaya sekunder + peringatan |
 
@@ -124,12 +126,14 @@ tidak boleh disamakan tanpa aturan penghubung tersebut.
 - `Proses` → `status-blue`, ikon progres.
 - `Completed`/`Terverifikasi` → `status-green`, ikon centang.
 - `Ditolak` → `status-neutral`, ikon silang (hanya terlihat di antrean Pesantren, tidak publik).
+- `Dibatalkan` → `status-neutral`, ikon silang (tampil publik beserta alasan, tanpa bukti/tenggat/catatan internal — D-21).
 - Severity/priority `Tinggi` → `status-red`; `Sedang` → `status-amber`; `Rendah` → `status-green`; `Belum ditentukan` → `status-neutral`.
 
 ## 6. Tindak lanjut dan laporan pimpinan (Aktor: Pesantren)
 
-1. Dari rekomendasi `Belum ditindaklanjuti` → **Buat rencana tindakan** (PIC + tenggat + catatan) → status rekomendasi `Berjalan`, laporan induk `Proses`.
-2. Perbarui progres (slider titik `0/25/50/75/100` + label tahap; nilai lama dibulatkan ke titik terdekat — D-20) + catatan + bukti penyelesaian dummy → ajukan selesai → akun Pesantren memverifikasi → `Completed`/`Terverifikasi`.
+ 1. Dari rekomendasi `Belum ditindaklanjuti` → **Buat rencana tindakan** (PIC + tenggat + catatan) → status rekomendasi `Berjalan`, laporan induk `Proses`.
+ 2. Perbarui progres (slider titik `0/25/50/75/100` + label tahap; nilai lama dibulatkan ke titik terdekat — D-20) + catatan + bukti penyelesaian upload gambar (PNG/JPEG/WebP 5 MB/20 MP, pratinjau + lepas/ganti, pola sama `/lapor` — D-21) → ajukan selesai → akun Pesantren memverifikasi → `Completed`/`Terverifikasi`.
+ 2a. **Batalkan perbaikan** (D-21): dari `Belum ditindaklanjuti/Berjalan/Menunggu verifikasi` → `Dibatalkan` (terminal per rekomendasi, baris tidak dihapus) → wajib alasan min 10 karakter + `canceledBy/canceledAt` + audit `Membatalkan tindak lanjut`; temuan tertaut ikut `Dibatalkan`; laporan induk tetap `Proses`; `Dibatalkan` menghalangi `Completed` otomatis. Status + alasan tampil publik; bukti/tenggat/catatan internal tetap privat.
 3. `/pesantren/laporan`: pratinjau ringkasan pimpinan dalam scope Pesantren + dimensi + status tindak lanjut + metadata (periode, versi instrumen, waktu buat, pembuat) + simulasi unduh PDF/Excel berlabel dummy. `/laporan` adalah versi baca publik dengan bidang sesuai D-02 (ringkasan + nama validator/PIC; tanpa nama pelapor, bukti, jawaban mentah) dan tidak otomatis sama dengan versi internal.
 
 ## 7. Siklus instrumen (Aktor: Validator — tujuan peran dipertahankan, D-17)

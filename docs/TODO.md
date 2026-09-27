@@ -1,5 +1,35 @@
 # TODO — Kontrol Kerja Aktif
 
+## Denah pratinjau kecil + klik perbesar (D-22) — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: denah baca tampil satu layar penuh; jadikan
+pratinjau kecil dulu (`Lihat denah besar` → penuh → `Tutup`). Keputusan D-22.
+Cakupan: docs + shared `TombolDenahBesar` + peta publik + `SavedLocation` +
+manager denah + test render. Form penandaan titik tetap penuh. Status stage lain
+tidak berubah sepihak.
+
+- [x] Catat D-22 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Kode + test (shared `TombolDenahBesar`/`SavedLocation` di `denah-preview.tsx`, peta publik pratinjau + pin/daftar terpecah, manager denah; 2 test render baru).
+- [x] Verifikasi: lint + typecheck + 146 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard buka/tutup denah di browser: belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
+## Pembatalan + bukti upload + detail tindak lanjut (D-21) — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: `/pesantren/tindak-lanjut` terlihat kosong,
+detail kurang, belum bisa upload bukti, dan butuh aksi batal perbaikan beralasan
+yang tampil di dashboard umum. Keputusan D-21 (`Dibatalkan` per rekomendasi +
+alasan min 10 + tampil publik; upload bukti pola `/lapor`; panel relasi penuh).
+Cakupan: docs + schema v9→v10 + store/repository + UI kelola/publik + seed +
+test. Scope Stage 07; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-21 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-21, FLOWS §5–§6, DATA_MODEL, ROLES, WIREFRAMES §5/§8, DATA_REQUIREMENTS §6, DESIGN_SYSTEM §2, TODO).
+- [x] Kode + migrasi v9→v10 + seed contoh Dibatalkan (RPT-0009 + alasan publik).
+- [x] Verifikasi: lint + typecheck + 144 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard slider/upload/dialog + alur klik browser: belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## Slider progres tindak lanjut 5 titik (D-20) — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik: `Progres (%)` pada kartu tindak lanjut

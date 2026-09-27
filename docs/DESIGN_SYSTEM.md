@@ -62,6 +62,7 @@ Aksen kartu statistik: atas merah `#dc2626` (`stat-red`), ambar `#d97706` (`stat
 | Handling `Pending` | `status-amber` | `Clock3` | `Pending` |
 | Handling `Proses` | `status-blue` | `Activity` | `Proses` |
 | Handling `Completed`/`Terverifikasi` | `status-green` | `CheckCircle2` | `Completed` / `Terverifikasi` |
+| Tindak lanjut `Dibatalkan` (D-21) | `status-neutral` | `X` | `Dibatalkan` |
 | Validation `Ditolak` | `status-neutral` | `X` | `Ditolak` |
 | Kanal `lapor-cepat` | `status-blue` | `Megaphone` | `Lapor cepat` |
 | Kanal `penilaian-mandiri` | `status-blue` | `ClipboardCheck` | `Penilaian mandiri` |
