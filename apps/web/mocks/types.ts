@@ -36,7 +36,7 @@ export type InstrumentDoc = {
   updatedAt: string;
 };
 export type RecommendationStatus =
-  "Belum ditindaklanjuti" | "Berjalan" | "Menunggu verifikasi" | "Terverifikasi";
+  "Belum ditindaklanjuti" | "Berjalan" | "Menunggu verifikasi" | "Terverifikasi" | "Dibatalkan";
 
 export type Institution = {
   activeCampusPlanVersionId?: string;
@@ -182,6 +182,10 @@ export type Recommendation = {
   progress: number; // 0–100
   lastNote?: string;
   completionEvidence?: string;
+  completionEvidenceAssetId?: string; // D-21: blob bukti upload (privat, IndexedDB)
+  canceledReason?: string; // D-21: wajib min 10 bila Dibatalkan (tampil publik)
+  canceledBy?: string; // FK User.id pembatal
+  canceledAt?: string;
   updatedAt?: string; // perubahan terakhir (pelaku tercatat di audit)
   verifiedBy?: string; // FK User.id pemeriksa penyelesaian (D-06)
   verifiedAt?: string;

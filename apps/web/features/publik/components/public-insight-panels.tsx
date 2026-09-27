@@ -13,6 +13,7 @@ const STATUS_COLORS: Record<string, string> = {
   Berjalan: "#3498db",
   "Menunggu verifikasi": "#d97706",
   Terverifikasi: "#047857",
+  Dibatalkan: "#64748b",
 };
 
 function PanelHeading({

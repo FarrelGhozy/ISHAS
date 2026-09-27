@@ -211,15 +211,32 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
 
   test("tindak lanjut laporan yang sudah diarsip ditolak", () => {
     const other = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
-    const id = "REC-RPT-0005-1"; // RPT-0005 Completed, rekomendasi Terverifikasi
+    // RPT-0007 satu rekomendasi: Belum → Berjalan → 100% → verifikasi → Completed → arsip.
+    const id = "REC-RPT-0007-1"; // RPT-0007 Proses, rekomendasi Belum ditindaklanjuti
     expect(
       storeActions.updateRecommendation(other, id, {
-        note: "Cek ulang.",
-        progress: 100,
-        evidenceName: "bukti.jpg",
+        owner: "Tim Sarana",
+        dueDate: "2099-10-01",
+        note: "Rencana penanganan pasokan air.",
       }).ok,
     ).toBe(true);
-    expect(storeActions.archiveCompletedReport(other, "RPT-0005", "Arsip akhir periode").ok).toBe(
+    expect(
+      storeActions.updateRecommendation(other, id, {
+        note: "Selesai, bukti terlampir.",
+        progress: 100,
+        evidenceName: "air.jpg",
+      }).ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(other, id, {
+        note: "Verifikasi akhir.",
+        verify: true,
+      }).ok,
+    ).toBe(true);
+    expect(getState().reports.find((report) => report.id === "RPT-0007")?.handlingStatus).toBe(
+      "Completed",
+    );
+    expect(storeActions.archiveCompletedReport(other, "RPT-0007", "Arsip akhir periode").ok).toBe(
       true,
     );
     expect(
@@ -228,6 +245,9 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
         progress: 100,
         evidenceName: "bukti.jpg",
       }).ok,
+    ).toBe(false);
+    expect(
+      storeActions.cancelRecommendation(other, id, "Alasan pembatalan yang cukup panjang.").ok,
     ).toBe(false);
   });
 });

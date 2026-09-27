@@ -199,6 +199,11 @@ function Recommendations({
           <h2 className="font-extrabold text-heading">{item.title}</h2>
           <p className="text-sm text-secondary-text">{item.location}</p>
           <p className="text-sm text-body-text">{item.action}</p>
+          {item.status === "Dibatalkan" && item.canceledReason ? (
+            <p className="rounded-lg bg-strip p-3 text-sm text-secondary-text">
+              Alasan pembatalan: {item.canceledReason}
+            </p>
+          ) : null}
           <div className="mt-auto">
             <p className="text-sm text-secondary-text">PIC: {item.owner}</p>
             <Progress value={item.progress} />
@@ -225,16 +230,29 @@ function FollowUps({
             <div>
               <h2 className="font-extrabold text-heading">{item.title}</h2>
               <p className="mt-1 text-sm text-secondary-text">
-                PIC: {item.owner} · {item.location}
+                PIC: {item.owner || "—"} · {item.location}
+              </p>
+              <p className="mt-1 text-sm text-secondary-text">
+                {item.source} · Prioritas {item.priority}
               </p>
             </div>
-            <StatusChip value={item.status} />
+            <div className="flex flex-wrap gap-2">
+              <StatusChip value={item.status} />
+              <StatusChip value={item.priority} />
+            </div>
           </div>
           <Progress value={item.progress} />
-          <p className="mt-3 text-sm text-secondary-text">
-            Progres dan status ditampilkan sebagai ringkasan publik. Bukti penyelesaian tidak
-            ditampilkan.
-          </p>
+          {item.status === "Dibatalkan" ? (
+            <p className="mt-3 rounded-lg bg-strip p-3 text-sm text-secondary-text">
+              Perbaikan ini dibatalkan.
+              {item.canceledReason ? ` Alasan: ${item.canceledReason}` : ""}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-secondary-text">
+              Progres dan status ditampilkan sebagai ringkasan publik. Bukti penyelesaian, tenggat,
+              dan catatan internal tidak ditampilkan.
+            </p>
+          )}
         </article>
       ))}
     </div>
@@ -288,7 +306,11 @@ function LeadershipReport({
         />
         <Metric
           label="Temuan aktif"
-          value={String(findings.filter((item) => item.status !== "Terverifikasi").length)}
+          value={String(
+            findings.filter(
+              (item) => item.status !== "Terverifikasi" && item.status !== "Dibatalkan",
+            ).length,
+          )}
         />
         <Metric
           label="Terverifikasi"

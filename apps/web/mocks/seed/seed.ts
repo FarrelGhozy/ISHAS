@@ -6,9 +6,11 @@
 //
 // Komposisi dirancang agar setiap halaman publik/pesantren/admin/validator
 // mempunyai data untuk didemo ke dosen:
-// - Publik: 9 laporan Diterima non-arsip (5 lapor-cepat + 4 penilaian-mandiri),
-//   13 temuan (Ekstrem 1, Tinggi 4, Sedang 6, Rendah 1 + 1 Terverifikasi),
-//   13 rekomendasi (Belum 3, Berjalan 8, Menunggu verifikasi 1, Terverifikasi 1),
+// - Publik: 9 laporan Diterima tampil publik (5 lapor-cepat + 4 penilaian-mandiri)
+//   + 2 Completed internal (demo arsip D-07),
+//   15 temuan (Ekstrem 1, Tinggi 4, Sedang 7, Rendah 3; 1 Dibatalkan demo D-21),
+//   15 rekomendasi (Belum 3, Berjalan 7, Menunggu verifikasi 1, Terverifikasi 3,
+//   Dibatalkan 1 demo D-21),
 //   seluruh 4 kategori K3 + baris Belum dipetakan, 2 snapshot INS-v1.1 terbaru
 //   sebagai sumber indeks (kontras 58 vs 70), tren 6 periode + periode berjalan,
 //   denah + titik untuk kedua pesantren terdaftar.
@@ -24,7 +26,7 @@ const T = {
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 9,
+  schemaVersion: 10,
   campusPlans: [
     {
       id: "CAMPUS-PSN-0018-v1",
@@ -966,7 +968,7 @@ export const SEED: IshasState = {
       issue: "Sampah dedaunan menumpuk di sisi perpustakaan",
       indicator: "Tidak menggunakan instrumen",
       recommendation: "Bersihkan tumpukan dan jadwalkan angkut sampah taman mingguan.",
-      status: "Belum ditindaklanjuti",
+      status: "Dibatalkan", // D-21: contoh pembatalan; laporan induk tetap Proses
       hazard: "Sarang nyamuk / vektor penyakit",
       impact: "Demam berdarah di lingkungan kelas",
       likelihood: "Jarang",
@@ -1404,10 +1406,14 @@ export const SEED: IshasState = {
       location: "Gedung Kelas · Lantai 2 · Perpustakaan",
       source: "IND-LAPOR-CEPAT · RPT-0009",
       action: "Bersihkan tumpukan dan jadwalkan angkut sampah taman mingguan.",
-      status: "Belum ditindaklanjuti",
+      status: "Dibatalkan", // D-21: contoh batal beralasan; tampil publik + alasan
       owner: "Ust. K.H. Mustofa Kamal",
       dueDate: "2026-10-08",
       progress: 0,
+      canceledReason:
+        "Penanganan dialihkan ke program kerja bakti mingguan santri sehingga tidak lagi menjadi pekerjaan perbaikan terpisah.",
+      canceledBy: "USR-003",
+      canceledAt: "2026-09-07T10:00:00.000Z",
     },
     {
       id: "REC-RPT-0010-1",

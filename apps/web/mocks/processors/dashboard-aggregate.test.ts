@@ -167,18 +167,50 @@ describe("panel temuan dan tindak lanjut", () => {
   test("temuan aktif terurut Ekstrem → Tinggi → Sedang → Rendah dan membatasi jumlah", () => {
     const prioritas = pilihTemuanPrioritas(findings, 4);
     expect(prioritas.map((f) => f.level)).toEqual(["Ekstrem", "Tinggi", "Tinggi", "Tinggi"]);
-    expect(prioritas.every((f) => f.status !== "Terverifikasi")).toBe(true);
+    expect(prioritas.every((f) => f.status !== "Terverifikasi" && f.status !== "Dibatalkan")).toBe(
+      true,
+    );
   });
 
   test("risiko tinggi menghitung temuan aktif level Tinggi", () => {
     expect(hitungRisikoTinggi(findings)).toBe(4);
   });
 
-  test("ringkasan tindak lanjut: rata-rata progres + count", () => {
+  test("ringkasan tindak lanjut: rata-rata progres + count + dibatalkan", () => {
     const ringkas = ringkasTindakLanjut(recs);
     expect(ringkas.pekerjaan).toBe(15);
     expect(ringkas.terverifikasi).toBe(3);
+    expect(ringkas.dibatalkan).toBe(1);
     expect(ringkas.rataProgress).toBe(39); // total progres 590 / 15 laporan Diterima
+  });
+
+  test("distribusi tindak lanjut memuat lima status termasuk Dibatalkan", () => {
+    const reports = SEED.reports.filter(
+      (report) => report.validationStatus === "Diterima" && !report.archivedAt,
+    );
+    const ids = new Set(reports.map((report) => report.id));
+    const result = buatDashboardInsight({
+      reports,
+      findings: SEED.findings.filter((finding) => ids.has(finding.reportId)),
+      recommendations: SEED.recommendations.filter((recommendation) =>
+        ids.has(recommendation.reportId),
+      ),
+      institutions: SEED.institutions,
+      users: SEED.users,
+      buildings: SEED.buildings,
+      areas: SEED.areas,
+      scopeCodes: ["PSN-0018", "PSN-0019"],
+    });
+    expect(result.distribution.tindakLanjut.map((item) => item.label)).toEqual([
+      "Belum ditindaklanjuti",
+      "Berjalan",
+      "Menunggu verifikasi",
+      "Terverifikasi",
+      "Dibatalkan",
+    ]);
+    expect(
+      result.distribution.tindakLanjut.find((item) => item.label === "Dibatalkan")?.value,
+    ).toBe(1);
   });
 });
 

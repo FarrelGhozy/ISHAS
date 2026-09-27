@@ -159,6 +159,98 @@ export const mockRepository = {
       };
     }
   },
+  // D-21: bukti penyelesaian tindak lanjut — pola sama /lapor
+  // (PNG/JPEG/WebP, 5 MB/20 MP, blob privat IndexedDB). Hanya Pesantren aktif.
+  async uploadCompletionEvidence(
+    actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const epoch = assetEpoch;
+    try {
+      if (resettingAssets)
+        return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      const state = getState();
+      const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
+      if (!account || account.status !== "Aktif" || account.roleId !== "pesantren")
+        return { ok: false, error: "Hanya Pesantren aktif yang dapat mengunggah bukti." };
+      if (!account.institutionCodes.includes(institutionCode))
+        return { ok: false, error: "Anda tidak berwenang mengunggah bukti pesantren ini." };
+      if (!selectRegisteredInstitutions(state).some((item) => item.code === institutionCode))
+        return { ok: false, error: "Pilih pesantren terdaftar sebelum mengunggah bukti." };
+      const error = validateEvidenceFile(file);
+      if (error) return { ok: false, error };
+      const bitmap = await createImageBitmap(file);
+      const pixels = bitmap.width * bitmap.height;
+      bitmap.close();
+      if (pixels > 20_000_000)
+        return {
+          ok: false,
+          error: "Resolusi gambar terlalu besar. Gunakan gambar maksimal 20 megapiksel.",
+        };
+      if (resettingAssets || epoch !== assetEpoch)
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      const id = `evidence-asset-${crypto.randomUUID()}`;
+      await putEvidenceAsset(id, { institutionCode, name: file.name.trim(), blob: file });
+      if (resettingAssets || epoch !== assetEpoch) {
+        await deleteEvidenceAsset(id);
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      }
+      return { ok: true, id };
+    } catch {
+      return {
+        ok: false,
+        error:
+          "Gambar gagal dibaca atau disimpan. Pilih gambar yang valid dan periksa penyimpanan browser.",
+      };
+    }
+  },
+  // D-21: simpan tindak lanjut dengan validasi blob bukti (bukan nama bebas).
+  async updateTindakLanjut(
+    actor: ReportActor,
+    recommendationId: string,
+    input: {
+      owner?: string;
+      dueDate?: string;
+      note: string;
+      progress?: number;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+      verify?: boolean;
+    },
+  ): Promise<ActionResult> {
+    try {
+      if (resettingAssets)
+        return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      if (input.evidenceAssetId) {
+        if (!/^evidence-asset-[0-9a-f-]{36}$/.test(input.evidenceAssetId))
+          return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
+        if (!input.evidenceName?.trim())
+          return { ok: false, error: "Nama bukti wajib mengikuti berkas yang diunggah." };
+        const asset = await getEvidenceAsset(input.evidenceAssetId);
+        const state = getState();
+        const rec = state.recommendations.find((item) => item.id === recommendationId);
+        const report = rec && state.reports.find((item) => item.id === rec.reportId);
+        if (
+          !asset ||
+          !report ||
+          asset.institutionCode !== report.institutionCode ||
+          asset.name !== input.evidenceName.trim()
+        )
+          return {
+            ok: false,
+            error:
+              "Gambar bukti tidak tersedia atau tidak sesuai. Pilih ulang atau lepas lampiran.",
+          };
+      }
+      return storeActions.updateRecommendation(actor, recommendationId, input);
+    } catch {
+      return {
+        ok: false,
+        error: "Bukti tidak dapat diperiksa. Catatan tetap tersimpan; coba lagi.",
+      };
+    }
+  },
   // D-16: pustaka detail indikator — hanya Validator aktif yang dapat mengunggah.
   async uploadInstrumentDoc(
     actor: ReportActor,

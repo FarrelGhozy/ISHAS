@@ -824,6 +824,7 @@ export const storeActions = {
       note: string;
       progress?: number;
       evidenceName?: string;
+      evidenceAssetId?: string;
       verify?: boolean;
     },
   ): ActionResult {
@@ -846,6 +847,9 @@ export const storeActions = {
         if (target.status !== "Menunggu verifikasi")
           return { ok: false, error: "Rekomendasi belum diajukan untuk verifikasi." };
         target.status = "Terverifikasi";
+        target.verifiedBy = actor.id;
+        target.verifiedAt = nowIso();
+        target.updatedAt = target.verifiedAt;
         draft.findings
           .filter((item) => item.recommendationId === target.id)
           .forEach((item) => {
@@ -865,8 +869,16 @@ export const storeActions = {
         target.owner = input.owner.trim();
         target.dueDate = input.dueDate;
         target.status = "Berjalan";
+        target.updatedAt = nowIso();
         report.handlingStatus = "Proses";
       } else {
+        // D-21: hanya Berjalan yang dapat diperbarui progresnya.
+        // Menunggu verifikasi (kunci verifikasi), Terverifikasi/Dibatalkan (terminal) ditolak.
+        if (target.status !== "Berjalan")
+          return {
+            ok: false,
+            error: "Hanya rekomendasi Berjalan yang dapat diperbarui progresnya.",
+          };
         const progress = input.progress;
         if (progress === undefined || !Number.isFinite(progress) || progress < 0 || progress > 100)
           return { ok: false, error: "Progres harus antara 0 dan 100." };
@@ -876,9 +888,17 @@ export const storeActions = {
         if (snapped === 100) {
           if (!input.evidenceName?.trim())
             return { ok: false, error: "Bukti penyelesaian wajib diisi saat mengajukan selesai." };
+          if (
+            input.evidenceAssetId &&
+            !/^evidence-asset-[0-9a-f-]{36}$/.test(input.evidenceAssetId)
+          )
+            return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
           target.completionEvidence = input.evidenceName.trim();
+          // D-21: blob upload bila ada; nama saja = "Bukti lama" (seed/legacy).
+          target.completionEvidenceAssetId = input.evidenceAssetId;
           target.status = "Menunggu verifikasi";
         }
+        target.updatedAt = nowIso();
       }
       target.lastNote = note;
       if (
@@ -893,6 +913,57 @@ export const storeActions = {
         institutionCode: report.institutionCode,
         action: input.verify ? "Memverifikasi tindak lanjut" : "Memperbarui tindak lanjut",
         note,
+      });
+      return { ok: true };
+    });
+  },
+
+  // D-21: batalkan perbaikan per rekomendasi (bukan hapus baris/arsip laporan).
+  // Terminal; baris tetap tampil internal + publik beserta alasan.
+  cancelRecommendation(
+    actor: { id?: string; name: string; role?: string },
+    recommendationId: string,
+    reason: string,
+  ): ActionResult {
+    const recommendation = currentState.recommendations.find(
+      (item) => item.id === recommendationId,
+    );
+    if (!recommendation) return { ok: false, error: "Rekomendasi tidak ditemukan." };
+    const trimmed = reason.trim();
+    if (trimmed.length < 10)
+      return { ok: false, error: "Alasan pembatalan minimal 10 karakter." };
+    return setStateReport(actor, recommendation.reportId, (draft, report) => {
+      const target = draft.recommendations.find((item) => item.id === recommendationId)!;
+      if (report.validationStatus !== "Diterima" || report.archivedAt) {
+        return {
+          ok: false,
+          error: "Tindak lanjut hanya untuk laporan Diterima yang belum diarsipkan.",
+        };
+      }
+      if (
+        target.status !== "Belum ditindaklanjuti" &&
+        target.status !== "Berjalan" &&
+        target.status !== "Menunggu verifikasi"
+      )
+        return { ok: false, error: "Hanya perbaikan yang belum selesai yang dapat dibatalkan." };
+      target.status = "Dibatalkan";
+      target.canceledReason = trimmed;
+      target.canceledBy = actor.id;
+      target.canceledAt = nowIso();
+      target.updatedAt = target.canceledAt;
+      draft.findings
+        .filter((item) => item.recommendationId === target.id)
+        .forEach((item) => {
+          item.status = "Dibatalkan";
+        });
+      // Laporan induk tetap Proses/Pending; Dibatalkan menghalangi Completed
+      // otomatis karena syarat every(Terverifikasi) tak terpenuhi.
+      audit(draft, actor, {
+        objectType: "Recommendation",
+        objectId: target.id,
+        institutionCode: report.institutionCode,
+        action: "Membatalkan tindak lanjut",
+        note: trimmed,
       });
       return { ok: true };
     });

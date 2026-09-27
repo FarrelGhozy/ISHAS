@@ -40,6 +40,7 @@ const MAP: Record<string, Chip> = {
   Berjalan: { className: BLUE, icon: Activity, label: "Berjalan" },
   "Menunggu verifikasi": { className: AMBER, icon: Clock3, label: "Menunggu verifikasi" },
   Terverifikasi: { className: GREEN, icon: CheckCircle2, label: "Terverifikasi" },
+  Dibatalkan: { className: NEUTRAL, icon: X, label: "Dibatalkan" },
   Aktif: { className: GREEN, icon: CheckCircle2, label: "Aktif" },
   Nonaktif: { className: NEUTRAL, icon: X, label: "Nonaktif" },
   Menunggu: { className: AMBER, icon: Clock3, label: "Menunggu" },

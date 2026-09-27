@@ -103,7 +103,7 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(9);
+    expect(state.schemaVersion).toBe(10);
     expect(selectRegisteredInstitutions(state).length).toBe(2);
   });
 });
@@ -237,6 +237,138 @@ describe("lokasi dan tindak lanjut V2-07", () => {
     expect(getState().recommendations.find((item) => item.id === "REC-RPT-0003-1")?.progress).toBe(
       25,
     );
+  });
+
+  test("rekomendasi terminal (Terverifikasi/Dibatalkan) menolak pembaruan progres", () => {
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0011-1", {
+        note: "Coba ubah yang sudah selesai.",
+        progress: 50,
+      }).ok,
+    ).toBe(false);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0009-1", {
+        note: "Coba ubah yang dibatalkan.",
+        progress: 50,
+      }).ok,
+    ).toBe(false);
+  });
+
+  test("bukti 100% menerima assetId sah dan menolak format palsu (D-21)", () => {
+    const valid = "evidence-asset-123e4567-e89b-12d3-a456-426614174000";
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Selesai dengan bukti upload.",
+        progress: 100,
+        evidenceName: "tangga.jpg",
+        evidenceAssetId: valid,
+      }).ok,
+    ).toBe(true);
+    expect(
+      getState().recommendations.find((item) => item.id === "REC-RPT-0003-1")
+        ?.completionEvidenceAssetId,
+    ).toBe(valid);
+    storeActions.resetMockData();
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Selesai dengan bukti palsu.",
+        progress: 100,
+        evidenceName: "tangga.jpg",
+        evidenceAssetId: "evidence-asset-palsu",
+      }).ok,
+    ).toBe(false);
+  });
+});
+
+describe("pembatalan tindak lanjut D-21", () => {
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
+  const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
+
+  beforeEach(() => storeActions.resetMockData());
+
+  test("alasan pendek ditolak; alasan sah membatalkan + temuan ikut + audit", () => {
+    expect(storeActions.cancelRecommendation(manager, "REC-RPT-0003-1", "pendek").ok).toBe(false);
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0003-1", "Perbaikan dialihkan ke program kerja bakti mingguan.").ok,
+    ).toBe(true);
+    const rec = getState().recommendations.find((item) => item.id === "REC-RPT-0003-1");
+    expect(rec?.status).toBe("Dibatalkan");
+    expect(rec?.canceledReason).toContain("kerja bakti");
+    expect(rec?.canceledBy).toBe("USR-003");
+    expect(rec?.canceledAt).toBeTruthy();
+    expect(
+      getState().findings.find((item) => item.recommendationId === "REC-RPT-0003-1")?.status,
+    ).toBe("Dibatalkan");
+    expect(
+      getState().auditEvents.some(
+        (event) =>
+          event.objectId === "REC-RPT-0003-1" && event.action === "Membatalkan tindak lanjut",
+      ),
+    ).toBe(true);
+    // Laporan induk tetap seperti semula (seed RPT-0003 Pending), tidak menjadi Completed.
+    expect(getState().reports.find((item) => item.id === "RPT-0003")?.handlingStatus).toBe(
+      "Pending",
+    );
+  });
+
+  test("batal dari Menunggu verifikasi bisa; dari Terverifikasi/Dibatalkan ditolak", () => {
+    expect(
+      storeActions.cancelRecommendation(otherManager, "REC-RPT-0015-1", "Tandon sudah berfungsi normal sehingga penanganan lanjutan tidak diperlukan.").ok,
+    ).toBe(true);
+    expect(
+      getState().recommendations.find((item) => item.id === "REC-RPT-0015-1")?.status,
+    ).toBe("Dibatalkan");
+    expect(
+      storeActions.cancelRecommendation(otherManager, "REC-RPT-0005-1", "Alasan pembatalan yang cukup panjang.").ok,
+    ).toBe(false);
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0009-1", "Alasan pembatalan yang cukup panjang.").ok,
+    ).toBe(false);
+  });
+
+  test("Dibatalkan menghalangi Completed otomatis pada laporan banyak temuan", () => {
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0010-2", "Jalur kabel diputuskan memakai rute lain yang sudah ada.").ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-1", {
+        note: "Selesai dan diverifikasi.",
+        progress: 100,
+        evidenceName: "kabel.jpg",
+      }).ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-1", {
+        note: "Verifikasi.",
+        verify: true,
+      }).ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-3", {
+        note: "Selesai dan diverifikasi.",
+        progress: 100,
+        evidenceName: "evakuasi.jpg",
+      }).ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-3", {
+        note: "Verifikasi.",
+        verify: true,
+      }).ok,
+    ).toBe(true);
+    // 1 Dibatalkan + 3 Terverifikasi → laporan tetap Proses, bukan Completed.
+    expect(getState().reports.find((item) => item.id === "RPT-0010")?.handlingStatus).toBe(
+      "Proses",
+    );
+  });
+
+  test("pesantren tidak dapat membatalkan di luar scope", () => {
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0013-1", "Alasan pembatalan yang cukup panjang untuk uji scope.").ok,
+    ).toBe(false);
+    expect(
+      getState().recommendations.find((item) => item.id === "REC-RPT-0013-1")?.status,
+    ).toBe("Belum ditindaklanjuti");
   });
 });
 

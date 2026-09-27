@@ -233,10 +233,10 @@ export function hitungIndexSummary(input: IndexInput, institutionCodes: string[]
 
 const URUTAN_LEVEL: Record<RiskLevel, number> = { Ekstrem: 0, Tinggi: 1, Sedang: 2, Rendah: 3 };
 
-// Temuan aktif (belum Terverifikasi) untuk panel tindak lanjut, prioritas level tertinggi dulu.
+// Temuan aktif (belum Terverifikasi/Dibatalkan) untuk panel tindak lanjut, prioritas level tertinggi dulu.
 export function pilihTemuanPrioritas(findings: RiskFinding[], limit = 4): RiskFinding[] {
   return findings
-    .filter((f) => f.status !== "Terverifikasi")
+    .filter((f) => f.status !== "Terverifikasi" && f.status !== "Dibatalkan")
     .sort(
       (a, b) =>
         URUTAN_LEVEL[a.level] - URUTAN_LEVEL[b.level] || b.observedAt.localeCompare(a.observedAt),
@@ -245,12 +245,17 @@ export function pilihTemuanPrioritas(findings: RiskFinding[], limit = 4): RiskFi
 }
 
 export function hitungRisikoTinggi(findings: RiskFinding[]): number {
-  return findings.filter((f) => f.level === "Tinggi" && f.status !== "Terverifikasi").length;
+  return findings.filter(
+    (f) => f.level === "Tinggi" && f.status !== "Terverifikasi" && f.status !== "Dibatalkan",
+  ).length;
 }
 
 export function hitungRisikoPrioritas(findings: RiskFinding[]): number {
   return findings.filter(
-    (f) => (f.level === "Tinggi" || f.level === "Ekstrem") && f.status !== "Terverifikasi",
+    (f) =>
+      (f.level === "Tinggi" || f.level === "Ekstrem") &&
+      f.status !== "Terverifikasi" &&
+      f.status !== "Dibatalkan",
   ).length;
 }
 
@@ -258,6 +263,7 @@ export type RingkasanTindakLanjut = {
   rataProgress: number | null;
   pekerjaan: number;
   terverifikasi: number;
+  dibatalkan: number;
 };
 
 export function ringkasTindakLanjut(recommendations: Recommendation[]): RingkasanTindakLanjut {
@@ -267,6 +273,7 @@ export function ringkasTindakLanjut(recommendations: Recommendation[]): Ringkasa
       : null,
     pekerjaan: recommendations.length,
     terverifikasi: recommendations.filter((r) => r.status === "Terverifikasi").length,
+    dibatalkan: recommendations.filter((r) => r.status === "Dibatalkan").length,
   };
 }
 
@@ -356,6 +363,7 @@ export function buatDashboardInsight(input: DashboardInsightInput): {
     "Berjalan",
     "Menunggu verifikasi",
     "Terverifikasi",
+    "Dibatalkan",
   ];
   const months = enamBulanSampai(input.reports.map((report) => report.createdAt));
 

@@ -41,7 +41,8 @@ test("batas titik: 0/100 sah, NaN/Infinity/di luar rentang ditolak", () => {
 test("scope general/invalid/nonaktif tidak membuka denah atau titik", () => {
   for (const code of [undefined, "PSN-tidak-ada", "PSN-0020"])
     expect(selectPublicCampusMap(getState(), code).plans).toHaveLength(0);
-  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(8);
+  // D-21: 8 temuan PSN-0018 dikurangi 1 Dibatalkan = 7 pin aktif.
+  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(7);
   storeActions.setUserStatus("USR-003", "Nonaktif");
   expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(0);
 });
@@ -53,19 +54,19 @@ test("kirim → validasi mempertahankan titik persis dan tidak mempublikasikan p
   );
   expect(result.ok).toBe(true);
   if (!result.ok || !result.id) return;
-  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(8);
+  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(7);
   storeActions.acceptReport(manager, result.id, "Tinggi", "Sedang");
   const finding = getState().findings.find((item) => item.reportId === result.id)!;
   expect(finding.locationSnapshot?.point).toEqual({ x: 0, y: 100 });
   expect(finding.locationSnapshot?.floorNote).toBe("Lantai 2");
-  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(9);
+  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(8);
   const rejected = storeActions.submitPublicReport(
     { name: "Penguji" },
     { ...input, locationSnapshot: location },
   );
   if (rejected.ok && rejected.id)
     storeActions.rejectReport(manager, rejected.id, "Titik dan kondisi perlu diperiksa kembali.");
-  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(9);
+  expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(8);
 });
 
 test("laporan tanpa titik tidak menggunakan centroid area atau 50/50", () => {
@@ -142,7 +143,7 @@ test("cluster menghitung anggota, bukan jumlah kelompok", () => {
   const items = selectPublicCampusMap(getState(), "PSN-0018").items;
   const same = items.map((item) => ({ ...item, point: { x: 20, y: 20 } }));
   expect(clusterMapItems(same)).toHaveLength(1);
-  expect(clusterMapItems(same)[0]).toHaveLength(8);
+  expect(clusterMapItems(same)[0]).toHaveLength(7);
 });
 
 test("v4 dimigrasi tanpa kehilangan laporan dan tanpa menganggap titik legacy sebagai observasi", () => {
@@ -202,6 +203,16 @@ test("multi-jawaban memakai lineage dan titik sumber masing-masing", () => {
   expect(
     findings.find((item) => item.sourceAnswerId === "IND-K3L-002")?.locationSnapshot?.point,
   ).toEqual({ x: 80, y: 80 });
+});
+
+test("temuan Dibatalkan tidak menjadi pin peta publik (D-21)", () => {
+  const items = selectPublicCampusMap(getState(), "PSN-0018").items;
+  expect(
+    getState().findings.some(
+      (item) => item.id === "RSK-RPT-0009-1" && item.status === "Dibatalkan",
+    ),
+  ).toBe(true);
+  expect(items.some((item) => item.issue.includes("Sampah dedaunan"))).toBe(false);
 });
 
 test("Completed dan arsip tidak tampil pada peta publik", () => {

@@ -136,8 +136,9 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         location: institution.location,
         index: institutionSummary.currentIndex,
         reports: institutionReports.length,
-        activeFindings: institutionFindings.filter((finding) => finding.status !== "Terverifikasi")
-          .length,
+        activeFindings: institutionFindings.filter(
+          (finding) => finding.status !== "Terverifikasi" && finding.status !== "Dibatalkan",
+        ).length,
         progress: ringkasTindakLanjut(institutionRecommendations).rataProgress,
       };
     });

@@ -1,11 +1,16 @@
+// Kelola tindak lanjut Pesantren — filter + daftar kartu (D-20, D-21).
+// Isi kartu tinggal di TindakLanjutCard; halaman ini mengatur filter dan
+// empty state yang menjelaskan penyebab kosong.
+
 import { useMemo, useState } from "react";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
-import type { Recommendation } from "~/mocks/types";
+import { useMockState } from "~/mocks/store/mock-store";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
-import { selectRecommendationsForManager } from "~/mocks/store/selectors";
+import {
+  selectRecommendationsForManager,
+  selectReportsForManager,
+} from "~/mocks/store/selectors";
 import { EmptyState } from "~/shared/components/empty-state";
-import { ProgressSlider, progressLabel, snapProgress } from "~/shared/components/progress-slider";
-import { StatusChip } from "~/shared/components/status-chip";
+import { TindakLanjutCard } from "../components/tindak-lanjut-card";
 
 export function Page() {
   const state = useMockState();
@@ -13,16 +18,34 @@ export function Page() {
   const [status, setStatus] = useState("Semua");
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
-  if (!user || user.roleId !== "pesantren" || user.institutionCodes.length !== 1)
-    return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
+  const code =
+    user?.roleId === "pesantren" && user.institutionCodes.length === 1
+      ? user.institutionCodes[0]
+      : undefined;
+  const all = useMemo(
+    () => (code ? selectRecommendationsForManager(state, code) : []),
+    [state, code],
+  );
+  const waiting = useMemo(
+    () =>
+      code
+        ? selectReportsForManager(state, code).filter(
+            (item) => item.validationStatus === "Menunggu validasi",
+          ).length
+        : 0,
+    [state, code],
+  );
   const items = useMemo(
     () =>
-      selectRecommendationsForManager(state, user.institutionCodes[0])
+      all
         .filter((x) => status === "Semua" || x.status === status)
         .filter((x) => priority === "Semua" || x.priority === priority)
-        .filter((x) => `${x.title} ${x.location}`.toLowerCase().includes(query.toLowerCase())),
-    [state, user, status, priority, query],
+        .filter((x) =>
+          `${x.id} ${x.title} ${x.location}`.toLowerCase().includes(query.toLowerCase()),
+        ),
+    [all, status, priority, query],
   );
+  if (!user || !code) return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
   return (
     <section className="flex flex-col gap-4">
       <header>
@@ -30,11 +53,12 @@ export function Page() {
         <h1 className="text-2xl font-extrabold text-heading">Tindak lanjut</h1>
         <p className="mt-1 text-sm text-secondary-text">
           Rencana tindakan mengubah laporan menjadi Proses; seluruh rekomendasi terverifikasi
-          menutupnya sebagai Completed.
+          menutupnya sebagai Completed. Yang dibatalkan tetap tercatat beserta alasannya.
         </p>
       </header>
       <div className="surface grid gap-3 p-3 md:grid-cols-3">
         <select
+          aria-label="Filter status"
           className="min-h-11 rounded border border-line-soft px-3"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
@@ -44,8 +68,10 @@ export function Page() {
           <option>Berjalan</option>
           <option>Menunggu verifikasi</option>
           <option>Terverifikasi</option>
+          <option>Dibatalkan</option>
         </select>
         <select
+          aria-label="Filter prioritas"
           className="min-h-11 rounded border border-line-soft px-3"
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
@@ -56,131 +82,31 @@ export function Page() {
           <option>Rendah</option>
         </select>
         <input
+          aria-label="Cari rekomendasi"
           className="min-h-11 rounded border border-line-soft px-3"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Cari rekomendasi atau lokasi"
+          placeholder="Cari nomor, judul, atau lokasi"
         />
       </div>
       {items.length ? (
         <div className="grid gap-3">
           {items.map((item) => (
-            <Card key={item.id} item={item} />
+            <TindakLanjutCard key={`${item.id}-${item.status}-${item.progress}`} item={item} />
           ))}
         </div>
       ) : (
-        <EmptyState title="Tidak ada tindak lanjut yang cocok" />
+        <EmptyState
+          title="Tidak ada tindak lanjut yang cocok"
+          description={
+            all.length === 0
+              ? waiting > 0
+                ? `Belum ada rencana karena ${waiting} laporan masih Menunggu validasi. Terima laporan di Validasi agar muncul di sini.`
+                : "Belum ada laporan Diterima pada pesantren ini, atau seluruhnya telah diarsipkan."
+              : "Coba ubah filter status/prioritas atau kata kunci pencarian."
+          }
+        />
       )}
     </section>
-  );
-}
-function Card({ item }: { item: Recommendation }) {
-  const user = useCurrentUser()!;
-  const [pic, setPic] = useState(item.owner);
-  const [due, setDue] = useState(item.dueDate);
-  const [progress, setProgress] = useState(() => snapProgress(item.progress));
-  const [note, setNote] = useState(item.lastNote ?? "");
-  const [evidence, setEvidence] = useState(item.completionEvidence ?? "");
-  const [message, setMessage] = useState("");
-  const save = (verify = false) => {
-    const r = storeActions.updateRecommendation(user, item.id, {
-      owner: pic,
-      dueDate: due,
-      progress,
-      note,
-      evidenceName: evidence,
-      verify,
-    });
-    setMessage(r.ok ? "Tindak lanjut tersimpan." : r.error);
-  };
-  const locked = item.status === "Menunggu verifikasi" || item.status === "Terverifikasi";
-  return (
-    <article className="surface p-4">
-      <div className="flex flex-wrap gap-2">
-        <StatusChip value={item.status} />
-        <StatusChip value={item.priority} />
-      </div>
-      <h2 className="mt-2 font-bold text-heading">{item.title}</h2>
-      <p className="mt-1 text-sm text-secondary-text">
-        {item.location} · {item.action}
-      </p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <label className="text-sm font-bold">
-          PIC
-          <input
-            className="mt-1 min-h-10 w-full rounded border border-line-soft px-3"
-            value={pic}
-            disabled={item.status !== "Belum ditindaklanjuti"}
-            onChange={(e) => setPic(e.target.value)}
-          />
-        </label>
-        <label className="text-sm font-bold">
-          Tenggat
-          <input
-            type="date"
-            className="mt-1 min-h-10 w-full rounded border border-line-soft px-3"
-            value={due}
-            disabled={item.status !== "Belum ditindaklanjuti"}
-            onChange={(e) => setDue(e.target.value)}
-          />
-        </label>
-        <div className="text-sm font-bold">
-          <span id={`progres-label-${item.id}`}>Progres (%)</span>
-          <div className="mt-1" role="group" aria-labelledby={`progres-label-${item.id}`}>
-            {item.status === "Belum ditindaklanjuti" || locked ? (
-              <p className="py-2 text-sm font-normal text-secondary-text">
-                {progress}% · {progressLabel(progress)}
-              </p>
-            ) : (
-              <ProgressSlider
-                id={`progres-${item.id}`}
-                value={progress}
-                onChange={setProgress}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-      {item.status === "Berjalan" && (
-        <label className="mt-3 block text-sm font-bold">
-          Bukti penyelesaian (wajib bila 100%)
-          <input
-            className="mt-1 min-h-10 w-full rounded border border-line-soft px-3"
-            value={evidence}
-            onChange={(e) => setEvidence(e.target.value)}
-            placeholder="contoh: perbaikan.jpg"
-          />
-        </label>
-      )}
-      <label className="mt-3 block text-sm font-bold">
-        Catatan
-        <textarea
-          className="mt-1 min-h-20 w-full rounded border border-line-soft p-3 font-normal"
-          value={note}
-          disabled={item.status === "Terverifikasi"}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </label>
-      {message && (
-        <p role="status" className="mt-2 text-sm">
-          {message}
-        </p>
-      )}
-      <div className="mt-3">
-        {item.status === "Menunggu verifikasi" ? (
-          <button className="primary-button" onClick={() => save(true)}>
-            Verifikasi Pesantren
-          </button>
-        ) : item.status !== "Terverifikasi" ? (
-          <button className="primary-button" onClick={() => save()}>
-            {item.status === "Belum ditindaklanjuti" ? "Buat rencana tindakan" : "Perbarui progres"}
-          </button>
-        ) : (
-          <p className="text-sm text-secondary-text">
-            Terverifikasi · bukti: {item.completionEvidence}
-          </p>
-        )}
-      </div>
-    </article>
   );
 }
