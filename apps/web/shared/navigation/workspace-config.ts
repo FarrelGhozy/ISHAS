@@ -36,7 +36,7 @@ export const ROLE_NAVIGATION: Record<RoleId, NavItem[]> = {
     { label: "Instrumen", path: "/validator/instrumen", icon: ListChecks },
     { label: "Dokumen instrumen", path: "/validator/dokumen-instrumen", icon: BookOpen },
     { label: "Scoring", path: "/validator/scoring", icon: Database },
-    { label: "Validasi & publikasi", path: "/validator/validasi-publikasi", icon: FileCheck2 },
+    { label: "Audit publikasi", path: "/validator/validasi-publikasi", icon: FileCheck2 },
     { label: "Data penelitian", path: "/validator/data-penelitian", icon: FileBarChart },
   ],
   pesantren: [

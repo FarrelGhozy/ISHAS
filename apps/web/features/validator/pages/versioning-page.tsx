@@ -14,9 +14,15 @@ export function Page() {
           Kelola soal, tipe jawaban, dan bobot langsung di Bank instrumen.
         </p>
       </header>
-      <div className="surface p-4">
+      <div className="surface flex flex-wrap gap-3 p-4">
         <Link className="text-button" to="/validator/instrumen">
           Buka Bank instrumen
+        </Link>
+        <Link className="text-button" to="/validator/scoring">
+          Buka Scoring
+        </Link>
+        <Link className="text-button" to="/validator/validasi-publikasi">
+          Buka Audit publikasi
         </Link>
       </div>
     </section>

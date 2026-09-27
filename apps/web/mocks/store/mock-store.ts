@@ -2076,6 +2076,104 @@ export const storeActions = {
     });
     return { ok: true };
   },
+
+  importResearchDataset(
+    actor: { id?: string; name: string; role?: string },
+    rows: { institutionCode: string; reporterName: string; scorePercent: number | null; title: string }[],
+  ): ActionResult {
+    // D-25: hanya Validator aktif; tiap baris jadi Menunggu validasi
+    // (masuk antrean Pesantren, tidak langsung publik).
+    const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengimpor dataset." };
+    }
+    if (!rows.length) {
+      return { ok: false, error: "Tidak ada baris valid untuk diimpor." };
+    }
+    if (rows.length > 200) {
+      return { ok: false, error: "Maksimal 200 baris per impor." };
+    }
+    const terdaftar = new Set(selectRegisteredInstitutions(currentState).map((i) => i.code));
+    for (const [i, row] of rows.entries()) {
+      if (!terdaftar.has(row.institutionCode)) {
+        return { ok: false, error: `Baris ${i + 1}: bukan pesantren terdaftar.` };
+      }
+      if (row.reporterName.trim().length < 2 || row.reporterName.trim().length > 100) {
+        return { ok: false, error: `Baris ${i + 1}: nama 2–100 karakter.` };
+      }
+      if (
+        row.scorePercent !== null &&
+        (!Number.isFinite(row.scorePercent) || row.scorePercent < 0 || row.scorePercent > 100)
+      ) {
+        return { ok: false, error: `Baris ${i + 1}: scorePercent 0–100.` };
+      }
+    }
+    let pertama = "";
+    setState((draft) => {
+      const bank = draft.instrument;
+      const beku: FrozenIndicator[] = (bank?.dimensions ?? []).flatMap((dimension) =>
+        dimension.indicators.map((indicator) => ({
+          id: indicator.id,
+          code: indicator.code,
+          title: indicator.title,
+          prompt: indicator.prompt,
+          dimensionId: dimension.id,
+          dimensionName: dimension.name,
+          categoryId: indicator.categoryId,
+          aspectId: indicator.aspectId,
+          answerType: indicator.answerType,
+          weight: indicator.weight ?? 1,
+          options: structuredClone(indicator.options),
+        })),
+      );
+      for (const row of rows) {
+        const n = draft.counters.report;
+        draft.counters.report = n + 1;
+        const id = `RPT-${String(n).padStart(4, "0")}`;
+        if (!pertama) {
+          pertama = id;
+        }
+        const stampedAt = nowIso();
+        draft.reports.push({
+          id,
+          channel: "penilaian-mandiri",
+          institutionCode: row.institutionCode,
+          reporterName: row.reporterName.trim(),
+          title: row.title.trim() || "Penilaian mandiri K3L (impor)",
+          description: "Baris impor dataset penelitian; menunggu validasi Pesantren.",
+          instrumentVersionId: BANK_ID,
+          instrumentChecksum: bank?.checksum,
+          scorePercent: row.scorePercent,
+          pdfGeneratedAt: stampedAt,
+          validationStatus: "Menunggu validasi",
+          severity: "Belum ditentukan",
+          priority: "Belum ditentukan",
+          handlingStatus: "Menunggu validasi",
+          createdAt: stampedAt,
+          submittedAt: stampedAt,
+          updatedAt: stampedAt,
+        });
+        draft.selfAssessmentSnapshots.push({
+          reportId: id,
+          instrumentVersionId: BANK_ID,
+          instrumentChecksum: bank?.checksum,
+          submittedAt: stampedAt,
+          answers: {},
+          frozenIndicators: beku,
+          scorePercent: row.scorePercent,
+          byDimension: {},
+        });
+        audit(draft, account, {
+          objectType: "Report",
+          objectId: id,
+          institutionCode: row.institutionCode,
+          action: "Mengimpor dataset penelitian",
+        });
+        notifyOwners(draft, row.institutionCode, id);
+      }
+    });
+    return { ok: true, id: pertama };
+  },
 };
 
 // Pembentuk kandidat temuan/rekomendasi turunan (aturan ilustratif, bukan final).
