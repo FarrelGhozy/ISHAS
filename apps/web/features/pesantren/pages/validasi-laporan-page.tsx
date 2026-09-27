@@ -193,9 +193,7 @@ function Review({
     report.channel === "penilaian-mandiri"
       ? state.selfAssessmentSnapshots.find((item) => item.reportId === report.id)
       : undefined;
-  const version = state.instrumentVersions.find(
-    (item) => item.id === (snapshot?.instrumentVersionId ?? report.instrumentVersionId),
-  );
+  const bank = state.instrument;
   const plans = state.campusPlans.filter(
     (plan) => plan.institutionCode === report.institutionCode,
   );
@@ -221,10 +219,10 @@ function Review({
         institutionName={institutionName}
         areaLabel={areaLabel}
       />
-      {snapshot && version ? (
+      {snapshot ? (
         <ReviewAnswers
           snapshot={snapshot}
-          version={version}
+          bank={bank}
           areaLabel={areaLabelMap}
           plans={plans}
         />

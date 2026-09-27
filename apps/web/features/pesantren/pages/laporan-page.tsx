@@ -45,9 +45,11 @@ export function Page() {
     const date = new Date(latest);
     return Number.isNaN(date.getTime()) ? "Sep 2026" : date.toLocaleDateString("id-ID");
   }, [reports]);
-  const dimensions =
-    state.instrumentVersions.find((x) => x.id === state.activeInstrumentVersionId)?.dimensions ??
-    [];
+  const bankDims = state.instrument?.dimensions ?? [];
+  const dimensions = bankDims.length
+    ? bankDims
+    : (state.instrumentVersions.find((x) => x.id === state.activeInstrumentVersionId)?.dimensions ??
+      []);
   const download = (kind: string) =>
     setNotice(`Simulasi unduh ${kind}: dokumen dummy tidak dibuat pada prototipe ini.`);
   const archived = state.reports.filter((x) => x.institutionCode === scope && x.archivedAt);
@@ -65,9 +67,8 @@ export function Page() {
         <p className="kicker">Ringkasan Pesantren</p>
         <h1 className="text-2xl font-extrabold text-heading">Laporan pesantren</h1>
         <p className="mt-1 text-sm text-secondary-text">
-          Periode Sep 2026 ·{" "}
-          {state.instrumentVersions.find((x) => x.id === state.activeInstrumentVersionId)?.label} ·
-          data terbaru {dataTerbaru} · oleh {user.name}
+          Periode Sep 2026 · {state.instrument.label} · data terbaru {dataTerbaru} · oleh{" "}
+          {user.name}
         </p>
         <p className="mt-1 text-sm">
           <Link className="text-button" to="/pesantren/validasi-laporan">
@@ -138,12 +139,23 @@ export function Page() {
                 {x.id} · {x.title}
               </strong>
               <StatusChip value={x.handlingStatus} />
-              <span className="text-secondary-text">
-                {x.instrumentVersionId ?? "Tanpa instrumen"}
-              </span>
+              {x.channel === "penilaian-mandiri" &&
+              x.scorePercent !== undefined &&
+              x.scorePercent !== null ? (
+                <span className="text-secondary-text">skor {Math.round(x.scorePercent)}%</span>
+              ) : (
+                <span className="text-secondary-text">
+                  {x.instrumentVersionId ?? "Tanpa instrumen"}
+                </span>
+              )}
               <span className="text-secondary-text">
                 {new Date(x.createdAt).toLocaleDateString("id-ID")}
               </span>
+              {x.channel === "penilaian-mandiri" ? (
+                <Link className="text-button" to={`/laporan/${x.id}`}>
+                  Lihat PDF
+                </Link>
+              ) : null}
               {x.handlingStatus === "Completed" ? (
                 <span className="flex w-full flex-wrap items-center gap-2">
                   <input

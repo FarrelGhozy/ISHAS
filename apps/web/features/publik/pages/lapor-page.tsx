@@ -128,20 +128,22 @@ function LaporPageContent() {
   );
   const mapError = validateMapLocation(state, values.institutionCode, values.locationSnapshot);
 
-  // D-15 cascading: opsi dari versi instrumen Published aktif (single source di seed).
-  const activeVersion = state.instrumentVersions.find(
-    (v) => v.id === state.activeInstrumentVersionId && v.status === "Published",
-  );
+  // D-15/D-24 cascading: opsi dari bank live (fallback versi warisan).
+  const bankDims = state.instrument?.dimensions ?? [];
+  const legacyDims =
+    state.instrumentVersions.find(
+      (v) => v.id === state.activeInstrumentVersionId && v.status === "Published",
+    )?.dimensions ?? [];
+  const refDims = bankDims.length ? bankDims : legacyDims;
   const categoryOptions = useMemo(
-    () =>
-      (activeVersion?.dimensions ?? []).map((d) => ({ id: d.categoryId ?? d.id, name: d.name })),
-    [activeVersion],
+    () => refDims.map((d) => ({ id: d.categoryId ?? d.id, name: d.name })),
+    [refDims],
   );
   const categoryIds = useMemo(() => categoryOptions.map((c) => c.id), [categoryOptions]);
   const aspectOptions = useMemo(() => {
-    const dim = activeVersion?.dimensions.find((d) => (d.categoryId ?? d.id) === values.categoryId);
+    const dim = refDims.find((d) => (d.categoryId ?? d.id) === values.categoryId);
     return (dim?.aspects ?? []).map((a) => ({ id: a.id, name: a.name }));
-  }, [activeVersion, values.categoryId]);
+  }, [refDims, values.categoryId]);
   const aspectIds = useMemo(() => aspectOptions.map((a) => a.id), [aspectOptions]);
 
   const errors = useMemo(

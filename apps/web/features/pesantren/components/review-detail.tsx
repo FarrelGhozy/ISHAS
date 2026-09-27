@@ -21,6 +21,11 @@ function cariIndikator(
   state: IshasState,
   indicatorId: string,
 ): { code: string; title: string } | null {
+  // D-24: bank live dulu; fallback versi warisan untuk arsip lama.
+  for (const dim of state.instrument?.dimensions ?? []) {
+    const found = dim.indicators.find((item) => item.id === indicatorId);
+    if (found) return { code: found.code, title: found.title };
+  }
   for (const version of state.instrumentVersions) {
     for (const dim of version.dimensions) {
       const found = dim.indicators.find((item) => item.id === indicatorId);
@@ -204,15 +209,16 @@ export function ReviewDetail({
         />
       </section>
 
-      {report.instrumentVersionId ? (
+      {report.channel === "penilaian-mandiri" ? (
         <section aria-label="Instrumen" className="mt-4">
           <h3 className="text-sm font-extrabold uppercase tracking-wide text-secondary-text">
             Instrumen
           </h3>
           <p className="mt-1 text-sm text-secondary-text">
-            Versi instrumen:
-            {" "}
-            {report.instrumentVersionId}
+            Bank live
+            {report.scorePercent !== undefined && report.scorePercent !== null
+              ? ` · skor beku ${Math.round(report.scorePercent)}%`
+              : ""}
           </p>
         </section>
       ) : null}

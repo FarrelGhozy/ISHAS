@@ -9,6 +9,7 @@ import { hitungRekapKategori } from "~/mocks/processors/dashboard-aggregate";
 import { K3_CATEGORIES } from "~/mocks/kategori-k3";
 import type {
   Area,
+  Instrument,
   InstrumentVersion,
   Recommendation,
   Report,
@@ -23,11 +24,14 @@ export function ScoreSummary({
   summary,
   snapshots,
   versions,
+  instrument,
 }: {
   summary: IndexSummary;
   snapshots: SelfAssessmentSnapshot[];
   versions: InstrumentVersion[];
+  instrument?: Instrument;
 }) {
+  const liveCount = instrument?.dimensions.flatMap((d) => d.indicators).length ?? 0;
   const expected = new Map(
     versions.map((version) => [
       version.id,
@@ -40,7 +44,10 @@ export function ScoreSummary({
     0,
   );
   const indicators = snapshots.reduce(
-    (total, snapshot) => total + (expected.get(snapshot.instrumentVersionId) ?? 0),
+    (total, snapshot) =>
+      total +
+      (snapshot.frozenIndicators?.length ??
+        (snapshot.instrumentVersionId === "INS-LIVE" ? liveCount : (expected.get(snapshot.instrumentVersionId) ?? 0))),
     0,
   );
   const percentage =
@@ -99,14 +106,22 @@ export function AspectAndRecap({
   areas,
   distribution,
   reports,
+  instrument,
 }: {
   findings: RiskFinding[];
   versions: InstrumentVersion[];
   areas: Area[];
   distribution: DashboardDistribution;
   reports?: Report[];
+  instrument?: Instrument;
 }) {
-  const rows = hitungRekapKategori({ reports: reports ?? [], findings, snapshots: [], versions });
+  const rows = hitungRekapKategori({
+    reports: reports ?? [],
+    findings,
+    snapshots: [],
+    versions,
+    instrument,
+  });
   const aspectItems = rows.filter((row) => row.categoryId || row.jumlahTemuan > 0);
   const maxAspect = Math.max(...aspectItems.map((row) => row.jumlahTemuan), 1);
   const areaById = new Map(areas.map((area) => [area.id, area]));
@@ -305,13 +320,21 @@ export function RekapKategoriPanel({
   findings,
   snapshots,
   versions,
+  instrument,
 }: {
   reports: Report[];
   findings: RiskFinding[];
   snapshots: SelfAssessmentSnapshot[];
   versions: InstrumentVersion[];
+  instrument?: Instrument;
 }) {
-  const rows: RekapKategori[] = hitungRekapKategori({ reports, findings, snapshots, versions });
+  const rows: RekapKategori[] = hitungRekapKategori({
+    reports,
+    findings,
+    snapshots,
+    versions,
+    instrument,
+  });
   return (
     <article className="surface min-w-0 overflow-hidden" aria-label="Rekapitulasi per kategori K3">
       <div className="p-4">
