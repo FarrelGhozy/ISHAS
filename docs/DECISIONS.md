@@ -411,3 +411,36 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   audit mencatat `Menambahkan dokumen indikator`. Ini catatan prototipe, bukan
   perubahan struktur ilmiah instrumen.
 - Dokumen terdampak: WIREFRAMES §9, FLOWS §8, DATA_MODEL §0, TODO.
+
+## D-17 — Rename peran Peneliti → Validator dan Pengelola Pesantren → Pesantren — DISETUJUI 27 September 2026
+
+- Arahan pemilik: sebutan `Peneliti` terlalu mewah; ganti menjadi `Validator`
+  dengan fungsi tetap sama (kelola instrumen, versioning, scoring, validasi &
+  publikasi, data dan dokumen indikator). Sebutan `Peneliti` tidak dipakai lagi
+  untuk peran login.
+- Arahan lanjutan pemilik: `Pengelola Pesantren` disingkat menjadi `Pesantren`
+  untuk peran akun lokal pondok. Fungsi tetap sama (validasi laporan, kelola
+  lokasi/denah, tindak lanjut, laporan scope-nya). Contoh: `/pengelola/tindak-lanjut`
+  menjadi `/pesantren/tindak-lanjut`.
+- **D-17.a — Identitas peran:** `RoleId peneliti → validator`, `RoleLabel Peneliti → Validator`;
+  `RoleId pengelola → pesantren`, `RoleLabel Pengelola Pesantren → Pesantren`.
+  Email demo `peneliti@ishas.demo → validator@ishas.demo`,
+  `peneliti2@ → validator2@`, `pengelola@ → pesantren@`, `pengelola2@ → pesantren2@`.
+  Nama orang tetap (gelar `Dr.` dilepas agar tidak mewah).
+- **D-17.b — Route workspace:** `/peneliti/* → /validator/*` (7 route);
+  `/pengelola/* → /pesantren/*` (4 route: `validasi-laporan`, `lokasi`,
+  `tindak-lanjut`, `laporan`). URL lama `/peneliti/*` dan `/pengelola/*`
+  dialihkan ke URL baru. Profil publik `/pesantren/:kode` tetap; route statis
+  workspace (`/pesantren/validasi-laporan` dsb) lebih diutamakan daripada
+  `:kode` dinamis.
+- **D-17.c — Bedakan dari istilah lama:** peran `Pesantren` (akun) dibedakan dari
+  `Pesantren terdaftar` (lembaga Aktif + punya akun Pesantren aktif). Kata
+  `validator` pada `validatedBy/nama validator/PIC/Divalidasi oleh` tetap merujuk
+  aksi akun Pesantren yang memoderasi laporan, bukan peran Validator instrumen.
+  Kata kerja `mengelola/dikelola/pengelolaan` dan frasa ilmiah `tim penelitian`
+  tidak diganti.
+- **D-17.d — Migrasi:** schema mock `v7 → v8`; mapping `roleId` lama ke baru pada
+  `users`, `reporterAccountEmail`, `targetUrl` notifikasi, dan `validatedByRole`
+  (`Pengelola Pesantren → Pesantren`); reset demo kembali ke seed baru.
+- Dokumen terdampak: AGENTS (istilah), README, ROLES, ROUTES, FLOWS, DATA_MODEL,
+  WIREFRAMES, TEST_PLAN, TODO, planning stage, dan seluruh `apps/web/` role-aware.

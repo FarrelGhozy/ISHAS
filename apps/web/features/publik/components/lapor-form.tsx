@@ -106,7 +106,7 @@ export function LaporForm(props: Props) {
         />
         <p id="lapor-nama-hint" className={HINT}>
           {isPrefilledManager
-            ? "Terisi otomatis dari akun Pengelola Pesantren — tetap dapat diubah. "
+            ? "Terisi otomatis dari akun Pesantren — tetap dapat diubah. "
             : null}
           Nama selalu dicatat dan tampil apa adanya secara internal; tidak ditampilkan di dashboard
           publik.
@@ -272,7 +272,7 @@ export function LaporForm(props: Props) {
       </div>
       <p className={HINT}>
         Opsional: memilih kategori memfilter aspek; memilih aspek memfilter indikator. Tingkat
-        risiko tetap ditentukan pengelola saat validasi.
+        risiko tetap ditentukan akun Pesantren saat validasi.
       </p>
       <div>
         <label htmlFor="lapor-judul" className={LABEL}>

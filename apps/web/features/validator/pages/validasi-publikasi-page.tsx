@@ -15,8 +15,8 @@ export function Page() {
         </p>
       </header>
       <div className="scope-banner">
-        Keputusan menerima atau menolak laporan tetap berada pada Pengelola Pesantren sesuai lingkup
-        lembaga. Peneliti mengaudit kesiapan publikasi.
+        Keputusan menerima atau menolak laporan tetap berada pada akun Pesantren sesuai lingkup
+        lembaga. Validator mengaudit kesiapan publikasi.
       </div>
       <div className="surface divide-y divide-line">
         {assessments.map((x) => {

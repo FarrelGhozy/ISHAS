@@ -1,8 +1,8 @@
 export function Page() {
   const rows = [
     ["Publik", "Baca hasil tervalidasi; lapor dan penilaian mandiri"],
-    ["Pengelola Pesantren", "Kelola scope sendiri; validasi, lokasi, tindak lanjut"],
-    ["Peneliti", "Kelola instrumen dan data penelitian"],
+    ["Pesantren", "Kelola scope sendiri; validasi, lokasi, tindak lanjut"],
+    ["Validator", "Kelola instrumen dan data penelitian"],
     ["Super Admin", "Kelola pesantren, pengguna, audit, dan pengaturan"],
   ];
   return (

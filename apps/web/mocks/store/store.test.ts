@@ -14,9 +14,9 @@ describe("selector", () => {
     storeActions.resetMockData();
   });
 
-  test("terdaftar = Aktif DAN pengelola aktif", () => {
+  test("terdaftar = Aktif DAN pesantren aktif", () => {
     const codes = selectRegisteredInstitutions(getState()).map((i) => i.code);
-    // PSN-0020 Aktif tanpa pengelola → tidak terdaftar; PSN-0021 Persiapan → tidak.
+    // PSN-0020 Aktif tanpa pesantren → tidak terdaftar; PSN-0021 Persiapan → tidak.
     expect(codes).toEqual(["PSN-0018", "PSN-0019"]);
   });
 
@@ -61,7 +61,7 @@ describe("aturan aksi", () => {
 
   test("terima dengan placeholder Belum ditentukan ditolak sistem", () => {
     const result = storeActions.acceptReport(
-      { id: "USR-003", name: "uji", role: "Pengelola Pesantren" },
+      { id: "USR-003", name: "uji", role: "Pesantren" },
       "RPT-0001",
       "Belum ditentukan" as never,
       "Belum ditentukan" as never,
@@ -77,7 +77,7 @@ describe("aturan aksi", () => {
 
   test("tolak dengan alasan sah mengubah status + menyimpan alasan", () => {
     const result = storeActions.rejectReport(
-      { name: "uji", id: "USR-003", role: "Pengelola Pesantren" },
+      { name: "uji", id: "USR-003", role: "Pesantren" },
       "RPT-0001",
       "Temuan sudah ditangani sejak Agustus.",
     );
@@ -87,9 +87,9 @@ describe("aturan aksi", () => {
     expect(report?.handlingStatus).toBe("Ditolak");
   });
 
-  test("pengelola tidak dapat memoderasi laporan di luar scope", () => {
+  test("pesantren tidak dapat memoderasi laporan di luar scope", () => {
     const result = storeActions.acceptReport(
-      { id: "USR-003", name: "Uji", role: "Pengelola Pesantren" },
+      { id: "USR-003", name: "Uji", role: "Pesantren" },
       "RPT-0002",
       "Sedang",
       "Sedang",
@@ -103,13 +103,13 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(7);
+    expect(state.schemaVersion).toBe(8);
     expect(selectRegisteredInstitutions(state).length).toBe(2);
   });
 });
 
 describe("lifecycle tindak lanjut V2-06", () => {
-  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pengelola Pesantren" };
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
 
   beforeEach(() => storeActions.resetMockData());
 
@@ -158,7 +158,7 @@ describe("lifecycle tindak lanjut V2-06", () => {
     expect(storeActions.deleteCompletedReport(manager, "RPT-0005", "Arsip laporan lama").ok).toBe(
       false,
     );
-    const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pengelola Pesantren" };
+    const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
     expect(
       storeActions.deleteCompletedReport(otherManager, "RPT-0005", "Arsip laporan lama").ok,
     ).toBe(true);
@@ -175,7 +175,7 @@ describe("lifecycle tindak lanjut V2-06", () => {
 });
 
 describe("lokasi dan tindak lanjut V2-07", () => {
-  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pengelola Pesantren" };
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
 
   beforeEach(() => storeActions.resetMockData());
 
@@ -217,7 +217,7 @@ describe("lokasi dan tindak lanjut V2-07", () => {
     );
     expect(
       storeActions.updateRecommendation(manager, id, {
-        note: "Bukti diperiksa pengelola.",
+        note: "Bukti diperiksa pesantren.",
         verify: true,
       }).ok,
     ).toBe(true);
@@ -261,11 +261,11 @@ describe("lapor-cepat V2-03", () => {
     );
     expect(audit).toBeDefined();
 
-    // Notifikasi hanya ke pengelola pemilik scope (USR-003), bukan ke scope lain.
+    // Notifikasi hanya ke pesantren pemilik scope (USR-003), bukan ke scope lain.
     const notes = getState().notifications.filter((n) => n.sourceObjectId === result.id);
     expect(notes.length).toBe(1);
     expect(notes[0].recipientAccountId).toBe("USR-003");
-    expect(notes[0].targetUrl).toBe("/pengelola/validasi-laporan");
+    expect(notes[0].targetUrl).toBe("/pesantren/validasi-laporan");
   });
 
   test("laporan baru TIDAK masuk selector validated (dashboard steril)", () => {
@@ -321,13 +321,13 @@ describe("lapor-cepat V2-03", () => {
     expect(getState().reports.filter((r) => r.id === first.id).length).toBe(1);
   });
 
-  test("pengelola yang mengirim → email akun tersimpan, nama laporan tetap editable", () => {
+  test("pesantren yang mengirim → email akun tersimpan, nama laporan tetap editable", () => {
     const result = storeActions.submitPublicReport(
       {
         id: "USR-003",
         name: "Ust. K.H. Mustofa Kamal",
-        email: "pengelola@ishas.demo",
-        role: "Pengelola Pesantren",
+        email: "pesantren@ishas.demo",
+        role: "Pesantren",
       },
       { ...VALID, reporterName: "Nama diubah manual" },
     );
@@ -335,7 +335,7 @@ describe("lapor-cepat V2-03", () => {
     if (!result.ok) return;
     const report = getState().reports.find((r) => r.id === result.id);
     expect(report?.reporterName).toBe("Nama diubah manual");
-    expect(report?.reporterAccountEmail).toBe("pengelola@ishas.demo");
+    expect(report?.reporterAccountEmail).toBe("pesantren@ishas.demo");
   });
 });
 
@@ -349,7 +349,7 @@ describe("regresi review frontend", () => {
   };
   beforeEach(() => storeActions.resetMockData());
 
-  test("Super Admin/Peneliti dan akun tak dikenal ditolak di lapisan data", () => {
+  test("Super Admin/Validator dan akun tak dikenal ditolak di lapisan data", () => {
     for (const id of ["USR-001", "USR-002", "USR-tidak-ada"]) {
       expect(storeActions.submitPublicReport({ id, name: "uji" }, input).ok).toBe(false);
     }

@@ -18,7 +18,7 @@ const descriptors = Object.fromEntries(
   ]),
 );
 const assets = new Map<string, unknown>();
-const manager = { id: "USR-003", name: "Penguji", role: "Pengelola Pesantren" };
+const manager = { id: "USR-003", name: "Penguji", role: "Pesantren" };
 const input = {
   institutionCode: "PSN-0018",
   reporterName: "Penguji",

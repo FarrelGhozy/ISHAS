@@ -23,7 +23,7 @@ tidak pernah warna saja. Warna aksen grafik boleh berbeda tetapi bukan satu-satu
 ## 2. Aspek / sub-aspek awal (ID stabil)
 
 Aspek adalah pengelompokan indikator di dalam satu kategori. Daftar awal berasal dari
-contoh cakupan brief; Peneliti dapat menambah aspek lewat Draft instrumen (FLOWS §7).
+contoh cakupan brief; Validator dapat menambah aspek lewat Draft instrumen (FLOWS §7).
 
 | Aspek ID | Kategori | Nama aspek |
 |---|---|---|
@@ -70,7 +70,7 @@ Aturan turunan temuan (ilustratif, sama seperti D-14.b, diperluas ke indikator b
 - `likert-1-5` bernilai `1/2` → temuan.
 - `likert-1-2-tidak` bernilai `1/Tidak` → temuan (nilai `2` = Sesuai, bukan temuan).
 - `boolean-ya-tidak` bernilai `Tidak` → temuan.
-- `severity/priority` tetap **hanya pengelola saat Terima** (FLOWS §4, D-15.c).
+- `severity/priority` tetap **hanya akun Pesantren saat Terima** (FLOWS §4, D-15.c).
   Form publik tidak berisi Likelihood/Severity/Risk Score/Rekomendasi.
 
 ## 4. Mapping dimensi lama → struktur baru
@@ -127,7 +127,7 @@ Alur lapor-cepat (opsional, tidak wajib — laporan tanpa kategori tetap sah):
 ```
 Lokasi → Kategori → Aspek → Indikator terkait (opsional)
   → Kondisi/Judul → Temuan/Deskripsi → Potensi bahaya (deskripsi)
-  → Foto → Kirim (risiko diisi pengelola saat validasi)
+  → Foto → Kirim (risiko diisi akun Pesantren saat validasi)
 ```
 
 - Memilih kategori memfilter aspek; memilih aspek memfilter indikator (cascading).

@@ -21,16 +21,16 @@ dan menjalankan uji rilis penuh sebelum meminta persetujuan.
 ### 1. Super Admin (`/admin/*`, login admin)
 
 - [x] `pesantren`: tambah (`Persiapan`) + daftar status dan onboarding.
- (konfirmasi + penjelasan efek ke pemilih publik); detail (pengelola, akun, status assessment/onboarding).
-- [x] `pengguna`: buat akun `Pengelola Pesantren` pada satu pesantren Aktif; email duplikat ditolak.
+ (konfirmasi + penjelasan efek ke pemilih publik); detail (akun Pesantren, status assessment/onboarding).
+- [x] `pengguna`: buat akun `Pesantren` pada satu pesantren Aktif; email duplikat ditolak.
  email duplikat ditolak; TIDAK ADA opsi Asesor di dropdown/filter/fallback.
-- [ ] Menambah pengelola pertama yang aktif → pesantren MUNCUL di pemilih publik (dibuktikan end-to-end);
- menonaktifkan pengelola terakhir → pesantren HILANG dari pemilih (arsip `Diterima` tetap tampil).
+- [ ] Menambah akun Pesantren pertama yang aktif → pesantren MUNCUL di pemilih publik (dibuktikan end-to-end);
+ menonaktifkan akun Pesantren terakhir → pesantren HILANG dari pemilih (arsip `Diterima` tetap tampil).
 - [x] `hak-akses`: matriks 3 peran + publik.
 - [x] `audit-log`: pencarian jejak kirim/terima/tolak/status/hapus .
 - [ ] `pengaturan`: preferensi non-ilmiah + konfirmasi tindakan berisiko + reset data demo ke seed.
 
-### 2. Peneliti — verifikasi fungsi dan hubungan data
+### 2. Validator — verifikasi fungsi dan hubungan data
 
 - [ ] Pastikan tidak ada teks/dependensi asesor tersisa; Published aktif menjadi sumber Stage 08
  (uji publikasi versi baru → self-assessment memakai snapshot baru tanpa merusak hasil lama).

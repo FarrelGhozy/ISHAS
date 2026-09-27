@@ -109,7 +109,7 @@ export function StatCards({
       <StatCard
         label="Terverifikasi"
         value={String(tindakLanjut.terverifikasi)}
-        sub="Oleh pengelola pondok"
+        sub="Oleh Pesantren"
         icon={CheckCircle2}
         tone="stat-blue"
       />

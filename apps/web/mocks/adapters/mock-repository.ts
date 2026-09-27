@@ -126,7 +126,7 @@ export const mockRepository = {
       const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
       if (
         actor.id
-          ? !account || account.status !== "Aktif" || account.roleId !== "pengelola"
+          ? !account || account.status !== "Aktif" || account.roleId !== "pesantren"
           : actor.role && !["Publik", "Publik / Pelapor"].includes(actor.role)
       )
         return { ok: false, error: "Akun ini tidak dapat mengunggah bukti pelaporan." };
@@ -159,7 +159,7 @@ export const mockRepository = {
       };
     }
   },
-  // D-16: pustaka detail indikator — hanya Peneliti aktif yang dapat mengunggah.
+  // D-16: pustaka detail indikator — hanya Validator aktif yang dapat mengunggah.
   async uploadInstrumentDoc(
     actor: ReportActor,
     indicatorId: string,
@@ -173,8 +173,8 @@ export const mockRepository = {
         return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
       const state = getState();
       const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
-      if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
-        return { ok: false, error: "Hanya akun Peneliti aktif yang dapat mengunggah berkas." };
+      if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+        return { ok: false, error: "Hanya akun Validator aktif yang dapat mengunggah berkas." };
       }
       const invalid = validateInstrumentDocFile(file);
       if (invalid) return { ok: false, error: invalid };
@@ -221,8 +221,8 @@ export const mockRepository = {
         return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
       const state = getState();
       const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
-      if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
-        return { ok: false, error: "Hanya akun Peneliti aktif yang dapat menambah dokumen." };
+      if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+        return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah dokumen." };
       }
       const invalid = validateInstrumentDocFile(file);
       if (invalid) return { ok: false, error: invalid };
@@ -268,8 +268,8 @@ export const mockRepository = {
     const account = viewer.id ? state.users.find((item) => item.id === viewer.id) : undefined;
     const canOpen =
       doc.visibility === "Public" ||
-      (account?.status === "Aktif" && account?.roleId === "peneliti");
-    if (!canOpen) return { ok: false, error: "Berkas Privat hanya dapat dibuka oleh Peneliti." };
+      (account?.status === "Aktif" && account?.roleId === "validator");
+    if (!canOpen) return { ok: false, error: "Berkas Privat hanya dapat dibuka oleh Validator." };
     try {
       if (isSeedInstrumentDocAssetId(doc.assetId)) {
         const found = state.instrumentVersions
@@ -285,7 +285,7 @@ export const mockRepository = {
       if (!asset)
         return {
           ok: false,
-          error: "Berkas tidak tersedia pada perangkat ini. Unggah ulang melalui ruang Peneliti.",
+            error: "Berkas tidak tersedia pada perangkat ini. Unggah ulang melalui ruang Validator.",
         };
       return { ok: true, blob: asset.blob, fileName: doc.fileName };
     } catch {

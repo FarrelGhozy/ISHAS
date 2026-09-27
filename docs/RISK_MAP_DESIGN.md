@@ -10,7 +10,7 @@ awal; status hasil nyata dan batas saat ini di [stage Risk Map](../planning/STAG
 
 Sudah diputuskan pemilik:
 
-- Pengelola Pesantren mengunggah satu denah gambaran besar pesantren.
+- Pesantren mengunggah satu denah gambaran besar pesantren.
 - Denah digunakan untuk menentukan titik lokasi pada pelaporan dan menampilkan
   lokasi temuan di dashboard publik.
 - Peta tidak ditampilkan pada scope semua pesantren; pengguna memilih satu pesantren dahulu.
@@ -38,7 +38,7 @@ Warna lanskap tidak menyatakan tingkat risiko. Identitas UI tetap marun;
 risiko memakai Tinggi/Sedang/Rendah dengan label dan ikon. Tidak menambah Ekstrem.
 
 Ilustrasi harus berlabel `Ilustrasi denah · bukan lokasi sebenarnya` saat dipakai
-sebagai demo. Denah sungguhan kelak harus diunggah dan diperiksa pengelola.
+sebagai demo. Denah sungguhan kelak harus diunggah dan diperiksa akun Pesantren.
 
 ## 3. Penempatan di dashboard
 
@@ -74,7 +74,7 @@ denah; tidak bergantung pada hover dan tidak menyebabkan scroll horizontal halam
 ## 4. Alur ujung-ke-ujung
 
 ```text
-Pengelola Pesantren (scope sendiri)
+Pesantren (scope sendiri)
   → unggah denah besar → pratinjau → terbitkan versi aktif
                                      ↓
 Publik / Pelapor memilih pesantren → area/keterangan lokasi → pilih titik
@@ -92,7 +92,7 @@ Semua temuan selesai → laporan Completed/arsip → tidak tampil publik
 
 ### A. Pengelolaan denah
 
-1. `/pengelola/lokasi` menyediakan bagian `Denah Pesantren` di atas daftar area.
+1. `/pesantren/lokasi` menyediakan bagian `Denah Pesantren` di atas daftar area.
 2. Pengelola hanya dapat mengunggah untuk pesantren dalam scope akunnya.
 3. Usulan format PNG/JPEG/WebP, maksimum 5 MB, minimum sisi pendek 800px.
    Batas ini usulan UX, perlu diperiksa saat implementasi; SVG/PDF tidak termasuk tahap awal.
@@ -102,7 +102,7 @@ Semua temuan selesai → laporan Completed/arsip → tidak tampil publik
 6. `Terbitkan denah` membuat versi baru immutable, menyimpan gambar, dimensi asli,
    pengunggah dan waktu; satu versi aktif untuk pelaporan baru per pesantren.
 7. Versi sebelumnya tidak ditimpa/dihapus bila dirujuk laporan. Audit penerbitan
-   tetap dicatat; tidak menambah akses baca audit bagi pengelola.
+   tetap dicatat; tidak menambah akses baca audit bagi Pesantren.
 8. Crop/rotasi/penggantian gambar setelah terbit dianggap versi baru.
 9. Nama area tetap memakai ID stabil. Label yang diganti tidak mengubah lokasi historis.
 
@@ -287,7 +287,7 @@ seed teruji sebelum mengaktifkan tampilan publik baru.
 
 1. Setujui rancangan/ilustrasi dan kewajiban titik; aktifkan satu stage revisi utama.
 2. Schema, repository aset, migration/reset dan selector map yang teruji.
-3. Pengelolaan denah kampus oleh pengelola dan versi aktif/historis.
+3. Pengelolaan denah kampus oleh Pesantren dan versi aktif/historis.
 4. Shared viewer/picker; integrasikan lapor cepat dan penilaian mandiri/draft.
 5. Validasi lokasi dan turunan temuan dengan lineage jawaban yang benar.
 6. Panel dashboard + halaman peta lengkap; URL scope/versi/filter konsisten.
@@ -302,20 +302,20 @@ hasil uji stage lama tidak membuktikan fitur baru sudah lulus.
 - [ ] Peringatan menjaga denah tetap tampil sebelum memilih berkas, termasuk unggah pertama.
 - [ ] Ganti denah membuka pemberitahuan sebelum memilih berkas; Batal/Esc tidak mengubah data.
 - [ ] Pratinjau ulang menampilkan dampak dan konfirmasi final tanpa centang default.
-- [ ] Upload oleh pengelola scope sendiri berhasil; lintas pesantren ditolak.
+- [ ] Upload oleh akun Pesantren scope sendiri berhasil; lintas pesantren ditolak.
 - [ ] Denah baru tidak menimpa versi lama; gagal simpan tidak mengubah versi aktif.
 - [ ] Scope semua pesantren tidak menampilkan peta; selected invalid tidak bocor.
 - [ ] Titik lapor cepat tersimpan persis; tanpa titik tidak mendapat 50/50.
 - [ ] Multi-temuan penilaian mandiri memakai titik jawaban sumber masing-masing.
 - [ ] Menunggu validasi/Ditolak tidak muncul atau memengaruhi cluster/count publik.
-- [ ] Severity/priority saat Diterima wajib dipilih pengelola, tanpa default.
+- [ ] Severity/priority saat Diterima wajib dipilih akun Pesantren, tanpa default.
 - [ ] Publik hanya melihat whitelist; berkas denah juga bebas identitas sensitif.
 - [ ] Versi lama hanya dirender pada gambar versinya; draft usang meminta titik ulang.
 - [ ] Ganti pesantren membersihkan pilihan lama; refresh/Back/Forward konsisten.
 - [ ] Pin tepi 0/100, resize, letterbox, zoom, keyboard dan ponsel diuji.
 - [ ] Cluster/count, daftar tanpa titik dan distribusi risiko memakai unit identik.
 - [ ] Completed seluruh temuan mengarsip laporan dan menghilangkan pin publik.
-- [ ] Pesantren Nonaktif/kehilangan pengelola tidak dapat dilaporkan/ditampilkan publik.
+- [ ] Pesantren Nonaktif/kehilangan akun Pesantren tidak dapat dilaporkan/ditampilkan publik.
 - [ ] Denah tidak ada/gagal muat tetap menyediakan alur lokasi teks yang jelas.
 - [ ] Desktop 1440px, tablet 834px, ponsel 390px tanpa overflow; label tetap terbaca.
 

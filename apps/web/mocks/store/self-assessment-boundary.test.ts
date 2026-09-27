@@ -13,8 +13,8 @@ import type { SelfAssessmentDraft } from "../types";
 const PENGELOLA = {
   id: "USR-003",
   name: "Ust. K.H. Mustofa Kamal",
-  email: "pengelola@ishas.demo",
-  role: "Pengelola Pesantren",
+  email: "pesantren@ishas.demo",
+  role: "Pesantren",
 };
 const ADMIN = { id: "USR-001", name: "Nadia Permata", role: "Super Admin" };
 
@@ -72,11 +72,11 @@ function simpan(id: string, overrides: Partial<SelfAssessmentDraft> = {}) {
 describe("boundary pengirim penilaian-mandiri (D-03)", () => {
   beforeEach(() => storeActions.resetMockData());
 
-  test("admin/peneliti/akun tak dikenal ditolak di lapisan data", () => {
+  test("admin/validator/akun tak dikenal ditolak di lapisan data", () => {
     simpan("SELF-PSN-0018");
     for (const actor of [
       ADMIN,
-      { id: "USR-002", name: "Dr. M. Ridwan", role: "Peneliti" },
+      { id: "USR-002", name: "M. Ridwan", role: "Validator" },
       { id: "USR-tidak-ada", name: "uji" },
     ]) {
       expect(storeActions.submitSelfAssessment(actor, "SELF-PSN-0018").ok).toBe(false);
@@ -84,7 +84,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     expect(getState().reports.length).toBe(16);
   });
 
-  test("publik tanpa login dan pengelola aktif lolos + email akun tersimpan", () => {
+  test("publik tanpa login dan pesantren aktif lolos + email akun tersimpan", () => {
     simpan("SELF-PSN-0018");
     const publik = storeActions.submitSelfAssessment(
       { name: "Warga", role: "Publik" },
@@ -101,7 +101,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     expect(kelola.ok).toBe(true);
     if (!kelola.ok || !kelola.id) return;
     expect(getState().reports.find((r) => r.id === kelola.id)?.reporterAccountEmail).toBe(
-      "pengelola@ishas.demo",
+      "pesantren@ishas.demo",
     );
   });
 });
@@ -210,7 +210,7 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
   });
 
   test("tindak lanjut laporan yang sudah diarsip ditolak", () => {
-    const other = { id: "USR-004", name: "H. Siti Aminah", role: "Pengelola Pesantren" };
+    const other = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
     const id = "REC-RPT-0005-1"; // RPT-0005 Completed, rekomendasi Terverifikasi
     expect(
       storeActions.updateRecommendation(other, id, {
@@ -235,7 +235,7 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
 describe("publik D-08 + arsip di agregat", () => {
   beforeEach(() => storeActions.resetMockData());
 
-  test("hasil pesantren yang kehilangan pengelola hilang dari publik, tetap internal", () => {
+  test("hasil pesantren yang kehilangan pesantren hilang dari publik, tetap internal", () => {
     expect(
       selectPublicReports(getState(), null).some((r) => r.institutionCode === "PSN-0018"),
     ).toBe(true);
@@ -271,7 +271,7 @@ describe("publik D-08 + arsip di agregat", () => {
   });
 
   test("archiveCompletedReport + alias lama mengarsipkan (bukan menghapus)", () => {
-    const other = { id: "USR-004", name: "H. Siti Aminah", role: "Pengelola Pesantren" };
+    const other = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
     expect(storeActions.archiveCompletedReport(other, "RPT-0005", "abcd").ok).toBe(false);
     expect(storeActions.archiveCompletedReport(other, "RPT-0005", "Arsip akhir periode").ok).toBe(
       true,

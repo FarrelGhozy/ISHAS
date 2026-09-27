@@ -149,7 +149,7 @@ export function CampusPlanManager({ user }: { user: User }) {
               <p className="mt-2 text-sm text-secondary-text">
                 {activePlan.illustration
                   ? "Ilustrasi denah · bukan lokasi sebenarnya"
-                  : "Denah unggahan pengelola"}{" "}
+                  : "Denah unggahan Pesantren"}{" "}
                 · {affected} temuan bertitik terkait
               </p>
             </>

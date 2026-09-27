@@ -8,7 +8,7 @@ export function Page() {
   const state = useMockState();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [roleId, setRoleId] = useState<"admin" | "peneliti" | "pengelola">("pengelola");
+  const [roleId, setRoleId] = useState<"admin" | "validator" | "pesantren">("pesantren");
   const [institutionCode, setInstitutionCode] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Semua");
@@ -25,12 +25,12 @@ export function Page() {
     [state.users, status, query],
   );
   const roleLabel =
-    roleId === "admin" ? "Super Admin" : roleId === "peneliti" ? "Peneliti" : "Pengelola Pesantren";
+    roleId === "admin" ? "Super Admin" : roleId === "validator" ? "Validator" : "Pesantren";
   const add = () => {
     const n = Math.max(0, ...state.users.map((x) => Number(x.id.replace(/\D/g, "")))) + 1;
     const institution = state.institutions.find((x) => x.code === institutionCode);
     const scopeName =
-      roleId === "pengelola"
+      roleId === "pesantren"
         ? (institution?.name ?? "")
         : roleId === "admin"
           ? "Seluruh sistem"
@@ -46,10 +46,10 @@ export function Page() {
         .join("")
         .slice(0, 2)
         .toUpperCase(),
-      role: roleLabel as "Super Admin" | "Peneliti" | "Pengelola Pesantren",
+      role: roleLabel as "Super Admin" | "Validator" | "Pesantren",
       roleId,
       institution: scopeName,
-      institutionCodes: roleId === "pengelola" ? (institutionCode ? [institutionCode] : []) : [],
+      institutionCodes: roleId === "pesantren" ? (institutionCode ? [institutionCode] : []) : [],
       status: "Aktif",
       lastActive: new Date().toISOString(),
     });
@@ -70,7 +70,7 @@ export function Page() {
         <p className="kicker">Administrasi</p>
         <h1 className="text-2xl font-extrabold text-heading">Pengguna</h1>
         <p className="text-sm text-secondary-text">
-          Buat akun Super Admin, Peneliti, dan Pengelola Pesantren (D-09). Pengelola wajib satu
+          Buat akun Super Admin, Validator, dan Pesantren (D-09). Pesantren wajib satu
           pesantren aktif.
         </p>
       </header>
@@ -101,8 +101,8 @@ export function Page() {
               value={roleId}
               onChange={(e) => setRoleId(e.target.value as typeof roleId)}
             >
-              <option value="pengelola">Pengelola Pesantren</option>
-              <option value="peneliti">Peneliti</option>
+              <option value="pesantren">Pesantren</option>
+              <option value="validator">Validator</option>
               <option value="admin">Super Admin</option>
             </select>
           </label>
@@ -111,11 +111,11 @@ export function Page() {
             <select
               className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
               value={institutionCode}
-              disabled={roleId !== "pengelola"}
+              disabled={roleId !== "pesantren"}
               onChange={(e) => setInstitutionCode(e.target.value)}
             >
               <option value="">
-                {roleId === "pengelola" ? "Pilih pesantren" : "Tanpa scope lembaga"}
+                {roleId === "pesantren" ? "Pilih pesantren" : "Tanpa scope lembaga"}
               </option>
               {state.institutions
                 .filter((x) => x.status === "Aktif")

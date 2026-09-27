@@ -12,8 +12,8 @@ export function Page() {
   const [status, setStatus] = useState("Semua");
   const [priority, setPriority] = useState("Semua");
   const [query, setQuery] = useState("");
-  if (!user || user.roleId !== "pengelola" || user.institutionCodes.length !== 1)
-    return <EmptyState title="Halaman ini hanya untuk Pengelola Pesantren" />;
+  if (!user || user.roleId !== "pesantren" || user.institutionCodes.length !== 1)
+    return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
   const items = useMemo(
     () =>
       selectRecommendationsForManager(state, user.institutionCodes[0])
@@ -164,7 +164,7 @@ function Card({ item }: { item: Recommendation }) {
       <div className="mt-3">
         {item.status === "Menunggu verifikasi" ? (
           <button className="primary-button" onClick={() => save(true)}>
-            Verifikasi pengelola
+            Verifikasi Pesantren
           </button>
         ) : item.status !== "Terverifikasi" ? (
           <button className="primary-button" onClick={() => save()}>

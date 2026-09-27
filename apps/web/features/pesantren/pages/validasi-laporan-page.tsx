@@ -18,8 +18,8 @@ export function ValidasiLaporanPage() {
   const [filter, setFilter] = useState("Menunggu validasi");
   const [query, setQuery] = useState("");
   const [report, setReport] = useState<Report | null>(null);
-  if (!user || user.roleId !== "pengelola" || user.institutionCodes.length !== 1)
-    return <EmptyState title="Halaman ini hanya untuk Pengelola Pesantren" />;
+  if (!user || user.roleId !== "pesantren" || user.institutionCodes.length !== 1)
+    return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
   const code = user.institutionCodes[0];
   const institution = selectInstitutionByCode(state, code);
   const reports = useMemo(

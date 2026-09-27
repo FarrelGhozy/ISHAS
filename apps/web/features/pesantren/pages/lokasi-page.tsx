@@ -17,8 +17,8 @@ export function Page() {
   const [zone, setZone] = useState("");
   const [newFloor, setNewFloor] = useState("");
   const [message, setMessage] = useState("");
-  if (!user || user.roleId !== "pengelola" || user.institutionCodes.length !== 1)
-    return <EmptyState title="Halaman ini hanya untuk Pengelola Pesantren" />;
+  if (!user || user.roleId !== "pesantren" || user.institutionCodes.length !== 1)
+    return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
   const buildings = state.buildings.filter((x) => x.institutionCode === user.institutionCodes[0]);
   const areas = state.areas.filter((x) => x.institutionCode === user.institutionCodes[0]);
   const run = (action: () => { ok: boolean; error?: string }) => {

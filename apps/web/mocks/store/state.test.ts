@@ -40,7 +40,7 @@ test("state entri instrumen null tidak melempar dan pulih ke seed", () => {
   expect(loadState()).toEqual(SEED);
 });
 
-test("state v6 tanpa instrumentDocs dimigrasi ke v7 berisi seed docs", () => {
+test("state v6 tanpa instrumentDocs dimigrasi ke v8 berisi seed docs", () => {
   const v6 = structuredClone(SEED) as unknown as Record<string, unknown>;
   delete v6["instrumentDocs"];
   v6["schemaVersion"] = 6;
@@ -53,11 +53,11 @@ test("state v6 tanpa instrumentDocs dimigrasi ke v7 berisi seed docs", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(7);
+  expect(loaded.schemaVersion).toBe(8);
   expect(loaded.instrumentDocs).toEqual(SEED.instrumentDocs);
 });
 
-test("state v5 valid dimigrasi ke v7 tanpa kehilangan record", () => {
+test("state v5 valid dimigrasi ke v8 tanpa kehilangan record", () => {
   const v5 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 5 });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
@@ -68,6 +68,6 @@ test("state v5 valid dimigrasi ke v7 tanpa kehilangan record", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(7);
+  expect(loaded.schemaVersion).toBe(8);
   expect(loaded.reports.length).toBe(SEED.reports.length);
 });

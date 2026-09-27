@@ -1,4 +1,4 @@
-// D-16: kelola berkas PDF per indikator (ruang Peneliti).
+// D-16: kelola berkas PDF per indikator (ruang Validator).
 // Independen dari versioning instrumen; default unggahan = Privat.
 
 import { useMemo, useRef, useState } from "react";

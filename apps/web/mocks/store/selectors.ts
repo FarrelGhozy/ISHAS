@@ -10,7 +10,7 @@ export function selectRegisteredInstitutions(state: {
   const activeManagerCodes = new Set(
     state.users
       .filter(
-        (u) => u.roleId === "pengelola" && u.status === "Aktif" && u.institutionCodes.length === 1,
+        (u) => u.roleId === "pesantren" && u.status === "Aktif" && u.institutionCodes.length === 1,
       )
       .flatMap((u) => u.institutionCodes),
   );
@@ -22,7 +22,7 @@ export function selectValidatedReports(state: { reports: Report[] }): Report[] {
 }
 
 // Bacaan publik (D-08): hanya laporan Diterima + belum diarsip + milik pesantren
-// yang MASIH terdaftar. Hasil lama pesantren Nonaktif/kehilangan pengelola tidak
+// yang MASIH terdaftar. Hasil lama pesantren Nonaktif/kehilangan akun Pesantren tidak
 // tampil publik; data tetap tersimpan untuk baca internal sesuai scope.
 export function selectPublicReports(
   state: { institutions: Institution[]; reports: Report[]; users: User[] },
@@ -47,7 +47,7 @@ export function selectValidationQueue(
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-// Bacaan kelola pengelola (internal, bukan publik): seluruh laporan milik satu
+// Bacaan kelola Pesantren (internal, bukan publik): seluruh laporan milik satu
 // pesantren, terbaru dulu. Filter status dilakukan di UI; mutasi tetap lewat
 // setStateReport (cek scope + akun aktif).
 export function selectReportsForManager(
@@ -82,7 +82,7 @@ export function selectReportsByInstitution(
   state: { institutions: Institution[]; reports: Report[]; users: User[] },
   institutionCode: string | null,
 ): Report[] {
-  // Alias internal = bacaan publik (D-08). Test lama + dashboard peneliti lewat sini.
+  // Alias internal = bacaan publik (D-08). Test lama + dashboard validator lewat sini.
   return selectPublicReports(state, institutionCode);
 }
 

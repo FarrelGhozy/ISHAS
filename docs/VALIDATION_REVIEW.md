@@ -38,7 +38,7 @@ serta hubungan laporan–temuan–tindak lanjut. Kelengkapan daftar halaman belu
 | V-16 | Model area/lantai/denah memakai beberapa label sebagai relasi; versi denah lama tidak mempunyai entitas riwayat. `RiskFinding` mewajibkan versi instrumen dan koordinat untuk semua kanal. | DATA_REQUIREMENTS merinci ID lantai/versi denah, lokasi tanpa denah, dan kanal tanpa instrumen. |
 | V-17 | Stage 08 menulis `observedAt` memakai nama pelapor; field tersebut semestinya waktu observasi. | Dikoreksi menjadi waktu; identitas pelapor disimpan terpisah. |
 | V-18 | URL pesantren tidak valid diabaikan menjadi default, tetapi test meminta kirim ditolak. Draft berisiko dikirim ke lembaga berbeda. | Dikoreksi: jangan mengganti sasaran form diam-diam; bedakan filter baca dan tujuan kiriman. |
-| V-19 | Klaim peran Peneliti tidak berubah tidak memetakan dataset, status `Final` lama, versi aktif, atau import ke laporan. | Tambahkan audit dependensi Peneliti; pertahankan fungsi ilmiah, bukan asumsi bahwa semua kontrak datanya tetap. |
+| V-19 | Klaim peran Peneliti tidak berubah tidak memetakan dataset, status `Final` lama, versi aktif, atau import ke laporan. [Historis 8 Sep 2026; peran `Peneliti` kini `Validator` per D-17, fungsi tetap.] | Tambahkan audit dependensi Peneliti; pertahankan fungsi ilmiah, bukan asumsi bahwa semua kontrak datanya tetap. |
 | V-20 | Rencana uji mewajibkan semua route HTTP 200, termasuk yang seharusnya redirect; “27+” tidak menjelaskan inventaris. | Koreksi: 27 pola route kanonis + kasus redirect/URL lama/tidak valid; periksa hasil navigasi dan isi. |
 | V-21 | Stage 03 diminta lulus E2E antrean sebelum Stage 05; Stage 07 menguji form penilaian sebelum Stage 08; Stage 09 menurunkan semua stage ke REVIEW walau sudah DONE. | Bedakan pemeriksaan per tahap dan integrasi tertunda; jangan mengarang hasil uji atau menurunkan stage disetujui. |
 | V-22 | Key penyimpanan lama sebenarnya `ishas-domain-v3`, bukan keluarga `ishas-mock-v3`. Mengganti key tidak otomatis membaca/menghapus key lama. | Koreksi fakta key; kebijakan namespace, reset, dan hidup berdampingan menunggu D-01. |
@@ -49,7 +49,7 @@ serta hubungan laporan–temuan–tindak lanjut. Kelengkapan daftar halaman belu
 
 Lihat [DATA_REQUIREMENTS](DATA_REQUIREMENTS.md) untuk hubungan data dan skenario uji konseptual:
 kiriman permanen, identitas akun, status yang sah, periode/hasil, denah historis,
-audit/notifikasi, seed konsisten, penyimpanan draft, dan alur Peneliti.
+audit/notifikasi, seed konsisten, penyimpanan draft, dan alur Peneliti (historis; kini Validator per D-17).
 
 Halaman publik masih perlu keputusan D-02 sebelum menentukan desain detail. Untuk setiap halaman,
 rencana akhir harus menyebut: tujuan pembaca, data yang ditampilkan, filter, sumber angka,

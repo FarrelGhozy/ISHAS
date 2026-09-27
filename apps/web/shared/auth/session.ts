@@ -1,5 +1,5 @@
 // Sesi login dummy — docs ROLES.md §7. Menunjuk ID akun, BUKAN role saja
-// (prasyarat isolasi scope dua pengelola). sessionStorage; pulih diam-diam saat refresh.
+// (prasyarat isolasi scope dua akun Pesantren). sessionStorage; pulih diam-diam saat refresh.
 
 import { useSyncExternalStore } from "react";
 import type { RoleId } from "~/mocks/types";
@@ -63,6 +63,6 @@ export function useSession(): Session | null {
 }
 
 export function canSubmitReport(roleId: RoleId | undefined): boolean {
-  // D-03 (dijawab 8 Sep 2026): hanya publik tanpa login dan pengelola yang boleh kirim.
-  return roleId === undefined || roleId === "pengelola";
+  // D-03 (dijawab 8 Sep 2026): hanya publik tanpa login dan Pesantren yang boleh kirim.
+  return roleId === undefined || roleId === "pesantren";
 }

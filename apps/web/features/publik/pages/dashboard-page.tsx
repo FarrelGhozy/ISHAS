@@ -81,7 +81,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         title={isKnown ? "Pesantren tidak tersedia untuk publik" : "Pesantren tidak ditemukan"}
         description={
           isKnown
-            ? `Kode "${rawParam}" tercatat tetapi tidak memenuhi syarat Pesantren terdaftar (Aktif + pengelola aktif). Hasil lama tidak tampil publik sesuai D-08.`
+            ? `Kode "${rawParam}" tercatat tetapi tidak memenuhi syarat Pesantren terdaftar (Aktif + akun Pesantren aktif). Hasil lama tidak tampil publik sesuai D-08.`
             : `Kode "${rawParam}" tidak dikenal. Periksa kembali tautan atau pilih pesantren dari dashboard.`
         }
         action={

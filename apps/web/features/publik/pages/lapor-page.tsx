@@ -1,6 +1,6 @@
 // `/lapor` — form laporan cepat satu langkah (V2-03: FLOWS §2, WIREFRAMES §2).
-// Tanpa login maupun login pengelola (nama otomatis, tetap editable — D-03).
-// Super Admin/Peneliti: baca saja, kirim nonaktif + pesan keluar dari akun.
+// Tanpa login maupun login pesantren (nama otomatis, tetap editable — D-03).
+// Super Admin/Validator: baca saja, kirim nonaktif + pesan keluar dari akun.
 // Draft per pesantren bertahan saat refresh; kirim-ganda dicegah via tombol terkunci
 // + requestId idempotency yang sama bila klik ganda terjadi sebelum render ulang.
 
@@ -65,7 +65,7 @@ function LaporPageContent() {
   const registeredCodes = useMemo(() => registered.map((i) => i.code), [registered]);
 
   const blocked = user !== null && !canSubmitReport(user.roleId);
-  const isPrefilledManager = user?.roleId === "pengelola";
+  const isPrefilledManager = user?.roleId === "pesantren";
 
   const param = searchParams.get("pesantren");
   const paramValid = param !== null && registeredCodes.includes(param);
@@ -85,7 +85,7 @@ function LaporPageContent() {
       return {
         ...EMPTY_LAPOR_VALUES,
         institutionCode: initialCode,
-        reporterName: user?.roleId === "pengelola" ? (user.name ?? "") : "",
+        reporterName: user?.roleId === "pesantren" ? (user.name ?? "") : "",
       };
     }
     if (paramInvalid)
@@ -95,7 +95,7 @@ function LaporPageContent() {
     if (mirror && (!isLaporEmpty(mirror) || mirror.institutionCode)) return mirror;
     return {
       ...EMPTY_LAPOR_VALUES,
-      reporterName: user?.roleId === "pengelola" ? (user.name ?? "") : "",
+      reporterName: user?.roleId === "pesantren" ? (user.name ?? "") : "",
     };
   });
   const [touched, setTouched] = useState<Partial<Record<keyof LaporValues, boolean>>>({});
@@ -334,7 +334,7 @@ function LaporPageContent() {
         <p className="kicker">Laporan publik</p>
         <h1 className="text-xl font-extrabold text-heading">Laporkan temuan bahaya</h1>
         <p className="mt-1 text-sm text-secondary-text">
-          Laporan Anda tidak langsung tampil; pengelola pondok memvalidasi dan menentukan tingkat
+          Laporan Anda tidak langsung tampil; akun Pesantren memvalidasi dan menentukan tingkat
           bahaya terlebih dahulu.
         </p>
       </header>

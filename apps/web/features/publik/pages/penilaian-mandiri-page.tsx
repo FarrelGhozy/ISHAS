@@ -182,7 +182,7 @@ export function PenilaianMandiriPage() {
         </h1>
         <p className="mt-2 max-w-lg text-sm text-secondary-text">
           Penilaian <strong className="text-heading">{submittedId}</strong> akan diperiksa oleh
-          pengelola pesantren sebelum digunakan dalam hasil K3L.
+          akun Pesantren sebelum digunakan dalam hasil K3L.
         </p>
         <button
           type="button"

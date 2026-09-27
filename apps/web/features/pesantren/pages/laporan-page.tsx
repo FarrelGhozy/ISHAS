@@ -10,7 +10,7 @@ export function Page() {
   const [notice, setNotice] = useState("");
   const [archiveReason, setArchiveReason] = useState<Record<string, string>>({});
   const scope =
-    user?.roleId === "pengelola" && user.institutionCodes.length === 1
+    user?.roleId === "pesantren" && user.institutionCodes.length === 1
       ? user.institutionCodes[0]
       : undefined;
   const reports = state.reports.filter(
@@ -38,12 +38,12 @@ export function Page() {
     setNotice(r.ok ? `${id} diarsipkan dan tidak tampil publik.` : r.error);
     if (r.ok) setArchiveReason((old) => ({ ...old, [id]: "" }));
   };
-  if (!user || user.roleId !== "pengelola" || user.institutionCodes.length !== 1)
-    return <EmptyState title="Halaman ini hanya untuk Pengelola Pesantren" />;
+  if (!user || user.roleId !== "pesantren" || user.institutionCodes.length !== 1)
+    return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
   return (
     <section className="flex flex-col gap-4">
       <header>
-        <p className="kicker">Ringkasan pengelola</p>
+        <p className="kicker">Ringkasan Pesantren</p>
         <h1 className="text-2xl font-extrabold text-heading">Laporan pesantren</h1>
         <p className="mt-1 text-sm text-secondary-text">
           Periode Sep 2026 ·{" "}

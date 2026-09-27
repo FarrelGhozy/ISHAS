@@ -35,23 +35,27 @@ export default [
     route("audit-log", "routes/admin.audit-log.tsx"),
     route("pengaturan", "routes/admin.pengaturan.tsx"),
   ]),
-  route("peneliti", "routes/_workspace.peneliti.tsx", [
-    index("routes/peneliti.index.tsx"),
-    route("dashboard", "routes/peneliti.dashboard.tsx"),
-    route("instrumen", "routes/peneliti.instrumen.tsx"),
-    route("dokumen-instrumen", "routes/peneliti.dokumen-instrumen.tsx"),
-    route("versioning", "routes/peneliti.versioning.tsx"),
-    route("scoring", "routes/peneliti.scoring.tsx"),
-    route("validasi-publikasi", "routes/peneliti.validasi-publikasi.tsx"),
-    route("data-penelitian", "routes/peneliti.data-penelitian.tsx"),
+  route("validator", "routes/_workspace.validator.tsx", [
+    index("routes/validator.index.tsx"),
+    route("dashboard", "routes/validator.dashboard.tsx"),
+    route("instrumen", "routes/validator.instrumen.tsx"),
+    route("dokumen-instrumen", "routes/validator.dokumen-instrumen.tsx"),
+    route("versioning", "routes/validator.versioning.tsx"),
+    route("scoring", "routes/validator.scoring.tsx"),
+    route("validasi-publikasi", "routes/validator.validasi-publikasi.tsx"),
+    route("data-penelitian", "routes/validator.data-penelitian.tsx"),
   ]),
-  route("pengelola", "routes/_workspace.pengelola.tsx", [
-    index("routes/pengelola.index.tsx"),
-    route("validasi-laporan", "routes/pengelola.validasi-laporan.tsx"),
-    route("lokasi", "routes/pengelola.lokasi.tsx"),
-    route("tindak-lanjut", "routes/pengelola.tindak-lanjut.tsx"),
-    route("laporan", "routes/pengelola.laporan.tsx"),
+  route("pesantren", "routes/_workspace.pesantren.tsx", [
+    index("routes/pesantren.index.tsx"),
+    route("validasi-laporan", "routes/pesantren.validasi-laporan.tsx"),
+    route("lokasi", "routes/pesantren.lokasi.tsx"),
+    route("tindak-lanjut", "routes/pesantren.tindak-lanjut.tsx"),
+    route("laporan", "routes/pesantren.laporan.tsx"),
   ]),
+
+  // Alih URL lama D-17: /peneliti/* → /validator/*, /pengelola/* → /pesantren/*
+  route("peneliti/*", "routes/redirect-validator.tsx"),
+  route("pengelola/*", "routes/redirect-pesantren.tsx"),
 
   // Route tidak dikenal
   route("*", "routes/not-found.tsx"),

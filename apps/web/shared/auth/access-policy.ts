@@ -8,8 +8,8 @@ export type WorkspaceAccess = "allowed" | "login" | "denied";
 
 const ROLE_PREFIXES: { prefix: string; roleId: RoleId }[] = [
   { prefix: "/admin", roleId: "admin" },
-  { prefix: "/peneliti", roleId: "peneliti" },
-  { prefix: "/pengelola", roleId: "pengelola" },
+  { prefix: "/validator", roleId: "validator" },
+  { prefix: "/pesantren", roleId: "pesantren" },
 ];
 
 export function workspaceRoleFor(pathname: string): RoleId | null {
@@ -20,14 +20,14 @@ export function workspaceRoleFor(pathname: string): RoleId | null {
 }
 
 export function workspaceHome(roleId: RoleId): string {
-  // ROUTES §5: tujuan pengelola adalah halaman utama Validasi Laporan.
+  // ROUTES §5: tujuan Pesantren adalah halaman utama Validasi Laporan.
   switch (roleId) {
     case "admin":
       return "/admin/dashboard";
-    case "peneliti":
-      return "/peneliti/dashboard";
-    case "pengelola":
-      return "/pengelola/validasi-laporan";
+    case "validator":
+      return "/validator/dashboard";
+    case "pesantren":
+      return "/pesantren/validasi-laporan";
   }
 }
 
@@ -56,5 +56,5 @@ export function canManageInstitution(
   user: { roleId: RoleId; institutionCodes: string[] },
   code: string,
 ): boolean {
-  return user.roleId === "pengelola" && user.institutionCodes.includes(code);
+  return user.roleId === "pesantren" && user.institutionCodes.includes(code);
 }

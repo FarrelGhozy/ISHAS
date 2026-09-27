@@ -38,13 +38,13 @@ sepihak oleh revisi lintas fitur ini.
 | Stage 00 | Validasi rencana, konflik dokumen, dan keputusan terbuka | IN PROGRESS |
 | Stage 01 | Fondasi aplikasi ISHAS: scaffold, schema v4, login 3 peran, `/` publik | REVIEW |
 | Stage 02 | Shell publik + dashboard agregat + pemilih pesantren | REVIEW |
-| Stage 03 | Laporan cepat `/lapor` (tanpa login + login pengelola) | REVIEW |
+| Stage 03 | Laporan cepat `/lapor` (tanpa login + login Pesantren) | REVIEW |
 | Stage 04 | Halaman baca publik (hasil, peta, rekomendasi, tindak lanjut, laporan) | REVIEW |
-| Stage 05 | Antrean validasi pengelola (terima/tolak + severity/priority) | REVIEW |
+| Stage 05 | Antrean validasi Pesantren (terima/tolak + severity/priority) | REVIEW |
 | Stage 06 | Lifecycle Pending/Proses/Completed + arsip completed + audit | REVIEW |
-| Stage 07 | Lokasi (gedung/area/denah) + tindak lanjut kelola + laporan pengelola | IN PROGRESS |
+| Stage 07 | Lokasi (gedung/area/denah) + tindak lanjut kelola + laporan Pesantren | IN PROGRESS |
 | Stage 08 | Penilaian mandiri (tanpa penugasan + kirim validasi) | IN PROGRESS |
-| Stage 09 | Admin (pesantren + akun pengelola) + sinkron dokumen + rilis REVIEW | IN PROGRESS |
+| Stage 09 | Admin (pesantren + akun Pesantren) + sinkron dokumen + rilis REVIEW | IN PROGRESS |
 
 ## Cara menggunakan
 
@@ -54,7 +54,7 @@ sepihak oleh revisi lintas fitur ini.
 4. Jalankan `TEST_PLAN.md` yang relevan; isi `Hasil Pemeriksaan`; pindahkan ke `REVIEW`.
 5. `DONE` hanya setelah persetujuan pemilik proyek/dosen; lalu aktifkan stage berikutnya.
 
-Ketergantungan yang masih harus ditinjau: hak dan model data Peneliti perlu dipetakan sebelum
+Ketergantungan yang masih harus ditinjau: hak dan model data Validator perlu dipetakan sebelum
 fondasi dianggap lengkap; lokasi awal diperlukan sebelum demo lapor; uji kirim–validasi lintas
 halaman baru lengkap ketika Stage 05 tersedia. Rincian ada di `../docs/VALIDATION_REVIEW.md`.
 
@@ -64,7 +64,7 @@ halaman baru lengkap ketika Stage 05 tersedia. Rincian ada di `../docs/VALIDATIO
 |---|---|---|
 | Dashboard polish | REVIEW | 106 test, lint/typecheck/build dan browser responsif; belum persetujuan DONE |
 | Risk Map | REVIEW | Pemeriksaan pada STAGE_RISK_MAP.md; titik opsional |
-| Bukti gambar Pelaporan | IN PROGRESS | Kode/test tersedia; uji browser unggah/refresh/pengelola belum lengkap |
+| Bukti gambar Pelaporan | IN PROGRESS | Kode/test tersedia; uji browser unggah/refresh/Pesantren belum lengkap |
 
 Stage 03 kini REVIEW berdasarkan hasil review ulang yang sudah tercatat; Stage 04
 REVIEW mengikuti file stage dan hasil historis. Stage 07–09 tidak dinaikkan hanya

@@ -22,7 +22,7 @@
 
 - Melihat antrean validasi, detail laporan yang belum divalidasi milik orang lain, atau alasan penolakan milik orang lain.
 - Mengubah severity, priority, atau status penanganan.
-- Mengelola gedung/area/denah, membuat rencana tindak lanjut (PIC/tenggat), menghapus data, membuka `/admin/*`, `/peneliti/*`, halaman kelola `/pengelola/validasi-laporan`.
+- Mengelola gedung/area/denah, membuat rencana tindak lanjut (PIC/tenggat), menghapus data, membuka `/admin/*`, `/validator/*`, halaman kelola `/pesantren/validasi-laporan`.
 - Melihat dashboard sebagai "milik pesantren saya" — dashboard publik selalu agregat + filter, tidak ada konsep kepemilikan tanpa login.
 
 **Edge case yang ditetapkan:**
@@ -30,7 +30,7 @@
 - Publik tidak perlu mendaftar dan tidak ada proses registrasi mandiri pesantren. Pesantren baru hanya lahir dari Super Admin (lihat FLOWS §1).
 - Jika pemilih pesantren kosong (belum ada pesantren terdaftar), dashboard menampilkan empty state "Belum ada pesantren terdaftar" dan form lapor dinonaktifkan dengan penjelasan — bukan form dengan dropdown kosong.
 
-## 2. Pengelola Pesantren — mitra (login, `roleId: pengelola`)
+## 2. Pesantren — mitra (login, `roleId: pesantren`)
 
 **Definisi:** admin lokal satu pondok, dibuatkan akun oleh Super Admin dengan `institutionCodes: [<satu kode>]`. Satu akun mengelola tepat satu pesantren (multi-lembaga per akun tidak didukung di ).
 
@@ -39,14 +39,14 @@
 | Field | Nilai |
 |---|---|
 | Nama | Ust. K.H. Mustofa Kamal |
-| Email | `pengelola@ishas.demo` |
+| Email | `pesantren@ishas.demo` |
 | Kata sandi | `demo1234` |
-| Label peran | Pengelola Pesantren |
+| Label peran | Pesantren |
 | Scope | `PSN-0018` (PP Al-Hikmah Malang) |
 
 **Kemampuan dalam rancangan awal:**
 
-- Membaca data publik seperti pengunjung lain. Boleh melapor ke pesantren lain sebagai pelapor umum (D-03): laporannya divalidasi oleh pengelola pesantren sasaran; hak kelola tetap terbatas satu pesantren. Saat melapor, field nama **terisi otomatis** dari akun aktif + label `Pengelola Pesantren`; tetap dapat diubah manual per laporan.
+- Membaca data publik seperti pengunjung lain. Boleh melapor ke pesantren lain sebagai pelapor umum (D-03): laporannya divalidasi oleh akun Pesantren sasaran; hak kelola tetap terbatas satu pesantren. Saat melapor, field nama **terisi otomatis** dari akun aktif + label `Pesantren`; tetap dapat diubah manual per laporan.
 - Membuka antrean **Validasi Laporan** (hanya laporan dengan `institutionCode` miliknya).
 - **Menerima** laporan: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
 - **Menolak** laporan: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
@@ -57,12 +57,12 @@
 **TIDAK BOLEH:**
 
 - Melihat antrean/detail internal atau memvalidasi laporan pesantren lain. Data yang memang ditetapkan publik mengikuti akses baca publik; cakupan bidangnya mengikuti D-02 (ringkasan saja + nama validator/PIC).
-- Mendaftarkan pesantren baru, membuat akun (termasuk akun pengelola lain), mengubah hak akses, membuka audit log global, pengaturan sistem, atau area peneliti.
+- Mendaftarkan pesantren baru, membuat akun (termasuk akun Pesantren lain), mengubah hak akses, membuka audit log global, pengaturan sistem, atau area validator.
 - Menentukan rumus/skor/ambang ilmiah; skor tetap dihitung sistem (ilustratif).
 
 ## 3. Super Admin (login, `roleId: admin`)
 
-**Definisi:** operator sistem pusat. Satu-satunya peran yang dapat melahirkan pesantren dan akun pengelola.
+**Definisi:** operator sistem pusat. Satu-satunya peran yang dapat melahirkan pesantren dan akun Pesantren.
 
 **Akun demo persis:**
 
@@ -75,8 +75,8 @@
 
 **BOLEH:**
 
-- Pesantren: tambah (status awal `Persiapan`), verifikasi menjadi `Aktif`, nonaktifkan menjadi `Nonaktif`. Hanya `Aktif` + punya pengelola aktif yang tampil di pemilih publik.
-- Pengguna: buat akun `Pengelola Pesantren` (wajib pilih tepat satu pesantren), nonaktifkan akun, lihat detail. Tidak ada pembuatan akun Asesor (peran dihapus).
+- Pesantren: tambah (status awal `Persiapan`), verifikasi menjadi `Aktif`, nonaktifkan menjadi `Nonaktif`. Hanya `Aktif` + punya akun Pesantren aktif yang tampil di pemilih publik.
+- Pengguna: buat akun `Pesantren` (wajib pilih tepat satu pesantren), nonaktifkan akun, lihat detail. Tidak ada pembuatan akun Asesor (peran dihapus).
 - Membaca dashboard publik (mode baca, tidak memvalidasi), matriks hak akses (baca), audit log global (baca), pengaturan non-ilmiah + reset data demo.
 
 **TIDAK BOLEH:**
@@ -85,9 +85,9 @@
 - Memvalidasi/menolak laporan, mengisi severity/priority/status, mengisi penilaian, mengelola lokasi/tindak lanjut pesantren tertentu.
 - Menyentuh instrumen, scoring, atau publikasi ilmiah.
 
-## 4. Peneliti (login, `roleId: peneliti`)
+## 4. Validator (login, `roleId: validator`)
 
-**Definisi dan akun demo tidak berubah dari lama** (Dr. M. Ridwan, `peneliti@ishas.demo`, `demo1234`).
+**Definisi dan akun demo** (M. Ridwan, `validator@ishas.demo`, `demo1234`; D-17 melepas gelar `Dr.`).
 
 **BOLEH:** instrumen (builder dimensi/indikator), versioning Draft/Published/Archived, konfigurasi scoring, validasi & publikasi, data penelitian. Versi Published aktif otomatis menjadi sumber soal penilaian mandiri.
 
@@ -101,11 +101,11 @@ Daftar hapus eksplisit (agar tidak ada sisa tafsir "asesor masih ada di balik la
 - Seluruh route `/asesor/*`, menu, guard cabang asesor, notifikasi ke asesor.
 - Entitas penugasan (`Assignment`, `assessorEmail`, status Terjadwal/Draft/Final versi asesor).
 - Istilah "penugasan", "verifikasi 4 data penugasan", "Assessment Saya".
-- Atribusi karya ke asesor ("dibuat/diverifikasi Asesor") diganti "dilaporkan oleh [nama]" / "divalidasi oleh [nama pengelola]".
+- Atribusi karya ke asesor ("dibuat/diverifikasi Asesor") diganti "dilaporkan oleh [nama]" / "divalidasi oleh [nama akun Pesantren]".
 
 ## 6. Matriks akses — D-02/D-03 telah dijawab; D-06/D-09 masih terbuka
 
-| Kemampuan | Publik | Pengelola | Super Admin | Peneliti |
+| Kemampuan | Publik | Pesantren | Super Admin | Validator |
 |---|---|---|---|---|
 | Dashboard agregat + filter pesantren | ✅ | ✅ | ✅ baca | ✅ baca |
 | Lapor cepat + penilaian mandiri | ✅ | ✅ (termasuk ke pesantren lain sebagai pelapor umum, D-03) | ❌ harus keluar dahulu | ❌ harus keluar dahulu |
@@ -114,7 +114,7 @@ Daftar hapus eksplisit (agar tidak ada sisa tafsir "asesor masih ada di balik la
 | Status Pending/Proses/Completed + hapus Completed | ❌ | ✅ miliknya | ❌ | ❌ |
 | Gedung/area/denah + tindak lanjut kelola | ❌ | ✅ miliknya | ❌ | ❌ |
 | Daftar pesantren + buat/verifikasi/nonaktif | ❌ | ❌ | ✅ | ❌ |
-| Buat/nonaktifkan akun pengelola | ❌ | ❌ | ✅ | ❌ |
+| Buat/nonaktifkan akun Pesantren | ❌ | ❌ | ✅ | ❌ |
 | Audit log + pengaturan + reset demo | ❌ | ❌ | ✅ | ❌ |
 | Instrumen/scoring/publikasi/data penelitian | ❌ | ❌ | ❌ | ✅ |
 
@@ -125,4 +125,4 @@ Daftar hapus eksplisit (agar tidak ada sisa tafsir "asesor masih ada di balik la
 3. Pada halaman publik: tanpa sesi tampil **Masuk**; dengan sesi tampil identitas akun aktif (nama + label peran + inisial) dan tombol **Ruang kerja**. Penanda `Data publik · ilustrasi` tetap ada. Ini identitas pengguna yang sedang memakai perangkat, bukan publikasi identitas pelapor pada suatu laporan.
 4. Refresh tidak boleh mengeluarkan sesi login (sessionStorage) dan tidak boleh menghapus draft laporan (localStorage) — keduanya dipulihkan diam-diam.
 5. Logout membersihkan sesi dan mengarah ke `/` (dashboard publik), bukan ke halaman kosong.
-6. Sesi perlu membedakan ID akun, bukan role saja, agar dua pengelola memiliki scope yang benar. Cara login akun tambahan dan aktivasi menunggu D-09; draft saat berganti akun menunggu D-10.
+6. Sesi perlu membedakan ID akun, bukan role saja, agar dua akun Pesantren memiliki scope yang benar. Cara login akun tambahan dan aktivasi menunggu D-09; draft saat berganti akun menunggu D-10.

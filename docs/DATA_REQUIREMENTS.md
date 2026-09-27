@@ -23,7 +23,7 @@ kiriman, dan jumlah temuan sebagai angka yang sama.
 
 ## 2. Kiriman permanen dan jejak identitas
 
-Kebutuhan ini berasal dari alur yang sudah meminta pengelola membaca jawaban setelah kirim,
+Kebutuhan ini berasal dari alur yang sudah meminta akun Pesantren membaca jawaban setelah kirim,
 penguncian isi laporan, serta ketertelusuran historis.
 
 | Kekurangan sketsa awal | Detail yang perlu tersedia |
@@ -51,7 +51,7 @@ yang **sudah tertulis**; tidak menetapkan aturan baru untuk kasus tanpa temuan a
 | `Diterima` | `Pending`, `Proses`, atau `Completed` | Validator dan waktu; severity/prioritas dipilih menurut rancangan sekarang, dengan pengecualian yang belum diputuskan pada D-05 |
 
 - `Diterima + Ditolak` dan `Menunggu validasi + Completed` adalah kombinasi tidak konsisten.
-- Terima/tolak hanya dari keadaan menunggu. Dua pengelola yang membuka item yang sama tidak boleh
+- Terima/tolak hanya dari keadaan menunggu. Dua akun Pesantren yang membuka item yang sama tidak boleh
  menimpa keputusan terbaru tanpa mendeteksi perubahan; detail pembukaan ulang menunggu D-07.
 - Rancangan mengizinkan kembali `Proses → Pending` dan `Completed → Proses` dengan alasan.
  Nilai progres, bukti, tanggal selesai, dan status rekomendasi setelah mundur harus dijelaskan;
@@ -99,10 +99,10 @@ titik nullable terikat versi; lantai berupa keterangan. Detail kontrak dan migra
 di [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md) §5–8. Tidak ada koordinat palsu.
 
 - `Institution` memerlukan alamat lengkap yang diminta onboarding, selain kota/kabupaten.
- Nama pengelola utama dapat menjadi data kontak calon saat `Persiapan`; setelah ada akun,
- relasi pengelola harus melalui ID. Kebijakan nama pesantren duplikat perlu mempertimbangkan
+ Nama penanggung jawab utama dapat menjadi data kontak calon saat `Persiapan`; setelah ada akun,
+ relasi akun Pesantren harus melalui ID. Kebijakan nama pesantren duplikat perlu mempertimbangkan
  nama yang sama di lokasi berbeda; keunikan nama nasional belum terbukti sebagai kebutuhan.
-- Sesi login dummy harus menunjuk akun yang dapat dibedakan, bukan hanya `roleId`. Dua pengelola
+- Sesi login dummy harus menunjuk akun yang dapat dibedakan, bukan hanya `roleId`. Dua akun Pesantren
  memiliki role sama tetapi scope berbeda. Status aktif dan lingkup dibaca dari sumber akun bersama.
 - Pemeriksaan role/scope dilakukan pada pemilihan data **dan tindakan simpan**, termasuk direct URL,
  ID report, ID area, rencana, serta target notifikasi. Ini tetap simulasi frontend, bukan keamanan produksi.
@@ -121,7 +121,7 @@ D-02: **ringkasan saja** + **nama validator/PIC**. Matriks berikut berlaku untuk
 publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`,
 `/pesantren/[kode]`), pratinjau, dan ekspor dummy — bukan sekadar menyembunyikan kolom di satu halaman.
 
-| Bidang | Publik | Internal (pengelola scope) |
+| Bidang | Publik | Internal (Pesantren scope) |
 |---|---|---|
 | Nomor laporan (`RPT-XXXX`) | ❌ | ✅ |
 | Judul temuan / deskripsi | ✅ (bagian ringkasan) | ✅ |
@@ -133,7 +133,7 @@ publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/lapor
 | Jawaban mentah per indikator | ❌ (hanya skor/kategori ringkasan) | ✅ |
 | Severity/priority | ✅ (sebagai chip ringkasan) | ✅ |
 | Status penanganan + progres | ✅ | ✅ |
-| Nama validator (pengelola yang menerima) | ✅ | ✅ |
+| Nama validator (akun Pesantren yang menerima) | ✅ | ✅ |
 | Nama PIC tindak lanjut | ✅ | ✅ |
 | Tenggat, catatan rencana internal | ❌ (hanya progres/status) | ✅ |
 | Alasan penolakan | ❌ | ✅ |
@@ -149,7 +149,7 @@ Audit dummy di browser bukan rekaman yang kebal manipulasi. “Audit tetap ada s
 berarti tidak ikut penghapusan laporan biasa; reset seluruh demo memang mengembalikan seed.
 
 Calon kontrak notifikasi: ID, ID penerima, scope pesantren, objek sumber, pesan, target URL,
-waktu, dan status dibaca. Menargetkan role `pengelola` saja tidak cukup untuk isolasi pesantren.
+waktu, dan status dibaca. Menargetkan role `pesantren` saja tidak cukup untuk isolasi pesantren.
 Target harus tetap mempunyai perilaku yang jelas setelah laporan ditolak, diarsipkan, atau dihapus.
 
 Notifikasi status ke pelapor login dan pelacakan publik masih usulan di SUGGESTIONS.
@@ -172,21 +172,21 @@ dasar menampilkan alasan penolakan atau detail privat kepada orang yang memasukk
 
 ## 8. Seed dan alur demonstrasi yang dapat diperiksa
 
-Seed awal menyebut tiga pesantren Aktif, tetapi hanya dua mempunyai pengelola.
+Seed awal menyebut tiga pesantren Aktif, tetapi hanya dua mempunyai akun Pesantren.
 Dua rancangan yang konsisten bisa dipilih: (a) hanya dua terdaftar, yang ketiga menjadi kasus
-“Aktif tanpa pengelola”; atau (b) tambahkan pengelola untuk pesantren ketiga sehingga ketiganya terdaftar.
+“Aktif tanpa akun Pesantren”; atau (b) tambahkan akun Pesantren untuk pesantren ketiga sehingga ketiganya terdaftar.
 Pemilihan belum diputuskan. Status `Aktif` dan count “terdaftar” jangan disamakan dalam acceptance criteria.
 
-Untuk setiap pesantren yang akan dipakai demo kirim, perlu akun pengelola yang dapat dipilih saat login
+Untuk setiap pesantren yang akan dipakai demo kirim, perlu akun Pesantren yang dapat dipilih saat login
 serta area yang sesuai kebijakan D-11. Tiga kartu **peran** login tidak otomatis membatasi total akun
-seed menjadi tiga; cara memilih akun pengelola kedua menunggu D-09.
+seed menjadi tiga; cara memilih akun Pesantren kedua menunggu D-09.
 
 Rencana fixture tambahan untuk review, bukan data yang sudah dibuat:
 
 | Kasus | Yang harus dapat dibuktikan |
 |---|---|
 | Dua pesantren dengan laporan masing-masing | Pengelola A tidak membaca/mengubah antrean B, termasuk notifikasi dan ID langsung |
-| Pesantren Persiapan / Aktif tanpa pengelola / Nonaktif | Pemilih, kirim, dan arsip mengikuti definisi serta keputusan D-08 |
+| Pesantren Persiapan / Aktif tanpa akun Pesantren / Nonaktif | Pemilih, kirim, dan arsip mengikuti definisi serta keputusan D-08 |
 | Laporan menunggu, ditolak, diterima | Status moderasi dan hasil publik tidak tertukar |
 | Penilaian satu/banyak/tanpa temuan | Penanganan report dan rekomendasi mengikuti D-05 |
 | Published baru + draft/hasil versi lama | Snapshot dan kebijakan D-10 terjaga |
@@ -194,7 +194,7 @@ Rencana fixture tambahan untuk review, bukan data yang sudah dibuat:
 | Tanpa hasil + seluruh jawaban N/A | Tidak ada skor/kategori atau tren palsu |
 | Kirim ulang / keputusan dari dua jendela | Tidak ada report ganda atau keputusan saling menimpa tanpa deteksi |
 
-## 9. Fungsi Peneliti perlu tetap terhubung
+## 9. Fungsi Validator perlu tetap terhubung
 
 Tujuan perannya dapat dipertahankan, tetapi sumber data perlu dipetakan: instrumen Published
 ke form mandiri; snapshot kiriman diterima ke hasil; hasil ke dataset; serta dataset ke ekspor dummy.

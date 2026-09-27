@@ -10,8 +10,8 @@ describe("administrasi Super Admin", () => {
       name: "A",
       email: "salah",
       initials: "A",
-      role: "Pengelola Pesantren",
-      roleId: "pengelola",
+      role: "Pesantren",
+      roleId: "pesantren",
       institution: "",
       institutionCodes: [],
       status: "Aktif",
@@ -24,7 +24,7 @@ describe("administrasi Super Admin", () => {
     });
   });
 
-  test("pesantren baru unik, menaikkan counter, dan aktivasi memerlukan pengelola", () => {
+  test("pesantren baru unik, menaikkan counter, dan aktivasi memerlukan pesantren", () => {
     expect(
       storeActions.addInstitution({
         code: "PSN-0022",
@@ -38,12 +38,12 @@ describe("administrasi Super Admin", () => {
     expect(getState().counters.institution).toBe(23);
     expect(storeActions.setInstitutionStatus("PSN-0022", "Aktif")).toEqual({
       ok: false,
-      error: "Tetapkan minimal satu pengelola aktif sebelum aktivasi.",
+      error: "Tetapkan minimal satu akun Pesantren aktif sebelum aktivasi.",
     });
   });
 });
 
-describe("versioning instrumen Peneliti", () => {
+describe("versioning instrumen Validator", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("draft baru dapat dipublikasikan dan versi aktif lama diarsipkan", () => {

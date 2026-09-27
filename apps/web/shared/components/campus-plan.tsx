@@ -173,7 +173,7 @@ export function LocationPicker({
             Versi {plan.revision} ·{" "}
             {plan.illustration
               ? "Ilustrasi denah · bukan lokasi sebenarnya"
-              : "Denah unggahan pengelola"}
+              : "Denah unggahan Pesantren"}
           </p>
           <details>
             <summary className="cursor-pointer text-sm font-semibold text-primary">

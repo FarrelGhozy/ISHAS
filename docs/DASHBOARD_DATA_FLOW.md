@@ -8,10 +8,10 @@ Tema dan token warna tetap. Prototipe frontend memakai schema v6; backend belum 
 
 ```mermaid
 flowchart TD
-  A[Publik atau Pengelola Pesantren] --> B[Lapor cepat atau penilaian mandiri]
+  A[Publik atau Pesantren] --> B[Lapor cepat atau penilaian mandiri]
   B --> C[Repository: validasi scope, lokasi, versi dan kategori]
   C --> D[Menunggu validasi: risiko Belum ditentukan]
-  D --> E[Pengelola pemilik pesantren memeriksa]
+  D --> E[Pesantren pemilik pesantren memeriksa]
   E -->|Tolak: alasan minimum 10 karakter| F[Ditolak: tidak tampil publik]
   E -->|Terima: severity dan priority wajib| G[Diterima: temuan dan rekomendasi]
   G --> H[Shared store: audit dan notifikasi]
@@ -22,7 +22,7 @@ flowchart TD
   L --> M[Arsip: tetap internal, dikeluarkan dari publik]
 ```
 
-Sesi login tidak mengubah dataset publik. Pengelola boleh memoderasi laporannya
+Sesi login tidak mengubah dataset publik. Pesantren boleh memoderasi laporannya
 sendiri (D-06); audit membedakan pengirim dan validator. Mutasi lintas halaman
 melalui repository/store, bukan state lokal. Blob bukti/denah berada di IndexedDB;
 record/draft menyimpan ID, bukan file server atau kredensial produksi.

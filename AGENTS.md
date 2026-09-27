@@ -9,9 +9,9 @@ Dibaca bersama `docs/README.md` (visi + istilah baku) sebelum menyentuh file apa
 - Tahap saat ini adalah validasi tampilan, alur, dan fitur menggunakan data dummy.
 - Backend dan integrasi API baru dimulai setelah rancangan frontend disetujui.
 - Tiga peran login ditambah ruang publik, dengan pemisahan yang jelas:
-  - **Super Admin** mengelola pesantren, akun pengelola, audit, dan pengaturan demo.
-  - **Peneliti** mengelola ilmu, instrumen, versi, serta konfigurasi penilaian.
-  - **Pengelola Pesantren** memvalidasi laporan, mengelola lokasi, tindak lanjut, dan laporan scope-nya.
+  - **Super Admin** mengelola pesantren, akun Pesantren, audit, dan pengaturan demo.
+  - **Validator** mengelola ilmu, instrumen, versi, serta konfigurasi penilaian.
+  - **Pesantren** memvalidasi laporan, mengelola lokasi, tindak lanjut, dan laporan scope-nya.
   - **Publik / Pelapor** (tanpa login) membaca dashboard dan mengirim laporan/penilaian mandiri.
 
 ## Sumber Kebenaran
@@ -40,7 +40,7 @@ Jika sumber ilmiah belum menetapkan rumus, ambang, atau klasifikasi, tandai seba
 
 - `/` adalah dashboard publik tanpa login; sesi login tidak mengubah isinya.
 - Laporan `Menunggu validasi`/`Ditolak` tidak pernah tampil di dashboard/hasil/peta/rekomendasi/laporan.
-- Severity/priority hanya diisi pengelola saat menerima (tanpa default). Penolakan wajib alasan min 10 karakter.
+- Severity/priority hanya diisi akun Pesantren saat menerima (tanpa default). Penolakan wajib alasan min 10 karakter.
 - Pengguna masuk melalui halaman login dummy dan hanya melihat ruang kerja sesuai perannya.
 - Jangan menyediakan pemilih peran setelah login. Pergantian peran dilakukan dengan keluar lalu masuk sebagai akun lain.
 - Akun aktif harus tampil di kanan atas pada seluruh halaman setelah login.
@@ -48,7 +48,7 @@ Jika sumber ilmiah belum menetapkan rumus, ambang, atau klasifikasi, tandai seba
 - Gunakan bahasa Indonesia yang ringkas dan konsisten.
 - Arah visual: modern, akademis, tenang, dan mudah diaudit; merah-marun adalah identitas utama ISHAS. Status bahaya tetap harus dibedakan dengan label dan ikon, bukan warna saja.
 - Instrumen yang sudah dipublikasikan tidak boleh diubah langsung; perubahan dibuat sebagai versi baru.
-- Laporan yang tampil di dashboard harus tetap dapat ditelusuri ke versi instrumen, bukti, lokasi, pelapor, validator, dan audit event.
+- Laporan yang tampil di dashboard harus tetap dapat ditelusuri ke versi instrumen, bukti, lokasi, pelapor, akun Pesantren yang memvalidasi, dan audit event.
 
 ## Arsitektur Frontend
 
@@ -84,8 +84,9 @@ Aturan ini berlaku untuk semua kode di `apps/web/` agar pemilik mudah membaca da
 
 ## Istilah Baku
 
-Pakai persis: `Super Admin`, `Pengelola Pesantren (mitra)` / singkat `Pengelola Pesantren`,
-`Peneliti`, `Publik / Pelapor`, `Pesantren terdaftar`, `Menunggu validasi`, `Pending`, `Proses`,
+Pakai persis: `Super Admin`, `Pesantren (mitra)` / singkat `Pesantren` untuk peran akun lokal
+pondok (bedakan dari `Pesantren terdaftar` untuk lembaga), `Validator`,
+`Publik / Pelapor`, `Pesantren terdaftar`, `Menunggu validasi`, `Pending`, `Proses`,
 `Completed`, `Ditolak`, `Diterima`, `Tinggi/Sedang/Rendah`, `Belum ditentukan`.
 Level risiko temuan: `Rendah/Sedang/Tinggi/Ekstrem` sesuai D-15; severity/priority tetap `Tinggi/Sedang/Rendah`. Ekstrem adalah kategori prototipe, bukan ambang ilmiah final.
 

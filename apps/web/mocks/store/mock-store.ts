@@ -128,7 +128,7 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       account.institutionCodes.length !== 1 ||
       account.institutionCodes[0] !== input.institutionCode ||
       !institution
@@ -222,11 +222,11 @@ export const storeActions = {
     // Recheck the account at the data boundary, including direct adapter calls.
     if (actor.id) {
       const account = currentState.users.find((u) => u.id === actor.id);
-      if (!account || account.status !== "Aktif" || account.roleId !== "pengelola") {
+      if (!account || account.status !== "Aktif" || account.roleId !== "pesantren") {
         return {
           ok: false,
           error:
-            "Hanya publik tanpa login dan Pengelola Pesantren aktif yang dapat mengirim laporan.",
+            "Hanya publik tanpa login dan Pesantren aktif yang dapat mengirim laporan.",
         };
       }
       actor = { id: account.id, name: account.name, email: account.email, role: account.role };
@@ -637,10 +637,10 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       account.institutionCodes.length !== 1
     )
-      return { ok: false, error: "Hanya Pengelola Pesantren aktif yang dapat mengelola lokasi." };
+      return { ok: false, error: "Hanya Pesantren aktif yang dapat mengelola lokasi." };
     const code = input.code.trim().toUpperCase();
     const name = input.name.trim();
     if (code.length < 2 || name.length < 2)
@@ -691,7 +691,7 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !building ||
       !account.institutionCodes.includes(building.institutionCode)
     )
@@ -735,7 +735,7 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !building ||
       !account.institutionCodes.includes(building.institutionCode)
     )
@@ -777,7 +777,7 @@ export const storeActions = {
     const building = currentState.buildings.find((item) => item.id === buildingId);
     if (
       !account ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !building ||
       !account.institutionCodes.includes(building.institutionCode)
     )
@@ -937,15 +937,15 @@ export const storeActions = {
     draftId: string,
   ): ActionResult {
     // Penegakan D-03 di boundary data (sama seperti lapor-cepat): hanya publik
-    // tanpa login + pengelola aktif. UI saja tidak cukup (panggilan adapter langsung).
+    // tanpa login + akun Pesantren aktif. UI saja tidak cukup (panggilan adapter langsung).
     let sender: ReportActor = actor;
     if (actor.id) {
       const account = currentState.users.find((u) => u.id === actor.id);
-      if (!account || account.status !== "Aktif" || account.roleId !== "pengelola") {
+      if (!account || account.status !== "Aktif" || account.roleId !== "pesantren") {
         return {
           ok: false,
           error:
-            "Hanya publik tanpa login dan Pengelola Pesantren aktif yang dapat mengirim penilaian.",
+            "Hanya publik tanpa login dan Pesantren aktif yang dapat mengirim penilaian.",
         };
       }
       sender = { id: account.id, name: account.name, email: account.email, role: account.role };
@@ -1084,21 +1084,21 @@ export const storeActions = {
     if (name.length < 2) return { ok: false, error: "Nama pengguna minimal 2 karakter." };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return { ok: false, error: "Format email tidak valid." };
-    // D-09 (9 Sep 2026): Super Admin dapat membuat Super Admin, Peneliti, Pengelola.
-    // Pengelola wajib tepat 1 pesantren Aktif; admin/peneliti tanpa scope lembaga.
+    // D-09 (9 Sep 2026): Super Admin dapat membuat Super Admin, Validator, Pesantren.
+    // Pesantren wajib tepat 1 pesantren Aktif; admin/validator tanpa scope lembaga.
     if (
-      user.roleId === "pengelola" &&
+      user.roleId === "pesantren" &&
       (user.institutionCodes.length !== 1 ||
         !currentState.institutions.some(
           (item) => item.code === user.institutionCodes[0] && item.status === "Aktif",
         ))
     )
-      return { ok: false, error: "Pengelola wajib terhubung ke satu pesantren aktif." };
+      return { ok: false, error: "Pesantren wajib terhubung ke satu pesantren aktif." };
     if (
-      (user.roleId === "admin" || user.roleId === "peneliti") &&
+      (user.roleId === "admin" || user.roleId === "validator") &&
       user.institutionCodes.length !== 0
     )
-      return { ok: false, error: "Super Admin dan Peneliti tidak terikat pesantren." };
+      return { ok: false, error: "Super Admin dan Validator tidak terikat pesantren." };
     if (getState().users.some((u) => u.email.toLowerCase() === email)) {
       return { ok: false, error: "Email sudah digunakan pada data demo." };
     }
@@ -1169,12 +1169,12 @@ export const storeActions = {
       status === "Aktif" &&
       !currentState.users.some(
         (item) =>
-          item.roleId === "pengelola" &&
+          item.roleId === "pesantren" &&
           item.status === "Aktif" &&
           item.institutionCodes.includes(code),
       )
     )
-      return { ok: false, error: "Tetapkan minimal satu pengelola aktif sebelum aktivasi." };
+      return { ok: false, error: "Tetapkan minimal satu akun Pesantren aktif sebelum aktivasi." };
     setState((draft) => {
       const institution = draft.institutions.find((item) => item.code === code)!;
       institution.status = status;
@@ -1215,7 +1215,7 @@ export const storeActions = {
       draft.instrumentVersions.push(copy);
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         {
           objectType: "InstrumentVersion",
           objectId: id,
@@ -1250,7 +1250,7 @@ export const storeActions = {
       });
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         {
           objectType: "InstrumentVersion",
           objectId: versionId,
@@ -1316,11 +1316,11 @@ export const storeActions = {
         categoryId: (input.categoryId ??
           dim.categoryId) as InstrumentVersion["dimensions"][number]["indicators"][number]["categoryId"],
         aspectId: input.aspectId,
-        findingTrigger: "ilustrasi: dikaji pengelola saat validasi",
+        findingTrigger: "ilustrasi: dikaji Pesantren saat validasi",
       });
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         {
           objectType: "InstrumentVersion",
           objectId: versionId,
@@ -1357,7 +1357,7 @@ export const storeActions = {
       draft.activeInstrumentVersionId = id;
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         { objectType: "InstrumentVersion", objectId: id, action: "Mempublikasikan instrumen" },
       );
     });
@@ -1379,10 +1379,10 @@ export const storeActions = {
     },
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return {
         ok: false,
-        error: "Hanya akun Peneliti aktif yang dapat mengelola berkas indikator.",
+        error: "Hanya akun Validator aktif yang dapat mengelola berkas indikator.",
       };
     }
     const indicatorId = input.indicatorId.trim();
@@ -1443,7 +1443,7 @@ export const storeActions = {
     return { ok: true, id };
   },
 
-  // D-16.g: Peneliti membuat entri dokumen indikator baru di luar katalog versi.
+  // D-16.g: Validator membuat entri dokumen indikator baru di luar katalog versi.
   // Metadata indikator di-denormalisasi; InstrumentVersion tidak diubah.
   createInstrumentDocEntry(
     actor: { id?: string; name: string; role?: string },
@@ -1459,10 +1459,10 @@ export const storeActions = {
     },
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return {
         ok: false,
-        error: "Hanya akun Peneliti aktif yang dapat menambah dokumen indikator.",
+        error: "Hanya akun Validator aktif yang dapat menambah dokumen indikator.",
       };
     }
     const code = input.code.trim();
@@ -1545,10 +1545,10 @@ export const storeActions = {
     visibility: InstrumentDocVisibility,
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return {
         ok: false,
-        error: "Hanya akun Peneliti aktif yang dapat mengubah visibilitas berkas.",
+        error: "Hanya akun Validator aktif yang dapat mengubah visibilitas berkas.",
       };
     }
     if (visibility !== "Public" && visibility !== "Privat") {
@@ -1576,8 +1576,8 @@ export const storeActions = {
     indicatorId: string,
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
-      return { ok: false, error: "Hanya akun Peneliti aktif yang dapat menghapus berkas." };
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus berkas." };
     }
     const target = currentState.instrumentDocs.find((item) => item.indicatorId === indicatorId);
     if (!target) return { ok: false, error: "Berkas indikator belum diunggah." };
@@ -1682,11 +1682,11 @@ function ensureDerivedWork(
           : (report.indicatorId ?? "Tidak menggunakan instrumen"),
       recommendation: `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
       status: "Belum ditindaklanjuti",
-      hazard: "Menunggu kajian pengelola",
-      impact: "Menunggu kajian pengelola",
+      hazard: "Menunggu kajian Pesantren",
+      impact: "Menunggu kajian Pesantren",
       likelihood: "Belum dinilai",
       severityText: level,
-      exposedPeople: "Menunggu kajian pengelola",
+      exposedPeople: "Menunggu kajian Pesantren",
       existingControl: "—",
       evidence: sourceAnswer?.evidenceName ?? report.evidenceName ?? "",
       observedAt: report.createdAt,
@@ -1741,7 +1741,7 @@ function setStateReport(
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !account.institutionCodes.includes(report.institutionCode)
     ) {
       result = { ok: false, error: "Anda tidak berwenang mengubah laporan pesantren ini." };
@@ -1755,7 +1755,7 @@ function setStateReport(
 function notifyOwners(draft: IshasState, institutionCode: string, reportId: string): void {
   const owners = draft.users.filter(
     (u) =>
-      u.roleId === "pengelola" &&
+      u.roleId === "pesantren" &&
       u.status === "Aktif" &&
       u.institutionCodes.includes(institutionCode),
   );
@@ -1765,7 +1765,7 @@ function notifyOwners(draft: IshasState, institutionCode: string, reportId: stri
       institutionCode,
       sourceObjectId: reportId,
       message: `Laporan baru ${reportId} menunggu validasi.`,
-      targetUrl: "/pengelola/validasi-laporan",
+      targetUrl: "/pesantren/validasi-laporan",
     });
   }
 }

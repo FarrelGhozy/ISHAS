@@ -22,7 +22,7 @@ import { StatusChip } from "~/shared/components/status-chip";
 function usePublicDocRows() {
   const state = useMockState();
   const user = useCurrentUser();
-  const canOpenPrivate = user?.roleId === "peneliti" && user?.status === "Aktif";
+  const canOpenPrivate = user?.roleId === "validator" && user?.status === "Aktif";
   const rows = useMemo(
     () =>
       selectPublicDocRows(selectIndicatorDocRows(state)).map((row) =>
@@ -76,7 +76,7 @@ function DocTable({
     return (
       <EmptyState
         title="Belum ada dokumen yang cocok"
-        description="Ubah kata kunci atau filter, atau hubungi Peneliti untuk penambahan berkas."
+        description="Ubah kata kunci atau filter, atau hubungi Validator untuk penambahan berkas."
       />
     );
   }

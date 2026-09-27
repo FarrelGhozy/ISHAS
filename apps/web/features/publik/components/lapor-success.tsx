@@ -29,7 +29,7 @@ export function LaporSuccess({
         Belum tampil di dashboard sebelum divalidasi.
       </p>
       <p className="max-w-md text-sm text-secondary-text">
-        Laporan Anda belum tampil di dashboard; menunggu validasi pengelola pondok.
+        Laporan Anda belum tampil di dashboard; menunggu validasi akun Pesantren.
       </p>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
         <Link className="secondary-button" to="/">

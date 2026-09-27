@@ -6,8 +6,8 @@ import type { K3CategoryId } from "./kategori-k3";
 export type RiskLevel = "Rendah" | "Sedang" | "Tinggi" | "Ekstrem"; // D-15.b, asumsi prototipe
 
 export type InstitutionStatus = "Persiapan" | "Aktif" | "Nonaktif";
-export type RoleId = "admin" | "peneliti" | "pengelola";
-export type RoleLabel = "Super Admin" | "Peneliti" | "Pengelola Pesantren";
+export type RoleId = "admin" | "validator" | "pesantren";
+export type RoleLabel = "Super Admin" | "Validator" | "Pesantren";
 export type ReportChannel = "lapor-cepat" | "penilaian-mandiri";
 export type ValidationStatus = "Menunggu validasi" | "Diterima" | "Ditolak";
 export type Severity = "Belum ditentukan" | "Tinggi" | "Sedang" | "Rendah";
@@ -28,7 +28,7 @@ export type InstrumentDoc = {
   mime: "application/pdf";
   assetId: string; // blob di IndexedDB perangkat-lokal
   visibility: InstrumentDocVisibility; // default 'Privat'
-  // D-16.g: entri dokumen buatan Peneliti (tidak ada di katalog versi).
+  // D-16.g: entri dokumen buatan Validator (tidak ada di katalog versi).
   indicatorCode?: string;
   indicatorTitle?: string;
   manual?: boolean;
@@ -44,7 +44,7 @@ export type Institution = {
   name: string; // unik, maks 120
   location: string; // 'Kota Malang' (kota/kabupaten; alamat lengkap di address bila ada)
   address?: string; // alamat lengkap onboarding (FLOWS §1); publik hanya kota/kabupaten (D-02)
-  manager: string; // nama pengelola utama (teks tampilan; relasi resmi via User.institutionCodes)
+  manager: string; // nama penanggung jawab utama (teks tampilan; relasi resmi via User.institutionCodes)
   users?: number; // count turunan (DATA_MODEL §2); dihitung, bukan input
   assessment: "Belum dimulai" | "Berjalan" | "Draft" | "Selesai"; // warisan V1; pemetaan menunggu D-04
   status: InstitutionStatus;
@@ -57,8 +57,8 @@ export type User = {
   initials: string;
   role: RoleLabel;
   roleId: RoleId;
-  institution: string; // nama tampilan lingkup ('Seluruh sistem' utk admin/peneliti)
-  institutionCodes: string[]; // pengelola: tepat 1 kode; admin/peneliti: []
+  institution: string; // nama tampilan lingkup ('Seluruh sistem' utk admin/validator)
+  institutionCodes: string[]; // pesantren: tepat 1 kode; admin/validator: []
   status: "Aktif" | "Menunggu" | "Nonaktif";
   lastActive: string;
 };
@@ -84,14 +84,14 @@ export type Report = {
   contact?: string;
   instrumentVersionId?: string; // wajib bila kanal penilaian-mandiri
   validationStatus: ValidationStatus;
-  severity: Severity; // 'Belum ditentukan', hanya pengelola yang mengubah
+  severity: Severity; // 'Belum ditentukan', hanya akun Pesantren yang mengubah
   priority: Priority;
   handlingStatus: HandlingStatus;
   rejectionReason?: string; // wajib bila Ditolak, min 10
   validationNote?: string;
-  validatedBy?: string; // FK User.id validator (keputusan moderasi)
-  validatedByName?: string; // snapshot nama validator saat keputusan (anti rewrite histori)
-  validatedByRole?: string; // snapshot peran validator saat keputusan
+  validatedBy?: string; // FK User.id akun Pesantren (keputusan moderasi)
+  validatedByName?: string; // snapshot nama akun Pesantren saat keputusan (anti rewrite histori)
+  validatedByRole?: string; // snapshot peran akun Pesantren saat keputusan
   validatedAt?: string;
   archivedAt?: string;
   archivedReason?: string;

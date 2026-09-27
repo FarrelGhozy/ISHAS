@@ -1,4 +1,4 @@
-// D-16: halaman kelola pustaka PDF per indikator (ruang Peneliti).
+// D-16: halaman kelola pustaka PDF per indikator (ruang Validator).
 // Independen dari versioning instrumen dan penilaian mandiri.
 
 import { InstrumentDocManager } from "../components/instrument-doc-manager";

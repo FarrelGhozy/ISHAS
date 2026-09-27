@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { renderToString } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { DokumenPage } from "~/features/publik/pages/dokumen-page";
-import { Page as DokumenInstrumenPage } from "~/features/peneliti/pages/dokumen-instrumen-page";
-import { Page as InstrumenPage } from "~/features/peneliti/pages/instrumen-page";
+import { Page as DokumenInstrumenPage } from "~/features/validator/pages/dokumen-instrumen-page";
+import { Page as InstrumenPage } from "~/features/validator/pages/instrumen-page";
 import { DashboardDocPanel } from "~/features/publik/components/public-instrument-docs";
 import { SESSION_STORAGE_KEY } from "~/shared/auth/session";
 
@@ -33,9 +33,9 @@ test("halaman /dokumen ter-render tanpa crash", () => {
   expect(html).toContain("Terkunci"); // privat tanpa tombol
 });
 
-test("halaman /peneliti/dokumen-instrumen ter-render saat login peneliti", () => {
+test("halaman /validator/dokumen-instrumen ter-render saat login validator", () => {
   const html = renderToString(
-    <MemoryRouter initialEntries={["/peneliti/dokumen-instrumen"]}>
+    <MemoryRouter initialEntries={["/validator/dokumen-instrumen"]}>
       <DokumenInstrumenPage />
     </MemoryRouter>,
   ).replace(/<!-- -->/g, "");
@@ -56,9 +56,9 @@ test("panel dashboard ter-render tanpa crash", () => {
   expect(html).toContain("Buka semua dokumen");
 });
 
-test("halaman /peneliti/instrumen ter-render setelah rapihan format", () => {
+test("halaman /validator/instrumen ter-render setelah rapihan format", () => {
   const html = renderToString(
-    <MemoryRouter initialEntries={["/peneliti/instrumen"]}>
+    <MemoryRouter initialEntries={["/validator/instrumen"]}>
       <InstrumenPage />
     </MemoryRouter>,
   ).replace(/<!-- -->/g, "");

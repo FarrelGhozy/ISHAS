@@ -1,5 +1,20 @@
 # TODO — Kontrol Kerja Aktif
 
+## Rename peran Peneliti→Validator + Pengelola→Pesantren — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: `Peneliti` menjadi `Validator` (fungsi tetap),
+`Pengelola Pesantren` menjadi `Pesantren` (fungsi tetap); `/peneliti/*` menjadi
+`/validator/*`, `/pengelola/*` menjadi `/pesantren/*` (contoh: `/pesantren/tindak-lanjut`).
+Keputusan D-17. Cakupan: docs normatif + `apps/web/` role-aware + migrasi schema v7→v8
++ redirect URL lama. Status stage lain tidak berubah sepihak.
+
+- [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (AGENTS, DECISIONS D-17, ROLES, ROUTES, FLOWS, DATA_MODEL, WIREFRAMES, README + sisa: TEST_PLAN, BACKLOG, DATA_REQUIREMENTS, VALIDATION_REVIEW V-19, DASHBOARD_*, KATEGORI, RISK_MAP, planning stages, TODO).
+- [x] Rename kode + migrasi v8 + redirect.
+- [x] Verifikasi: lint + typecheck + 123 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + alur klik browser (login 3 kartu, guard direct URL, redirect lama, validasi→terbit): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## Perapihan format kode apps/web — 23 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik: rapikan format seluruh kode `apps/web/`
@@ -235,7 +250,7 @@ Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` bel
 
 ## Stage 09 — Admin + sinkron dokumen + rilis REVIEW — `IN PROGRESS`
 
-- [x] Tambah pesantren Persiapan + buat akun pengelola; tanpa opsi asesor.
+- [x] Tambah pesantren Persiapan + buat akun Pesantren; tanpa opsi asesor.
 - [ ] Uji penuh `TEST_PLAN.md` (lint, typecheck, test, build lulus; route/visual menyusul).
 - [ ] Isi `Hasil Pemeriksaan` sesuai hasil nyata tiap stage. Stage `DONE` yang telah disetujui tidak diturunkan menjadi `REVIEW`; review integrasi dicatat di Stage 09.
 
@@ -244,7 +259,7 @@ Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` bel
 - Skala severity/priority resmi (sementara `Tinggi/Sedang/Rendah`).
 - Rumus indeks, bobot, ambang kategori, recommendation rule resmi.
 - Halaman perkenalan `/perkenalan` di aplikasi ISHAS (menunggu keputusan).
-- Rename `/pengelola` → `/pesantren`.
+- ~~Rename `/pengelola` → `/pesantren`~~ — dikerjakan via D-17 (27 Sep 2026).
 - D-04–D-12: arti hasil/agregat, temuan/status/riwayat, pesantren/akun, draft/versi, lokasi awal, tampilan.
 
 ## Review ulang frontend Stage 01–03 — 8 September 2026

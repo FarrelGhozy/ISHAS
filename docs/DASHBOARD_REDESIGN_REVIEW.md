@@ -65,9 +65,9 @@ border lembut, judul berikon, dan jarak rapat membentuk dashboard pemantauan.
   tidak publik (D-07), pesantren tidak terdaftar tidak publik (D-08).
 - Nama pelapor, kontak, bukti/foto, jawaban mentah, denah rinci/titik, tenggat internal,
   catatan dan audit tidak publik. Nama validator/PIC boleh publik (D-02 + matriks §6).
-- Pengirim publik/Pengelola Pesantren masuk antrean validasi. Severity/priority
-  ditentukan pengelola saat menerima, tanpa default; penolakan minimal 10 karakter.
-- Super Admin dan Peneliti tidak mengirim saat login (D-03). Tidak ada pemilih peran.
+- Pengirim publik/Pesantren masuk antrean validasi. Severity/priority
+  ditentukan akun Pesantren saat menerima, tanpa default; penolakan minimal 10 karakter.
+- Super Admin dan Validator tidak mengirim saat login (D-03). Tidak ada pemilih peran.
 - Identitas marun, status berlabel dan berikon, serta penanda `Data ilustrasi` tetap
   berlaku. Warna toska gambar belum menjadi pengganti token ISHAS.
 - Instrumen Published tidak diubah langsung. Perubahan struktur/opsi/aturan harus

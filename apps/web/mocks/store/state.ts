@@ -5,8 +5,8 @@
 import { SEED } from "../seed/seed";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 7;
-export const MOCK_STORAGE_KEY = "ishas-mock-v7";
+export const MOCK_SCHEMA_VERSION = 8;
+export const MOCK_STORAGE_KEY = "ishas-mock-v8";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -68,6 +68,54 @@ export function migrateV6(value: unknown): unknown {
   return migrated;
 }
 
+// D-17: v7 → v8 rename peran peneliti→validator, pengelola→pesantren.
+// Mempertahankan seluruh record/ID; hanya memetakan roleId, email demo,
+// targetUrl notifikasi, dan validatedByRole.
+export function migrateV7(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 7)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 8;
+  migrated.users?.forEach((user) => {
+    if (user.roleId === ("peneliti" as never)) {
+      user.roleId = "validator" as never;
+    }
+    if (user.roleId === ("pengelola" as never)) {
+      user.roleId = "pesantren" as never;
+    }
+    if (user.role === ("Peneliti" as never)) {
+      user.role = "Validator" as never;
+    }
+    if (user.role === ("Pengelola Pesantren" as never)) {
+      user.role = "Pesantren" as never;
+    }
+    if (user.email === "peneliti@ishas.demo") user.email = "validator@ishas.demo";
+    if (user.email === "peneliti2@ishas.demo") user.email = "validator2@ishas.demo";
+    if (user.email === "pengelola@ishas.demo") user.email = "pesantren@ishas.demo";
+    if (user.email === "pengelola2@ishas.demo") user.email = "pesantren2@ishas.demo";
+  });
+  migrated.reports?.forEach((report) => {
+    if (report.reporterAccountEmail === "peneliti@ishas.demo")
+      report.reporterAccountEmail = "validator@ishas.demo";
+    if (report.reporterAccountEmail === "peneliti2@ishas.demo")
+      report.reporterAccountEmail = "validator2@ishas.demo";
+    if (report.reporterAccountEmail === "pengelola@ishas.demo")
+      report.reporterAccountEmail = "pesantren@ishas.demo";
+    if (report.reporterAccountEmail === "pengelola2@ishas.demo")
+      report.reporterAccountEmail = "pesantren2@ishas.demo";
+    if (report.validatedByRole === "Pengelola Pesantren") report.validatedByRole = "Pesantren";
+    if (report.validatedByRole === "Peneliti") report.validatedByRole = "Validator";
+  });
+  migrated.notifications?.forEach((notification) => {
+    if (typeof notification.targetUrl === "string") {
+      notification.targetUrl = notification.targetUrl
+        .replaceAll("/peneliti/", "/validator/")
+        .replaceAll("/pengelola/", "/pesantren/");
+    }
+  });
+  return migrated;
+}
+
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
@@ -114,11 +162,12 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v7") ??
       localStorage.getItem("ishas-mock-v6") ??
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV6(migrateV5(migrateV4(JSON.parse(raw))));
+      const parsed: unknown = migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw)))));
       if (isValidState(parsed)) return parsed;
     }
   } catch {

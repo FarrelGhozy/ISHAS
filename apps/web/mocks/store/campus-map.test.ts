@@ -10,7 +10,7 @@ import { migrateV4 } from "./state";
 import { SEED } from "../seed/seed";
 import type { IshasState, LocationSnapshot } from "../types";
 
-const manager = { id: "USR-003", name: "Penguji", role: "Pengelola Pesantren" };
+const manager = { id: "USR-003", name: "Penguji", role: "Pesantren" };
 const location: LocationSnapshot = {
   locationText: "Koridor",
   floorNote: "Lantai 2",
@@ -95,7 +95,7 @@ test("titik invalid/versi salah/lintas pesantren ditolak tanpa membuat laporan",
   expect(validateMapLocation(getState(), "PSN-0019", location)).not.toBeNull();
 });
 
-test("penggantian memerlukan pengelola scope, persetujuan dan versi aktif yang belum berubah", () => {
+test("penggantian memerlukan pesantren scope, persetujuan dan versi aktif yang belum berubah", () => {
   const next = {
     institutionCode: "PSN-0018",
     assetId: "campus-asset-uji",
@@ -207,7 +207,7 @@ test("multi-jawaban memakai lineage dan titik sumber masing-masing", () => {
 test("Completed dan arsip tidak tampil pada peta publik", () => {
   expect(selectPublicCampusMap(getState(), "PSN-0019").items).toHaveLength(5);
   storeActions.archiveCompletedReport(
-    { id: "USR-004", name: "Penguji", role: "Pengelola Pesantren" },
+    { id: "USR-004", name: "Penguji", role: "Pesantren" },
     "RPT-0005",
     "Arsip akhir periode",
   );

@@ -50,11 +50,11 @@ type InstrumentDoc = {
   visibility: InstrumentDocVisibility; // default 'Privat'
   indicatorCode?: string; // D-16.g: denormalisasi entri manual
   indicatorTitle?: string; // D-16.g: denormalisasi entri manual
-  manual?: boolean; // true = entri dokumen buatan Peneliti (bukan katalog versi)
+  manual?: boolean; // true = entri dokumen buatan Validator (bukan katalog versi)
   updatedBy: string; updatedAt: string;
 };
 ```
-- D-16.g: entri dokumen buatan Peneliti memakai field opsional
+- D-16.g: entri dokumen buatan Validator memakai field opsional
   `indicatorCode/indicatorTitle/manual`; skema tetap `v7` (aditif, tanpa migrasi
   baru) dan tidak mengubah `instrumentVersions`.
 - Migrasi v5→v6 mempertahankan seluruh record/ID; hanya menambah field
@@ -64,8 +64,8 @@ type InstrumentDoc = {
 
 ```ts
 type InstitutionStatus = 'Persiapan' | 'Aktif' | 'Nonaktif';
-type RoleId = 'admin' | 'peneliti' | 'pengelola'; // 'asesor' DIHAPUS
-type RoleLabel = 'Super Admin' | 'Peneliti' | 'Pengelola Pesantren';
+type RoleId = 'admin' | 'validator' | 'pesantren'; // 'asesor' DIHAPUS; D-17 rename peneliti→validator, pengelola→pesantren
+type RoleLabel = 'Super Admin' | 'Validator' | 'Pesantren';
 type ReportChannel = 'lapor-cepat' | 'penilaian-mandiri';
 type ValidationStatus = 'Menunggu validasi' | 'Diterima' | 'Ditolak';
 type Severity = 'Belum ditentukan' | 'Tinggi' | 'Sedang' | 'Rendah';
@@ -88,20 +88,20 @@ type Institution = {
  code: string; // 'PSN-0018', unik, dibuat berurutan PSN-XXXX
  name: string; // unik, maks 120
  location: string; // 'Kota Malang'
- manager: string; // nama pengelola utama (teks)
+  manager: string; // nama penanggung jawab utama (teks)
  users: number; // count turunan, bukan input
  assessment: 'Belum dimulai' | 'Berjalan' | 'Draft' | 'Selesai'; // field lama (tidak dipakai sebagai status resmi); hubungan dengan hasil/periode belum dipetakan (D-04)
  status: InstitutionStatus;
 };
-// TERDAFTAR = status 'Aktif' DAN ada user roleId pengelola + institutionCodes
+// TERDAFTAR = status 'Aktif' DAN ada user roleId pesantren + institutionCodes
 // memuat code ini + status user 'Aktif'. Selain itu tidak tampil di pemilih.
 
 type User = {
  id: string; // 'USR-001'
  name: string; email: string; initials: string;
  role: RoleLabel; roleId: RoleId;
- institution: string; // nama tampilan lingkup ('Seluruh sistem' utk admin/peneliti)
- institutionCodes: string[]; // pengelola: tepat 1 kode; admin/peneliti: []
+  institution: string; // nama tampilan lingkup ('Seluruh sistem' utk admin/validator)
+  institutionCodes: string[]; // pesantren: tepat 1 kode; admin/validator: []
  status: 'Aktif' | 'Menunggu' | 'Nonaktif';
  lastActive: string;
 };
@@ -114,7 +114,7 @@ type Report = {
   aspectId?: string; // aspek pilihan pelapor (opsional, D-15)
   indicatorId?: string; // indikator terkait pilihan pelapor (opsional, D-15)
  reporterName: string; // 2-100 karakter, wajib; selalu tampil apa adanya secara internal (tanpa opsi anonim, D-02)
- reporterAccountEmail?: string; // terisi bila dikirim saat login (pengelola)
+  reporterAccountEmail?: string; // terisi bila dikirim saat login (Pesantren)
  title: string; // 10-140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
  description: string; // min 20 (lapor-cepat) / ringkasan otomatis dari jawaban terkirim (penilaian-mandiri; aturan penyusunannya belum ditetapkan, D-04/D-05)
  areaId?: string; // FK Area.id; kebijakan tanpa area menunggu D-11
@@ -124,8 +124,8 @@ type Report = {
  contact?: string;
  instrumentVersionId?: string; // wajib bila channel penilaian-mandiri
  validationStatus: ValidationStatus;
- severity: Severity; // default 'Belum ditentukan', hanya pengelola yang mengubah
- priority: Priority; // idem
+  severity: Severity; // default 'Belum ditentukan', hanya akun Pesantren yang mengubah
+  priority: Priority; // idem
  handlingStatus: HandlingStatus;
  rejectionReason?: string; // wajib bila Ditolak, min 10
  validationNote?: string;
@@ -187,22 +187,22 @@ denah rinci + titik, jawaban mentah, alasan penolakan, dan audit tidak publik. A
 nonaktif menunggu D-08.
 
 - Dashboard/hasil/peta/rekomendasi/laporan pimpinan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (+ temuan/rekomendasi turunannya), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
-- `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor + antrean `/pengelola/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02).
-- `Ditolak` hanya terlihat di arsip antrean pengelola pemilik scope.
+- `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor + antrean `/pesantren/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02).
+- `Ditolak` hanya terlihat di arsip antrean Pesantren pemilik scope.
 - Agregat `/` dihitung dari himpunan `Diterima` lintas pesantren terdaftar; filter pesantren mempersempit ke satu `institutionCode`.
 
 ## 4. Store actions (pengganti action asesor lama)
 
 | Action | Input | Hasil |
 |---|---|---|
-| `submitPublicReport` | field §FLOWS-2 + `reporterName` | `RPT-XXXX` + audit + notifikasi pengelola |
+| `submitPublicReport` | field §FLOWS-2 + `reporterName` | `RPT-XXXX` + audit + notifikasi Pesantren |
 | `saveSelfAssessmentDraft` | draft parsial | tersimpan lokal, `progress` dihitung ulang |
 | `submitSelfAssessment` | draft lengkap | snapshot jawaban terkirim + 1 `Report` + kandidat temuan + audit + notifikasi; ulang percobaan yang sama tidak menggandakan kiriman |
 | `acceptReport` | `id` + `severity` + `priority` (+ catatan) | `Diterima/Pending`; wajib keduanya terisi |
 | `rejectReport` | `id` + alasan min 10 | `Ditolak`; arsip + validator/waktu/alasan |
 | `updateHandlingStatus` | `id` + status baru + syarat per transisi (PIC/tenggat/bukti) | status baru + audit |
 | `deleteCompletedReport` | `id` + alasan | rancangan hapus report/temuan masih menunggu D-07; harus menetapkan dampak ke seluruh relasi dan riwayat |
-| `addUser` / `addInstitution` | sama tanpa peran asesor | + pesantren baru TIDAK otomatis tampil sebelum `Aktif` + punya pengelola |
+| `addUser` / `addInstitution` | sama tanpa peran asesor | + pesantren baru TIDAK otomatis tampil sebelum `Aktif` + punya akun Pesantren |
 | `resetMockData` | — | kembali ke seed |
 
 Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAssessmentDraft(assignmentId)`, `finalizeAssessment(assignmentId)`, dsb).
@@ -210,13 +210,13 @@ Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAsse
 ## 5. Seed kaya demo (agar setiap halaman dapat didemo ke dosen)
 
 Komposisi minimum §5 lama telah diperkaya (September 2026) menjadi data demo
-penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v6):
+penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v8, D-17):
 
 - 3 pesantren `Aktif` (`PSN-0018` PP Al-Hikmah Malang, `PSN-0019` PP Nurul Iman
   Batu, `PSN-0020` PP Darussalam Kediri) + 1 `Persiapan` (`PSN-0021`, tidak tampil
   di pemilih — untuk demo aturan). `PSN-0020` sengaja tanpa pengelola aktif
   sehingga TIDAK terdaftar: 2 pesantren terdaftar (kasus batas D-08/D-09).
-- 5 akun: Super Admin, 2 Peneliti, 2 Pengelola Pesantren (satu per pesantren
+- 5 akun: Super Admin, 2 Validator, 2 Pesantren (satu per pesantren
   terdaftar; kartu login tetap 3 akun — akun kedua ada di data untuk demo
   isolasi scope di sisi data).
 - 3 laporan `Menunggu validasi` (antrean 1 untuk PSN-0018, 2 untuk PSN-0019) +
@@ -243,6 +243,6 @@ penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v6):
   `INS-v1.0` diarsipkan untuk reproduksi snapshot lama). Mapping lama→baru di `KATEGORI_K3.md` §4.
 
 **Catatan validasi seed:** komposisi di atas baru menjamin dua pesantren terdaftar, bukan tiga,
-karena pengelola aktif baru tersedia untuk dua pesantren. Pilih skenario seed setelah D-09;
+karena akun Pesantren aktif baru tersedia untuk dua pesantren. Pilih skenario seed setelah D-09;
 lihat `DATA_REQUIREMENTS.md` §8. Seed tidak boleh membuat ketiga pesantren muncul dengan
 mengabaikan syarat pengelola aktif. Lokasi demo juga perlu mengikuti kebijakan D-11.

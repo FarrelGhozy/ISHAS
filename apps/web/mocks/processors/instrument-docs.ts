@@ -52,7 +52,7 @@ export function selectIndicatorDocRows(state: {
         }),
       )
     : [];
-  // D-16.g: entri dokumen buatan Peneliti (tidak ada di katalog versi) tetap tampil.
+  // D-16.g: entri dokumen buatan Validator (tidak ada di katalog versi) tetap tampil.
   const known = new Set(catalogRows.map((row) => row.indicatorId));
   const manualRows = (state.instrumentDocs ?? [])
     .filter((doc) => doc.manual && !known.has(doc.indicatorId))

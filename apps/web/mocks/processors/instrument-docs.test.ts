@@ -44,14 +44,14 @@ test("entri dokumen manual (D-16.g) tampil sebagai baris pustaka", () => {
     categoryId: "KAT-KESELAMATAN",
     aspectId: "ASP-KES-001",
     indicatorCode: "IND-DOC-001",
-    indicatorTitle: "Dokumen tambahan peneliti",
+    indicatorTitle: "Dokumen tambahan validator",
     manual: true,
     fileName: "tambahan.pdf",
     fileSize: 1024,
     mime: "application/pdf",
     assetId: "instrument-doc-123e4567-e89b-12d3-a456-426614174000",
     visibility: "Privat",
-    updatedBy: "Dr. M. Ridwan",
+    updatedBy: "M. Ridwan",
     updatedAt: "2026-09-23T00:00:00.000Z",
   };
   const withManual = selectIndicatorDocRows({
@@ -61,7 +61,7 @@ test("entri dokumen manual (D-16.g) tampil sebagai baris pustaka", () => {
   expect(withManual.length).toBe(11);
   const row = withManual.find((r) => r.indicatorId === "IND-DOC-001")!;
   expect(row.code).toBe("IND-DOC-001");
-  expect(row.title).toBe("Dokumen tambahan peneliti");
+  expect(row.title).toBe("Dokumen tambahan validator");
   expect(row.categoryName).toBe("Keselamatan");
   expect(row.aspectName).toBe("Instalasi listrik");
   expect(selectPublicDocRows(withManual).length).toBe(5);

@@ -19,7 +19,7 @@ export function Page() {
     <section className="flex flex-col gap-5">
       <header>
         <p className="kicker">Ruang kerja ilmiah</p>
-        <h1 className="text-2xl font-extrabold text-heading">Dashboard Peneliti</h1>
+        <h1 className="text-2xl font-extrabold text-heading">Dashboard Validator</h1>
         <p className="text-sm text-secondary-text">
           Ringkasan instrumen, cakupan data, dan kesiapan publikasi.
         </p>
@@ -56,7 +56,7 @@ export function Page() {
         <div className="surface p-4">
           <div className="flex justify-between">
             <h2 className="font-bold text-heading">Skor per dimensi</h2>
-            <Link className="text-button" to="/peneliti/scoring">
+            <Link className="text-button" to="/validator/scoring">
               Detail
             </Link>
           </div>
@@ -75,7 +75,7 @@ export function Page() {
         <div className="surface overflow-hidden">
           <div className="flex justify-between border-b border-line p-4">
             <h2 className="font-bold text-heading">Versi instrumen</h2>
-            <Link className="text-button" to="/peneliti/versioning">
+            <Link className="text-button" to="/validator/versioning">
               Kelola
             </Link>
           </div>
