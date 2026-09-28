@@ -2,6 +2,7 @@
 // UI memakai `repository` (bukan `mockRepository`) agar swap transparan per fase.
 
 import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { getCampusAsset } from "~/mocks/adapters/campus-assets";
 import {
   getState,
   storeActions,
@@ -21,6 +22,7 @@ import type {
 } from "~/mocks/types";
 import { refreshAdminState } from "./admin-state";
 import { USE_BACKEND } from "./http-client";
+import { refreshPublicState } from "./public-state";
 import {
   httpRepository,
   type BankIndicatorInput,
@@ -33,11 +35,15 @@ import {
 import { refreshAllWorkspaceStates } from "./workspace-state";
 
 export const repository = {
+  // Catatan: selector baca (`registeredInstitutions`, `validatedReports`,
+  // `findingsFor`, `recommendationsFor`) hanya valid di mode mock; alihkan baca
+  // ke state hook (`usePublicState`/`usePesantrenState`/…) agar tidak terjebak.
   ...mockRepository,
   async submitLaporCepat(actor: ReportActor, input: LaporInput): Promise<ActionResult> {
-    return USE_BACKEND
-      ? httpRepository.submitLaporCepat(actor, input)
-      : mockRepository.submitLaporCepat(actor, input);
+    if (!USE_BACKEND) return mockRepository.submitLaporCepat(actor, input);
+    const result = await httpRepository.submitLaporCepat(actor, input);
+    if (result.ok) refreshPublicState();
+    return result;
   },
   async uploadReportEvidence(
     actor: ReportActor,
@@ -48,20 +54,32 @@ export const repository = {
       ? httpRepository.uploadReportEvidence(actor, institutionCode, file)
       : mockRepository.uploadReportEvidence(actor, institutionCode, file);
   },
-  async saveSelfAssessmentDraft(input: SelfAssessmentDraft): Promise<ActionResult> {
+  async uploadSelfEvidence(
+    actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
     return USE_BACKEND
-      ? httpRepository.saveSelfAssessmentDraft(input)
-      : mockRepository.saveSelfAssessmentDraft(input);
+      ? httpRepository.uploadSelfEvidence(actor, institutionCode, file)
+      : mockRepository.uploadReportEvidence(actor, institutionCode, file);
+  },
+  async saveSelfAssessmentDraft(input: SelfAssessmentDraft): Promise<ActionResult> {
+    if (!USE_BACKEND) return mockRepository.saveSelfAssessmentDraft(input);
+    const result = await httpRepository.saveSelfAssessmentDraft(input);
+    if (result.ok) refreshPublicState();
+    return result;
   },
   async submitSelfAssessment(actor: ReportActor, draftId: string): Promise<ActionResult> {
-    return USE_BACKEND
-      ? httpRepository.submitSelfAssessment(actor, draftId)
-      : mockRepository.submitSelfAssessment(actor, draftId);
+    if (!USE_BACKEND) return mockRepository.submitSelfAssessment(actor, draftId);
+    const result = await httpRepository.submitSelfAssessment(actor, draftId);
+    if (result.ok) refreshPublicState();
+    return result;
   },
   async deleteSelfAssessmentDraft(draftId: string): Promise<ActionResult> {
-    return USE_BACKEND
-      ? httpRepository.deleteSelfAssessmentDraft(draftId)
-      : mockRepository.deleteSelfAssessmentDraft(draftId);
+    if (!USE_BACKEND) return mockRepository.deleteSelfAssessmentDraft(draftId);
+    const result = await httpRepository.deleteSelfAssessmentDraft(draftId);
+    if (result.ok) refreshPublicState();
+    return result;
   },
 
   // --- Ruang kerja Pesantren (Fase 2) ---
@@ -433,6 +451,11 @@ export const repository = {
       ? httpRepository.openEvidenceAsset(assetId)
       : mockRepository.openEvidenceAsset(assetId, institutionCode);
   },
+  // Denah: baca blob dari server saat flag aktif, selain itu IndexedDB perangkat.
+  async openCampusPlanAsset(assetId: string): Promise<Blob | null> {
+    if (USE_BACKEND) return httpRepository.openCampusPlanAsset(assetId);
+    return (await getCampusAsset(assetId)) ?? null;
+  },
 
   // --- Super Admin + notifikasi + migrasi aset (Fase 5) ---
   async addInstitution(
@@ -570,6 +593,7 @@ export const repository = {
     const result = await httpRepository.resetDemo();
     if (!result.ok) throw new Error(result.error);
     refreshAllWorkspaceStates();
+    refreshPublicState();
   },
 };
 

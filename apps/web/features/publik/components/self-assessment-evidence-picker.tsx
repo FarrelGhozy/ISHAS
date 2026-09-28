@@ -61,7 +61,7 @@ export function SelfAssessmentEvidencePicker({
           onBusy(true);
           setError("");
           try {
-            const result = await repository.uploadReportEvidence(actor, institutionCode, file);
+            const result = await repository.uploadSelfEvidence(actor, institutionCode, file);
             if (!alive.current) return;
             if (result.ok && result.id) onChange(result.id, file.name.trim());
             else if (!result.ok) setError(result.error);

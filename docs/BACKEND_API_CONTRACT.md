@@ -71,7 +71,7 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 |---|---|---|
 | `GET /public/dashboard?institution=&period=` | `institution` tak dikenal → fallback semua + notice (bukan error) | Agregat D-04 ilustratif: 1 snapshot `Diterima` terbaru/lembaga, rata-rata per lembaga, `indexHistory` untuk tren |
 | `GET /public/results`, `/public/risk-map`, `/public/recommendations`, `/public/follow-ups` | Filter `institution` sama; peta butuh 1 pesantren dipilih (D-14) | Daftar Area + temuan aktif (tanpa `Dibatalkan`), rekomendasi final |
-| `GET /public/reports/:id/pdf-data` | Hanya laporan `penilaian-mandiri` + `Diterima` | Kop + skor beku + dimensi + temuan (lokasi, severity/priority final, status/progres/PIC) + foto bukti + metadata (D-28, tanpa jawaban mentah) |
+| `GET /public/reports/:id/pdf-data` | Hanya laporan `penilaian-mandiri` + `Diterima` | Kop + skor beku + dimensi + temuan (lokasi, severity/priority final, status/progres/PIC) + foto bukti + metadata (D-28). Tanpa jawaban mentah: `snapshot.answers` hanya memuat `evidenceAssetId`/`evidenceName` (foto) + `institution` + `instrumentLabel` |
 | `GET /public/docs?q=&category=&visibility=` | Blob privat di-strip (`assetId=""`) | Baris katalog + filter; `Privat` hanya nama + gembok |
 | `GET /public/institutions` | — | Hanya terdaftar (pemilih publik) |
 | `GET /public/institutions/:code` | Tak dikenal → empty, bukan 404 teknis | Profil ringkas (kota saja, tanpa alamat lengkap — D-02) |
@@ -141,7 +141,8 @@ bukan nol; opsi lama (`likert-1-5` dsb) hanya dibaca untuk snapshot lama.
 (`name` ≥3), `POST /validator/bank/indicators` (`code` unik global, `title` ≥5,
 `prompt` ≥10, tipe 1 dari 4, aspek se-kategori), `PATCH/DELETE .../:id`
 (ganti tipe → opsi reset), `PUT /validator/bank/indicators/:id/options`
-(≥2 opsi, label unik, bobot 0–100, pengali 0–10). Tiap ubah: `checksum` baru +
+(≥2 opsi, nilai unik, bobot 0–100, pengali 0–10 dengan nol ditolak — cermin
+mock 1:1). Tiap ubah: `checksum` baru +
 audit. Hapus tidak memblokir riwayat (snapshot beku tetap).
 
 `GET /validator/bank/dimensions` mengembalikan bank penuh (dimensi→indikator→opsi
@@ -168,7 +169,7 @@ menyembunyikan bobot/flag. `GET /validator/state` (D-30.d) adalah proyeksi penuh
 | `POST /validator/sam/categories` | `name` ≥3, unik | Kategori baru |
 | `PATCH /validator/sam/categories/:id` | `name` ≥3, unik | Ubah kategori |
 | `DELETE /validator/sam/categories/:id` | Kategori berisi soal → tolak | Hapus kategori |
-| `POST /validator/sam/questions` | `text` ≥5, `categoryId` dikenal, `panduan` ≤500, `contohBukti` ≤280 | Soal baru |
+| `POST /validator/sam/questions` | `text` ≥10, `categoryId` dikenal, `panduan` ≤500, `contohBukti` ≤280 | Soal baru |
 | `PATCH /validator/sam/questions/:id` | idem | Ubah soal |
 | `POST /validator/sam/questions/:id/move` | `direction up\|down` (juga menerima `naik\|turun` dari UI) | Urutan soal |
 | `POST /validator/sam/questions/:id/active` | boolean | Aktif/nonaktif soal |
@@ -237,13 +238,13 @@ institusi pada filter, bukan nama/kontak pelapor.
 | Method + Path | Akses | Efek |
 |---|---|---|
 | `GET /health` | publik | `{ok:true,data:{status:"ok",db:"ok",version,uptime}}`; dipakai issue Fase 0 |
-| `GET /api/files/:assetId` | sesuai `visibility`+scope (`BACKEND_STORAGE.md` §4) | Stream blob, `Content-Disposition: inline`, `nosniff`, `Cache-Control: private, max-age=3600` |
+| `GET /api/v1/files/:assetId` | sesuai `visibility`+scope (`BACKEND_STORAGE.md` §4) | Stream blob, `Content-Disposition: inline`, `nosniff`, `Cache-Control: private, max-age=3600` |
 | `POST /uploads/*` | sesuai matriks §1 | Endpoint staging per jenis (report/self/sam/completion/campus/instrument-doc) |
 | `POST /admin/*` | Super Admin aktif | Admin, audit, reset, sweep, migrasi (§12) |
-| `GET/POST /notifications` | akun sesi | Daftar + tandai dibaca |
+| `GET/POST /notifications` | akun sesi | Daftar (`GET /notifications`) + tandai dibaca (`POST /notifications/read`) |
 
 Tidak ada respons API yang memuat `stored_path`/path storage absolut; blob hanya
-disajikan lewat `GET /api/files/:assetId` (atau alias `/docs/:indicatorId/blob`).
+disajikan lewat `GET /api/v1/files/:assetId` (atau alias `/docs/:indicatorId/blob`).
 
 CORS/lingkungan: dev memakai Vite proxy (same-origin, cookie `SameSite=Lax`
 cukup). Bila frontend dan API beda origin di produksi, wajib

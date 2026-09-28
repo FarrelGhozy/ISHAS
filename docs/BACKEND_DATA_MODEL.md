@@ -17,7 +17,8 @@ Sumber: `apps/web/mocks/types.ts` + `docs/DATA_MODEL.md`. Schema mock aktif: **v
   `JSON` selama tidak di-filter SQL; yang di-filter/join dibuat tabel sendiri.
 - `created_at/updated_at` DEFAULT/ON UPDATE ada di **semua tabel domain ber-ID**.
   Pengecualian yang disengaja (tidak punya salah satunya): `bank_options`,
-  `instrument_version_indicators`, `sam_follow_ups` (hanya `created_at`),
+  `instrument_version_indicators`, `sam_follow_ups` (memakai `created_at` +
+  `updated_at`),
   `audit_events`/`notifications` (memakai `at` sebagai waktu domain),
   `sequences` (metrik sederhana). Jangan menambah timestamp yang tidak dipakai UI.
 - Uang tidak ada; skor disimpan `TINYINT/INT`, persen `DECIMAL(5,2)`,
@@ -355,7 +356,7 @@ CREATE TABLE findings (
   x DECIMAL(5,2) NOT NULL DEFAULT 0.00,  -- *derived* dari location_snapshot.point
   y DECIMAL(5,2) NOT NULL DEFAULT 0.00,
   indicator VARCHAR(200) NOT NULL DEFAULT '',
-  recommendation TEXT NOT NULL DEFAULT '',
+  recommendation TEXT NOT NULL,   -- tanpa DEFAULT: MySQL 8 menolak default literal pada TEXT
   hazard VARCHAR(255) NOT NULL DEFAULT 'Menunggu kajian Pesantren',
   impact VARCHAR(255) NOT NULL DEFAULT 'Menunggu kajian Pesantren',
   likelihood VARCHAR(80) NOT NULL DEFAULT 'Belum dinilai',

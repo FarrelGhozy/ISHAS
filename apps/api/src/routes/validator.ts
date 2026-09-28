@@ -85,8 +85,10 @@ export function buildValidatorRoutes(deps: ValidatorRouteDeps): Route[] {
   const withState = (handler: (ctx: StateContext) => Promise<Response>) =>
     async (ctx: RouteContext) => handler({ ...ctx, state: await deps.loadState() });
 
-  const guard = (ctx: RouteContext): Response | null =>
-    isValidator(ctx.actor) ? null : fail(FORBIDDEN, 403);
+  const guard = (ctx: RouteContext): Response | null => {
+    if (!ctx.actor || ctx.actor.status !== "Aktif") return fail("Sesi tidak dikenal.", 401);
+    return isValidator(ctx.actor) ? null : fail(FORBIDDEN, 403);
+  };
 
   return [
     {

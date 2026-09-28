@@ -40,8 +40,10 @@ export function buildAdminRoutes(deps: AdminRouteDeps): Route[] {
   const withState = (handler: (ctx: StateContext) => Promise<Response>) =>
     async (ctx: RouteContext) => handler({ ...ctx, state: await deps.loadState() });
 
-  const guard = (ctx: RouteContext): Response | null =>
-    isAdmin(ctx.actor) ? null : fail(FORBIDDEN, 403);
+  const guard = (ctx: RouteContext): Response | null => {
+    if (!ctx.actor || ctx.actor.status !== "Aktif") return fail("Sesi tidak dikenal.", 401);
+    return isAdmin(ctx.actor) ? null : fail(FORBIDDEN, 403);
+  };
 
   return [
     {
@@ -57,8 +59,8 @@ export function buildAdminRoutes(deps: AdminRouteDeps): Route[] {
         if (denied) return denied;
         const { url } = ctx;
         const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
-        const rawLimit = Number.parseInt(url.searchParams.get("limit") ?? "50", 10) || 50;
-        const limit = Math.min(200, Math.max(1, rawLimit));
+        const rawLimit = Number.parseInt(url.searchParams.get("limit") ?? "20", 10) || 20;
+        const limit = Math.min(100, Math.max(1, rawLimit));
         const result = listAudit(
           ctx.state,
           {

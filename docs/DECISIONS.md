@@ -815,6 +815,36 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   build lulus; smoke endpoint admin/notifikasi/sweep OK; cek visual 3 viewport
   belum dijalankan.
 
+## D-30.g — Audit + perbaikan Fase 0–5 sebelum auth (issue #6) — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`validasi issues backend yang sudah ditutup fase 0–5 … sebelum
+  lanjut ke #6` lalu `ok kerjakan`): audit menyeluruh #3–#8 + #10, lalu perbaiki
+  semua temuan (A–F) sebelum fase auth. Status stage lain tidak berubah sepihak.
+- **Perbaikan backend:** redaksi D-02 pada `/public/results|recommendations|follow-ups`
+  dan `pdf-data` (foto bukti saja, tanpa jawaban mentah); `DELETE
+  /uploads/report-evidence/:assetId` dibatasi kind + scope Pesantren (Super Admin
+  dilarang); `accept` memeriksa sesi/scope sebelum validasi; pemetaan status HTTP
+  **401** (tanpa sesi) & **413** (ukuran/tipe berkas) selain 403/404/409; idempotensi
+  lapor-cepat membaca header `X-Request-Id`; pagination audit 20/100; route berkas
+  menyajikan blob via `tryReadStoredBlob` (baris seed tanpa blob → 404, bukan 500).
+- **Skema:** migrasi `0004` menambah FK `RESTRICT` `reports.evidence_asset_id`
+  dan `recommendations.completion_evidence_asset_id` → `file_assets`; migrasi
+  `0005` menambah `notifications.legacy_id` agar ID `NOT-*` stabil.
+- **Seed fidelity:** `instrument_version_dimensions.description` disimpan,
+  `instrument_docs.updated_by` memakai nama seed, dan ilustrasi denah seed disalin
+  ke storage agar `GET /api/v1/files/:assetId` menyajikannya (paritas mock).
+- **Adapter #10:** `uploadSelfEvidence` → `POST /uploads/self-evidence` (picker
+  penilaian-mandiri sebelumnya salah endpoint), pustaka dokumen publik memakai
+  `repository`, halaman PDF publik memakai `GET /public/reports/:id/pdf-data`
+  (hook `usePublicReportPdf`) + `openCampusPlanAsset`, dan `refreshPublicState`
+  setelah mutasi/reset. Self-evidence publik hanya bila menempel pada laporan
+  mandiri `Diterima`.
+- **Higiene test:** test integrasi auto-skip bila `DB_NAME` bukan database uji
+  (`*test*`); verifikasi memakai `DB_NAME=ishas_test` (seed `TRUNCATE`).
+- Verifikasi: lint + typecheck + **78 test backend** (DB uji) + **244 test frontend**
+  + build lulus; migrate `--fresh` 5 migrasi + seed demo/empty OK. Cek visual 3
+  viewport adapter tetap pending (tercatat di TODO).
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

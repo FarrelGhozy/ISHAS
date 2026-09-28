@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { MapPin, AlertTriangle } from "lucide-react";
 import type { CampusPlanVersion, LocationSnapshot, PlanPoint } from "~/mocks/types";
-import { getCampusAsset } from "~/mocks/adapters/campus-assets";
+import { repository } from "~/shared/api/repository";
 import { isValidPoint } from "~/mocks/processors/campus-map";
 
 function usePlanImage(assetId: string) {
@@ -14,7 +14,8 @@ function usePlanImage(assetId: string) {
     }
     let disposed = false,
       objectUrl = "";
-    getCampusAsset(assetId)
+    repository
+      .openCampusPlanAsset(assetId)
       .then((blob) => {
         if (disposed) return;
         if (!blob) {

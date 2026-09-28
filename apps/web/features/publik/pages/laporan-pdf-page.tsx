@@ -5,9 +5,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Printer } from "lucide-react";
-import { useMockState } from "~/mocks/store/mock-store";
-import { selectPublicReports } from "~/mocks/store/selectors";
-import { getEvidenceAsset } from "~/mocks/adapters/report-evidence";
+import { repository } from "~/shared/api/repository";
+import { usePublicReportPdf } from "~/shared/api/public-report-pdf";
 import type { SelfAssessmentSnapshot } from "~/mocks/types";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
@@ -30,10 +29,11 @@ function FotoBukti({
     if (!assetId) return;
     let batal = false;
     let objectUrl = "";
-    getEvidenceAsset(assetId)
+    repository
+      .openEvidenceAsset(assetId, institutionCode)
       .then((asset) => {
         if (batal) return;
-        if (!asset || asset.institutionCode !== institutionCode) {
+        if (!asset.ok) {
           setHilang(true);
           return;
         }
@@ -84,7 +84,7 @@ function BuktiFoto({
   snapshot,
   institutionCode,
 }: {
-  snapshot?: SelfAssessmentSnapshot;
+  snapshot?: SelfAssessmentSnapshot | null;
   institutionCode: string;
 }) {
   const entri = Object.entries(snapshot?.answers ?? {}).filter(
@@ -117,13 +117,10 @@ function BuktiFoto({
 }
 
 export function LaporanPdfPage() {
-  const state = useMockState();
   const { id } = useParams();
-  const report = selectPublicReports(state, null).find(
-    (r) => r.id === id && r.channel === "penilaian-mandiri",
-  );
+  const data = usePublicReportPdf(id);
 
-  if (!report)
+  if (!data)
     return (
       <EmptyState
         title="Laporan tidak tersedia"
@@ -131,10 +128,9 @@ export function LaporanPdfPage() {
       />
     );
 
-  const institution = state.institutions.find((i) => i.code === report.institutionCode);
-  const snapshot = state.selfAssessmentSnapshots.find((s) => s.reportId === report.id);
-  const temuan = state.findings.filter((f) => f.reportId === report.id);
-  const rekomendasi = new Map(state.recommendations.filter((r) => r.reportId === report.id).map((r) => [r.id, r]));
+  const { report, snapshot, institution } = data;
+  const temuan = data.findings;
+  const rekomendasi = new Map(data.recommendations.map((r) => [r.id, r]));
   const checksumPendek = snapshot?.instrumentChecksum
     ? snapshot.instrumentChecksum.slice(0, 8)
     : "";
@@ -163,7 +159,7 @@ export function LaporanPdfPage() {
           {new Date(tanggalKirim).toLocaleDateString("id-ID")}
         </p>
         <p className="mt-1 text-xs text-secondary-text">
-          {state.instrument.label}
+          {data.instrumentLabel}
           {checksumPendek ? ` · checksum ${checksumPendek}` : ""}
           {report.pdfGeneratedAt
             ? ` · PDF dibuat ${new Date(report.pdfGeneratedAt).toLocaleDateString("id-ID")}`

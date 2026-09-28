@@ -44,7 +44,7 @@ Health check:
 
 ```bash
 curl -s http://localhost:3004/health
-# {"ok":true,"data":{"status":"ok","db":"ok","version":"0.1.0","uptime":1}}
+# {"ok":true,"data":{"status":"ok","db":"ok","version":"0.2.0","uptime":1}}
 ```
 
 ## Endpoint Fase 1–3
@@ -95,8 +95,13 @@ header `X-Demo-Account: USR-xxx` (non-production); publik tanpa header.
 ```bash
 bun run lint
 bun run typecheck
-bun test          # unit + integrasi DB; integrasi auto-skip tanpa MySQL
+DB_NAME=ishas_test bun run migrate   # sekali: siapkan database uji terpisah
+DB_NAME=ishas_test bun test          # unit + integrasi DB; auto-skip tanpa MySQL/DB uji
 ```
+
+Test integrasi memakai **database uji** (bukan `ishas`) karena seed melakukan
+`TRUNCATE`; tanpa `DB_NAME` berisi `test` atau tanpa MySQL, test integrasi
+di-skip dan itu dilaporkan.
 
 Cakupan test: `tests/checksum.test.ts` (vektor checksum mock↔backend),
 `tests/helpers.test.ts` (normalisasi nilai), `tests/domain.test.ts` (validasi

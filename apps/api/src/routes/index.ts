@@ -16,12 +16,12 @@ import type { IshasState } from "../../../web/mocks/types";
 import type { Route, RouteContext } from "../router";
 import { actionResponse, fail, httpStatusForError, ok } from "../http";
 import { requireRole } from "../actor";
-import { buildPublicState } from "../domain/public-state";
+import { buildPublicState, projectPublicRecommendation, projectPublicReport } from "../domain/public-state";
 import { resolveSender, submitLaporCepat, validateEvidence, validateLapor } from "../domain/lapor";
 import { deleteDraftById, saveDraft, submitSelfAssessment, type DraftInput } from "../domain/self-assessment";
 import { uploadEvidence } from "../domain/uploads";
 import { deleteFileAsset, getFileAsset } from "../repo/files";
-import { readStoredBlob, removeStoredBlob } from "../storage";
+import { removeStoredBlob, tryReadStoredBlob } from "../storage";
 import { buildPesantrenRoutes } from "./pesantren";
 import { buildValidatorRoutes } from "./validator";
 import { buildAdminRoutes } from "./admin";
@@ -142,7 +142,10 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       handler: withState(async ({ state, url }) => {
         const { selected } = institutionNotice(state, url);
         const reports = selectPublicReports(state, selected ?? null);
-        return ok({ items: reports, findings: selectFindingsByReports(state, reports) });
+        return ok({
+          items: reports.map(projectPublicReport),
+          findings: selectFindingsByReports(state, reports),
+        });
       }),
     },
     {
@@ -151,7 +154,9 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       handler: withState(async ({ state, url }) => {
         const { selected } = institutionNotice(state, url);
         const reports = selectPublicReports(state, selected ?? null);
-        return ok({ items: selectRecommendationsByReports(state, reports) });
+        return ok({
+          items: selectRecommendationsByReports(state, reports).map(projectPublicRecommendation),
+        });
       }),
     },
     {
@@ -160,7 +165,9 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       handler: withState(async ({ state, url }) => {
         const { selected } = institutionNotice(state, url);
         const reports = selectPublicReports(state, selected ?? null);
-        return ok({ items: selectRecommendationsByReports(state, reports) });
+        return ok({
+          items: selectRecommendationsByReports(state, reports).map(projectPublicRecommendation),
+        });
       }),
     },
     {
@@ -244,21 +251,34 @@ export function buildRoutes(deps: RouteDeps): Route[] {
         if (report.channel !== "penilaian-mandiri" || report.validationStatus !== "Diterima") {
           return fail("Laporan tidak tersedia untuk publik.", 404);
         }
+        const institution = selectRegisteredInstitutions(state).find(
+          (i) => i.code === report.institutionCode,
+        );
         const snapshot = state.selfAssessmentSnapshots.find((s) => s.reportId === report.id);
+        // D-02 + D-27: tanpa jawaban mentah, tetapi foto bukti per indikator
+        // (asset + nama) tetap tersedia untuk PDF publik.
+        const evidenceOnly = snapshot
+          ? Object.fromEntries(
+              Object.entries(snapshot.answers).map(([indicatorId, answer]) => [
+                indicatorId,
+                {
+                  evidenceAssetId: answer.evidenceAssetId,
+                  evidenceName: answer.evidenceName,
+                },
+              ]),
+            )
+          : {};
         return ok({
-          report: {
-            ...report,
-            reporterName: "",
-            reporterUserId: undefined,
-            reporterAccountEmail: undefined,
-            contact: undefined,
-            reporterRecommendation: undefined,
-            evidenceAssetId: undefined,
-            instrumentChecksum: undefined,
-          },
-          snapshot: snapshot ? { ...snapshot, answers: {} } : null,
+          report: projectPublicReport(report),
+          snapshot: snapshot ? { ...snapshot, answers: evidenceOnly } : null,
           findings: selectFindingsByReports(state, [report]),
-          recommendations: selectRecommendationsByReports(state, [report]),
+          recommendations: selectRecommendationsByReports(state, [report]).map(
+            projectPublicRecommendation,
+          ),
+          institution: institution
+            ? { code: institution.code, name: institution.name, location: institution.location }
+            : null,
+          instrumentLabel: state.instrument.label,
         });
       }),
     },
@@ -267,6 +287,10 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       pattern: "/api/v1/reports/lapor-cepat",
       handler: withState(async ({ state, actor, request }) => {
         const input = await readJson<Parameters<typeof validateLapor>[1]>(request);
+        // Kontrak §0/§3: idempotensi lewat header X-Request-Id; body
+        // clientRequestId tetap didukung (cermin mock).
+        const headerKey = request.headers.get("x-request-id")?.trim();
+        if (headerKey && !input.clientRequestId) input.clientRequestId = headerKey;
         const senderOrError = resolveSender(state, actor, "laporan");
         if ("error" in senderOrError) return fail(senderOrError.error, 403);
         const evidenceError = await validateEvidence(input);
@@ -299,10 +323,12 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       handler: withState(async ({ state, actor, params }) => {
         if (!actor || actor.status !== "Aktif") return fail("Sesi tidak dikenal.", 401);
         const asset = await getFileAsset(params.assetId);
-        if (!asset) return fail("Berkas tidak ditemukan.", 404);
+        if (!asset || String(asset.kind) !== "report-evidence") {
+          return fail("Berkas tidak ditemukan.", 404);
+        }
         if (
-          actor.roleId !== "admin" &&
-          !(actor.roleId === "pesantren" && actor.institutionCodes.includes(String(asset.institution_code)))
+          actor.roleId !== "pesantren" ||
+          !actor.institutionCodes.includes(String(asset.institution_code))
         ) {
           return fail("Anda tidak berwenang menghapus berkas ini.", 403);
         }
@@ -376,38 +402,52 @@ export function buildRoutes(deps: RouteDeps): Route[] {
         const asset = await getFileAsset(params.assetId);
         if (!asset) return fail("Berkas tidak ditemukan.", 404);
         const kind = String(asset.kind);
+        const active = actor?.status === "Aktif" ? actor : null;
         if (kind === "instrument-doc") {
           const isPublic = String(asset.visibility) === "Public";
-          const isValidator = actor?.status === "Aktif" && actor.roleId === "validator";
+          const isValidator = active?.roleId === "validator";
           if (!isPublic && !isValidator) {
             return fail("Berkas Privat hanya dapat dibuka oleh Validator.", 403);
           }
         } else if (kind === "self-evidence") {
-          // D-27: foto bukti penilaian-mandiri boleh lewat pdf-data publik;
-          // akses langsung tetap privat untuk pemilik scope.
-          const allowed =
-            actor?.status === "Aktif" &&
-            (actor.roleId === "admin" ||
-              (actor.roleId === "pesantren" &&
-                actor.institutionCodes.includes(String(asset.institution_code))));
-          if (!allowed) return fail("Berkas bukti bersifat privat.", 403);
+          // D-27: foto bukti yang menempel pada laporan mandiri publik boleh
+          // tampil di PDF publik; di luar itu tetap privat untuk pemilik scope.
+          const ownerReportId = String(asset.owner_ref ?? "");
+          const viaPublicPdf = selectPublicReports(state, null).some((r) => r.id === ownerReportId);
+          if (!viaPublicPdf) {
+            if (!active) return fail("Sesi tidak dikenal.", 401);
+            const allowed =
+              active.roleId === "admin" ||
+              (active.roleId === "pesantren" &&
+                active.institutionCodes.includes(String(asset.institution_code)));
+            if (!allowed) return fail("Berkas bukti bersifat privat.", 403);
+          }
         } else if (kind === "sam-evidence") {
           // Fase 4: bukti SAM-iSAFE hanya untuk Validator aktif.
-          const isValidator = actor?.status === "Aktif" && actor.roleId === "validator";
-          if (!isValidator) return fail("Berkas bukti bersifat privat.", 403);
+          if (!active) return fail("Sesi tidak dikenal.", 401);
+          if (active.roleId !== "validator") return fail("Berkas bukti bersifat privat.", 403);
+        } else if (kind === "campus-plan") {
+          // Denah: blob Public dapat dibuka publik (cermin peta publik D-14;
+          // pesantren yang dipilih ditentukan client via activeCampusPlanVersionId).
+          if (String(asset.visibility) !== "Public") {
+            if (!active) return fail("Sesi tidak dikenal.", 401);
+            const allowed =
+              active.roleId === "admin" ||
+              (active.roleId === "pesantren" &&
+                active.institutionCodes.includes(String(asset.institution_code)));
+            if (!allowed) return fail("Berkas bukti bersifat privat.", 403);
+          }
         } else {
+          if (!active) return fail("Sesi tidak dikenal.", 401);
           const allowed =
-            actor?.status === "Aktif" &&
-            (actor.roleId === "admin" ||
-              (actor.roleId === "pesantren" &&
-                actor.institutionCodes.includes(String(asset.institution_code))));
+            active.roleId === "admin" ||
+            (active.roleId === "pesantren" &&
+              active.institutionCodes.includes(String(asset.institution_code)));
           if (!allowed) return fail("Berkas bukti bersifat privat.", 403);
         }
         void state;
-        if (String(asset.stored_path).startsWith("seed/")) {
-          return fail("Berkas belum tersedia di server.", 404);
-        }
-        const bytes = await readStoredBlob(String(asset.stored_path));
+        const bytes = await tryReadStoredBlob(String(asset.stored_path));
+        if (!bytes) return fail("Berkas belum tersedia di server.", 404);
         return new Response(bytes, {
           status: 200,
           headers: {
@@ -425,14 +465,20 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       handler: withState(async ({ state, actor, params }) => {
         const doc = state.instrumentDocs.find((d) => d.indicatorId === params.indicatorId);
         if (!doc) return fail("Berkas belum tersedia untuk indikator ini.", 404);
-        const canOpen =
-          doc.visibility === "Public" || (actor?.status === "Aktif" && actor.roleId === "validator");
-        if (!canOpen) return fail("Berkas Privat hanya dapat dibuka oleh Validator.", 403);
+        if (doc.visibility !== "Public") {
+          if (!actor || actor.status !== "Aktif") return fail("Sesi tidak dikenal.", 401);
+          if (actor.roleId !== "validator") {
+            return fail("Berkas Privat hanya dapat dibuka oleh Validator.", 403);
+          }
+        }
         const asset = await getFileAsset(doc.assetId);
-        if (!asset || String(asset.stored_path).startsWith("seed/")) {
+        if (!asset) {
           return fail("Berkas tidak tersedia pada server. Unggah ulang melalui ruang Validator.", 404);
         }
-        const bytes = await readStoredBlob(String(asset.stored_path));
+        const bytes = await tryReadStoredBlob(String(asset.stored_path));
+        if (!bytes) {
+          return fail("Berkas tidak tersedia pada server. Unggah ulang melalui ruang Validator.", 404);
+        }
         return new Response(bytes, {
           status: 200,
           headers: {

@@ -115,6 +115,22 @@ export const httpRepository = {
     return result.ok ? { ok: true, id: result.data.id } : { ok: false, error: result.error };
   },
 
+  // D-27: bukti foto jawaban penilaian-mandiri (kind `self-evidence`).
+  async uploadSelfEvidence(
+    _actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("institutionCode", institutionCode);
+    const result = await apiRequest<{ id: string }>("/uploads/self-evidence", {
+      method: "POST",
+      form,
+    });
+    return result.ok ? { ok: true, id: result.data.id } : { ok: false, error: result.error };
+  },
+
   async saveSelfAssessmentDraft(input: SelfAssessmentDraft): Promise<ActionResult> {
     const result = await apiRequest<{ id?: string }>("/self-assessments/drafts", {
       method: "POST",
@@ -688,6 +704,12 @@ export const httpRepository = {
     return result.ok
       ? { ok: true, blob: result.blob, name: result.fileName }
       : { ok: false, error: result.error };
+  },
+
+  // Denah publik aktif (D-14) — jalur kanonik `/files/:assetId`.
+  async openCampusPlanAsset(assetId: string): Promise<Blob | null> {
+    const result = await apiBlob(`/files/${encodeURIComponent(assetId)}`);
+    return result.ok ? result.blob : null;
   },
 
   // --- Super Admin + notifikasi + migrasi aset (Fase 5) ---

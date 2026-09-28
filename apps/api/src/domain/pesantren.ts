@@ -82,9 +82,10 @@ export function scopedReport(state: IshasState, actor: Actor | null, reportId: s
   const report = state.reports.find((r) => r.id === reportId);
   if (!report) return { error: "Laporan tidak ditemukan." };
   const account = actor ? state.users.find((u) => u.id === actor.id) : undefined;
+  if (!account || account.status !== "Aktif") {
+    return { error: "Sesi tidak dikenal." };
+  }
   if (
-    !account ||
-    account.status !== "Aktif" ||
     account.roleId !== "pesantren" ||
     !account.institutionCodes.includes(report.institutionCode)
   ) {
@@ -129,11 +130,11 @@ export async function acceptReport(
   note?: string,
   rekomendasiFinal?: string,
 ): Promise<ActionResult> {
+  const scope = scopedReport(state, actor, reportId);
+  if (isScope(scope)) return { ok: false, error: scope.error };
   if (!severity || !priority || severity === "Belum ditentukan" || priority === "Belum ditentukan") {
     return { ok: false, error: "Severity dan priority wajib dipilih tanpa default." };
   }
-  const scope = scopedReport(state, actor, reportId);
-  if (isScope(scope)) return { ok: false, error: scope.error };
   if (scope.report.validationStatus !== "Menunggu validasi") {
     return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat diterima." };
   }
@@ -411,12 +412,10 @@ export async function setFindingLevel(
 
 function pesantrenAccount(state: IshasState, actor: Actor | null): { codes: string[] } | { error: string } {
   const account = actor ? state.users.find((u) => u.id === actor.id) : undefined;
-  if (
-    !account ||
-    account.status !== "Aktif" ||
-    account.roleId !== "pesantren" ||
-    account.institutionCodes.length !== 1
-  ) {
+  if (!account || account.status !== "Aktif") {
+    return { error: "Sesi tidak dikenal." };
+  }
+  if (account.roleId !== "pesantren" || account.institutionCodes.length !== 1) {
     return { error: "Hanya Pesantren aktif yang dapat mengelola lokasi." };
   }
   return { codes: account.institutionCodes };

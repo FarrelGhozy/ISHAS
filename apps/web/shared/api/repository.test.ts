@@ -69,6 +69,33 @@ describe("httpRepository", () => {
     expect(calls[0].url).toContain("/api/v1/uploads/report-evidence");
   });
 
+  test("uploadSelfEvidence mengirim ke /uploads/self-evidence", async () => {
+    stubFetch({ ok: true, data: { id: "evidence-asset-self" } }, 201);
+    const file = new File([new Uint8Array([1, 2, 3])], "jawab.png", { type: "image/png" });
+    const result = await httpRepository.uploadSelfEvidence(
+      { name: "Ahmad", role: "Publik" },
+      "PSN-0018",
+      file,
+    );
+    expect(result).toEqual({ ok: true, id: "evidence-asset-self" });
+    expect(calls[0].url).toContain("/api/v1/uploads/self-evidence");
+    expect(calls[0].init.body instanceof FormData).toBe(true);
+  });
+
+  test("openCampusPlanAsset mengambil blob via /files/:assetId", async () => {
+    calls = [];
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(input), init: init ?? {} });
+      return new Response(new Uint8Array([0x89, 0x50]), {
+        status: 200,
+        headers: { "Content-Type": "image/png" },
+      });
+    }) as typeof fetch;
+    const blob = await httpRepository.openCampusPlanAsset("campus-asset-campus-psn-0018-v1");
+    expect(blob).not.toBeNull();
+    expect(calls[0].url).toContain("/api/v1/files/campus-asset-campus-psn-0018-v1");
+  });
+
   test("deleteSelfAssessmentDraft memakai method DELETE", async () => {
     stubFetch({ ok: true, data: { id: "SELF-1" } });
     await httpRepository.deleteSelfAssessmentDraft("SELF-1");

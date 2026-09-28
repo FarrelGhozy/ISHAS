@@ -22,10 +22,10 @@ CREATE TABLE file_assets (
   visibility VARCHAR(16) NOT NULL DEFAULT 'Privat', -- Public|Privat (khusus instrument-doc)
   uploaded_by VARCHAR(16) NOT NULL,
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  INDEX idx_file_inst (institution_code),
-  INDEX idx_file_owner (owner_ref),
-  INDEX idx_file_kind (kind, created_at)
-) ENGINE=InnoDB;
+   INDEX idx_file_inst (institution_code),
+   INDEX idx_file_owner (owner_ref),
+   INDEX idx_file_kind (kind, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 Tabel domain cukup menyimpan `*_asset_id` + nama tampilan (seperti mock kini);
@@ -90,8 +90,10 @@ ramah-tampilan `GET /docs/:indicatorId/blob` (kontrak §10) memetakan
 - `instrument-doc` + `Public`: bebas login.
 - `instrument-doc` + `Privat`: hanya Validator aktif (cermin `openInstrumentDoc`).
 - Bukti lapor-cepat/penyelesaian: hanya Pesantren pemilik scope (tetap privat).
-- Foto bukti penilaian-mandiri: boleh lewat `pdf-data` publik (D-27);
-  akses langsung tetap privat.
+- Foto bukti penilaian-mandiri: tampil lewat `pdf-data` publik (D-27);
+  `GET /api/v1/files/:assetId` untuk `self-evidence` terbuka **publik hanya bila**
+  asset menempel (`owner_ref`) pada laporan mandiri yang sudah `Diterima` dan
+  belum diarsip; di luar itu privat untuk pemilik scope.
 - Denah aktif: publik hanya setelah 1 pesantren dipilih (D-14).
 
 Header: `Content-Disposition: inline; filename="<original_name>"` +

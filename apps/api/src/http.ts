@@ -29,7 +29,8 @@ export function fail(error: string, status = 400): Response {
 }
 
 // Pemetaan pesan validasi mock → kode HTTP (API §0.b). Urutan diperiksa dari
-// pola peran/scope dulu, lalu "tidak ditemukan", lalu konflik, lalu umum.
+// sesi dulu, lalu peran/scope, "tidak ditemukan", konflik, ukuran berkas, umum.
+const UNAUTHORIZED = ["sesi tidak dikenal", "sesi berakhir"];
 const NOT_FOUND = ["tidak ditemukan", "belum diunggah"];
 const FORBIDDEN = [
   "hanya pengelola",
@@ -40,6 +41,7 @@ const FORBIDDEN = [
   "berwenang",
   "keluar dari akun",
   "tidak berwenang",
+  "tidak dapat mengunggah",
   "hanya publik tanpa login",
   "akun sendiri",
 ];
@@ -50,12 +52,22 @@ const CONFLICT = [
   "denah telah berubah",
   "sedang direset",
 ];
+const PAYLOAD_TOO_LARGE = [
+  "maksimal 5 mb",
+  "maksimum 5 mb",
+  "maksimal 10 mb",
+  "20 megapiksel",
+  "melebihi batas",
+  "terlalu besar",
+];
 
 export function httpStatusForError(message: string): number {
   const lower = message.toLowerCase();
+  if (UNAUTHORIZED.some((p) => lower.includes(p))) return 401;
   if (NOT_FOUND.some((p) => lower.includes(p))) return 404;
   if (FORBIDDEN.some((p) => lower.includes(p))) return 403;
   if (CONFLICT.some((p) => lower.includes(p))) return 409;
+  if (PAYLOAD_TOO_LARGE.some((p) => lower.includes(p))) return 413;
   return 400;
 }
 

@@ -535,7 +535,7 @@ export async function loadIshasState(): Promise<IshasState> {
   }));
 
   const notifications: Notification[] = notifRows.map((row) => ({
-    id: `NOT-${String(row.id)}`,
+    id: row.legacy_id ? String(row.legacy_id) : `NOT-${String(row.id)}`,
     recipientAccountId: row.recipient_account_id ? String(row.recipient_account_id) : undefined,
     institutionCode: row.institution_code ? String(row.institution_code) : undefined,
     sourceObjectId: String(row.source_object_id),

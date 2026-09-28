@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Download, Eye, FileText, Lock } from "lucide-react";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { repository } from "~/shared/api/repository";
 import { K3_CATEGORIES } from "~/mocks/kategori-k3";
 import {
   filterDocRows,
@@ -39,7 +39,7 @@ async function openDoc(
   mode: "view" | "download",
   onError: (message: string) => void,
 ) {
-  const result = await mockRepository.openInstrumentDoc({ id: viewerId }, indicatorId);
+  const result = await repository.openInstrumentDoc({ id: viewerId }, indicatorId);
   if (!result.ok) {
     onError(result.error);
     return;

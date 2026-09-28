@@ -79,9 +79,12 @@ Setiap perubahan kode harus menjaga suite test tetap hijau; test adalah jaring p
 - **Jalankan verifikasi sekaligus sebelum commit** dan jangan commit bila merah:
   ```bash
   cd apps/web   && bun run lint && bun run typecheck && bun test
-  cd apps/api   && bun run lint && bun run typecheck && bun test
+  cd apps/api   && bun run lint && bun run typecheck && DB_NAME=ishas_test bun test
   ```
-  Untuk backend dengan MySQL hidup, test integrasi ikut berjalan; tanpa MySQL, test tersebut di-skip dan itu harus dilaporkan.
+  Test integrasi backend memakai **database uji terpisah** (mis. `ishas_test`) karena seed
+  melakukan `TRUNCATE`; siapkan sekali dengan `DB_NAME=ishas_test bun run migrate`. Bila
+  `DB_NAME` bukan database uji, atau MySQL mati, test integrasi di-skip dan itu harus
+  dilaporkan. Jangan pernah menjalankan test integrasi terhadap DB pengembangan `ishas`.
 
 ## Format dan Keterbacaan Kode
 

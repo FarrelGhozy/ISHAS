@@ -74,6 +74,16 @@ export async function readStoredBlob(storedPath: string): Promise<Uint8Array> {
   return new Uint8Array(await readFile(join(STORAGE_DIR, storedPath)));
 }
 
+// Baca blob bila ada; `null` bila berkas belum tersedia di server (mis. baris
+// seed yang hanya metadata). Dipakai rute penyajian agar tidak 500.
+export async function tryReadStoredBlob(storedPath: string): Promise<Uint8Array | null> {
+  try {
+    return new Uint8Array(await readFile(join(STORAGE_DIR, storedPath)));
+  } catch {
+    return null;
+  }
+}
+
 export async function removeStoredBlob(storedPath: string): Promise<void> {
   await rm(join(STORAGE_DIR, storedPath), { force: true });
 }

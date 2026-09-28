@@ -1,13 +1,42 @@
 // Seed demo: mengimpor `SEED` mock (apps/web/mocks/seed/seed.ts) agar komposisi
 // 1:1 dengan frontend, lalu memetakan ke tabel MySQL. Lihat BACKEND_DATA_MODEL §10.
 
+import { copyFile, mkdir } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { SEED } from "../../../web/mocks/seed/seed";
 import { K3_CATEGORIES } from "../../../web/mocks/kategori-k3";
+import { STORAGE_DIR } from "../storage";
 import { insertRows, json, text, toDateOnly, toDateTime, truncateAll, type SqlValue } from "./helpers";
 
 const now = (): Date => new Date();
 const campusAssetId = (planId: string): string => `campus-asset-${planId.toLowerCase()}`;
+const campusStoredPath = (planId: string): string => `campus-plans/${planId.toLowerCase()}.png`;
 const baseName = (path: string): string => path.split("/").pop() ?? path;
+const bundledCampusImage = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+  "web",
+  "public",
+  "images",
+  "risk-map-campus-v1.png",
+);
+
+// Salin ilustrasi denah bundel ke storage agar `GET /api/v1/files/:assetId`
+// dapat menyajikannya (paritas tampilan demo mock ↔ backend).
+async function seedCampusBlobs(): Promise<void> {
+  const seen = new Set<string>();
+  for (const plan of SEED.campusPlans) {
+    const stored = campusStoredPath(plan.id);
+    if (seen.has(stored)) continue;
+    seen.add(stored);
+    const target = join(STORAGE_DIR, stored);
+    await mkdir(dirname(target), { recursive: true });
+    await copyFile(bundledCampusImage, target).catch(() => undefined);
+  }
+}
 
 export async function seedDemo(): Promise<void> {
   await truncateAll();
@@ -51,14 +80,16 @@ export async function seedDemo(): Promise<void> {
     K3_CATEGORIES.flatMap((c) => c.aspects.map((a, index) => [a.id, a.categoryId, a.name, index + 1])),
   );
 
-  // file_assets: denah (satu per campus plan, id disintesis unik) + dokumen indikator.
+  // file_assets: denah (satu per campus plan, id disintesis unik + blob disalin
+  // ke storage) + dokumen indikator (metadata; blob disiapkan saat migrasi).
+  await seedCampusBlobs();
   const campusAssetRows: SqlValue[][] = SEED.campusPlans.map((plan) => [
     campusAssetId(plan.id),
     "campus-plan",
     plan.institutionCode,
     plan.id,
     baseName(plan.assetId),
-    `seed/campus-plans/${plan.id}.png`,
+    campusStoredPath(plan.id),
     "image/png",
     0,
     plan.width,
@@ -176,7 +207,7 @@ export async function seedDemo(): Promise<void> {
         dim.id,
         dim.name,
         dim.categoryId ?? null,
-        null,
+        dim.description ?? null,
         json(dim.aspects),
         di + 1,
       ]);
@@ -580,7 +611,7 @@ export async function seedDemo(): Promise<void> {
       doc.mime,
       doc.assetId,
       doc.visibility,
-      "USR-002",
+      doc.updatedBy ?? "USR-002",
       toDateTime(doc.updatedAt) ?? now(),
     ]),
   );
@@ -719,6 +750,7 @@ export async function seedDemo(): Promise<void> {
   await insertRows(
     "notifications",
     [
+      "legacy_id",
       "recipient_account_id",
       "institution_code",
       "source_object_id",
@@ -728,6 +760,7 @@ export async function seedDemo(): Promise<void> {
       "at",
     ],
     SEED.notifications.map((n) => [
+      n.id,
       n.recipientAccountId ?? null,
       n.institutionCode ?? null,
       n.sourceObjectId,

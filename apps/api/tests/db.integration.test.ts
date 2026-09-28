@@ -1,5 +1,7 @@
-// Uji integrasi DB (dilewati otomatis bila MySQL tidak tersedia):
-// skema, komposisi seed demo/empty, dan invarian relasi antar tabel.
+// Uji integrasi DB (dilewati otomatis bila MySQL tidak tersedia atau DB_NAME
+// bukan database uji): skema, komposisi seed demo/empty, invarian relasi, alur HTTP.
+// Jalankan dengan DB uji terpisah (mis. `DB_NAME=ishas_test bun run migrate && DB_NAME=ishas_test bun test`)
+// karena seed melakukan TRUNCATE — dilarang menyentuh DB pengembangan.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { RowDataPacket } from "mysql2/promise";
 import { SEED } from "../../web/mocks/seed/seed";
@@ -13,15 +15,25 @@ import { seedDemo } from "../src/seed/demo";
 import { seedEmpty } from "../src/seed/empty";
 import { ALL_TABLES, countRows } from "../src/seed/helpers";
 
+const dbName = process.env.DB_NAME ?? "ishas";
+const isTestDb = /test/i.test(dbName);
+
 let dbReady = false;
-try {
-  await pingDb();
-  dbReady = true;
-} catch {
-  dbReady = false;
+if (isTestDb) {
+  try {
+    await pingDb();
+    dbReady = true;
+  } catch {
+    dbReady = false;
+  }
 }
 
-if (!dbReady) {
+if (!isTestDb) {
+  console.warn(
+    `[test] DB_NAME="${dbName}" bukan database uji → lewati uji integrasi DB ` +
+      "(pakai DB_NAME=ishas_test agar tidak menghapus data pengembangan).",
+  );
+} else if (!dbReady) {
   console.warn("[test] MySQL tidak tersedia → lewati uji integrasi DB.");
 }
 
@@ -56,6 +68,23 @@ describe.skipIf(!dbReady)("skema database", () => {
       "0001_schema_v15.sql",
     ])).toBe(1);
   });
+
+  test("FK evidence merujuk file_assets (migrasi 0004)", async () => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT CONSTRAINT_NAME AS name, TABLE_NAME AS tbl, COLUMN_NAME AS col, " +
+        "REFERENCED_TABLE_NAME AS ref FROM information_schema.KEY_COLUMN_USAGE " +
+        "WHERE TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = 'file_assets'",
+    );
+    const found = new Set(rows.map((row) => `${row.tbl}.${row.col}`));
+    for (const key of [
+      "campus_plans.asset_id",
+      "instrument_docs.asset_id",
+      "reports.evidence_asset_id",
+      "recommendations.completion_evidence_asset_id",
+    ]) {
+      expect(found.has(key)).toBe(true);
+    }
+  });
 });
 
 describe.skipIf(!dbReady)("seed demo", () => {
@@ -79,6 +108,25 @@ describe.skipIf(!dbReady)("seed demo", () => {
     expect(await countRows("file_assets")).toBe(
       SEED.campusPlans.length + SEED.instrumentDocs.length,
     );
+    const [legacy] = await pool.query<RowDataPacket[]>(
+      "SELECT legacy_id AS id FROM notifications ORDER BY id",
+    );
+    expect(legacy.map((row) => String(row.id))).toEqual(
+      SEED.notifications.map((n) => n.id),
+    );
+    const [vdims] = await pool.query<RowDataPacket[]>(
+      "SELECT version_id, id FROM instrument_version_dimensions WHERE description IS NOT NULL",
+    );
+    const expectedDims = SEED.instrumentVersions.flatMap((v) =>
+      v.dimensions.filter((d) => d.description).map((d) => `${v.id}/${d.id}`),
+    );
+    expect(vdims.map((row) => `${row.version_id}/${row.id}`).sort()).toEqual(
+      expectedDims.sort(),
+    );
+    const [docs] = await pool.query<RowDataPacket[]>(
+      "SELECT DISTINCT updated_by AS u FROM instrument_docs",
+    );
+    expect(docs.map((row) => String(row.u))).toEqual(["Dr. M. Ridwan"]);
   });
 
   test("checksum bank di DB sama dengan hitungChecksumInstrument", async () => {
@@ -131,6 +179,19 @@ describe.skipIf(!dbReady)("seed demo", () => {
           "WHERE fa.asset_id IS NULL",
       ),
     ).toBe(0);
+    expect(
+      await scalar(
+        "SELECT COUNT(*) AS c FROM reports r LEFT JOIN file_assets fa ON fa.asset_id = r.evidence_asset_id " +
+          "WHERE r.evidence_asset_id IS NOT NULL AND fa.asset_id IS NULL",
+      ),
+    ).toBe(0);
+    expect(
+      await scalar(
+        "SELECT COUNT(*) AS c FROM recommendations x LEFT JOIN file_assets fa " +
+          "ON fa.asset_id = x.completion_evidence_asset_id " +
+          "WHERE x.completion_evidence_asset_id IS NOT NULL AND fa.asset_id IS NULL",
+      ),
+    ).toBe(0);
   });
 
   test("sequences mengikuti counters seed (demo)", async () => {
@@ -180,7 +241,10 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
   const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
   const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
     ...init,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...((init.headers as Record<string, string> | undefined)),
+    },
     body: JSON.stringify(body),
   });
   const call = (path: string, init?: RequestInit) =>
@@ -198,12 +262,77 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       ok: boolean;
-      data: { reports: { validationStatus: string; reporterName: string }[] };
+      data: {
+        reports: { validationStatus: string; reporterName: string }[];
+        recommendations: Record<string, unknown>[];
+      };
     };
     expect(body.ok).toBe(true);
     expect(body.data.reports.length).toBeGreaterThan(0);
     expect(body.data.reports.every((r) => r.validationStatus === "Diterima")).toBe(true);
     expect(body.data.reports.every((r) => r.reporterName === "")).toBe(true);
+    expect(body.data.recommendations.length).toBeGreaterThan(0);
+    for (const rec of body.data.recommendations) {
+      expect(rec.dueDate).toBe("");
+      for (const key of [
+        "lastNote",
+        "completionEvidence",
+        "completionEvidenceAssetId",
+        "canceledBy",
+        "canceledAt",
+        "verifiedBy",
+        "verifiedAt",
+      ]) {
+        expect(rec[key]).toBeUndefined();
+      }
+    }
+  });
+
+  test("GET /public/results|recommendations|follow-ups: redaksi D-02", async () => {
+    const results = (await (await call("/api/v1/public/results")).json()) as {
+      ok: boolean;
+      data: { items: Record<string, unknown>[] };
+    };
+    expect(results.ok).toBe(true);
+    expect(results.data.items.length).toBeGreaterThan(0);
+    for (const item of results.data.items) {
+      expect(item.reporterName).toBe("");
+      for (const key of [
+        "reporterUserId",
+        "reporterAccountEmail",
+        "contact",
+        "reporterRecommendation",
+        "rejectionReason",
+        "validationNote",
+        "evidenceAssetId",
+        "evidenceName",
+        "instrumentChecksum",
+      ]) {
+        expect(item[key]).toBeUndefined();
+      }
+    }
+    for (const path of ["/api/v1/public/recommendations", "/api/v1/public/follow-ups"]) {
+      const res = (await (await call(path)).json()) as {
+        ok: boolean;
+        data: { items: Record<string, unknown>[] };
+      };
+      expect(res.ok).toBe(true);
+      expect(res.data.items.length).toBeGreaterThan(0);
+      for (const item of res.data.items) {
+        expect(item.dueDate).toBe("");
+        for (const key of [
+          "lastNote",
+          "completionEvidence",
+          "completionEvidenceAssetId",
+          "canceledBy",
+          "canceledAt",
+          "verifiedBy",
+          "verifiedAt",
+        ]) {
+          expect(item[key]).toBeUndefined();
+        }
+      }
+    }
   });
 
   test("POST /reports/lapor-cepat: validasi 1:1 + idempotensi", async () => {
@@ -249,6 +378,40 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
       [first.data.id],
     );
     expect(notifs).toBeGreaterThan(0);
+  });
+
+  test("POST /reports/lapor-cepat: idempotensi via header X-Request-Id", async () => {
+    const area = SEED.areas.find((a) => a.institutionCode === "PSN-0018")!;
+    const payload = {
+      institutionCode: "PSN-0018",
+      reporterName: "Siti",
+      title: "Lantai musholla licin saat hujan",
+      description: "Lantai musholla menjadi licin setiap hujan dan berbahaya bagi jamaah.",
+      areaId: area.id,
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Request-Id": "it-request-header-1",
+    };
+    const first = await call(
+      "/api/v1/reports/lapor-cepat",
+      { method: "POST", headers, body: JSON.stringify(payload) },
+    );
+    expect(first.status).toBe(201);
+    const firstId = ((await first.json()) as { data: { id: string } }).data.id;
+    const second = await call(
+      "/api/v1/reports/lapor-cepat",
+      { method: "POST", headers, body: JSON.stringify(payload) },
+    );
+    expect(second.status).toBe(201);
+    expect(((await second.json()) as { data: { id: string } }).data.id).toBe(firstId);
+  });
+
+  test("denah seed: GET /files publik menyajikan blob image/png", async () => {
+    const served = await call("/api/v1/files/campus-asset-campus-psn-0018-v1");
+    expect(served.status).toBe(200);
+    expect(served.headers.get("content-type")).toBe("image/png");
+    expect((await served.arrayBuffer()).byteLength).toBeGreaterThan(0);
   });
 
   test("penilaian-mandiri: draft → submit → snapshot beku", async () => {
@@ -325,7 +488,7 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     });
     expect(fileResponse.status).toBe(200);
     const anonymous = await call(`/api/v1/files/${asset.data.id}`);
-    expect(anonymous.status).toBe(403);
+    expect(anonymous.status).toBe(401);
     const deleted = await call(`/api/v1/uploads/report-evidence/${asset.data.id}`, {
       method: "DELETE",
       headers: { "X-Demo-Account": owner.id },
@@ -335,13 +498,175 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
       await scalar("SELECT COUNT(*) AS c FROM file_assets WHERE asset_id = ?", [asset.data.id]),
     ).toBe(0);
   });
+
+  test("unggah bukti: peran salah 403 + ukuran 413 + hapus scope/kind", async () => {
+    const tiny = new Uint8Array(24);
+    tiny.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    tiny[18] = 0x03;
+    tiny[19] = 0x20;
+    tiny[22] = 0x02;
+    tiny[23] = 0x1c;
+    const roleForm = new FormData();
+    roleForm.append("file", new File([tiny], "bukti.png", { type: "image/png" }));
+    roleForm.append("institutionCode", "PSN-0018");
+    const denied = await call("/api/v1/uploads/report-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-002" },
+      body: roleForm,
+    });
+    expect(denied.status).toBe(403);
+    expect(((await denied.json()) as { error: string }).error).toBe(
+      "Akun ini tidak dapat mengunggah bukti pelaporan.",
+    );
+
+    const big = new Uint8Array(6 * 1024 * 1024);
+    big.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const bigForm = new FormData();
+    bigForm.append("file", new File([big], "besar.png", { type: "image/png" }));
+    bigForm.append("institutionCode", "PSN-0018");
+    const tooLarge = await call("/api/v1/uploads/report-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": owner.id },
+      body: bigForm,
+    });
+    expect(tooLarge.status).toBe(413);
+
+    const selfForm = new FormData();
+    selfForm.append("file", new File([tiny], "jawab.png", { type: "image/png" }));
+    selfForm.append("institutionCode", "PSN-0018");
+    const selfUp = await call("/api/v1/uploads/self-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": owner.id },
+      body: selfForm,
+    });
+    expect(selfUp.status).toBe(201);
+    const selfAsset = (await selfUp.json()) as { data: { id: string } };
+    const crossKind = await call(`/api/v1/uploads/report-evidence/${selfAsset.data.id}`, {
+      method: "DELETE",
+      headers: { "X-Demo-Account": owner.id },
+    });
+    expect(crossKind.status).toBe(404);
+
+    const reportForm = new FormData();
+    reportForm.append("file", new File([tiny], "lapor.png", { type: "image/png" }));
+    reportForm.append("institutionCode", "PSN-0018");
+    const reportUp = await call("/api/v1/uploads/report-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": owner.id },
+      body: reportForm,
+    });
+    expect(reportUp.status).toBe(201);
+    const reportAsset = (await reportUp.json()) as { data: { id: string } };
+    const adminDelete = await call(`/api/v1/uploads/report-evidence/${reportAsset.data.id}`, {
+      method: "DELETE",
+      headers: { "X-Demo-Account": "USR-001" },
+    });
+    expect(adminDelete.status).toBe(403);
+    const ownerDelete = await call(`/api/v1/uploads/report-evidence/${reportAsset.data.id}`, {
+      method: "DELETE",
+      headers: { "X-Demo-Account": owner.id },
+    });
+    expect(ownerDelete.status).toBe(200);
+  });
+
+  test("pdf-data publik: foto bukti self-evidence disajikan tanpa jawaban mentah", async () => {
+    const state = await loadIshasState();
+    const bank = state.instrument;
+    const tiny = new Uint8Array(24);
+    tiny.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    tiny[18] = 0x03;
+    tiny[19] = 0x20;
+    tiny[22] = 0x02;
+    tiny[23] = 0x1c;
+    const form = new FormData();
+    form.append("file", new File([tiny], "foto.png", { type: "image/png" }));
+    form.append("institutionCode", "PSN-0018");
+    const uploaded = await call("/api/v1/uploads/self-evidence", { method: "POST", body: form });
+    expect(uploaded.status).toBe(201);
+    const assetId = ((await uploaded.json()) as { data: { id: string } }).data.id;
+
+    const answers: Record<string, Record<string, unknown>> = {};
+    for (const dim of bank.dimensions) {
+      for (const ind of dim.indicators) {
+        answers[ind.id] = {
+          value: ind.options[0].value,
+          note: "",
+          evidenceName: ind.evidenceRequired ? "foto.png" : "",
+          evidenceAssetId: ind.evidenceRequired ? assetId : undefined,
+          areaId: ind.locationRequired
+            ? SEED.areas.find((a) => a.institutionCode === "PSN-0018")!.id
+            : "",
+          manualLocation: "",
+          planPoint: null,
+        };
+      }
+    }
+    const saved = await call(
+      "/api/v1/self-assessments/drafts",
+      json(
+        {
+          id: "SELF-PDF-1",
+          institutionCode: "PSN-0018",
+          reporterName: "Ahmad",
+          instrumentVersionId: "INS-LIVE",
+          instrumentChecksum: bank.checksum,
+          answers,
+          activeIndex: 0,
+          updatedAt: new Date().toISOString(),
+        },
+        { method: "POST" },
+      ),
+    );
+    expect(saved.status).toBe(200);
+    const submitted = await call(
+      "/api/v1/self-assessments/submit",
+      json({ draftId: "SELF-PDF-1", reporterName: "Ahmad" }, { method: "POST" }),
+    );
+    expect(submitted.status).toBe(201);
+    const reportId = ((await submitted.json()) as { data: { id: string } }).data.id;
+
+    const accepted = await call(
+      `/api/v1/pesantren/reports/${reportId}/accept`,
+      json(
+        { severity: "Sedang", priority: "Sedang", note: "Diterima untuk uji." },
+        { method: "POST", headers: { "X-Demo-Account": owner.id } },
+      ),
+    );
+    expect(accepted.status).toBe(200);
+
+    const pdf = await call(`/api/v1/public/reports/${reportId}/pdf-data`);
+    expect(pdf.status).toBe(200);
+    const body = (await pdf.json()) as {
+      data: {
+        report: Record<string, unknown>;
+        snapshot: { answers: Record<string, { evidenceAssetId?: string }> } | null;
+        institution: { code: string } | null;
+      };
+    };
+    expect(body.data.report.reporterName).toBe("");
+    expect(body.data.institution?.code).toBe("PSN-0018");
+    const evidenceEntry = Object.values(body.data.snapshot?.answers ?? {}).find(
+      (entry) => entry.evidenceAssetId === assetId,
+    );
+    expect(evidenceEntry).toBeTruthy();
+    expect(Object.values(body.data.snapshot?.answers ?? {}).every(
+      (entry) => !("value" in entry),
+    )).toBe(true);
+
+    const photo = await call(`/api/v1/files/${assetId}`);
+    expect(photo.status).toBe(200);
+    expect(photo.headers.get("content-type")).toBe("image/png");
+  });
 });
 
 describe.skipIf(!dbReady)("Fase 2 HTTP (validasi + lifecycle + lokasi + tindak lanjut)", () => {
   const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
   const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
     ...init,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...((init.headers as Record<string, string> | undefined)),
+    },
     body: JSON.stringify(body),
   });
   const call = (path: string, init?: RequestInit) =>
@@ -362,6 +687,22 @@ describe.skipIf(!dbReady)("Fase 2 HTTP (validasi + lifecycle + lokasi + tindak l
 
   beforeAll(async () => {
     await seedDemo();
+  });
+
+  test("accept: sesi dulu, lalu scope — anonim 401, peran salah 403", async () => {
+    const anonymous = await call(
+      "/api/v1/pesantren/reports/RPT-0002/accept",
+      json({ severity: "Belum ditentukan", priority: "Belum ditentukan" }, { method: "POST" }),
+    );
+    expect(anonymous.status).toBe(401);
+
+    const foreign = await call(
+      "/api/v1/pesantren/reports/RPT-0002/accept",
+      asOwner(
+        json({ severity: "Tinggi", priority: "Tinggi", rekomendasiFinal: "Perbaiki segera." }, { method: "POST" }),
+      ),
+    );
+    expect(foreign.status).toBe(403);
   });
 
   test("accept: severity/priority wajib + rekomendasi final + turunan", async () => {
@@ -674,7 +1015,10 @@ describe.skipIf(!dbReady)("Fase 3 HTTP (bank + dokumen + dataset)", () => {
   const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
   const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
     ...init,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...((init.headers as Record<string, string> | undefined)),
+    },
     body: JSON.stringify(body),
   });
   const call = (path: string, init?: RequestInit) =>
@@ -815,7 +1159,7 @@ describe.skipIf(!dbReady)("Fase 3 HTTP (bank + dokumen + dataset)", () => {
     expect(upsert.status).toBe(201);
 
     const privateBlob = await call("/api/v1/docs/IND-K3L-002/blob");
-    expect(privateBlob.status).toBe(403);
+    expect(privateBlob.status).toBe(401);
 
     const visible = await call(
       "/api/v1/validator/docs/IND-K3L-002/visibility",
@@ -853,7 +1197,7 @@ describe.skipIf(!dbReady)("Fase 3 HTTP (bank + dokumen + dataset)", () => {
     expect(exportedBody).not.toContain("reporterName");
 
     const denied = await call("/api/v1/validator/dataset/export?format=csv");
-    expect(denied.status).toBe(403);
+    expect(denied.status).toBe(401);
   });
 
   test("dataset: impor ≤200 baris → pratinjau → Menunggu validasi + notifikasi", async () => {
@@ -922,7 +1266,10 @@ describe.skipIf(!dbReady)("Fase 4 HTTP (SAM-iSAFE)", () => {
   const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
   const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
     ...init,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...((init.headers as Record<string, string> | undefined)),
+    },
     body: JSON.stringify(body),
   });
   const call = (path: string, init?: RequestInit) =>
@@ -1318,7 +1665,7 @@ describe.skipIf(!dbReady)("Fase 4 HTTP (SAM-iSAFE)", () => {
     expect(allowed.status).toBe(200);
 
     const anon = await call(`/api/v1/files/${assetId}`);
-    expect(anon.status).toBe(403);
+    expect(anon.status).toBe(401);
   });
 });
 
@@ -1567,6 +1914,16 @@ describe.skipIf(!dbReady)("Fase 5 HTTP (admin + notifikasi + storage + migrasi)"
     };
     expect(body.data.total).toBeGreaterThan(0);
     expect(body.data.items.every((e) => e.objectType === "User")).toBe(true);
+
+    const paged = (await (
+      await call("/api/v1/admin/audit?limit=500", asAdmin())
+    ).json()) as { data: { items: unknown[]; page: number; limit: number } };
+    expect(paged.data.limit).toBe(100);
+    const defaultPaged = (await (
+      await call("/api/v1/admin/audit", asAdmin())
+    ).json()) as { data: { items: unknown[]; page: number; limit: number } };
+    expect(defaultPaged.data.limit).toBe(20);
+    expect(defaultPaged.data.page).toBe(1);
 
     const reset = await call("/api/v1/admin/reset-demo", asAdmin({ method: "POST" }));
     expect(reset.status).toBe(200);

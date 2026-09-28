@@ -16,13 +16,20 @@ function emit(): void {
   for (const listener of listeners) listener();
 }
 
-function load(): void {
-  if (started || !USE_BACKEND) return;
+function load(force = false): void {
+  if (!USE_BACKEND) return;
+  if (started && !force) return;
   started = true;
   void apiRequest<IshasState>("/public/state").then((result) => {
     cache = result.ok ? { state: result.data, error: null } : { state: null, error: result.error };
     emit();
   });
+}
+
+// Muat ulang cache publik setelah mutasi (lapor/mandiri/reset) agar bacaan
+// dashboard publik tidak basi sampai reload penuh.
+export function refreshPublicState(): void {
+  load(true);
 }
 
 function subscribe(listener: () => void): () => void {

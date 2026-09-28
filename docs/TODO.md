@@ -1,6 +1,30 @@
 # TODO — Kontrol Kerja Aktif
 
-## Implementasi backend Fase 1 + adapter publik (D-30.b) — 29 September 2026 — `IN PROGRESS`
+## Audit + perbaikan backend Fase 0–5 sebelum issue #6 (D-30.g) — 29 September 2026 — `REVIEW`
+
+Arahan pemilik (`validasi issues backend yang sudah ditutup fase 0–5 … sebelum
+lanjut ke #6`, lalu `ok kerjakan`): audit menyeluruh #3–#8 + #10 dan perbaikan
+semua temuan A–F. Cakupan: `apps/api` (rute, domain, migrasi, seed, test) dan
+`apps/web` (adapter/facade/halaman publik). Status stage lain tidak berubah.
+
+- [x] A — redaksi publik D-02 (`/public/results|recommendations|follow-ups`,
+      `pdf-data`), delete bukti kind+scope, urutan sesi/scope `accept`, status
+      HTTP 401/413, idempotensi `X-Request-Id`, pagination audit.
+- [x] B — migrasi `0004` FK bukti → `file_assets` + test.
+- [x] C — `uploadSelfEvidence` (`POST /uploads/self-evidence`), pustaka dokumen
+      publik via `repository`, halaman PDF publik via `pdf-data`
+      (`usePublicReportPdf`) + `openCampusPlanAsset`, `refreshPublicState`.
+- [x] D — seed fidelity: notifikasi `legacy_id`, deskripsi dimensi, `updated_by`,
+      ilustrasi denah disalin ke storage.
+- [x] E — higiene test: integrasi auto-skip bila `DB_NAME` bukan DB uji;
+      verifikasi `DB_NAME=ishas_test`.
+- [x] F — sinkron `BACKEND_API_CONTRACT`/`DATA_MODEL`/`STORAGE`/README/AGENTS.
+- [x] Verifikasi: lint + typecheck + 78 test backend (DB uji) + 244 test frontend
+      + build lulus; migrate `--fresh` (5 migrasi) + seed demo/empty OK.
+- [ ] Cek visual 3 viewport adapter (publik/Pesantren/Validator/SAM/admin).
+- [ ] Review pemilik sebelum mulai issue #6 (auth server + RBAC).
+
+## Implementasi backend Fase 1 + adapter publik (D-30.b) — 29 September 2026 — `DONE`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan fase 1`): endpoint Fase 1
 (issue #4) + swap adapter frontend publik (issue #10 parsial). Cakupan:

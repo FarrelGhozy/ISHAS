@@ -54,7 +54,10 @@ export function buildPesantrenRoutes(deps: PesantrenRouteDeps): Route[] {
       method: "GET",
       pattern: "/api/v1/pesantren/state",
       handler: withState(async ({ state, actor }) => {
-        if (!actor || actor.roleId !== "pesantren" || actor.status !== "Aktif") {
+        if (!actor || actor.status !== "Aktif") {
+          return fail("Sesi tidak dikenal.", 401);
+        }
+        if (actor.roleId !== "pesantren") {
           return fail("Anda tidak berwenang mengubah laporan pesantren ini.", 403);
         }
         return ok(buildPesantrenState(state, actor.institutionCodes[0] ?? ""));
@@ -64,7 +67,10 @@ export function buildPesantrenRoutes(deps: PesantrenRouteDeps): Route[] {
       method: "GET",
       pattern: "/api/v1/pesantren/queue",
       handler: withState(async ({ state, actor, url }) => {
-        if (!actor || actor.roleId !== "pesantren" || actor.status !== "Aktif") {
+        if (!actor || actor.status !== "Aktif") {
+          return fail("Sesi tidak dikenal.", 401);
+        }
+        if (actor.roleId !== "pesantren") {
           return fail("Anda tidak berwenang mengubah laporan pesantren ini.", 403);
         }
         const institutionCode = actor.institutionCodes[0];

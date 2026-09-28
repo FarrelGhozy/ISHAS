@@ -8,20 +8,17 @@ import {
   selectRecommendationsByReports,
   selectRegisteredInstitutions,
 } from "../../../web/mocks/store/selectors";
-import type { IshasState } from "../../../web/mocks/types";
+import type { IshasState, Recommendation, Report } from "../../../web/mocks/types";
 
-export function buildPublicState(state: IshasState) {
-  const registered = selectRegisteredInstitutions(state);
-  const registeredCodes = new Set(registered.map((i) => i.code));
-  const reports = selectPublicReports(state, null);
-  const reportIds = new Set(reports.map((r) => r.id));
-
-  const publicReports = reports.map((r) => ({
-    ...r,
+// Proyeksi satu laporan untuk bacaan publik (D-02): tanpa identitas pelapor,
+// kontak, usulan mentah, bukti, alasan tolak, catatan internal, dan checksum.
+// Nama validator (validatedByName) tetap tampil (D-01: nama validator/PIC publik).
+export function projectPublicReport(report: Report): Report {
+  return {
+    ...report,
     reporterName: "",
     reporterUserId: undefined,
     reporterAccountEmail: undefined,
-    reporterContact: undefined,
     contact: undefined,
     reporterRecommendation: undefined,
     rejectionReason: undefined,
@@ -29,7 +26,33 @@ export function buildPublicState(state: IshasState) {
     evidenceAssetId: undefined,
     evidenceName: undefined,
     instrumentChecksum: undefined,
-  }));
+  };
+}
+
+// Proyeksi satu rekomendasi untuk bacaan publik (D-02 + D-21): tanpa tenggat,
+// catatan internal, bukti penyelesaian, dan pelaku internal; alasan pembatalan
+// (canceledReason) tetap tampil publik; nama PIC (owner) tampil (D-01).
+export function projectPublicRecommendation(rec: Recommendation): Recommendation {
+  return {
+    ...rec,
+    dueDate: "",
+    lastNote: undefined,
+    completionEvidence: undefined,
+    completionEvidenceAssetId: undefined,
+    canceledBy: undefined,
+    canceledAt: undefined,
+    verifiedBy: undefined,
+    verifiedAt: undefined,
+  };
+}
+
+export function buildPublicState(state: IshasState) {
+  const registered = selectRegisteredInstitutions(state);
+  const registeredCodes = new Set(registered.map((i) => i.code));
+  const reports = selectPublicReports(state, null);
+  const reportIds = new Set(reports.map((r) => r.id));
+
+  const publicReports = reports.map(projectPublicReport);
 
   const snapshots = state.selfAssessmentSnapshots
     .filter((s) => reportIds.has(s.reportId))
@@ -69,7 +92,7 @@ export function buildPublicState(state: IshasState) {
     selfAssessmentDrafts: {},
     selfAssessmentSnapshots: snapshots,
     findings: selectFindingsByReports(state, reports),
-    recommendations: selectRecommendationsByReports(state, reports),
+    recommendations: selectRecommendationsByReports(state, reports).map(projectPublicRecommendation),
     buildings: state.buildings.filter((b) => registeredCodes.has(b.institutionCode)),
     areas: state.areas.filter((a) => registeredCodes.has(a.institutionCode)),
     campusPlans: state.campusPlans.filter((p) => registeredCodes.has(p.institutionCode)),
