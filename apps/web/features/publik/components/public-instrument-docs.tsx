@@ -84,7 +84,7 @@ function DocTable({
     <div
       role="region"
       aria-label="Daftar dokumen indikator"
-      className="overflow-x-auto rounded-lg border border-line"
+      className="overflow-x-auto rounded-lg border border-line bg-white"
     >
       <table className="min-w-[720px] w-full text-left text-sm">
         <thead className="sticky top-0 bg-strip">
@@ -157,7 +157,7 @@ function FilterBar({ filter, onChange }: { filter: DocFilter; onChange: (f: DocF
       <label className="min-w-44 flex-1 text-xs font-bold sm:max-w-64">
         Cari dokumen
         <input
-          className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+          className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-3 font-normal"
           value={filter.q}
           onChange={(e) => onChange({ ...filter, q: e.target.value })}
           placeholder="Kode, judul, nama file…"
