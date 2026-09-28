@@ -7,13 +7,14 @@ import { resolveWorkspaceAccess, workspaceRoleFor } from "~/shared/auth/access-p
 import { IshasMark } from "~/shared/components/ishas-mark";
 import { Modal } from "~/shared/components/modal";
 import { ROLE_NAVIGATION } from "~/shared/navigation/workspace-config";
-import { useMockState } from "~/mocks/store/mock-store";
+import { repository } from "~/shared/api/repository";
+import { useWorkspaceState } from "~/shared/api/workspace-state";
 
 export default function WorkspaceLayout() {
   const location = useLocation();
   const session = useSession();
   const user = useCurrentUser();
-  const state = useMockState();
+  const state = useWorkspaceState();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -209,13 +210,30 @@ export default function WorkspaceLayout() {
       <Modal open={notifOpen} onClose={() => setNotifOpen(false)} label="Notifikasi">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold text-heading">Notifikasi</h2>
-          <button
-            className="secondary-button px-3"
-            onClick={() => setNotifOpen(false)}
-            aria-label="Tutup notifikasi"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {notifications.some((n) => !n.read) ? (
+              <button
+                type="button"
+                className="text-button text-xs"
+                onClick={() =>
+                  void repository.markNotificationsRead({
+                    id: user.id,
+                    name: user.name,
+                    role: user.role,
+                  })
+                }
+              >
+                Tandai semua dibaca
+              </button>
+            ) : null}
+            <button
+              className="secondary-button px-3"
+              onClick={() => setNotifOpen(false)}
+              aria-label="Tutup notifikasi"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
         {notifications.length === 0 ? (
           <p className="py-4 text-sm text-secondary-text">Belum ada notifikasi.</p>

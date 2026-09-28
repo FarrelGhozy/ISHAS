@@ -647,3 +647,29 @@ describe("regresi review frontend", () => {
     expect(retry).toEqual({ ok: true, id: "RPT-0020" });
   });
 });
+
+describe("notifikasi tandai dibaca (Fase 5)", () => {
+  beforeEach(() => {
+    storeActions.resetMockData();
+  });
+
+  test("menandai semua notifikasi akun lalu menghormati filter ids", () => {
+    const sebelum = getState().notifications.filter((n) => n.recipientAccountId === "USR-003");
+    expect(sebelum.length).toBeGreaterThan(0);
+    expect(sebelum.some((n) => !n.read)).toBe(true);
+
+    expect(storeActions.markNotificationsRead("USR-003").ok).toBe(true);
+    expect(
+      getState()
+        .notifications.filter((n) => n.recipientAccountId === "USR-003")
+        .every((n) => n.read),
+    ).toBe(true);
+
+    // Akun lain tidak ikut terpengaruh.
+    expect(
+      getState()
+        .notifications.filter((n) => n.recipientAccountId === "USR-004")
+        .some((n) => !n.read),
+    ).toBe(true);
+  });
+});

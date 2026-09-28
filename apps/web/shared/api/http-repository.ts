@@ -12,7 +12,22 @@ import type {
   SamFollowUpStatus,
   SelfAssessmentDraft,
   Severity,
+  User,
 } from "~/mocks/types";
+
+export type MigrateAssetItem = {
+  kind: string;
+  assetId: string;
+  institutionCode?: string;
+  ownerRef?: string;
+  indicatorId?: string;
+  fileName: string;
+  mime: string;
+  base64: string;
+  width?: number;
+  height?: number;
+  visibility?: "Public" | "Privat";
+};
 import { apiBlob, apiRequest } from "./http-client";
 
 export type BankIndicatorInput = {
@@ -673,5 +688,99 @@ export const httpRepository = {
     return result.ok
       ? { ok: true, blob: result.blob, name: result.fileName }
       : { ok: false, error: result.error };
+  },
+
+  // --- Super Admin + notifikasi + migrasi aset (Fase 5) ---
+  async addInstitution(
+    _actor: ReportActor,
+    input: { name: string; location: string; address?: string; manager?: string; status?: string },
+  ): Promise<ActionResult> {
+    return toAction(await apiRequest("/admin/institutions", { method: "POST", json: input }));
+  },
+
+  async setInstitutionStatus(
+    _actor: ReportActor,
+    code: string,
+    status: "Persiapan" | "Aktif" | "Nonaktif",
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/admin/institutions/${encodeURIComponent(code)}/status`, {
+        method: "POST",
+        json: { status },
+      }),
+    );
+  },
+
+  async addUser(
+    _actor: ReportActor,
+    input: { name: string; email: string; roleId: User["roleId"]; institutionCode?: string },
+  ): Promise<ActionResult> {
+    return toAction(await apiRequest("/admin/users", { method: "POST", json: input }));
+  },
+
+  async updateUser(
+    _actor: ReportActor,
+    userId: string,
+    patch: { name: string; email: string; institutionCode?: string },
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/admin/users/${encodeURIComponent(userId)}`, { method: "PATCH", json: patch }),
+    );
+  },
+
+  async setUserStatus(
+    _actor: ReportActor,
+    userId: string,
+    status: User["status"],
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/admin/users/${encodeURIComponent(userId)}/status`, {
+        method: "POST",
+        json: { status },
+      }),
+    );
+  },
+
+  async deleteUser(_actor: ReportActor, userId: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/admin/users/${encodeURIComponent(userId)}/delete`, { method: "POST" }),
+    );
+  },
+
+  async resetUserPassword(_actor: ReportActor, userId: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/admin/users/${encodeURIComponent(userId)}/reset-password`, {
+        method: "POST",
+      }),
+    );
+  },
+
+  async resetDemo(): Promise<ActionResult> {
+    return toAction(await apiRequest("/admin/reset-demo", { method: "POST" }));
+  },
+
+  async markNotificationsRead(ids?: string[]): Promise<ActionResult> {
+    return toAction(
+      await apiRequest("/notifications/read", { method: "POST", json: { ids: ids ?? [] } }),
+    );
+  },
+
+  async migrateDeviceAssets(
+    items: MigrateAssetItem[],
+  ): Promise<{ ok: true; imported: number } | { ok: false; error: string }> {
+    const result = await apiRequest<{ imported: number }>("/admin/migrate/assets", {
+      method: "POST",
+      json: { items },
+    });
+    return result.ok
+      ? { ok: true, imported: result.data.imported }
+      : { ok: false, error: result.error };
+  },
+
+  async migrationStatus(): Promise<{ migrated: boolean; at: string | null }> {
+    const result = await apiRequest<{ migrated: boolean; at: string | null }>(
+      "/admin/migrate/status",
+    );
+    return result.ok ? result.data : { migrated: false, at: null };
   },
 };

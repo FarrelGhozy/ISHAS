@@ -233,6 +233,17 @@ export const storeActions = {
     return currentState;
   },
 
+  // Fase 5: tandai notifikasi dibaca (semua bila `ids` kosong).
+  markNotificationsRead(accountId: string, ids?: string[]): ActionResult {
+    setState((draft) => {
+      for (const item of draft.notifications) {
+        if (item.recipientAccountId !== accountId) continue;
+        if (!ids || ids.length === 0 || ids.includes(item.id)) item.read = true;
+      }
+    });
+    return { ok: true };
+  },
+
   submitPublicReport(
     actor: ReportActor,
     input: {

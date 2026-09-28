@@ -1,13 +1,13 @@
 import { AlertTriangle, Building2, ClipboardCheck, Users } from "lucide-react";
 import { Link } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
+import { useAdminState } from "~/shared/api/admin-state";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { StatusChip } from "~/shared/components/status-chip";
 
 // Dashboard Super Admin — baca internal seluruh sistem. Angka Completed di sini
 // adalah bacaan internal; publik menyembunyikan Completed + arsip (D-07/D-08).
 export function Page() {
-  const state = useMockState();
+  const state = useAdminState();
   const registered = selectRegisteredInstitutions(state);
   const stats = [
     {

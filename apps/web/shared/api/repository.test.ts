@@ -196,6 +196,78 @@ describe("httpRepository SAM-iSAFE (Fase 4)", () => {
   });
 });
 
+describe("httpRepository Super Admin (Fase 5)", () => {
+  const admin = { id: "USR-001", name: "Super Admin", role: "Super Admin" };
+
+  test("addInstitution + setInstitutionStatus + addUser", async () => {
+    stubFetch({ ok: true, data: { id: "PSN-0024" } }, 201);
+    await httpRepository.addInstitution(admin, {
+      name: "PP Uji",
+      location: "Kota Uji",
+      address: "Jl. Uji Nomor 1",
+      manager: "Ust. Uji",
+    });
+    expect(calls[0].url).toContain("/api/v1/admin/institutions");
+    expect(calls[0].init.method).toBe("POST");
+
+    calls = [];
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.setInstitutionStatus(admin, "PSN-0024", "Aktif");
+    expect(calls[0].url).toContain("/api/v1/admin/institutions/PSN-0024/status");
+
+    calls = [];
+    stubFetch({ ok: true, data: { id: "USR-007" } }, 201);
+    await httpRepository.addUser(admin, {
+      name: "Akun Uji",
+      email: "uji@ishas.demo",
+      roleId: "pesantren",
+      institutionCode: "PSN-0018",
+    });
+    expect(calls[0].url).toContain("/api/v1/admin/users");
+  });
+
+  test("status/delete/reset pengguna memakai endpoint yang benar", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.setUserStatus(admin, "USR-007", "Aktif");
+    expect(calls[0].url).toContain("/api/v1/admin/users/USR-007/status");
+
+    calls = [];
+    await httpRepository.deleteUser(admin, "USR-007");
+    expect(calls[0].url).toContain("/api/v1/admin/users/USR-007/delete");
+
+    calls = [];
+    await httpRepository.resetUserPassword(admin, "USR-007");
+    expect(calls[0].url).toContain("/api/v1/admin/users/USR-007/reset-password");
+  });
+
+  test("resetDemo + markNotificationsRead + migrateDeviceAssets", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.resetDemo();
+    expect(calls[0].url).toContain("/api/v1/admin/reset-demo");
+
+    calls = [];
+    await httpRepository.markNotificationsRead(["NOT-001"]);
+    expect(calls[0].url).toContain("/api/v1/notifications/read");
+    const readBody = JSON.parse(String(calls[0].init.body)) as { ids: string[] };
+    expect(readBody.ids).toEqual(["NOT-001"]);
+
+    calls = [];
+    stubFetch({ ok: true, data: { imported: 2 } }, 201);
+    const migrated = await httpRepository.migrateDeviceAssets([
+      {
+        kind: "instrument-doc",
+        assetId: "instrument-doc-abc",
+        indicatorId: "IND-K3L-002",
+        fileName: "a.pdf",
+        mime: "application/pdf",
+        base64: "JVBERi0=",
+      },
+    ]);
+    expect(migrated).toEqual({ ok: true, imported: 2 });
+    expect(calls[0].url).toContain("/api/v1/admin/migrate/assets");
+  });
+});
+
 describe("apiRequest", () => {
   test("kegagalan jaringan → pesan ramah", async () => {
     globalThis.fetch = (async () => {

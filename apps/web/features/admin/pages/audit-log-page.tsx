@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { useMockState } from "~/mocks/store/mock-store";
+import { useAdminState } from "~/shared/api/admin-state";
 import { EmptyState } from "~/shared/components/empty-state";
 
 // Audit log global — baca Super Admin. Jejak kronologis terbaru dulu.
 export function Page() {
-  const state = useMockState();
+  const state = useAdminState();
   const [query, setQuery] = useState("");
   const [type, setType] = useState("Semua");
   const [actor, setActor] = useState("Semua");

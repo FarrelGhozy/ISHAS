@@ -2,7 +2,12 @@
 // UI memakai `repository` (bukan `mockRepository`) agar swap transparan per fase.
 
 import { mockRepository } from "~/mocks/adapters/mock-repository";
-import { storeActions, type ActionResult, type ReportActor } from "~/mocks/store/mock-store";
+import {
+  getState,
+  storeActions,
+  type ActionResult,
+  type ReportActor,
+} from "~/mocks/store/mock-store";
 import type {
   HandlingStatus,
   InstrumentAnswerType,
@@ -12,16 +17,20 @@ import type {
   SamFollowUpStatus,
   SelfAssessmentDraft,
   Severity,
+  User,
 } from "~/mocks/types";
+import { refreshAdminState } from "./admin-state";
 import { USE_BACKEND } from "./http-client";
 import {
   httpRepository,
   type BankIndicatorInput,
   type LaporInput,
+  type MigrateAssetItem,
   type SamAssessmentInput,
   type SamQuestionInput,
   type ValidImportRowInput,
 } from "./http-repository";
+import { refreshAllWorkspaceStates } from "./workspace-state";
 
 export const repository = {
   ...mockRepository,
@@ -423,6 +432,144 @@ export const repository = {
     return USE_BACKEND
       ? httpRepository.openEvidenceAsset(assetId)
       : mockRepository.openEvidenceAsset(assetId, institutionCode);
+  },
+
+  // --- Super Admin + notifikasi + migrasi aset (Fase 5) ---
+  async addInstitution(
+    actor: ReportActor,
+    input: { name: string; location: string; address?: string; manager?: string; status?: string },
+  ): Promise<ActionResult> {
+    if (!USE_BACKEND) {
+      const state = getState();
+      const max = state.institutions.reduce((value, item) => {
+        const parsed = Number.parseInt(item.code.replace(/\D+/g, ""), 10);
+        return Number.isFinite(parsed) ? Math.max(value, parsed) : value;
+      }, 0);
+      const code = `PSN-${String(max + 1).padStart(4, "0")}`;
+      const r = storeActions.addInstitution({
+        code,
+        name: input.name,
+        location: input.location,
+        address: input.address,
+        manager: input.manager ?? "",
+        assessment: "Belum dimulai",
+        status: "Persiapan",
+      });
+      return r.ok ? { ok: true, id: code } : r;
+    }
+    const result = await httpRepository.addInstitution(actor, input);
+    if (result.ok) refreshAdminState();
+    return result;
+  },
+  async setInstitutionStatus(
+    actor: ReportActor,
+    code: string,
+    status: "Persiapan" | "Aktif" | "Nonaktif",
+  ): Promise<ActionResult> {
+    if (!USE_BACKEND) return storeActions.setInstitutionStatus(code, status);
+    const result = await httpRepository.setInstitutionStatus(actor, code, status);
+    if (result.ok) refreshAdminState();
+    return result;
+  },
+  async addUser(
+    actor: ReportActor,
+    input: { name: string; email: string; roleId: User["roleId"]; institutionCode?: string },
+  ): Promise<ActionResult> {
+    if (!USE_BACKEND) {
+      const state = getState();
+      const n = Math.max(0, ...state.users.map((x) => Number(x.id.replace(/\D/g, "")))) + 1;
+      const id = `USR-${String(n).padStart(3, "0")}`;
+      const lembaga = state.institutions.find((x) => x.code === input.institutionCode);
+      const label: User["role"] =
+        input.roleId === "admin" ? "Super Admin" : input.roleId === "validator" ? "Validator" : "Pesantren";
+      const r = storeActions.addUser({
+        id,
+        name: input.name,
+        email: input.email,
+        initials: input.name
+          .split(" ")
+          .filter(Boolean)
+          .map((x) => x[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+        role: label,
+        roleId: input.roleId,
+        institution: input.roleId === "pesantren" ? (lembaga?.name ?? "") : "Seluruh sistem",
+        institutionCodes:
+          input.roleId === "pesantren" && input.institutionCode ? [input.institutionCode] : [],
+        status: "Menunggu",
+        lastActive: new Date().toISOString(),
+      });
+      return r.ok ? { ok: true, id } : r;
+    }
+    const result = await httpRepository.addUser(actor, input);
+    if (result.ok) refreshAdminState();
+    return result;
+  },
+  async updateUser(
+    actor: ReportActor,
+    userId: string,
+    patch: { name: string; email: string; institutionCode?: string },
+  ): Promise<ActionResult> {
+    if (!USE_BACKEND) {
+      return storeActions.updateUser(userId, {
+        name: patch.name,
+        email: patch.email,
+        institutionCode: patch.institutionCode ?? "",
+      });
+    }
+    const result = await httpRepository.updateUser(actor, userId, patch);
+    if (result.ok) refreshAdminState();
+    return result;
+  },
+  async setUserStatus(
+    actor: ReportActor,
+    userId: string,
+    status: User["status"],
+  ): Promise<ActionResult> {
+    if (!USE_BACKEND) return storeActions.setUserStatus(userId, status);
+    const result = await httpRepository.setUserStatus(actor, userId, status);
+    if (result.ok) refreshAdminState();
+    return result;
+  },
+  async deleteUser(actor: ReportActor, userId: string): Promise<ActionResult> {
+    if (!USE_BACKEND) return storeActions.deleteUser(userId);
+    const result = await httpRepository.deleteUser(actor, userId);
+    if (result.ok) refreshAdminState();
+    return result;
+  },
+  async resetUserPassword(actor: ReportActor, userId: string): Promise<ActionResult> {
+    if (!USE_BACKEND) return storeActions.resetUserPassword(userId);
+    const result = await httpRepository.resetUserPassword(actor, userId);
+    if (result.ok) refreshAdminState();
+    return result;
+  },
+  async markNotificationsRead(actor: ReportActor, ids?: string[]): Promise<ActionResult> {
+    if (!USE_BACKEND) {
+      return actor.id ? storeActions.markNotificationsRead(actor.id, ids) : { ok: true };
+    }
+    const result = await httpRepository.markNotificationsRead(ids);
+    if (result.ok) refreshAllWorkspaceStates();
+    return result;
+  },
+  async migrateDeviceAssets(
+    items: MigrateAssetItem[],
+  ): Promise<{ ok: true; imported: number } | { ok: false; error: string }> {
+    if (!USE_BACKEND) return { ok: true, imported: 0 };
+    const result = await httpRepository.migrateDeviceAssets(items);
+    if (result.ok) refreshAllWorkspaceStates();
+    return result;
+  },
+  async migrationStatus(): Promise<{ migrated: boolean; at: string | null }> {
+    if (!USE_BACKEND) return { migrated: true, at: null };
+    return httpRepository.migrationStatus();
+  },
+  async reset(): Promise<void> {
+    if (!USE_BACKEND) return mockRepository.reset();
+    const result = await httpRepository.resetDemo();
+    if (!result.ok) throw new Error(result.error);
+    refreshAllWorkspaceStates();
   },
 };
 
