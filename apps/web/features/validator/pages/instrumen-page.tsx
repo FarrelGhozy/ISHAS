@@ -2,14 +2,15 @@
 // Tanpa versioning: tambah/edit/hapus dimensi + indikator langsung aktif.
 
 import { useState } from "react";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
 import { K3_CATEGORIES } from "~/mocks/kategori-k3";
 import type { InstrumentIndicator } from "~/mocks/types";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState, useValidatorState } from "~/shared/api/validator-state";
 import { BankBobotModal } from "../components/bank-bobot-modal";
 import { BankIndikatorForm } from "../components/bank-indikator-form";
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const bank = state.instrument;
   const dimensions = Array.isArray(bank?.dimensions) ? bank.dimensions : [];
   const indicatorCount = dimensions.reduce((n, d) => n + d.indicators.length, 0);
@@ -30,28 +31,33 @@ export function Page() {
     setBobotInd(null);
   };
 
-  const addDim = () => {
-    const r = storeActions.addBankDimension(dimName, dimKategori || undefined);
+  const addDim = async () => {
+    const r = await repository.addBankDimension(dimName, dimKategori || undefined);
     setNote(r.ok ? "Dimensi ditambahkan ke bank live." : r.error);
     if (r.ok) {
       setDimName("");
       setDimKategori("");
+      refreshValidatorState();
     }
   };
 
-  const saveDim = (id: string) => {
-    const r = storeActions.updateBankDimension(id, { name: editDimName });
+  const saveDim = async (id: string) => {
+    const r = await repository.updateBankDimension(id, { name: editDimName });
     setNote(r.ok ? "Dimensi diubah." : r.error);
-    if (r.ok) done("");
+    if (r.ok) {
+      refreshValidatorState();
+      done("");
+    }
   };
 
-  const hapus = (kind: "dimensi" | "indikator", id: string, label: string) => {
+  const hapus = async (kind: "dimensi" | "indikator", id: string, label: string) => {
     if (!window.confirm(`Hapus ${kind} ${label}? Laporan terkirim tetap beku.`)) return;
     const r =
       kind === "dimensi"
-        ? storeActions.deleteBankDimension(id)
-        : storeActions.deleteBankIndicator(id);
+        ? await repository.deleteBankDimension(id)
+        : await repository.deleteBankIndicator(id);
     setNote(r.ok ? `${kind} dihapus.` : r.error);
+    if (r.ok) refreshValidatorState();
   };
 
   return (
@@ -141,7 +147,7 @@ export function Page() {
             ))}
           </select>
         </label>
-        <button type="button" className="primary-button" onClick={addDim}>
+        <button type="button" className="primary-button" onClick={() => void addDim()}>
           Tambah dimensi
         </button>
       </div>
@@ -163,7 +169,7 @@ export function Page() {
                   <button
                     type="button"
                     className="primary-button"
-                    onClick={() => saveDim(d.id)}
+                    onClick={() => void saveDim(d.id)}
                   >
                     Simpan
                   </button>
@@ -197,7 +203,7 @@ export function Page() {
                   <button
                     type="button"
                     className="secondary-button"
-                    onClick={() => hapus("dimensi", d.id, d.name)}
+                    onClick={() => void hapus("dimensi", d.id, d.name)}
                   >
                     Hapus
                   </button>
@@ -249,7 +255,7 @@ export function Page() {
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={() => hapus("indikator", i.id, i.code)}
+                      onClick={() => void hapus("indikator", i.id, i.code)}
                     >
                       Hapus
                     </button>

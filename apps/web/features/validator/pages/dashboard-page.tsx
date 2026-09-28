@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import { Link } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { hitungIndexSummary } from "~/mocks/processors/dashboard-aggregate";
+import { useValidatorState } from "~/shared/api/validator-state";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 import { nilaiKesiapan } from "../audit-kesiapan";
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const registered = selectRegisteredInstitutions(state);
   const summary = hitungIndexSummary(
     state,

@@ -1,9 +1,10 @@
 // Form tambah/edit indikator bank (D-24). Opsi + bobot diatur via modal Atur Bobot.
 
 import { useState } from "react";
-import { storeActions } from "~/mocks/store/mock-store";
 import { K3_CATEGORIES } from "~/mocks/kategori-k3";
 import type { InstrumentAnswerType, InstrumentIndicator } from "~/mocks/types";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 
 const TIPE_BARU: { value: InstrumentAnswerType; label: string }[] = [
   { value: "ya-tidak", label: "Ya / Tidak" },
@@ -54,7 +55,7 @@ export function BankIndikatorForm({
   const aspekPilihan =
     K3_CATEGORIES.find((c) => c.id === (form.categoryId || kategoriDimensi))?.aspects ?? [];
 
-  const simpan = () => {
+  const simpan = async () => {
     const payload = {
       code: form.code,
       title: form.title,
@@ -67,8 +68,9 @@ export function BankIndikatorForm({
       aspectId: form.aspectId || undefined,
     };
     const r = awal
-      ? storeActions.updateBankIndicator(awal.id, payload)
-      : storeActions.addBankIndicator(dimensionId, payload);
+      ? await repository.updateBankIndicator(awal.id, payload)
+      : await repository.addBankIndicator(dimensionId, payload);
+    if (r.ok) refreshValidatorState();
     onDone(r.ok ? (awal ? `Indikator ${form.code} diubah.` : `Indikator ${form.code} ditambahkan.`) : r.error);
   };
 
@@ -174,7 +176,7 @@ export function BankIndikatorForm({
         />
       </label>
       <div className="flex flex-wrap gap-2 md:col-span-3">
-        <button type="button" className="primary-button" onClick={simpan}>
+        <button type="button" className="primary-button" onClick={() => void simpan()}>
           {awal ? "Simpan perubahan" : "Tambah indikator"}
         </button>
         <button type="button" className="secondary-button" onClick={() => onDone("")}>

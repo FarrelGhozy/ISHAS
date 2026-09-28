@@ -3,15 +3,15 @@
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import type { Report } from "~/mocks/types";
+import { useValidatorState } from "~/shared/api/validator-state";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 import { nilaiKesiapan, type Kesiapan } from "../audit-kesiapan";
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const [query, setQuery] = useState("");
   const [institution, setInstitution] = useState("Semua terdaftar");
   const [kelengkapan, setKelengkapan] = useState("Semua");

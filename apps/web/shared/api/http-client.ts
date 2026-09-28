@@ -18,6 +18,37 @@ function buildHeaders(json: boolean, extra?: Record<string, string>): Record<str
   return headers;
 }
 
+// Unduh blob (PDF/bukti) dengan identitas sesi yang sama seperti `apiRequest`.
+export async function apiBlob(
+  path: string,
+): Promise<{ ok: true; blob: Blob; fileName: string } | { ok: false; error: string; status: number }> {
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      headers: buildHeaders(false),
+      credentials: "include",
+    });
+    if (!response.ok) {
+      let error = "Berkas tidak dapat dimuat.";
+      try {
+        const payload = (await response.json()) as { error?: string };
+        if (payload?.error) error = payload.error;
+      } catch {
+        // respons non-JSON (mis. 404 HTML) → pakai pesan umum
+      }
+      return { ok: false, error, status: response.status };
+    }
+    const disposition = response.headers.get("content-disposition") ?? "";
+    const match = /filename="?([^";]+)"?/.exec(disposition);
+    return { ok: true, blob: await response.blob(), fileName: match?.[1] ?? "dokumen.pdf" };
+  } catch {
+    return {
+      ok: false,
+      error: "Tidak dapat menghubungi server. Periksa koneksi lalu coba lagi.",
+      status: 0,
+    };
+  }
+}
+
 export async function apiRequest<T>(
   path: string,
   init: { method?: string; json?: unknown; form?: FormData; headers?: Record<string, string> } = {},

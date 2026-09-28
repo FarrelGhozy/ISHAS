@@ -4,13 +4,34 @@
 import type { ActionResult, ReportActor } from "~/mocks/store/mock-store";
 import type {
   HandlingStatus,
+  InstrumentAnswerType,
+  InstrumentOption,
   LocationSnapshot,
   Priority,
   RiskLevel,
   SelfAssessmentDraft,
   Severity,
 } from "~/mocks/types";
-import { apiRequest } from "./http-client";
+import { apiBlob, apiRequest } from "./http-client";
+
+export type BankIndicatorInput = {
+  code: string;
+  title: string;
+  prompt: string;
+  answerType: InstrumentAnswerType;
+  required: boolean;
+  evidenceRequired: boolean;
+  locationRequired: boolean;
+  categoryId?: string;
+  aspectId?: string;
+};
+
+export type ValidImportRowInput = {
+  institutionCode: string;
+  reporterName: string;
+  scorePercent: number | null;
+  title: string;
+};
 
 export type LaporInput = {
   institutionCode: string;
@@ -271,6 +292,163 @@ export const httpRepository = {
         method: "POST",
         json: { reason },
       }),
+    );
+  },
+
+  // --- Bank instrumen + dokumen + dataset Validator (Fase 3) ---
+  async addBankDimension(name: string, categoryId?: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest("/validator/bank/dimensions", { method: "POST", json: { name, categoryId } }),
+    );
+  },
+
+  async updateBankDimension(
+    id: string,
+    patch: { name?: string; categoryId?: string },
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/bank/dimensions/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        json: patch,
+      }),
+    );
+  },
+
+  async deleteBankDimension(id: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/bank/dimensions/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    );
+  },
+
+  async addBankIndicator(dimensionId: string, input: BankIndicatorInput): Promise<ActionResult> {
+    return toAction(
+      await apiRequest("/validator/bank/indicators", {
+        method: "POST",
+        json: { dimensionId, ...input },
+      }),
+    );
+  },
+
+  async updateBankIndicator(id: string, patch: Partial<BankIndicatorInput>): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/bank/indicators/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        json: patch,
+      }),
+    );
+  },
+
+  async deleteBankIndicator(id: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/bank/indicators/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    );
+  },
+
+  async setBankIndicatorOptions(
+    id: string,
+    options: InstrumentOption[],
+    weight?: number,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/bank/indicators/${encodeURIComponent(id)}/options`, {
+        method: "PUT",
+        json: { options, weight },
+      }),
+    );
+  },
+
+  async uploadInstrumentDoc(
+    _actor: ReportActor,
+    indicatorId: string,
+    file: File,
+    visibility: "Public" | "Privat",
+  ): Promise<ActionResult> {
+    const uploaded = await httpRepository.uploadInstrumentDocAsset(file);
+    if (!uploaded.ok) return { ok: false, error: uploaded.error };
+    return toAction(
+      await apiRequest(`/validator/docs/${encodeURIComponent(indicatorId)}`, {
+        method: "PUT",
+        json: {
+          fileName: file.name.trim(),
+          fileSize: file.size,
+          assetId: uploaded.id,
+          visibility,
+        },
+      }),
+    );
+  },
+
+  async uploadInstrumentDocAsset(file: File): Promise<ActionResult> {
+    const form = new FormData();
+    form.append("file", file);
+    const result = await apiRequest<{ id: string }>("/uploads/instrument-doc", {
+      method: "POST",
+      form,
+    });
+    return result.ok ? { ok: true, id: result.data.id } : { ok: false, error: result.error };
+  },
+
+  async createInstrumentDoc(
+    _actor: ReportActor,
+    input: {
+      code: string;
+      title: string;
+      categoryId: string;
+      aspectId?: string;
+      visibility?: "Public" | "Privat";
+    },
+    file: File,
+  ): Promise<ActionResult> {
+    const uploaded = await httpRepository.uploadInstrumentDocAsset(file);
+    if (!uploaded.ok) return { ok: false, error: uploaded.error };
+    return toAction(
+      await apiRequest("/validator/docs", {
+        method: "POST",
+        json: {
+          ...input,
+          fileName: file.name.trim(),
+          fileSize: file.size,
+          assetId: uploaded.id,
+        },
+      }),
+    );
+  },
+
+  async openInstrumentDoc(
+    _viewer: { id?: string },
+    indicatorId: string,
+  ): Promise<{ ok: true; blob: Blob; fileName: string } | { ok: false; error: string }> {
+    const result = await apiBlob(`/docs/${encodeURIComponent(indicatorId)}/blob`);
+    return result.ok
+      ? { ok: true, blob: result.blob, fileName: result.fileName }
+      : { ok: false, error: result.error };
+  },
+
+  async removeInstrumentDoc(_actor: ReportActor, indicatorId: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/docs/${encodeURIComponent(indicatorId)}`, { method: "DELETE" }),
+    );
+  },
+
+  async setInstrumentDocVisibility(
+    _actor: ReportActor,
+    indicatorId: string,
+    visibility: "Public" | "Privat",
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/docs/${encodeURIComponent(indicatorId)}/visibility`, {
+        method: "PATCH",
+        json: { visibility },
+      }),
+    );
+  },
+
+  async importResearchDataset(
+    _actor: ReportActor,
+    rows: ValidImportRowInput[],
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest("/validator/dataset/import", { method: "POST", json: { rows, apply: true } }),
     );
   },
 };

@@ -1,8 +1,9 @@
 // Modal Atur Bobot (D-24): bobot 0–100 + flag temuan per opsi + pengali indikator.
 
 import { useState } from "react";
-import { storeActions } from "~/mocks/store/mock-store";
 import type { InstrumentIndicator, InstrumentOption } from "~/mocks/types";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 
 type Baris = { value: string; label: string; weight: string; isFinding: boolean };
 
@@ -27,14 +28,14 @@ export function BankBobotModal({
   const patch = (index: number, next: Partial<Baris>) =>
     setBaris((old) => old.map((row, i) => (i === index ? { ...row, ...next } : row)));
 
-  const simpan = () => {
+  const simpan = async () => {
     const options: InstrumentOption[] = baris.map((row) => ({
       value: row.value.trim(),
       label: row.label.trim(),
       weight: Number(row.weight),
       isFinding: row.isFinding,
     }));
-    const r = storeActions.setBankIndicatorOptions(
+    const r = await repository.setBankIndicatorOptions(
       indicator.id,
       options,
       pengali.trim() ? Number(pengali) : undefined,
@@ -43,6 +44,7 @@ export function BankBobotModal({
       setError(r.error);
       return;
     }
+    refreshValidatorState();
     onClose(`Bobot ${indicator.code} disimpan. Skor lama tetap beku.`);
   };
 
@@ -110,7 +112,7 @@ export function BankBobotModal({
           </p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" className="primary-button" onClick={simpan}>
+          <button type="button" className="primary-button" onClick={() => void simpan()}>
             Simpan bobot
           </button>
           <button type="button" className="secondary-button" onClick={() => onClose("")}>

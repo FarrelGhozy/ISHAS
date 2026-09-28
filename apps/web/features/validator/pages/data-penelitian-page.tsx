@@ -3,8 +3,8 @@
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import { useValidatorState } from "~/shared/api/validator-state";
 import {
   buildResearchRows,
   researchToCSV,
@@ -27,7 +27,7 @@ function unduh(nama: string, isi: string, tipe: string): void {
 }
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const [query, setQuery] = useState("");
   const [institution, setInstitution] = useState("Semua terdaftar");
   const [status, setStatus] = useState("Semua");
