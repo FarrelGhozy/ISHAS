@@ -55,7 +55,14 @@ test("kirim → validasi mempertahankan titik persis dan tidak mempublikasikan p
   expect(result.ok).toBe(true);
   if (!result.ok || !result.id) return;
   expect(selectPublicCampusMap(getState(), "PSN-0018").items).toHaveLength(7);
-  storeActions.acceptReport(manager, result.id, "Tinggi", "Sedang");
+  storeActions.acceptReport(
+    manager,
+    result.id,
+    "Tinggi",
+    "Sedang",
+    undefined,
+    "Amankan area dan jadwalkan perbaikan oleh tim sarana.",
+  );
   const finding = getState().findings.find((item) => item.reportId === result.id)!;
   expect(finding.locationSnapshot?.point).toEqual({ x: 0, y: 100 });
   expect(finding.locationSnapshot?.floorNote).toBe("Lantai 2");
@@ -72,7 +79,14 @@ test("kirim → validasi mempertahankan titik persis dan tidak mempublikasikan p
 test("laporan tanpa titik tidak menggunakan centroid area atau 50/50", () => {
   const result = storeActions.submitPublicReport({ name: "Penguji" }, input);
   if (!result.ok || !result.id) throw Error("Submit gagal");
-  storeActions.acceptReport(manager, result.id, "Sedang", "Sedang");
+  storeActions.acceptReport(
+    manager,
+    result.id,
+    "Sedang",
+    "Sedang",
+    undefined,
+    "Amankan area dan jadwalkan perbaikan oleh tim sarana.",
+  );
   expect(
     getState().findings.find((item) => item.reportId === result.id)?.locationSnapshot?.point,
   ).toBeNull();

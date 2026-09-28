@@ -167,17 +167,42 @@ describe("turunan temuan saat Terima (flow peta/rekomendasi)", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("lapor-cepat Diterima langsung punya 1 temuan + 1 rekomendasi Belum ditindaklanjuti", () => {
-    const r = storeActions.acceptReport(PENGELOLA, "RPT-0001", "Tinggi", "Tinggi");
+    const r = storeActions.acceptReport(
+      PENGELOLA,
+      "RPT-0001",
+      "Tinggi",
+      "Tinggi",
+      undefined,
+      "Amankan kabel dengan pelindung lalu jadwalkan perbaikan instalasi.",
+    );
     expect(r.ok).toBe(true);
     expect(getState().findings.filter((f) => f.reportId === "RPT-0001").length).toBe(1);
     const rec = getState().recommendations.filter((x) => x.reportId === "RPT-0001");
     expect(rec.length).toBe(1);
     expect(rec[0].status).toBe("Belum ditindaklanjuti");
     expect(rec[0].location).toContain("Koridor");
+    expect(rec[0].action).toContain("pelindung");
+  });
+
+  test("lapor-cepat tanpa rekomendasi final ditolak; usulan pendek juga ditolak", () => {
+    expect(storeActions.acceptReport(PENGELOLA, "RPT-0001", "Tinggi", "Tinggi").ok).toBe(false);
+    expect(
+      storeActions.acceptReport(PENGELOLA, "RPT-0001", "Tinggi", "Tinggi", undefined, "pendek").ok,
+    ).toBe(false);
+    expect(getState().reports.find((x) => x.id === "RPT-0001")?.validationStatus).toBe(
+      "Menunggu validasi",
+    );
   });
 
   test("turunan seed tidak digandakan saat transisi lain berjalan", () => {
-    storeActions.acceptReport(PENGELOLA, "RPT-0001", "Sedang", "Sedang");
+    storeActions.acceptReport(
+      PENGELOLA,
+      "RPT-0001",
+      "Sedang",
+      "Sedang",
+      undefined,
+      "Amankan kabel dengan pelindung lalu jadwalkan perbaikan instalasi.",
+    );
     expect(
       storeActions.updateHandlingStatus(PENGELOLA, "RPT-0001", "Proses", {
         owner: "Tim Sarana",
@@ -193,7 +218,14 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("rencana tanpa catatan / PIC pendek / tenggat lampau ditolak", () => {
-    storeActions.acceptReport(PENGELOLA, "RPT-0001", "Sedang", "Sedang");
+    storeActions.acceptReport(
+      PENGELOLA,
+      "RPT-0001",
+      "Sedang",
+      "Sedang",
+      undefined,
+      "Amankan kabel dengan pelindung lalu jadwalkan perbaikan instalasi.",
+    );
     const id = getState().recommendations.find((x) => x.reportId === "RPT-0001")!.id;
     expect(
       storeActions.updateRecommendation(PENGELOLA, id, {

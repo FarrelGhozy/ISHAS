@@ -12,6 +12,7 @@ const BASE: LaporValues = {
   aspectId: "",
   reporterSeverity: "Belum ditentukan",
   reporterPriority: "Belum ditentukan",
+  reporterRecommendation: "",
   title: "Kabel terbuka di koridor lantai 2",
   description: "Kabel listrik menggantung di koridor lantai 2 asrama sejak kemarin.",
   evidenceName: "",
@@ -80,6 +81,23 @@ describe("validateLapor", () => {
       CTX,
     );
     expect(errors).toEqual({});
+  });
+
+  test("usulan rekomendasi D-29: kosong/sah lolos; pendek/panjang ditolak", () => {
+    expect(validateLapor(BASE, CTX)).toEqual({});
+    expect(
+      validateLapor(
+        { ...BASE, reporterRecommendation: "Amankan kabel lalu jadwalkan perbaikan." },
+        CTX,
+      ),
+    ).toEqual({});
+    expect(
+      validateLapor({ ...BASE, reporterRecommendation: "pendek" }, CTX).reporterRecommendation,
+    ).toBe("Usulan rekomendasi minimal 10 karakter.");
+    expect(
+      validateLapor({ ...BASE, reporterRecommendation: "x".repeat(501) }, CTX)
+        .reporterRecommendation,
+    ).toBe("Usulan rekomendasi maksimal 500 karakter.");
   });
 
   test("cascading D-19: aspek di luar kategori → ditolak", () => {

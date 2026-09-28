@@ -142,6 +142,7 @@ export type Report = {
   indicatorId?: string; // D-19: warisan lapor-cepat lama; lapor-cepat baru tidak mengisi
   reporterSeverity?: Severity; // D-19: usulan mandiri pelapor (opsional, default 'Belum ditentukan')
   reporterPriority?: Priority; // D-19: usulan mandiri pelapor (opsional, default 'Belum ditentukan')
+  reporterRecommendation?: string; // D-29: usulan rekomendasi tindakan lapor-cepat (opsional, maks 500; mentah tidak publik)
   reporterName: string; // 2–100 karakter, wajib; tanpa opsi anonim (D-02)
   reporterUserId?: string; // FK User.id bila dikirim saat login (DATA_REQUIREMENTS §2); email bukan kunci relasi
   reporterAccountEmail?: string; // terisi bila dikirim saat login (pengelola)

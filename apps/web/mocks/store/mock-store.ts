@@ -246,6 +246,7 @@ export const storeActions = {
       aspectId?: string;
       reporterSeverity?: string;
       reporterPriority?: string;
+      reporterRecommendation?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;
@@ -344,6 +345,14 @@ export const storeActions = {
     if (!levels.includes(reporterPriority)) {
       return { ok: false, error: "Usulan prioritas perbaikan tidak dikenal." };
     }
+    // D-29: usulan rekomendasi lapor-cepat opsional; bila diisi min 10, maks 500.
+    const reporterRecommendation = input.reporterRecommendation?.trim() || undefined;
+    if (reporterRecommendation && reporterRecommendation.length < 10) {
+      return { ok: false, error: "Usulan rekomendasi minimal 10 karakter." };
+    }
+    if (reporterRecommendation && reporterRecommendation.length > 500) {
+      return { ok: false, error: "Usulan rekomendasi maksimal 500 karakter." };
+    }
     const mapError = validateMapLocation(
       currentState,
       input.institutionCode,
@@ -382,6 +391,7 @@ export const storeActions = {
           aspectId,
           reporterSeverity: reporterSeverity as Report["reporterSeverity"],
           reporterPriority: reporterPriority as Report["reporterPriority"],
+          reporterRecommendation,
           title,
           description,
           areaId: input.areaId,
@@ -434,6 +444,7 @@ export const storeActions = {
     severity: Severity,
     priority: Priority,
     note?: string,
+    rekomendasiFinal?: string,
   ): ActionResult {
     if (
       !severity ||
@@ -443,9 +454,20 @@ export const storeActions = {
     ) {
       return { ok: false, error: "Severity dan priority wajib dipilih tanpa default." };
     }
+    const finalAction = rekomendasiFinal?.trim() || undefined;
     return setStateReport(actor, reportId, (draft, report) => {
       if (report.validationStatus !== "Menunggu validasi") {
         return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat diterima." };
+      }
+      // D-29: lapor-cepat wajib rekomendasi final (min 10, maks 500);
+      // penilaian-mandiri tetap turunan otomatis (final opsional, belum dipakai).
+      if (report.channel === "lapor-cepat") {
+        if (!finalAction || finalAction.length < 10) {
+          return { ok: false, error: "Rekomendasi tindakan wajib diisi minimal 10 karakter." };
+        }
+        if (finalAction.length > 500) {
+          return { ok: false, error: "Rekomendasi tindakan maksimal 500 karakter." };
+        }
       }
       report.validationStatus = "Diterima";
       report.handlingStatus = "Pending";
@@ -459,7 +481,8 @@ export const storeActions = {
       report.validationNote = note;
       // Bentuk kandidat temuan/rekomendasi turunan agar kiriman yang diterima
       // langsung mengalir ke peta/rekomendasi (aturan ilustratif, bukan final).
-      ensureDerivedWork(draft, report, severity, priority);
+      // D-29: lapor-cepat memakai teks final Pesantren sebagai isi tindakan.
+      ensureDerivedWork(draft, report, severity, priority, finalAction);
       audit(draft, actor, {
         objectType: "Report",
         objectId: reportId,
@@ -2989,6 +3012,7 @@ function ensureDerivedWork(
   report: Report,
   severity: Severity,
   priority: Priority,
+  finalAction?: string,
 ): void {
   if (
     draft.findings.some((f) => f.reportId === report.id) ||
@@ -3078,7 +3102,10 @@ function ensureDerivedWork(
         report.channel === "penilaian-mandiri"
           ? sourceAnswerId || report.instrumentVersionId || "Instrumen"
           : (report.indicatorId ?? "Tidak menggunakan instrumen"),
-      recommendation: `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
+      recommendation:
+        report.channel === "lapor-cepat" && finalAction
+          ? finalAction
+          : `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
       status: "Belum ditindaklanjuti",
       hazard: "Menunggu kajian Pesantren",
       impact: "Menunggu kajian Pesantren",
@@ -3102,7 +3129,9 @@ function ensureDerivedWork(
           ? `${report.instrumentVersionId ?? "INS"} · ${report.id}`
           : `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
       action:
-        "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
+        report.channel === "lapor-cepat" && finalAction
+          ? finalAction
+          : "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
       status: "Belum ditindaklanjuti",
       owner: "",
       dueDate: "",

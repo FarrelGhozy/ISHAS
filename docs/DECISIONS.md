@@ -736,3 +736,22 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Dokumen terdampak: ROUTES §1, WIREFRAMES §5, FLOWS §6, ROLES §akses publik,
   DATA_MODEL §3, DATA_REQUIREMENTS §6, TEST_PLAN §3. Scope Stage 08;
   status stage lain tidak berubah sepihak.
+
+## D-29 — Usulan rekomendasi pelapor + final Pesantren (lapor-cepat) — DISETUJUI 28 September 2026
+
+- Arahan pemilik: rekomendasi di `/rekomendasi` adalah rekomendasi tindakan
+  perbaikan; untuk sekarang dimasukkan sebagai usulan pelapor dari dashboard
+  umum (`/lapor`), divalidasi Pesantren, baru tampil di rekomendasi.
+- **Keputusan:**
+  - Form `/lapor` tambah `Usulan rekomendasi tindakan` opsional (maks 500
+    karakter; bila diisi minimal 10). Tersimpan sebagai `reporterRecommendation`
+    (usulan internal, tidak tampil publik — D-02).
+  - Validasi Pesantren menampilkan usulan sebagai pre-fill; saat `Terima`
+    lapor-cepat wajib isi rekomendasi final (min 10, maks 500, boleh ubah total
+    dari usulan). Yang tampil publik di `/rekomendasi` adalah versi final
+    (`Recommendation.action`).
+  - Scope lapor-cepat dulu; satu laporan = satu rekomendasi. Penilaian-mandiri
+    tetap perilaku turunan otomatis lama sampai diputuskan terpisah.
+  - Migrasi schema mock `v14 → v15` aditif (field baru, tanpa hapus data/ID).
+- Dokumen terdampak: FLOWS §2/§4, WIREFRAMES §2/§4, DATA_MODEL §0/§2/§4, TODO.
+  Scope Stage 03+05 + sentuhan baca Stage 04/07; status stage lain tidak berubah sepihak.

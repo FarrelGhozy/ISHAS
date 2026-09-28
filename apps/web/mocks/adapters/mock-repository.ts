@@ -453,6 +453,7 @@ export const mockRepository = {
       aspectId?: string;
       reporterSeverity?: string;
       reporterPriority?: string;
+      reporterRecommendation?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;

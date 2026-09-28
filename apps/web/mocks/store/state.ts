@@ -7,8 +7,8 @@ import { buildBankLiveDariVersi } from "../instrument-bank";
 import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED } from "../sam-isafe";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 14;
-export const MOCK_STORAGE_KEY = "ishas-mock-v14";
+export const MOCK_SCHEMA_VERSION = 15;
+export const MOCK_STORAGE_KEY = "ishas-mock-v15";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -214,6 +214,24 @@ export function migrateV13(value: unknown): unknown {
   return migrated;
 }
 
+// D-29: v14 → v15 menambah usulan rekomendasi lapor-cepat tanpa menyentuh data lama.
+export function migrateV14(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 14)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 15;
+  for (const report of migrated.reports ?? []) {
+    if (typeof report.reporterRecommendation !== "string") {
+      delete report.reporterRecommendation;
+      continue;
+    }
+    const trimmed = report.reporterRecommendation.trim();
+    if (!trimmed) delete report.reporterRecommendation;
+    else report.reporterRecommendation = trimmed.slice(0, 500);
+  }
+  return migrated;
+}
+
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
@@ -284,6 +302,7 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v14") ??
       localStorage.getItem("ishas-mock-v13") ??
       localStorage.getItem("ishas-mock-v12") ??
       localStorage.getItem("ishas-mock-v10") ??
@@ -294,11 +313,13 @@ export function loadState(): IshasState {
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV13(
-        migrateV12(
-          migrateV11(
-            migrateV10(
-              migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+      const parsed: unknown = migrateV14(
+        migrateV13(
+          migrateV12(
+            migrateV11(
+              migrateV10(
+                migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+              ),
             ),
           ),
         ),

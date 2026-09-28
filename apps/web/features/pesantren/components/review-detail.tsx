@@ -1,4 +1,4 @@
-// Detail isi laporan pada modal validasi — hanya-baca (FLOWS §4, D-19).
+// Detail isi laporan pada modal validasi — hanya-baca (FLOWS §4, D-19, D-29).
 // Menampilkan seluruh field kiriman publik: identitas, kontak internal,
 // kategori/aspek, usulan mandiri, lokasi + denah, bukti gambar, waktu,
 // dan jejak keputusan bila sudah diputus.
@@ -145,6 +145,9 @@ export function ReviewDetail({
               <StatusChip value={report.reporterSeverity ?? "Belum ditentukan"} />
               <StatusChip value={report.reporterPriority ?? "Belum ditentukan"} />
             </span>
+          </Baris>
+          <Baris label="Usulan rekomendasi">
+            {report.reporterRecommendation?.trim() ? report.reporterRecommendation : "—"}
           </Baris>
           {decided && live.validationStatus === "Diterima" ? (
             <Baris label="Keputusan">

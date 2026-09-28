@@ -32,7 +32,7 @@ const T = {
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 14,
+  schemaVersion: 15,
   samCategories: structuredClone(SAM_CATEGORIES_SEED),
   samQuestions: structuredClone(SAM_QUESTIONS_SEED),
   samAssessments: [],
@@ -195,6 +195,7 @@ export const SEED: IshasState = {
       aspectId: "ASP-KES-001",
       reporterSeverity: "Tinggi",
       reporterPriority: "Sedang",
+      reporterRecommendation: "Amankan kabel dengan pelindung sementara lalu jadwalkan perbaikan instalasi oleh teknisi.",
       reporterName: "Santri Blok A",
       title: "Kabel terbuka di koridor lantai 2",
       description:

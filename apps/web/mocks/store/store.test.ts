@@ -104,7 +104,7 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(14);
+    expect(state.schemaVersion).toBe(15);
     expect(selectRegisteredInstitutions(state).length).toBe(2);
   });
 });
@@ -487,6 +487,36 @@ describe("lapor-cepat V2-03", () => {
     );
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe("Usulan tingkat keparahan tidak dikenal.");
+  });
+
+  test("usulan rekomendasi opsional tersimpan; pendek/panjang ditolak (D-29)", () => {
+    const kosong = storeActions.submitPublicReport({ name: "Santri Blok B" }, VALID);
+    expect(kosong.ok).toBe(true);
+    if (!kosong.ok) return;
+    expect(
+      getState().reports.find((r) => r.id === kosong.id)?.reporterRecommendation,
+    ).toBeUndefined();
+    const pendek = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, reporterRecommendation: "pendek" },
+    );
+    expect(pendek.ok).toBe(false);
+    if (!pendek.ok) expect(pendek.error).toBe("Usulan rekomendasi minimal 10 karakter.");
+    const panjang = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, reporterRecommendation: "x".repeat(501) },
+    );
+    expect(panjang.ok).toBe(false);
+    if (!panjang.ok) expect(panjang.error).toBe("Usulan rekomendasi maksimal 500 karakter.");
+    const sah = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, reporterRecommendation: "Amankan kabel lalu jadwalkan perbaikan teknisi." },
+    );
+    expect(sah.ok).toBe(true);
+    if (!sah.ok) return;
+    expect(
+      getState().reports.find((r) => r.id === sah.id)?.reporterRecommendation,
+    ).toBe("Amankan kabel lalu jadwalkan perbaikan teknisi.");
   });
 
   test("aspek di luar kategori ditolak tanpa menyebut indikator", () => {

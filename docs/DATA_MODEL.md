@@ -41,6 +41,12 @@ tetap menunggu penelitian.
   migrasi v13→v14 mengisi default kosong. Bank `SAM-KAT-*` terpisah
   dari kategori sistem `KAT-*`.
 
+- **Amendemen D-29 (28 September 2026):** schema `v15`
+  (`MOCK_STORAGE_KEY: ishas-mock-v15`): `Report` bertambah
+  `reporterRecommendation` (usulan rekomendasi tindakan lapor-cepat,
+  opsional, maks 500; usulan mentah tidak publik). Migrasi v14→v15
+  menormalisasi field baru tanpa menghapus record/ID.
+
 - Calon `MOCK_STORAGE_KEY`: `ishas-mock-v11`. Aplikasi ISHAS
 - `MOCK_SCHEMA_VERSION`: `11` (v11 bank live D-24: `instrument` +
   `instrumentChecksum` + opsi/bobot per jawaban + snapshot beku + skor % +
@@ -132,6 +138,7 @@ type Report = {
    indicatorId?: string; // warisan lapor-cepat lama + penilaian-mandiri; lapor-cepat baru tidak mengisi (D-19)
    reporterSeverity?: Severity; // usulan pelapor, opsional (D-19); default 'Belum ditentukan'
    reporterPriority?: Priority; // usulan pelapor, opsional (D-19); default 'Belum ditentukan'
+   reporterRecommendation?: string; // D-29: usulan rekomendasi tindakan lapor-cepat, opsional, maks 500; mentah tidak publik
  reporterName: string; // 2-100 karakter, wajib; selalu tampil apa adanya secara internal (tanpa opsi anonim, D-02)
   reporterAccountEmail?: string; // terisi bila dikirim saat login (Pesantren)
  title: string; // 10-140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
@@ -231,10 +238,10 @@ penolakan, dan audit tidak publik. Arsip pesantren nonaktif menunggu D-08.
 
 | Action | Input | Hasil |
 |---|---|---|
-| `submitPublicReport` | field §FLOWS-2 + `reporterName` | `RPT-XXXX` + audit + notifikasi Pesantren |
+| `submitPublicReport` | field §FLOWS-2 + `reporterName` + usulan rekomendasi opsional | `RPT-XXXX` + audit + notifikasi Pesantren |
 | `saveSelfAssessmentDraft` | draft parsial | tersimpan lokal, `progress` dihitung ulang |
 | `submitSelfAssessment` | draft lengkap | snapshot jawaban terkirim + 1 `Report` + kandidat temuan + audit + notifikasi; ulang percobaan yang sama tidak menggandakan kiriman |
-| `acceptReport` | `id` + `severity` + `priority` (+ catatan) | `Diterima/Pending`; wajib keduanya terisi |
+| `acceptReport` | `id` + `severity` + `priority` (+ catatan) + rekomendasi final wajib untuk lapor-cepat (min 10, maks 500) | `Diterima/Pending` + 1 rekomendasi final; wajib ketiganya untuk lapor-cepat |
 | `rejectReport` | `id` + alasan min 10 | `Ditolak`; arsip + validator/waktu/alasan |
 | `updateHandlingStatus` | `id` + status baru + syarat per transisi (PIC/tenggat/bukti) | status baru + audit; jalur utama maju lewat `updateRecommendation`, manual untuk tanpa-rekomendasi/mundur/arsip (D-23.a) |
 | `updateRecommendation` | `id` + PIC/tenggat/progres/bukti/catatan/`verify` | rekomendasi maju + laporan otomatis `Proses`/`Completed`; progres dinormalisasi D-20 |

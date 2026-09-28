@@ -1,4 +1,4 @@
-// Antrean validasi Pesantren — daftar + modal periksa (FLOWS §4, D-19).
+// Antrean validasi Pesantren — daftar + modal periksa (FLOWS §4, D-19, D-29).
 // Detail hanya-baca tinggal di komponen review; halaman ini mengatur
 // filter, keputusan Terima/Tolak, dan pre-fill usulan pelapor.
 
@@ -177,9 +177,13 @@ function Review({
   const [accept, setAccept] = useState(true);
   const [severity, setSeverity] = useState<string>(() => usulanKeputusan(report?.reporterSeverity));
   const [priority, setPriority] = useState<string>(() => usulanPrioritas(report?.reporterPriority));
+  const [rekomendasi, setRekomendasi] = useState<string>(
+    () => report?.reporterRecommendation?.trim() ?? "",
+  );
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   if (!report) return null;
+  const isLaporCepat = report.channel === "lapor-cepat";
   const live = state.reports.find((item) => item.id === report.id) ?? report;
   const decided = live.validationStatus !== "Menunggu validasi";
   const areas = selectAreasByInstitution(state, report.institutionCode);
@@ -205,6 +209,7 @@ function Review({
           severity as Severity,
           priority as Priority,
           note || undefined,
+          isLaporCepat ? rekomendasi || undefined : undefined,
         )
       : storeActions.rejectReport(user, report.id, note);
     if (result.ok) close();
@@ -257,6 +262,11 @@ function Review({
             {report.reporterPriority ?? "Belum ditentukan"}
             {" — tinjau ulang sebelum konfirmasi."}
           </p>
+          {report.reporterRecommendation?.trim() ? (
+            <p className="mt-2 rounded-lg bg-strip p-3 text-sm text-secondary-text">
+              Usulan rekomendasi pelapor: {report.reporterRecommendation}
+            </p>
+          ) : null}
           {accept ? (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-bold">
@@ -286,6 +296,22 @@ function Review({
                 </select>
               </label>
             </div>
+          ) : null}
+          {accept && isLaporCepat ? (
+            <label className="mt-4 block text-sm font-bold">
+              Rekomendasi tindakan*
+              <textarea
+                className="mt-1 min-h-24 w-full rounded border border-line-soft p-3 font-normal"
+                value={rekomendasi}
+                maxLength={500}
+                placeholder="Tulis tindakan perbaikan yang tampil di rekomendasi publik."
+                onChange={(e) => setRekomendasi(e.target.value)}
+              />
+              <span className="text-secondary-text">
+                {rekomendasi.trim().length} karakter · minimal 10 · terisi awal dari usulan pelapor,
+                boleh diubah total.
+              </span>
+            </label>
           ) : null}
           <label className="mt-4 block text-sm font-bold">
             {accept ? "Catatan validasi (opsional)" : "Alasan penolakan (minimal 10 karakter)"}

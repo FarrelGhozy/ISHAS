@@ -138,7 +138,16 @@ test("upload → draft → kirim → validasi menjaga blob/id dan tidak publik",
   expect(getState().reports.find((report) => report.id === result.id)?.evidenceAssetId).toBe(
     uploaded.id,
   );
-  expect(storeActions.acceptReport(manager, result.id, "Tinggi", "Sedang").ok).toBe(true);
+  expect(
+    storeActions.acceptReport(
+      manager,
+      result.id,
+      "Tinggi",
+      "Sedang",
+      undefined,
+      "Amankan area dan jadwalkan perbaikan oleh tim sarana.",
+    ).ok,
+  ).toBe(true);
   expect((await getEvidenceAsset(uploaded.id))?.name).toBe("bukti.png");
   const publicItem = selectPublicCampusMap(getState(), input.institutionCode).items.find(
     (item) => item.issue === input.title,

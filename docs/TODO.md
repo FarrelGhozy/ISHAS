@@ -1,5 +1,17 @@
 # TODO — Kontrol Kerja Aktif
 
+## Usulan rekomendasi pelapor + final Pesantren (D-29) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): rekomendasi tindakan
+diusulkan pelapor di `/lapor` (opsional), difinalkan Pesantren saat Terima,
+baru tampil di `/rekomendasi`. Scope lapor-cepat dulu; satu laporan satu
+rekomendasi; penilaian-mandiri tetap perilaku lama. Schema v14→v15.
+
+- [x] Catat D-29 + sinkron FLOWS/WIREFRAMES/DATA_MODEL sebelum mengubah kode.
+- [x] Kode + migrasi v14→v15 + test (lint + typecheck + 219 test + build lulus, 28 Sep 2026; +4 test D-29).
+- [ ] Cek visual 3 viewport + alur klik browser (lapor → validasi → rekomendasi): belum dijalankan di lingkungan ini (Chrome tidak tersedia).
+- [ ] Review pemilik.
+
 ## Pengayaan seed demo presentasi — 28 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (seed harus menampilkan semua data dan
