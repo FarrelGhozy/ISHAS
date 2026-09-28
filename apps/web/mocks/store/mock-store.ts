@@ -1213,6 +1213,7 @@ export const storeActions = {
           value: v.value ?? "",
           note: v.note ?? "",
           evidenceName: v.evidenceName ?? "",
+          evidenceAssetId: v.evidenceAssetId ?? undefined,
           areaId: v.areaId ?? "",
           manualLocation: v.manualLocation?.trim() || undefined,
           planPoint: v.planPoint ?? null,

@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   FileText,
   MapPin,
+  RotateCcw,
   Save,
 } from "lucide-react";
 import { useMockState } from "~/mocks/store/mock-store";
@@ -20,6 +21,7 @@ import { canSubmitReport } from "~/shared/auth/session";
 import type { IndicatorAnswer, InstrumentIndicator } from "~/mocks/types";
 import { LocationPicker } from "~/shared/components/campus-plan";
 import { validateMapLocation } from "~/mocks/processors/campus-map";
+import { SelfAssessmentEvidencePicker } from "../components/self-assessment-evidence-picker";
 import {
   bacaPesantrenTerakhir,
   draftPenilaianSama,
@@ -110,8 +112,13 @@ export function PenilaianMandiriPage() {
   ).length;
   const progress = indicators.length ? Math.round((completedCount / indicators.length) * 100) : 0;
   const identityComplete = Boolean(institutionCode && reporterName.trim().length >= 2);
+  const [uploadBusy, setUploadBusy] = useState(false);
   const valid =
-    identityComplete && completedCount === indicators.length && !draftStale && !mapError;
+    identityComplete &&
+    completedCount === indicators.length &&
+    !draftStale &&
+    !mapError &&
+    !uploadBusy;
 
   // Autosave tanpa menunggu nama (nama divalidasi saat kirim) agar jawaban
   // tidak hilang bila reload sebelum identitas diisi. Tulis hanya bila isi
@@ -121,6 +128,9 @@ export function PenilaianMandiriPage() {
   useEffect(() => {
     if (!institutionCode || !instrument || submittedId || draftStale) return;
     if (blocked) return;
+    // Ingat pesantren setiap autosave agar reload tanpa ?pesantren=
+    // tetap memuat draft yang benar (FLOWS §3).
+    ingatPesantren(institutionCode);
     const payload = {
       reporterName: reporterName.trim(),
       contact: contact.trim() || undefined,
@@ -220,6 +230,22 @@ export function PenilaianMandiriPage() {
     setNotice("");
     setTersimpanPada("");
   };
+  const ulangiDariAwal = () => {
+    if (!institutionCode) return;
+    if (answeredCount === 0 && active === 0) return;
+    if (
+      !window.confirm(
+        "Ulangi penilaian dari awal? Seluruh jawaban yang tersimpan di perangkat ini akan dihapus.",
+      )
+    )
+      return;
+    if (storedDraft) mockRepository.deleteSelfAssessmentDraft(draftId);
+    setAnswers({});
+    setActive(0);
+    setDraftChecksum(instrument?.checksum ?? "");
+    setNotice("");
+    setTersimpanPada("");
+  };
   const setAnswer = (key: keyof IndicatorAnswer, value: string) => {
     if (!current) return;
     setAnswers((old) => ({
@@ -228,6 +254,18 @@ export function PenilaianMandiriPage() {
         ...old[current.id],
         [key]: value,
         ...(key === "areaId" ? { locationSnapshot: undefined } : {}),
+      },
+    }));
+    setNotice("");
+  };
+  const setEvidence = (assetId?: string, name?: string) => {
+    if (!current) return;
+    setAnswers((old) => ({
+      ...old,
+      [current.id]: {
+        ...old[current.id],
+        evidenceAssetId: assetId,
+        evidenceName: name ?? "",
       },
     }));
     setNotice("");
@@ -397,12 +435,24 @@ export function PenilaianMandiriPage() {
                   {group.indicators.map((indicator) => {
                     const index = indicators.findIndex((item) => item.id === indicator.id);
                     const complete = answerIsComplete(indicator, answers[indicator.id]);
+                    const answered = Boolean(answers[indicator.id]?.value);
                     const selected = index === active;
+                    const badge = complete
+                      ? "border-[#047857] bg-[#dff7ed] text-[#047857]"
+                      : answered
+                        ? "border-[#b45309] bg-[#fff3d6] text-[#b45309]"
+                        : "border-line-soft text-secondary-text";
+                    const statusLabel = complete
+                      ? "Lengkap"
+                      : answered
+                        ? "Terjawab, belum lengkap"
+                        : "Belum dijawab";
                     return (
                       <button
                         type="button"
                         key={indicator.id}
                         aria-current={selected ? "step" : undefined}
+                        title={`${index + 1}. ${indicator.title} — ${statusLabel}`}
                         className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 text-left text-sm font-semibold transition ${selected ? "bg-brand-bg text-primary ring-1 ring-brand-border" : "text-body-text hover:bg-strip"}`}
                         onClick={() => {
                           setActive(index);
@@ -410,9 +460,13 @@ export function PenilaianMandiriPage() {
                         }}
                       >
                         <span
-                          className={`grid size-5 shrink-0 place-items-center rounded-full border text-[10px] ${complete ? "border-[#047857] bg-[#dff7ed] text-[#047857]" : "border-line-soft text-secondary-text"}`}
+                          className={`grid size-5 shrink-0 place-items-center rounded-full border text-[10px] ${badge}`}
                         >
-                          {complete ? <Check size={13} strokeWidth={3} /> : index + 1}
+                          {complete || answered ? (
+                            <Check size={13} strokeWidth={3} />
+                          ) : (
+                            index + 1
+                          )}
                         </span>
                         <span className="truncate">{indicator.title}</span>
                       </button>
@@ -429,6 +483,19 @@ export function PenilaianMandiriPage() {
                 ? `Draft tersimpan otomatis · ${tersimpanPada}`
                 : "Draft tersimpan otomatis di perangkat ini"}
             </span>
+            <button
+              type="button"
+              className="secondary-button mt-2 w-full text-xs"
+              disabled={!institutionCode || (answeredCount === 0 && active === 0)}
+              onClick={ulangiDariAwal}
+              title="Hapus seluruh jawaban di perangkat ini dan mulai dari pertanyaan pertama"
+            >
+              <RotateCcw size={14} />
+              Ulangi dari awal
+            </button>
+            <p className="mt-1">
+              Reload tidak menghapus isian. Ulangi menghapus seluruh jawaban.
+            </p>
           </div>
         </aside>
 
@@ -537,18 +604,20 @@ export function PenilaianMandiriPage() {
                     </div>
                   ) : null}
                   {current.evidenceRequired ? (
-                    <label className="text-sm font-bold text-heading">
-                      Bukti pendukung <span className="text-primary">*</span>
-                      <input
-                        className={fieldClass}
-                        value={answer.evidenceName ?? ""}
-                        onChange={(event) => setAnswer("evidenceName", event.target.value)}
-                        placeholder="Contoh: foto-kabel-aula.jpg"
-                      />
-                      <span className="mt-1 block text-xs font-normal text-secondary-text">
-                        Tuliskan nama foto atau dokumen yang Anda siapkan.
-                      </span>
-                    </label>
+                    <SelfAssessmentEvidencePicker
+                      key={current.id}
+                      institutionCode={institutionCode}
+                      actor={{
+                        id: user?.id,
+                        name: user?.name ?? reporterName.trim(),
+                        role: user?.role ?? "Publik",
+                      }}
+                      assetId={answer.evidenceAssetId}
+                      name={answer.evidenceName ?? ""}
+                      disabled={blocked || uploadBusy}
+                      onBusy={setUploadBusy}
+                      onChange={(assetId, name = "") => setEvidence(assetId, name)}
+                    />
                   ) : null}
                 </div>
                 {current.locationRequired && institutionCode ? (

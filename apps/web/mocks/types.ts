@@ -181,6 +181,7 @@ export type IndicatorAnswer = {
   value: string;
   note: string;
   evidenceName: string;
+  evidenceAssetId?: string; // D-27: blob foto upload (IndexedDB perangkat pengunggah)
   areaId: string;
   manualLocation?: string; // deskripsi manual bila area tak tersedia (D-11)
   planPoint: { x: number; y: number } | null;
