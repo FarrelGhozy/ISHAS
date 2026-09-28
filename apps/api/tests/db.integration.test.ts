@@ -336,6 +336,339 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
   });
 });
 
+describe.skipIf(!dbReady)("Fase 2 HTTP (validasi + lifecycle + lokasi + tindak lanjut)", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+  const asOwner = (init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: { ...(init.headers as Record<string, string> | undefined), "X-Demo-Account": "USR-003" },
+  });
+  const pngBytes = (width: number, height: number): Uint8Array => {
+    const png = new Uint8Array(24);
+    png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    png[18] = (width >> 8) & 0xff;
+    png[19] = width & 0xff;
+    png[22] = (height >> 8) & 0xff;
+    png[23] = height & 0xff;
+    return png;
+  };
+
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("accept: severity/priority wajib + rekomendasi final + turunan", async () => {
+    const missing = await call(
+      "/api/v1/pesantren/reports/RPT-0001/accept",
+      asOwner(json({ severity: "Belum ditentukan", priority: "Sedang" }, { method: "POST" })),
+    );
+    expect(((await missing.json()) as { error: string }).error).toBe(
+      "Severity dan priority wajib dipilih tanpa default.",
+    );
+
+    const shortRec = await call(
+      "/api/v1/pesantren/reports/RPT-0001/accept",
+      asOwner(
+        json({ severity: "Tinggi", priority: "Sedang", rekomendasiFinal: "pendek" }, { method: "POST" }),
+      ),
+    );
+    expect(shortRec.status).toBe(400);
+    expect(((await shortRec.json()) as { error: string }).error).toBe(
+      "Rekomendasi tindakan wajib diisi minimal 10 karakter.",
+    );
+
+    const accepted = await call(
+      "/api/v1/pesantren/reports/RPT-0001/accept",
+      asOwner(
+        json(
+          {
+            severity: "Tinggi",
+            priority: "Sedang",
+            note: "Dicek hari ini.",
+            rekomendasiFinal: "Ganti kabel dan pasang conduit dalam 3 hari.",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(accepted.status).toBe(200);
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT validation_status, handling_status, validated_by FROM reports WHERE id = 'RPT-0001'",
+    );
+    expect(rows[0]?.validation_status).toBe("Diterima");
+    expect(rows[0]?.handling_status).toBe("Pending");
+    expect(rows[0]?.validated_by).toBe("USR-003");
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM findings WHERE report_id = 'RPT-0001'"),
+    ).toBeGreaterThan(0);
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM recommendations WHERE report_id = 'RPT-0001'"),
+    ).toBeGreaterThan(0);
+
+    const [finding] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM findings WHERE report_id = 'RPT-0001' LIMIT 1",
+    );
+    const findingId = String(finding[0].id);
+    const level = await call(
+      `/api/v1/pesantren/findings/${findingId}/level`,
+      asOwner(json({ level: "Ekstrem" }, { method: "PATCH" })),
+    );
+    expect(level.status).toBe(200);
+    const [after] = await pool.query<RowDataPacket[]>(
+      "SELECT level FROM findings WHERE id = ?",
+      [findingId],
+    );
+    expect(after[0]?.level).toBe("Ekstrem");
+  });
+
+  test("accept ulang ditolak (bukan Menunggu validasi)", async () => {
+    const again = await call(
+      "/api/v1/pesantren/reports/RPT-0001/accept",
+      asOwner(
+        json(
+          { severity: "Rendah", priority: "Rendah", rekomendasiFinal: "Sudah cukup panjang." },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(again.status).toBe(409);
+    expect(((await again.json()) as { error: string }).error).toBe(
+      "Hanya laporan Menunggu validasi yang dapat diterima.",
+    );
+  });
+
+  test("lifecycle Pending→Proses→Completed + verify + arsip", async () => {
+    const start = await call(
+      "/api/v1/pesantren/reports/RPT-0001/status",
+      asOwner(
+        json(
+          { next: "Proses", owner: "Tim Listrik", dueDate: "2026-12-31", note: "Rencana disusun." },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(start.status).toBe(200);
+    const [recRows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM recommendations WHERE report_id = 'RPT-0001'",
+    );
+    const recId = String(recRows[0].id);
+
+    const progress = await call(
+      `/api/v1/pesantren/recommendations/${recId}/progress`,
+      asOwner(json({ note: "Pekerjaan selesai.", progress: 100, evidenceName: "bukti.jpg" }, { method: "POST" })),
+    );
+    expect(progress.status).toBe(200);
+    const [mid] = await pool.query<RowDataPacket[]>(
+      "SELECT status FROM recommendations WHERE id = ?",
+      [recId],
+    );
+    expect(mid[0]?.status).toBe("Menunggu verifikasi");
+
+    const verify = await call(
+      `/api/v1/pesantren/recommendations/${recId}/verify`,
+      asOwner(json({ verify: true, note: "Bukti sesuai." }, { method: "POST" })),
+    );
+    expect(verify.status).toBe(200);
+    const [done] = await pool.query<RowDataPacket[]>(
+      "SELECT status FROM recommendations WHERE id = ?",
+      [recId],
+    );
+    expect(done[0]?.status).toBe("Terverifikasi");
+    const [report] = await pool.query<RowDataPacket[]>(
+      "SELECT handling_status FROM reports WHERE id = 'RPT-0001'",
+    );
+    expect(report[0]?.handling_status).toBe("Completed");
+
+    const archived = await call(
+      "/api/v1/pesantren/reports/RPT-0001/archive",
+      asOwner(json({ reason: "Selesai dan terverifikasi." }, { method: "POST" })),
+    );
+    expect(archived.status).toBe(200);
+    const [arsip] = await pool.query<RowDataPacket[]>(
+      "SELECT archived_at FROM reports WHERE id = 'RPT-0001'",
+    );
+    expect(arsip[0]?.archived_at).not.toBeNull();
+  });
+
+  test("reject alasan minimal 10 + setFindingLevel", async () => {
+    const created = await call(
+      "/api/v1/reports/lapor-cepat",
+      json(
+        {
+          institutionCode: "PSN-0018",
+          reporterName: "Ahmad",
+          title: "Kabel terkelupas di dapur",
+          description: "Kabel dekat kompor terkelupas dan berisiko tersengat.",
+          manualLocation: "Dapur utama",
+        },
+        { method: "POST" },
+      ),
+    );
+    const newId = ((await created.json()) as { data: { id: string } }).data.id;
+
+    const short = await call(
+      `/api/v1/pesantren/reports/${newId}/reject`,
+      asOwner(json({ reason: "pendek" }, { method: "POST" })),
+    );
+    expect(short.status).toBe(400);
+    expect(((await short.json()) as { error: string }).error).toBe(
+      "Alasan penolakan minimal 10 karakter.",
+    );
+    const rejected = await call(
+      `/api/v1/pesantren/reports/${newId}/reject`,
+      asOwner(json({ reason: "Tidak sesuai kriteria pelaporan." }, { method: "POST" })),
+    );
+    expect(rejected.status).toBe(200);
+  });
+
+  test("cancel tindak lanjut alasan minimal 10", async () => {
+    const created = await call(
+      "/api/v1/reports/lapor-cepat",
+      json(
+        {
+          institutionCode: "PSN-0018",
+          reporterName: "Ahmad",
+          title: "Pintu darurat terhalang kursi",
+          description: "Akses pintu darurat tertutup tumpukan kursi di koridor.",
+          manualLocation: "Koridor lantai 1",
+        },
+        { method: "POST" },
+      ),
+    );
+    const id = ((await created.json()) as { data: { id: string } }).data.id;
+    await call(
+      `/api/v1/pesantren/reports/${id}/accept`,
+      asOwner(
+        json(
+          {
+            severity: "Sedang",
+            priority: "Sedang",
+            note: "Diterima.",
+            rekomendasiFinal: "Bersihkan jalur evakuasi segera.",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    const [recRows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM recommendations WHERE report_id = ? LIMIT 1",
+      [id],
+    );
+    const recId = String(recRows[0].id);
+    const short = await call(
+      `/api/v1/pesantren/recommendations/${recId}/cancel`,
+      asOwner(json({ reason: "pendek" }, { method: "POST" })),
+    );
+    expect(short.status).toBe(400);
+    const canceled = await call(
+      `/api/v1/pesantren/recommendations/${recId}/cancel`,
+      asOwner(json({ reason: "Perbaikan digantikan renovasi menyeluruh." }, { method: "POST" })),
+    );
+    expect(canceled.status).toBe(200);
+    const [rec] = await pool.query<RowDataPacket[]>(
+      "SELECT status, canceled_reason FROM recommendations WHERE id = ?",
+      [recId],
+    );
+    expect(rec[0]?.status).toBe("Dibatalkan");
+    expect(String(rec[0]?.canceled_reason)).toContain("renovasi");
+  });
+
+  test("lokasi: gedung + lantai + area", async () => {
+    const building = await call(
+      "/api/v1/pesantren/buildings",
+      asOwner(json({ code: "GD-IT", name: "Gedung IT" }, { method: "POST" })),
+    );
+    expect(building.status).toBe(201);
+    const buildingId = ((await building.json()) as { data: { id: string } }).data.id;
+    expect(buildingId.startsWith("BLD-")).toBe(true);
+
+    const floor = await call(
+      `/api/v1/pesantren/buildings/${buildingId}/floors`,
+      asOwner(json({ name: "Lantai 2" }, { method: "POST" })),
+    );
+    expect(floor.status).toBe(201);
+
+    const area = await call(
+      "/api/v1/pesantren/areas",
+      asOwner(
+        json(
+          { buildingId, floor: "Lantai 2", name: "Lab Komputer", zone: "Zona A" },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(area.status).toBe(201);
+    const areaId = ((await area.json()) as { data: { id: string } }).data.id;
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM areas WHERE id = ? AND institution_code = 'PSN-0018'", [
+        areaId,
+      ]),
+    ).toBe(1);
+  });
+
+  test("denah: upload + publish optimistic lock", async () => {
+    const form = new FormData();
+    form.append("file", new File([pngBytes(1000, 900)], "denah.png", { type: "image/png" }));
+    form.append("institutionCode", "PSN-0018");
+    const uploaded = await call("/api/v1/uploads/campus-plan", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-003" },
+      body: form,
+    });
+    expect(uploaded.status).toBe(201);
+    const assetId = ((await uploaded.json()) as { data: { id: string } }).data.id;
+
+    const state = await loadIshasState();
+    const active = state.institutions.find((i) => i.code === "PSN-0018")?.activeCampusPlanVersionId;
+
+    const stale = await call(
+      "/api/v1/pesantren/campus-plans/publish",
+      asOwner(
+        json(
+          {
+            institutionCode: "PSN-0018",
+            assetId,
+            width: 1000,
+            height: 900,
+            expectedActiveId: "CAMPUS-PSN-0018-v99",
+            acknowledged: true,
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(stale.status).toBe(409);
+
+    const published = await call(
+      "/api/v1/pesantren/campus-plans/publish",
+      asOwner(
+        json(
+          {
+            institutionCode: "PSN-0018",
+            assetId,
+            width: 1000,
+            height: 900,
+            expectedActiveId: active,
+            acknowledged: true,
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(published.status).toBe(201);
+    const [row] = await pool.query<RowDataPacket[]>(
+      "SELECT active_campus_plan_id FROM institutions WHERE code = 'PSN-0018'",
+    );
+    expect(String(row[0]?.active_campus_plan_id)).toContain("CAMPUS-PSN-0018-v");
+  });
+});
+
 afterAll(async () => {
   if (dbReady) await closePool();
 });

@@ -58,6 +58,12 @@ header `X-Demo-Account: USR-xxx` (non-production); publik tanpa header.
 | POST | `/self-assessments/submit` | publik / Pesantren |
 | POST | `/uploads/self-evidence` | publik / Pesantren |
 | GET | `/files/:assetId`, `/docs/:indicatorId/blob` | sesuai visibility/scope |
+| GET | `/pesantren/state`, `/pesantren/queue`, `/pesantren/reports/:id` | Pesantren scope (internal, D-30.c) |
+| POST | `/pesantren/reports/:id/accept|reject|status|archive` | Pesantren scope |
+| PATCH | `/pesantren/findings/:id/level` | Pesantren scope |
+| POST | `/pesantren/buildings`, `/buildings/:id/floors`, `/areas` | Pesantren scope |
+| POST | `/uploads/campus-plan`, `/pesantren/campus-plans/publish` | Pesantren scope |
+| POST | `/uploads/completion-evidence`, `/pesantren/recommendations/:id/progress|verify|cancel` | Pesantren scope |
 
 ## Pemeriksaan teknis
 

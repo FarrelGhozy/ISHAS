@@ -45,6 +45,7 @@ const FORBIDDEN = [
 const CONFLICT = [
   "hanya laporan menunggu validasi",
   "instrumen berubah",
+  "denah aktif berubah",
   "denah telah berubah",
   "sedang direset",
 ];

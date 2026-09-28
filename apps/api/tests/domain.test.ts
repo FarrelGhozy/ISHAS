@@ -109,6 +109,9 @@ describe("httpStatusForError", () => {
   });
   test("konflik → 409", () => {
     expect(httpStatusForError("Instrumen berubah saat Anda mengisi. Buang draft lama.")).toBe(409);
+    expect(
+      httpStatusForError("Denah aktif berubah. Muat ulang dan periksa versi terbaru."),
+    ).toBe(409);
   });
   test("validasi umum → 400", () => {
     expect(httpStatusForError("Judul minimal 10 karakter.")).toBe(400);

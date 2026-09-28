@@ -22,6 +22,7 @@ import { deleteDraftById, saveDraft, submitSelfAssessment, type DraftInput } fro
 import { uploadEvidence } from "../domain/uploads";
 import { deleteFileAsset, getFileAsset } from "../repo/files";
 import { readStoredBlob, removeStoredBlob } from "../storage";
+import { buildPesantrenRoutes } from "./pesantren";
 
 export type RouteDeps = { loadState: () => Promise<IshasState> };
 
@@ -436,6 +437,7 @@ export function buildRoutes(deps: RouteDeps): Route[] {
         });
       }),
     },
+    ...buildPesantrenRoutes(deps),
   ];
 }
 
