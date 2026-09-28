@@ -57,11 +57,18 @@ Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
       + `refreshValidatorState`, method bank/dokumen/dataset di resolver,
       `apiBlob`; halaman bank/dokumen/dataset/audit/scoring/dashboard beralih
       saat `VITE_USE_BACKEND=true`. Verifikasi: 233 test frontend + build lulus.
-- [ ] Fase 4 (issue #7): SAM-iSAFE + bank.
+- [x] Fase 4 (issue #7): SAM-iSAFE — bank kategori/soal (CRUD + pindah + urutan
+      + aktif, tolak hapus terpakai), pengamatan (buat/jawab/complete/review/hapus),
+      tindak lanjut temuan 0/1 (unik aktif per soal + batal ≥10), skor dinamis
+      aktif×2, bukti foto; migrasi `0002` unique aktif generated (D-30.e).
+      Verifikasi: lint + typecheck + 65 test (unit + integrasi DB) + build lulus
+      (29 Sep 2026). Adapter ruang Validator SAM: `useValidatorState` + method
+      bank/pengamatan/tindak lanjut/`uploadSamEvidence` + `EvidencePreview`
+      backend; 238 test frontend + build lulus.
 - [ ] Fase 5 (issue #8): admin + audit + notifikasi + storage lokal.
 - [ ] Fase 6 (issue #9): auth server + RBAC.
-- [ ] Cek visual 3 viewport adapter publik/Pesantren/Validator + review pemilik
-      (Fase 1–3/#10).
+- [ ] Cek visual 3 viewport adapter publik/Pesantren/Validator termasuk SAM +
+      review pemilik (Fase 1–4/#10).
 
 ## Perbaikan invarian seed + bug alur data frontend — 28 September 2026 — `IN PROGRESS`
 

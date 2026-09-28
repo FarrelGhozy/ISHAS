@@ -170,7 +170,7 @@ menyembunyikan bobot/flag. `GET /validator/state` (D-30.d) adalah proyeksi penuh
 | `DELETE /validator/sam/categories/:id` | Kategori berisi soal → tolak | Hapus kategori |
 | `POST /validator/sam/questions` | `text` ≥5, `categoryId` dikenal, `panduan` ≤500, `contohBukti` ≤280 | Soal baru |
 | `PATCH /validator/sam/questions/:id` | idem | Ubah soal |
-| `POST /validator/sam/questions/:id/move` | `direction up\|down` | Urutan soal |
+| `POST /validator/sam/questions/:id/move` | `direction up\|down` (juga menerima `naik\|turun` dari UI) | Urutan soal |
 | `POST /validator/sam/questions/:id/active` | boolean | Aktif/nonaktif soal |
 | `DELETE /validator/sam/questions/:id` | Soal dipakai pengamatan → tolak (suruh nonaktifkan) | Hapus soal |
 | `POST /validator/sam/assessments` | Pesantren `Aktif`, area/manual wajib, `observerName` ≥2 | `SAM-xxxx` `Berlangsung` |
@@ -184,6 +184,15 @@ menyembunyikan bobot/flag. `GET /validator/state` (D-30.d) adalah proyeksi penuh
 
 Skor dinamis: `maks = soal aktif × 2`, persen = total/maks × 100, ambang
 prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_KINDS`.
+
+- `GET /validator/sam/bank` mengembalikan `{categories, questions, duplicates,
+  usage, kinds}`; `duplicates` = peta id → id lain berteks sama (D-26.f), `usage`
+  = jumlah pengamatan yang menjawab soal itu.
+- Bukti jawaban diunggah via `POST /uploads/sam-evidence` (Validator, pesantren
+  terdaftar, PNG/JPEG/WebP ≤5 MB/≤20 MP); disajikan lewat `GET /files/:assetId`
+  hanya untuk Validator aktif.
+- DB menegakkan satu tindak lanjut aktif per `(assessment,question)` lewat
+  `active_key` generated (migrasi `0002`); baris `Dibatalkan` boleh menumpuk.
 
 ## 12. Admin + dataset + audit
 

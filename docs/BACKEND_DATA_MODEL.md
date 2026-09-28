@@ -563,13 +563,17 @@ CREATE TABLE sam_follow_ups (
   CONSTRAINT fk_smf_ass FOREIGN KEY (assessment_id) REFERENCES sam_assessments(id) ON DELETE CASCADE,
   CONSTRAINT fk_smf_q FOREIGN KEY (question_id) REFERENCES sam_questions(id),
   CONSTRAINT fk_smf_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-  UNIQUE KEY uq_smf_active (assessment_id, question_id, status),
+  active_key VARCHAR(1) GENERATED ALWAYS AS (IF(status = 'Dibatalkan', NULL, 'A')) STORED,
+  UNIQUE KEY uq_smf_active (assessment_id, question_id, active_key),
   INDEX idx_smf_ass (assessment_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
-Catatan: `UNIQUE(assessment,question,status)` tidak melarang duplikat historis
-`Selesai`/`Dibatalkan`; batas "satu aktif" ditegakkan di aplikasi seperti mock.
+Catatan (migrasi `0002_sam_followup_active.sql`): kolom generated `active_key`
+bernilai `NULL` saat `Dibatalkan`, sehingga baris `Dibatalkan` boleh menumpuk
+(riwayat) sementara hanya **satu tindak lanjut aktif** per `(assessment,question)`
+ditegakkan database. Ini mengganti `UNIQUE(assessment,question,status)` lama yang
+ikut memblokir dua baris `Dibatalkan` dan bertentangan dengan mock.
 
 ## 8. Referensi kategori K3 (`kategori-k3.ts`)
 

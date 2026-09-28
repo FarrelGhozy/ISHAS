@@ -759,6 +759,33 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Batas terverifikasi: lint + typecheck + 61 test backend + 233 test frontend +
   build lulus; cek visual 3 viewport belum dijalankan di lingkungan ini.
 
+## D-30.e — Fase 4 backend + adapter SAM-iSAFE — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 4`, jawaban **A** atas pertanyaan unik tindak
+  lanjut): kerjakan backend issue #7 (SAM-iSAFE, Validator-only) sekaligus
+  adapter frontend halaman SAM.
+- Backend `apps/api`: bank SAM (kategori + soal: CRUD, pindah kategori, urutan,
+  aktif/nonaktif, tolak hapus kategori berisi soal / soal terpakai pengamatan,
+  panduan ≤500 + contohBukti ≤280, penanda duplikat); pengamatan (buat Validator
+  atas pesantren terdaftar, jawab 0/1/2 + bukti berpasangan, selesai bila semua
+  aktif terjawab, review `Selesai`, hapus non-`Selesai`); tindak lanjut temuan
+  skor 0/1 (unik aktif per soal, PIC ≥2, tenggat ≥ tanggal pengamatan, batal
+  ≥10); skor dinamis maks = soal aktif × 2, ambang prototipe 80/60. Modul baru
+  `domain/sam.ts`, `repo/sam.ts`; unggah bukti di `domain/uploads.ts` + rute
+  `POST /uploads/sam-evidence` dan cabang `GET /files/:assetId` khusus Validator.
+- **Migrasi `0002_sam_followup_active.sql`:** unique `sam_follow_ups` diganti
+  kolom generated `active_key` (`NULL` saat `Dibatalkan`) agar "satu aktif per
+  temuan" ditegakkan DB tanpa memblokir riwayat batal berganda (setara mock).
+- Perbaikan lintas fase: `repo/state.ts` memetakan kolom DATE (`sam_assessments.
+  observed_at`, `sam_follow_ups.due_date`, `recommendations.due_date`) memakai
+  `toDateOnly` — sebelumnya `Date` mysql2 menjadi teks Inggris sehingga
+  perbandingan tangga/tenggat salah.
+- Frontend `apps/web`: method SAM di `http-repository`/`repository`, `useValidatorState`
+  dipakai halaman/komponen SAM, `EvidencePreview` memuat blob via repository
+  (server saat `VITE_USE_BACKEND=true`); mock tetap default.
+- Batas terverifikasi: lint + typecheck + 65 test backend + 238 test frontend +
+  build lulus; smoke endpoint SAM OK; cek visual 3 viewport belum dijalankan.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator
