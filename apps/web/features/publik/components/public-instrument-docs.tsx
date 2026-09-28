@@ -14,13 +14,13 @@ import {
   stripPrivateAsset,
   type DocFilter,
 } from "~/mocks/processors/instrument-docs";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 function usePublicDocRows() {
-  const state = useMockState();
+  const state = usePublicState();
   const user = useCurrentUser();
   const canOpenPrivate = user?.roleId === "validator" && user?.status === "Aktif";
   const rows = useMemo(

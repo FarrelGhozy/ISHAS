@@ -6,8 +6,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { usePublicState } from "~/shared/api/public-state";
+import { repository } from "~/shared/api/repository";
 import {
   selectAreasByInstitution,
   selectRegisteredInstitutions,
@@ -58,7 +58,7 @@ export function LaporPage() {
 }
 
 function LaporPageContent() {
-  const state = useMockState();
+  const state = usePublicState();
   const user = useCurrentUser();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -281,7 +281,7 @@ function LaporPageContent() {
     // klik ganda lolos sebelum render ulang (store mengembalikan id yang sama).
     submitLock.current = true;
     setSubmitting(true);
-    const result = await mockRepository.submitLaporCepat(
+    const result = await repository.submitLaporCepat(
       {
         id: user?.id,
         name: user?.name ?? values.reporterName.trim(),

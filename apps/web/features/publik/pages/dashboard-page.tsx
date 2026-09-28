@@ -5,7 +5,7 @@
 
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import {
   selectFindingsByReports,
   selectInstitutionByCode,
@@ -45,7 +45,7 @@ import {
 } from "../components/institution-comparison-panel";
 
 export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode?: string }) {
-  const state = useMockState();
+  const state = usePublicState();
   const [searchParams] = useSearchParams();
 
   const registered = selectRegisteredInstitutions(state);

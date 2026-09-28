@@ -12,8 +12,8 @@ import {
   RotateCcw,
   Save,
 } from "lucide-react";
-import { useMockState } from "~/mocks/store/mock-store";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { usePublicState } from "~/shared/api/public-state";
+import { repository } from "~/shared/api/repository";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { EmptyState } from "~/shared/components/empty-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
@@ -47,7 +47,7 @@ function answerIsComplete(indicator: Indicator, answer?: Partial<IndicatorAnswer
 }
 
 export function PenilaianMandiriPage() {
-  const state = useMockState();
+  const state = usePublicState();
   const user = useCurrentUser();
   const [searchParams, setSearchParams] = useSearchParams();
   const registeredCodes = selectRegisteredInstitutions(state).map((i) => i.code);
@@ -139,21 +139,29 @@ export function PenilaianMandiriPage() {
       activeIndex: active,
     };
     if (draftPenilaianSama(storedDraft, payload)) return;
-    try {
-      const result = mockRepository.saveSelfAssessmentDraft({
-        id: draftId,
-        institutionCode,
-        instrumentVersionId: "INS-LIVE",
-        updatedAt: new Date().toISOString(),
-        ...payload,
-      });
-      if (!result.ok) setNotice(result.error);
-      else setTersimpanPada(new Date().toLocaleTimeString("id-ID"));
-    } catch (error) {
-      setNotice(
-        error instanceof Error ? error.message : "Draft belum tersimpan. Jangan tutup halaman.",
-      );
-    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const result = await repository.saveSelfAssessmentDraft({
+          id: draftId,
+          institutionCode,
+          instrumentVersionId: "INS-LIVE",
+          updatedAt: new Date().toISOString(),
+          ...payload,
+        });
+        if (cancelled) return;
+        if (!result.ok) setNotice(result.error);
+        else setTersimpanPada(new Date().toLocaleTimeString("id-ID"));
+      } catch (error) {
+        if (!cancelled)
+          setNotice(
+            error instanceof Error ? error.message : "Draft belum tersimpan. Jangan tutup halaman.",
+          );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [
     institutionCode,
     reporterName,
@@ -223,7 +231,7 @@ export function PenilaianMandiriPage() {
     setSearchParams(next);
   };
   const discardStaleDraft = () => {
-    if (storedDraft) mockRepository.deleteSelfAssessmentDraft(draftId);
+    if (storedDraft) void repository.deleteSelfAssessmentDraft(draftId);
     setAnswers({});
     setActive(0);
     setDraftChecksum(instrument?.checksum ?? "");
@@ -239,7 +247,7 @@ export function PenilaianMandiriPage() {
       )
     )
       return;
-    if (storedDraft) mockRepository.deleteSelfAssessmentDraft(draftId);
+    if (storedDraft) void repository.deleteSelfAssessmentDraft(draftId);
     setAnswers({});
     setActive(0);
     setDraftChecksum(instrument?.checksum ?? "");
@@ -270,7 +278,7 @@ export function PenilaianMandiriPage() {
     }));
     setNotice("");
   };
-  const submit = () => {
+  const submit = async () => {
     if (mapError) {
       setNotice(mapError);
       return;
@@ -293,7 +301,7 @@ export function PenilaianMandiriPage() {
       ? { id: user.id, name: user.name, email: user.email, role: user.role }
       : { name: reporterName.trim(), role: "Publik" };
     try {
-      const saved = mockRepository.saveSelfAssessmentDraft({
+      const saved = await repository.saveSelfAssessmentDraft({
         id: draftId,
         institutionCode,
         reporterName: reporterName.trim(),
@@ -308,7 +316,7 @@ export function PenilaianMandiriPage() {
         setNotice(saved.error);
         return;
       }
-      const result = mockRepository.submitSelfAssessment(actor, draftId);
+      const result = await repository.submitSelfAssessment(actor, draftId);
       if (result.ok) setSubmittedId(result.id ?? "Nomor penilaian dibuat");
       else setNotice(result.error ?? "Penilaian belum dapat dikirim. Coba lagi.");
     } catch (error) {

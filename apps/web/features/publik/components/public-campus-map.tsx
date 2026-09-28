@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { MapPin } from "lucide-react";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import {
   clusterMapItems,
   selectPublicCampusMap,
@@ -28,7 +28,7 @@ export function PublicCampusMap({
 }
 
 function MapContent({ institutionCode, compact }: { institutionCode?: string; compact: boolean }) {
-  const state = useMockState();
+  const state = usePublicState();
   const [params, setParams] = useSearchParams();
   const [opened, setOpened] = useState<string[]>([]);
   const [zoom, setZoom] = useState(1);

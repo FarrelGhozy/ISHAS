@@ -3,15 +3,15 @@
 
 import { Link } from "react-router";
 import { FileText } from "lucide-react";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function LaporanPdfList({
   reports,
 }: {
-  reports: ReturnType<typeof useMockState>["reports"];
+  reports: ReturnType<typeof usePublicState>["reports"];
 }) {
-  const state = useMockState();
+  const state = usePublicState();
   const items = reports.filter((r) => r.channel === "penilaian-mandiri");
   if (!items.length)
     return (

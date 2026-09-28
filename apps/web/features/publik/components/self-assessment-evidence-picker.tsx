@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { repository } from "~/shared/api/repository";
 import type { ReportActor } from "~/mocks/store/mock-store";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
 
@@ -61,11 +61,7 @@ export function SelfAssessmentEvidencePicker({
           onBusy(true);
           setError("");
           try {
-            const result = await mockRepository.uploadReportEvidence(
-              actor,
-              institutionCode,
-              file,
-            );
+            const result = await repository.uploadReportEvidence(actor, institutionCode, file);
             if (!alive.current) return;
             if (result.ok && result.id) onChange(result.id, file.name.trim());
             else if (!result.ok) setError(result.error);

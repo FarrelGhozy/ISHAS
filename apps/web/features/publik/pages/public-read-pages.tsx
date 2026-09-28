@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from "react-router";
 import { PublicCampusMap } from "../components/public-campus-map";
 import { ExternalLink } from "lucide-react";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import {
   selectFindingsByReports,
   selectInstitutionByCode,
@@ -42,7 +42,7 @@ function PublicHeader({ kind }: { kind: PublicReadKind }) {
 }
 
 export function PublicReadPage({ kind }: { kind: PublicReadKind }) {
-  const state = useMockState();
+  const state = usePublicState();
   const [params] = useSearchParams();
   const institutions = selectRegisteredInstitutions(state);
   const requested = params.get("pesantren") ?? undefined;
@@ -108,7 +108,7 @@ function Results({
   findings,
   recommendations,
 }: {
-  state: ReturnType<typeof useMockState>;
+  state: ReturnType<typeof usePublicState>;
   codes: string[];
   reports: ReturnType<typeof selectPublicReports>;
   findings: ReturnType<typeof selectFindingsByReports>;
