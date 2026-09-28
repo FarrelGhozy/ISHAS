@@ -609,6 +609,52 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   DATA_REQUIREMENTS §2/§4, TEST_PLAN, TODO, STAGE_08. Scope Stage 08 +
   sentuhan baca laporan; status stage lain tidak berubah sepihak.
 
+## D-26 — SAM-iSAFE khusus Validator (bank dinamis, MVP) — DISETUJUI 28 September 2026
+
+- Arahan pemilik: SAM-iSAFE menjadi halaman baru di ruang Validator
+  (satu entri navbar), dipakai untuk penilaian oleh Validator. Fase 1 hanya
+  Validator; tidak tampil di dashboard publik maupun ruang Pesantren.
+  Pembahasan tampil di Pesantren menyusul bila MVP sudah pas.
+- **D-26.a — Bank dinamis:** kategori + pertanyaan SAM-iSAFE adalah bank data
+  (`samCategories/samQuestions`), bukan array hard-code. Validator (semua akun
+  Validator aktif) boleh tambah kategori dan tambah/aktifkan pertanyaan.
+  Skor maksimum dinamis: `COUNT(aktif) x 2`; persen = `total/max x 100`.
+  Rumus `Total/50` pada poster tidak dipakai.
+- **D-26.b — Checklist awal:** 27 soal persis panduan dosen (Fisik 5,
+  Kesehatan 5, Sosial/Tata kelola 5, Darurat 5, Perilaku 7). Ambang
+  prototipe: `>=80 Risiko Rendah, 60-79 Risiko Sedang, <60 Risiko Tinggi`.
+  Asumsi prototipe, bukan ketentuan ilmiah final.
+- **D-26.c — Scope:** Validator memilih pesantren terdaftar mana pun
+  (Validator general, tidak terikat satu pesantren). Foto bukti ditunda fase 2.
+- **D-26.d — Pengecualian D-03 terbatas:** Validator boleh membuat/mengisi
+  SAM-iSAFE saat login. Larangan kirim lapor-cepat/penilaian-mandiri saat
+  login tetap berlaku.
+- Dokumen terdampak: ROLES §4, ROUTES §2, FLOWS §baru, DATA_MODEL schema v12,
+  WIREFRAMES §validator, TODO, stage `STAGE_SAM_ISAFE.md`.
+
+## D-26.e — SAM-iSAFE fase 2 (bukti, tindak lanjut, tren, cetak, review) — DISETUJUI 27 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 2` + UI profesional): lengkapi modul
+  SAM-iSAFE khusus Validator tanpa mengubah scope D-26.a–D-26.d
+  (tetap Validator-only, tidak publik/Pesantren).
+- **Bukti foto:** tiap jawaban boleh satu foto (PNG/JPEG/WebP, 5 MB/20 MP,
+  pola sama `/lapor`, blob privat IndexedDB). Wajib dianjurkan bila skor 0,
+  tetap opsional agar alur lapangan tidak terhambat.
+- **Tindak lanjut:** tiap temuan (skor 0/1) dapat dibuatkan tindak lanjut
+  (PIC + tenggat wajib, catatan opsional) dengan status
+  `Belum ditindaklanjuti → Berjalan → Selesai`, plus `Dibatalkan` beralasan
+  min 10 karakter. Dikelola Validator di halaman detail pengamatan.
+- **Tren + statistik:** halaman riwayat memuat grafik perkembangan persen
+  antar pengamatan Selesai dan rata-rata per kategori; murni ilustratif.
+- **Cetak/PDF:** halaman detail memakai tombol cetak browser
+  (`window.print`, pola `/laporan/:id`); tanpa PDF server.
+- **Review supervisor:** pengamatan Selesai dapat ditandai `Ditinjau`
+  oleh akun Validator (nama + waktu + catatan teraudit).
+- **Audit:** halaman detail memuat jejak audit pengamatan tersebut.
+- **UI profesional:** rapikan seluruh halaman SAM-iSAFE mengikuti token
+  `DESIGN_SYSTEM.md` (tanpa kelas `.status`/warna merek baru).
+- Dokumen terdampak: DATA_MODEL schema v13, TODO, stage `STAGE_SAM_ISAFE_FASE2.md`.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

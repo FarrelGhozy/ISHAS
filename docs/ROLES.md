@@ -98,7 +98,7 @@ menjadi sumber soal penilaian mandiri; tanpa versioning Draft/Published/Archived
 Keputusan `Terima/Tolak` laporan tetap milik akun Pesantren; `Divalidasi oleh`
 = akun Pesantren penerima, bukan peran Validator.
 
-**TIDAK BOLEH:** melihat antrean validasi, memvalidasi laporan, mengelola pesantren/akun, mengirim laporan/penilaian saat login (D-03); jika ingin melapor, keluar dari akun dan gunakan mode publik.
+**TIDAK BOLEH:** melihat antrean validasi, memvalidasi laporan, mengelola pesantren/akun, mengirim laporan/penilaian saat login (D-03); jika ingin melapor, keluar dari akun dan gunakan mode publik. **Pengecualian D-26:** semua akun Validator aktif boleh membuat dan mengisi SAM-iSAFE (`/validator/sam-isafe/*`) saat login; modul ini khusus Validator dan tidak tampil publik/Pesantren pada fase 1.
 
 ## 5. Dihapus: Asesor
 

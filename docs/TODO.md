@@ -1,5 +1,29 @@
 # TODO — Kontrol Kerja Aktif
 
+## SAM-iSAFE fase 2 Validator (D-26.e) — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan fase 2` + UI profesional):
+foto bukti per jawaban, tindak lanjut temuan, grafik perkembangan + statistik,
+cetak browser, review `Ditinjau`, jejak audit di detail, polish seluruh halaman
+SAM-iSAFE. Tetap Validator-only. Stage: `planning/STAGE_SAM_ISAFE_FASE2.md`.
+
+- [x] Catat D-26.e + stage IN PROGRESS sebelum mengubah kode.
+- [x] Kode + migrasi v12→v13 + seed demo + test.
+- [x] Verifikasi teknis: lint + typecheck + 198 test + build lulus (27 Sep 2026; +17 test SAM fase 2/store).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (dashboard, foto, tindak lanjut, cetak, review, audit): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## SAM-iSAFE khusus Validator (D-26) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: satu navbar Validator, bank dinamis,
+27 soal awal, maks dinamis, ambang prototipe 80/60, khusus Validator fase 1.
+Stage: `planning/STAGE_SAM_ISAFE.md`.
+
+- [x] Catat D-26 + stage IN PROGRESS sebelum mengubah kode.
+- [x] Kode + migrasi v11→v12 + seed + test (lint + typecheck + 185 test + build lulus, 28 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (riwayat → baru → detail → bank): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## Pematangan Super Admin + deadlock onboarding — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (kerja penuh + ikuti flow: pesantren ada

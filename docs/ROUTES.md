@@ -54,6 +54,10 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/validator/scoring` | validator | Audit skor % beku (D-24, D-25: filter + nama dimensi + link PDF) |
 | `/validator/validasi-publikasi` | validator | Audit publikasi: checklist 5 kriteria kesiapan snapshot, label menu `Audit publikasi` (D-25; route tetap) |
 | `/validator/data-penelitian` | validator | Dataset + ekspor CSV/JSON whitelist D-02 + impor validasi→pratinjau→terapkan sebagai `Menunggu validasi` (D-25) |
+| `/validator/sam-isafe` | validator | SAM-iSAFE: riwayat + bank data (D-26; khusus Validator, tidak publik) |
+| `/validator/sam-isafe/baru` | validator | SAM-iSAFE: info pengamatan + kuesioner 0/1/2 + hasil (D-26) |
+| `/validator/sam-isafe/bank` | validator | SAM-iSAFE: kelola kategori + pertanyaan bank (D-26) |
+| `/validator/sam-isafe/:id` | validator | SAM-iSAFE: detail pengamatan + skor per kategori (D-26) |
 | `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi (halaman kelola utama)** |
 | `/pesantren/lokasi` | pesantren | Gedung & denah |
 | `/pesantren/tindak-lanjut` | pesantren | Kelola (PIC, tenggat, progres, bukti) |
