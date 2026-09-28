@@ -3,6 +3,7 @@
 
 import type { RowDataPacket } from "mysql2/promise";
 import { pool } from "../db";
+import { toDateOnly } from "../seed/helpers";
 import type {
   Area,
   AuditEvent,
@@ -183,7 +184,7 @@ function mapRecommendation(row: RowDataPacket): Recommendation {
     action: String(row.action),
     status: row.status,
     owner: row.owner ? String(row.owner) : "",
-    dueDate: row.due_date ? String(row.due_date).slice(0, 10) : "",
+    dueDate: toDateOnly(row.due_date) ?? "",
     progress: Number(row.progress),
     lastNote: row.last_note ? String(row.last_note) : undefined,
     completionEvidence: row.completion_evidence ? String(row.completion_evidence) : undefined,
@@ -485,7 +486,7 @@ export async function loadIshasState(): Promise<IshasState> {
     institutionCode: String(row.institution_code),
     areaId: row.area_id ? String(row.area_id) : undefined,
     manualLocation: row.manual_location ? String(row.manual_location) : undefined,
-    observedAt: row.observed_at ? String(row.observed_at).slice(0, 10) : "",
+    observedAt: toDateOnly(row.observed_at) ?? "",
     observedTime: row.observed_time ? String(row.observed_time) : undefined,
     kind: String(row.kind),
     observerName: String(row.observer_name),
@@ -511,7 +512,7 @@ export async function loadIshasState(): Promise<IshasState> {
     title: String(row.title),
     note: row.note ? String(row.note) : undefined,
     pic: String(row.pic),
-    dueDate: row.due_date ? String(row.due_date).slice(0, 10) : "",
+    dueDate: toDateOnly(row.due_date) ?? "",
     status: row.status,
     createdBy: row.created_by ? String(row.created_by) : undefined,
     createdAt: toIso(row.created_at) ?? new Date(0).toISOString(),

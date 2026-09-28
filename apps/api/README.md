@@ -5,9 +5,10 @@ Scope: **Fase 0** (koneksi DB, migrasi schema v15, seed demo/kosong, health) +
 **Fase 1** (baca publik, lapor-cepat, penilaian-mandiri, unggah bukti, berkas) +
 **Fase 2** (validasi/lifecycle Pesantren, lokasi/denah, tindak lanjut) +
 **Fase 3** (bank instrumen live, dokumen indikator PDF, dataset/impor, audit
-publikasi).
+publikasi) +
+**Fase 4** (SAM-iSAFE: bank kategori/soal, pengamatan, tindak lanjut, bukti foto).
 Kontrak dan model data: `docs/BACKEND_DATA_MODEL.md`, `docs/BACKEND_API_CONTRACT.md`.
-Keputusan: D-30.b/D-30.c/D-30.d di `docs/DECISIONS.md`.
+Keputusan: D-30.b/D-30.c/D-30.d/D-30.e di `docs/DECISIONS.md`.
 
 ## Prasyarat
 
@@ -73,6 +74,12 @@ header `X-Demo-Account: USR-xxx` (non-production); publik tanpa header.
 | PUT/PATCH/DELETE | `/validator/docs/:indicatorId[/visibility]` | Validator aktif |
 | GET | `/validator/dataset`, `/validator/dataset/export`, `/validator/publication-audit` | Validator aktif |
 | POST | `/validator/dataset/import` | Validator aktif |
+| GET | `/validator/sam/bank` | Validator aktif |
+| POST/PATCH/DELETE | `/validator/sam/categories[/:id]`, `/validator/sam/questions[/:id]` | Validator aktif |
+| POST | `/validator/sam/questions/:id/move`, `/validator/sam/questions/:id/active` | Validator aktif |
+| POST/PUT/DELETE | `/validator/sam/assessments[/:id]`, `/validator/sam/assessments/:id/answers|complete|review` | Validator aktif |
+| POST/PATCH | `/validator/sam/follow-ups[/:fid]`, `/validator/sam/follow-ups/:fid/cancel` | Validator aktif |
+| POST | `/uploads/sam-evidence` | Validator aktif |
 
 ## Pemeriksaan teknis
 
@@ -86,8 +93,9 @@ Cakupan test: `tests/checksum.test.ts` (vektor checksum mock↔backend),
 `tests/helpers.test.ts` (normalisasi nilai), `tests/domain.test.ts` (validasi
 lapor + proyeksi publik + deteksi gambar), `tests/app.test.ts` (handler `/health`
 dengan dependensi disuntik), `tests/db.integration.test.ts` (skema, komposisi seed
-demo/empty, invarian relasi, dan alur HTTP Fase 1–3 termasuk checksum bank,
-dokumen indikator, dataset, dan audit publikasi; butuh MySQL hidup).
+demo/empty, invarian relasi, dan alur HTTP Fase 1–4 termasuk checksum bank,
+dokumen indikator, dataset, audit publikasi, serta bank/pengamatan/tindak
+lanjut SAM-iSAFE; butuh MySQL hidup).
 
 ## Konfigurasi (environment)
 
@@ -103,7 +111,7 @@ dokumen indikator, dataset, dan audit publikasi; butuh MySQL hidup).
 
 ## Struktur
 
-- `migrations/` — DDL bernomor (`0001_schema_v15.sql`).
+- `migrations/` — DDL bernomor (`0001_schema_v15.sql`, `0002_sam_followup_active.sql`).
 - `src/config.ts` — konfigurasi environment.
 - `src/db.ts` — pool MySQL + health ping.
 - `src/migrate.ts` — runner migrasi.

@@ -165,6 +165,57 @@ export async function uploadCompletionEvidence(
   return { ok: true, id };
 }
 
+// Fase 4 / D-26.e: bukti foto jawaban SAM-iSAFE — hanya Validator aktif.
+export async function uploadSamEvidence(
+  state: IshasState,
+  actor: Actor | null,
+  institutionCode: string,
+  file: File,
+): Promise<UploadResult> {
+  const account = actor ? state.users.find((u) => u.id === actor.id) : undefined;
+  if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+    return { ok: false, error: "Hanya Validator aktif yang dapat mengunggah bukti." };
+  }
+  if (!selectRegisteredInstitutions(state).some((item) => item.code === institutionCode)) {
+    return { ok: false, error: "Pilih pesantren terdaftar sebelum mengunggah bukti." };
+  }
+  if (!ALLOWED.includes(file.type)) return { ok: false, error: "Pilih gambar PNG, JPEG atau WebP." };
+  if (file.size <= 0 || file.size > MAX_BYTES) {
+    return { ok: false, error: "Ukuran gambar harus lebih dari 0 dan maksimal 5 MB." };
+  }
+  const name = file.name.trim();
+  if (!name || name.length > 200) {
+    return { ok: false, error: "Nama file harus terisi dan maksimal 200 karakter." };
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const info = imageInfo(bytes);
+  if (!info) return { ok: false, error: "Pilih gambar PNG, JPEG atau WebP." };
+  if (info.width * info.height > 20_000_000) {
+    return {
+      ok: false,
+      error: "Resolusi gambar terlalu besar. Gunakan gambar maksimal 20 megapiksel.",
+    };
+  }
+  const id = newAssetId("evidence-asset");
+  const { storedPath } = await saveStoredBlob("sam-evidence", file.type, bytes);
+  await insertFileAsset({
+    assetId: id,
+    kind: "sam-evidence",
+    institutionCode,
+    ownerRef: null,
+    originalName: name,
+    storedPath,
+    mime: file.type,
+    sizeBytes: bytes.length,
+    width: info.width,
+    height: info.height,
+    sha256: sha256Hex(bytes),
+    visibility: "Privat",
+    uploadedBy: account.id,
+  });
+  return { ok: true, id };
+}
+
 export async function uploadEvidence(
   state: IshasState,
   actor: Actor | null,

@@ -390,6 +390,10 @@ export function buildRoutes(deps: RouteDeps): Route[] {
               (actor.roleId === "pesantren" &&
                 actor.institutionCodes.includes(String(asset.institution_code))));
           if (!allowed) return fail("Berkas bukti bersifat privat.", 403);
+        } else if (kind === "sam-evidence") {
+          // Fase 4: bukti SAM-iSAFE hanya untuk Validator aktif.
+          const isValidator = actor?.status === "Aktif" && actor.roleId === "validator";
+          if (!isValidator) return fail("Berkas bukti bersifat privat.", 403);
         } else {
           const allowed =
             actor?.status === "Aktif" &&

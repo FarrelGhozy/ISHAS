@@ -1,8 +1,32 @@
 // Rute ruang kerja Validator minus SAM — Fase 3 (API §9–§10, §12–§13).
 
-import type { InstrumentAnswerType, InstrumentOption, IshasState } from "../../../web/mocks/types";
+import { SAM_KINDS, samDuplicateQuestions } from "../../../web/mocks/sam-isafe";
+import type {
+  InstrumentAnswerType,
+  InstrumentOption,
+  IshasState,
+  SamFollowUpStatus,
+} from "../../../web/mocks/types";
 import type { Actor, Route, RouteContext } from "../router";
 import { actionResponse, fail, httpStatusForError, ok } from "../http";
+import {
+  addSamCategory,
+  addSamQuestion,
+  cancelSamFollowUp,
+  completeSamAssessment,
+  createSamAssessment,
+  createSamFollowUp,
+  deleteSamCategory,
+  deleteSamDraft,
+  deleteSamQuestion,
+  moveSamQuestion,
+  reviewSamAssessment,
+  saveSamAnswer,
+  setSamQuestionActive,
+  updateSamCategory,
+  updateSamFollowUp,
+  updateSamQuestion,
+} from "../domain/sam";
 import {
   addBankDimension,
   addBankIndicator,
@@ -25,7 +49,7 @@ import {
   exportDataset,
   previewDatasetImport,
 } from "../domain/dataset";
-import { uploadInstrumentDoc } from "../domain/uploads";
+import { uploadInstrumentDoc, uploadSamEvidence } from "../domain/uploads";
 
 export type ValidatorRouteDeps = { loadState: () => Promise<IshasState> };
 
@@ -224,6 +248,242 @@ export function buildValidatorRoutes(deps: ValidatorRouteDeps): Route[] {
         const denied = guard(ctx);
         if (denied) return denied;
         return actionResponse(await deleteInstrumentDoc(ctx.state, ctx.actor, ctx.params.indicatorId));
+      }),
+    },
+    // --- SAM-iSAFE (Fase 4, API §11) ---
+    {
+      method: "GET",
+      pattern: "/api/v1/validator/sam/bank",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const usage: Record<string, number> = {};
+        for (const assessment of ctx.state.samAssessments) {
+          for (const questionId of Object.keys(assessment.answers)) {
+            usage[questionId] = (usage[questionId] ?? 0) + 1;
+          }
+        }
+        return ok({
+          categories: ctx.state.samCategories,
+          questions: ctx.state.samQuestions,
+          duplicates: Object.fromEntries(samDuplicateQuestions(ctx.state.samQuestions)),
+          usage,
+          kinds: SAM_KINDS,
+        });
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/categories",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{ name: string; description?: string }>(ctx.request);
+        return actionResponse(await addSamCategory(ctx.state, ctx.actor, body));
+      }),
+    },
+    {
+      method: "PATCH",
+      pattern: "/api/v1/validator/sam/categories/:id",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{ name?: string; description?: string }>(ctx.request);
+        return actionResponse(await updateSamCategory(ctx.state, ctx.actor, ctx.params.id, body));
+      }),
+    },
+    {
+      method: "DELETE",
+      pattern: "/api/v1/validator/sam/categories/:id",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        return actionResponse(await deleteSamCategory(ctx.state, ctx.actor, ctx.params.id));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/questions",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{
+          categoryId: string;
+          text: string;
+          panduan?: string;
+          contohBukti?: string;
+        }>(ctx.request);
+        return actionResponse(await addSamQuestion(ctx.state, ctx.actor, body));
+      }),
+    },
+    {
+      method: "PATCH",
+      pattern: "/api/v1/validator/sam/questions/:id",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{
+          text?: string;
+          panduan?: string;
+          contohBukti?: string;
+          categoryId?: string;
+        }>(ctx.request);
+        return actionResponse(await updateSamQuestion(ctx.state, ctx.actor, ctx.params.id, body));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/questions/:id/move",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{ direction: string }>(ctx.request);
+        const direction =
+          body.direction === "up" ? "naik" : body.direction === "down" ? "turun" : body.direction;
+        if (direction !== "naik" && direction !== "turun") {
+          return fail("Arah tidak sah. Gunakan up atau down.", 400);
+        }
+        return actionResponse(await moveSamQuestion(ctx.state, ctx.actor, ctx.params.id, direction));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/questions/:id/active",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{ active: boolean }>(ctx.request);
+        return actionResponse(
+          await setSamQuestionActive(ctx.state, ctx.actor, ctx.params.id, body.active !== false),
+        );
+      }),
+    },
+    {
+      method: "DELETE",
+      pattern: "/api/v1/validator/sam/questions/:id",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        return actionResponse(await deleteSamQuestion(ctx.state, ctx.actor, ctx.params.id));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/assessments",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{
+          institutionCode: string;
+          areaId?: string;
+          manualLocation?: string;
+          observedAt: string;
+          observedTime?: string;
+          kind: string;
+          observerName: string;
+          note?: string;
+        }>(ctx.request);
+        return actionResponse(await createSamAssessment(ctx.state, ctx.actor, body));
+      }),
+    },
+    {
+      method: "PUT",
+      pattern: "/api/v1/validator/sam/assessments/:id/answers",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{
+          questionId: string;
+          score: number;
+          note?: string;
+          evidenceName?: string;
+          evidenceAssetId?: string;
+        }>(ctx.request);
+        return actionResponse(
+          await saveSamAnswer(ctx.state, ctx.actor, { assessmentId: ctx.params.id, ...body }),
+        );
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/assessments/:id/complete",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        return actionResponse(await completeSamAssessment(ctx.state, ctx.actor, ctx.params.id));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/assessments/:id/review",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{ note?: string }>(ctx.request);
+        return actionResponse(await reviewSamAssessment(ctx.state, ctx.actor, ctx.params.id, body.note));
+      }),
+    },
+    {
+      method: "DELETE",
+      pattern: "/api/v1/validator/sam/assessments/:id",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        return actionResponse(await deleteSamDraft(ctx.state, ctx.actor, ctx.params.id));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/follow-ups",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{
+          assessmentId: string;
+          questionId: string;
+          pic: string;
+          dueDate: string;
+          note?: string;
+        }>(ctx.request);
+        return actionResponse(await createSamFollowUp(ctx.state, ctx.actor, body));
+      }),
+    },
+    {
+      method: "PATCH",
+      pattern: "/api/v1/validator/sam/follow-ups/:fid",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{
+          status?: SamFollowUpStatus;
+          pic?: string;
+          dueDate?: string;
+          note?: string;
+        }>(ctx.request);
+        return actionResponse(await updateSamFollowUp(ctx.state, ctx.actor, ctx.params.fid, body));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/validator/sam/follow-ups/:fid/cancel",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const body = await readJson<{ reason: string }>(ctx.request);
+        return actionResponse(await cancelSamFollowUp(ctx.state, ctx.actor, ctx.params.fid, body.reason));
+      }),
+    },
+    {
+      method: "POST",
+      pattern: "/api/v1/uploads/sam-evidence",
+      handler: withState(async (ctx) => {
+        const denied = guard(ctx);
+        if (denied) return denied;
+        const { file, fields } = await formField(ctx.request);
+        if (!file) return fail("Pilih gambar PNG, JPEG atau WebP.", 400);
+        const result = await uploadSamEvidence(ctx.state, ctx.actor, fields.institutionCode ?? "", file);
+        if (!result.ok) return fail(result.error, httpStatusForError(result.error));
+        return ok({ id: result.id }, 201);
       }),
     },
     {

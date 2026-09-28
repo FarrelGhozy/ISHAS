@@ -918,6 +918,410 @@ describe.skipIf(!dbReady)("Fase 3 HTTP (bank + dokumen + dataset)", () => {
   });
 });
 
+describe.skipIf(!dbReady)("Fase 4 HTTP (SAM-iSAFE)", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+  const asValidator = (init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: {
+      ...(init.headers as Record<string, string> | undefined),
+      "X-Demo-Account": "USR-002",
+    },
+  });
+  const pngBytes = (width: number, height: number): Uint8Array => {
+    const png = new Uint8Array(24);
+    png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    png[18] = (width >> 8) & 0xff;
+    png[19] = width & 0xff;
+    png[22] = (height >> 8) & 0xff;
+    png[23] = height & 0xff;
+    return png;
+  };
+
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("bank SAM: RBAC + kategori + soal + urutan + aktif + guard hapus", async () => {
+    const denied = await call(
+      "/api/v1/validator/sam/categories",
+      json({ name: "Kategori uji" }, { method: "POST", headers: { "X-Demo-Account": "USR-003" } }),
+    );
+    expect(denied.status).toBe(403);
+
+    const shortName = await call(
+      "/api/v1/validator/sam/categories",
+      asValidator(json({ name: "xy" }, { method: "POST" })),
+    );
+    expect(shortName.status).toBe(400);
+    expect(((await shortName.json()) as { error: string }).error).toBe(
+      "Nama kategori minimal 3 karakter.",
+    );
+
+    const category = await call(
+      "/api/v1/validator/sam/categories",
+      asValidator(json({ name: "Kategori Uji Fase 4" }, { method: "POST" })),
+    );
+    expect(category.status).toBe(201);
+    const categoryId = ((await category.json()) as { data: { id: string } }).data.id;
+
+    const duplicate = await call(
+      "/api/v1/validator/sam/categories",
+      asValidator(json({ name: "kategori uji fase 4" }, { method: "POST" })),
+    );
+    expect(duplicate.status).toBe(400);
+    expect(((await duplicate.json()) as { error: string }).error).toBe(
+      "Nama kategori sudah digunakan.",
+    );
+
+    const shortText = await call(
+      "/api/v1/validator/sam/questions",
+      asValidator(json({ categoryId, text: "pendek" }, { method: "POST" })),
+    );
+    expect(shortText.status).toBe(400);
+    expect(((await shortText.json()) as { error: string }).error).toBe(
+      "Teks pertanyaan minimal 10 karakter.",
+    );
+
+    const question = await call(
+      "/api/v1/validator/sam/questions",
+      asValidator(
+        json(
+          {
+            categoryId,
+            text: "Apakah jalur evakuasi bebas hambatan dan mudah diakses?",
+            panduan: "Periksa koridor dan pintu keluar.",
+            contohBukti: "Foto koridor.",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(question.status).toBe(201);
+    const questionId = ((await question.json()) as { data: { id: string } }).data.id;
+
+    const edge = await call(
+      `/api/v1/validator/sam/questions/${questionId}/move`,
+      asValidator(json({ direction: "up" }, { method: "POST" })),
+    );
+    expect(edge.status).toBe(400);
+    expect(((await edge.json()) as { error: string }).error).toBe("Sudah di ujung urutan.");
+
+    const disabled = await call(
+      `/api/v1/validator/sam/questions/${questionId}/active`,
+      asValidator(json({ active: false }, { method: "POST" })),
+    );
+    expect(disabled.status).toBe(200);
+
+    const blockedDelete = await call(
+      `/api/v1/validator/sam/categories/${categoryId}`,
+      asValidator({ method: "DELETE" }),
+    );
+    expect(blockedDelete.status).toBe(400);
+    expect(((await blockedDelete.json()) as { error: string }).error).toContain(
+      "masih berisi 1 pertanyaan",
+    );
+
+    expect(
+      (
+        await call(
+          `/api/v1/validator/sam/questions/${questionId}`,
+          asValidator({ method: "DELETE" }),
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await call(
+          `/api/v1/validator/sam/categories/${categoryId}`,
+          asValidator({ method: "DELETE" }),
+        )
+      ).status,
+    ).toBe(200);
+  });
+
+  test("pengamatan: buat → jawab → selesai → review + riwayat utuh setelah bank berubah", async () => {
+    const nonRegistered = await call(
+      "/api/v1/validator/sam/assessments",
+      asValidator(
+        json(
+          {
+            institutionCode: "PSN-0023",
+            manualLocation: "Asrama",
+            observedAt: "2026-09-28",
+            kind: "Pemeriksaan Rutin",
+            observerName: "M. Ridwan",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(nonRegistered.status).toBe(400);
+    expect(((await nonRegistered.json()) as { error: string }).error).toBe(
+      "Pilih pesantren terdaftar.",
+    );
+
+    const created = await call(
+      "/api/v1/validator/sam/assessments",
+      asValidator(
+        json(
+          {
+            institutionCode: "PSN-0018",
+            manualLocation: "Asrama Putra Blok B",
+            observedAt: "2026-09-28",
+            observedTime: "09:00",
+            kind: "Pemeriksaan Rutin",
+            observerName: "M. Ridwan",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(created.status).toBe(201);
+    const assessmentId = ((await created.json()) as { data: { id: string } }).data.id;
+
+    const badScore = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}/answers`,
+      asValidator(json({ questionId: "SAM-Q-001", score: 3 }, { method: "PUT" })),
+    );
+    expect(badScore.status).toBe(400);
+    expect(((await badScore.json()) as { error: string }).error).toBe(
+      "Nilai harus 0, 1, atau 2.",
+    );
+
+    const active = (await loadIshasState()).samQuestions.filter((item) => item.isActive);
+    const first = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}/answers`,
+      asValidator(json({ questionId: active[0].id, score: 2 }, { method: "PUT" })),
+    );
+    expect(first.status).toBe(200);
+
+    const incomplete = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}/complete`,
+      asValidator({ method: "POST" }),
+    );
+    expect(incomplete.status).toBe(400);
+    expect(((await incomplete.json()) as { error: string }).error).toMatch(
+      /Masih ada \d+ pertanyaan belum dinilai\./,
+    );
+
+    for (const item of active) {
+      const filled = await call(
+        `/api/v1/validator/sam/assessments/${assessmentId}/answers`,
+        asValidator(json({ questionId: item.id, score: 2 }, { method: "PUT" })),
+      );
+      expect(filled.status).toBe(200);
+    }
+
+    const completed = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}/complete`,
+      asValidator({ method: "POST" }),
+    );
+    expect(completed.status).toBe(200);
+    const doneState = await loadIshasState();
+    const done = doneState.samAssessments.find((item) => item.id === assessmentId)!;
+    expect(done.status).toBe("Selesai");
+    expect(done.maxScore).toBe(active.length * 2);
+    expect(done.percent).toBe(100);
+
+    const reviewed = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}/review`,
+      asValidator(json({ note: "Diperiksa supervisor." }, { method: "POST" })),
+    );
+    expect(reviewed.status).toBe(200);
+    const [reviewRow] = await pool.query<RowDataPacket[]>(
+      "SELECT reviewed_by FROM sam_assessments WHERE id = ?",
+      [assessmentId],
+    );
+    expect(String(reviewRow[0]?.reviewed_by)).toBe("M. Ridwan");
+
+    // Riwayat jawaban lama harus utuh meski bank berubah (kriteria hijau #1).
+    const target = active[active.length - 1];
+    const edited = await call(
+      `/api/v1/validator/sam/questions/${target.id}`,
+      asValidator(json({ text: "Teks pertanyaan diperbarui untuk uji riwayat." }, { method: "PATCH" })),
+    );
+    expect(edited.status).toBe(200);
+    const toggled = await call(
+      `/api/v1/validator/sam/questions/${active[0].id}/active`,
+      asValidator(json({ active: false }, { method: "POST" })),
+    );
+    expect(toggled.status).toBe(200);
+
+    const afterBank = await loadIshasState();
+    const frozen = afterBank.samAssessments.find((item) => item.id === assessmentId)!;
+    expect(Object.keys(frozen.answers).length).toBe(active.length);
+    expect(frozen.percent).toBe(100);
+    expect(frozen.totalScore).toBe(active.length * 2);
+
+    const deleteDone = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}`,
+      asValidator({ method: "DELETE" }),
+    );
+    expect(deleteDone.status).toBe(400);
+    expect(((await deleteDone.json()) as { error: string }).error).toBe(
+      "Pengamatan selesai tidak dapat dihapus.",
+    );
+
+    // Kembalikan soal ke aktif agar tidak mengubah komposisi seed untuk uji berikutnya.
+    await call(
+      `/api/v1/validator/sam/questions/${active[0].id}/active`,
+      asValidator(json({ active: true }, { method: "POST" })),
+    );
+  });
+
+  test("tindak lanjut: unik aktif + batal ≥10 + buat ulang setelah batal", async () => {
+    const duplicate = await call(
+      "/api/v1/validator/sam/follow-ups",
+      asValidator(
+        json(
+          {
+            assessmentId: "SAM-0001",
+            questionId: "SAM-Q-005",
+            pic: "Bagian Sarpras",
+            dueDate: "2026-09-30",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(duplicate.status).toBe(400);
+    expect(((await duplicate.json()) as { error: string }).error).toBe(
+      "Temuan ini sudah mempunyai tindak lanjut aktif.",
+    );
+
+    const first = await call(
+      "/api/v1/validator/sam/follow-ups",
+      asValidator(
+        json(
+          {
+            assessmentId: "SAM-0001",
+            questionId: "SAM-Q-018",
+            pic: "Bagian Sarpras",
+            dueDate: "2026-09-30",
+            note: "Pasang tanda titik kumpul.",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(first.status).toBe(201);
+    const firstId = ((await first.json()) as { data: { id: string } }).data.id;
+
+    const shortPic = await call(
+      "/api/v1/validator/sam/follow-ups",
+      asValidator(
+        json(
+          { assessmentId: "SAM-0001", questionId: "SAM-Q-019", pic: "A", dueDate: "2026-09-30" },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(shortPic.status).toBe(400);
+    expect(((await shortPic.json()) as { error: string }).error).toBe(
+      "Penanggung jawab minimal 2 karakter.",
+    );
+
+    const earlyDue = await call(
+      "/api/v1/validator/sam/follow-ups",
+      asValidator(
+        json(
+          {
+            assessmentId: "SAM-0001",
+            questionId: "SAM-Q-020",
+            pic: "Bagian Sarpras",
+            dueDate: "2026-09-01",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(earlyDue.status).toBe(400);
+    expect(((await earlyDue.json()) as { error: string }).error).toBe(
+      "Tenggat tidak boleh sebelum tanggal pengamatan.",
+    );
+
+    const updated = await call(
+      `/api/v1/validator/sam/follow-ups/${firstId}`,
+      asValidator(json({ status: "Berjalan" }, { method: "PATCH" })),
+    );
+    expect(updated.status).toBe(200);
+
+    const shortReason = await call(
+      `/api/v1/validator/sam/follow-ups/${firstId}/cancel`,
+      asValidator(json({ reason: "pendek" }, { method: "POST" })),
+    );
+    expect(shortReason.status).toBe(400);
+    expect(((await shortReason.json()) as { error: string }).error).toBe(
+      "Alasan pembatalan minimal 10 karakter.",
+    );
+
+    const canceled = await call(
+      `/api/v1/validator/sam/follow-ups/${firstId}/cancel`,
+      asValidator(json({ reason: "Tidak relevan setelah verifikasi ulang." }, { method: "POST" })),
+    );
+    expect(canceled.status).toBe(200);
+
+    const second = await call(
+      "/api/v1/validator/sam/follow-ups",
+      asValidator(
+        json(
+          {
+            assessmentId: "SAM-0001",
+            questionId: "SAM-Q-018",
+            pic: "Bagian Sarpras",
+            dueDate: "2026-10-05",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(second.status).toBe(201);
+    const secondId = ((await second.json()) as { data: { id: string } }).data.id;
+
+    const canceledAgain = await call(
+      `/api/v1/validator/sam/follow-ups/${secondId}/cancel`,
+      asValidator(json({ reason: "Digantikan rencana baru tahap dua." }, { method: "POST" })),
+    );
+    expect(canceledAgain.status).toBe(200);
+
+    // Migrasi 0002: dua baris Dibatalkan untuk pasangan yang sama diizinkan.
+    expect(
+      await scalar(
+        "SELECT COUNT(*) AS c FROM sam_follow_ups WHERE assessment_id = 'SAM-0001' " +
+          "AND question_id = 'SAM-Q-018' AND status = 'Dibatalkan'",
+      ),
+    ).toBe(2);
+  });
+
+  test("bukti SAM: unggah Validator + serve scope + tolak anon", async () => {
+    const form = new FormData();
+    form.append("file", new File([pngBytes(400, 300)], "temuan.png", { type: "image/png" }));
+    form.append("institutionCode", "PSN-0018");
+    const uploaded = await call("/api/v1/uploads/sam-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-002" },
+      body: form,
+    });
+    expect(uploaded.status).toBe(201);
+    const assetId = ((await uploaded.json()) as { data: { id: string } }).data.id;
+
+    const allowed = await call(`/api/v1/files/${assetId}`, {
+      headers: { "X-Demo-Account": "USR-002" },
+    });
+    expect(allowed.status).toBe(200);
+
+    const anon = await call(`/api/v1/files/${assetId}`);
+    expect(anon.status).toBe(403);
+  });
+});
+
 afterAll(async () => {
   if (dbReady) await closePool();
 });
