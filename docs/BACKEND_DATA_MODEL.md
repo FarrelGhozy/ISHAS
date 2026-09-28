@@ -192,19 +192,21 @@ CREATE TABLE instrument_versions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE instrument_version_dimensions (
-  id VARCHAR(24) PRIMARY KEY,
   version_id VARCHAR(16) NOT NULL,
+  id VARCHAR(24) NOT NULL,               -- DIM-* (boleh sama antar versi)
   name VARCHAR(120) NOT NULL,
   category_id VARCHAR(32) NULL,
   description VARCHAR(280) NULL,
   aspects JSON NULL,                     -- [{id,name}] (warisan versioning)
   sort_order INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (version_id, id),          -- versi lama berbagi id indikator/dimensi
   CONSTRAINT fk_insvd_ver FOREIGN KEY (version_id) REFERENCES instrument_versions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE instrument_version_indicators (
-  id VARCHAR(24) PRIMARY KEY,            -- IND-XXX-000
+  version_id VARCHAR(16) NOT NULL,
   dimension_id VARCHAR(24) NOT NULL,
+  id VARCHAR(24) NOT NULL,               -- IND-K3L-* stabil (boleh sama antar versi)
   code VARCHAR(40) NOT NULL,
   title VARCHAR(200) NOT NULL,
   prompt TEXT NOT NULL,
@@ -216,7 +218,9 @@ CREATE TABLE instrument_version_indicators (
   location_required BOOL NOT NULL DEFAULT FALSE,
   finding_trigger VARCHAR(40) NULL,      -- contoh seed ilustratif, bukan aturan final
   sort_order INT NOT NULL DEFAULT 0,
-  CONSTRAINT fk_insvi_dim FOREIGN KEY (dimension_id) REFERENCES instrument_version_dimensions(id) ON DELETE CASCADE
+  PRIMARY KEY (version_id, id),
+  CONSTRAINT fk_insvi_dim FOREIGN KEY (version_id, dimension_id)
+    REFERENCES instrument_version_dimensions(version_id, id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 

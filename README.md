@@ -1,10 +1,11 @@
 # ISHAS
 
-Integrated Safety and Health Assessment System adalah prototipe sistem penilaian K3L untuk pesantren. Tahap saat ini berfokus pada validasi tampilan dan fitur menggunakan data dummy. Backend dan formula ilmiah final belum diimplementasikan.
+Integrated Safety and Health Assessment System adalah prototipe sistem penilaian K3L untuk pesantren. Tahap saat ini berfokus pada validasi tampilan dan fitur menggunakan data dummy. Backend mulai dibangun (Fase 0: skema MySQL, seed, health check); formula ilmiah final belum ditetapkan.
 
 ## Struktur repository
 
 - `apps/web` — aplikasi ISHAS (React Router + TypeScript + bun).
+- `apps/api` — backend ISHAS (Bun + TypeScript + MySQL 8); lihat `apps/api/README.md`.
 - `docs/source` — proposal asli sebagai sumber penelitian.
 - `docs` — sumber kebenaran: visi, peran, route, alur, model data, dan spesifikasi produk yang berlaku.
 - `planning` — local issue management stage (Stage 00...09).
@@ -33,6 +34,20 @@ docker compose --profile prod up --build   # hasil build statis (nginx) di local
 
 Dev dan prod memakai port host yang sama (`WEB_PORT`), jadi jalankan bergantian.
 Ubah port/tag image cukup lewat `.env`; `docker compose config` untuk memeriksa hasil interpolasi.
+
+## Menjalankan backend (Fase 0)
+
+```bash
+docker compose --profile api up -d db   # MySQL 8 (profile `api`)
+cd apps/api
+bun install
+bun run migrate
+bun run seed --mode=demo                # atau --mode=empty
+bun run dev                             # http://localhost:3004/health
+```
+
+Rincian di `apps/api/README.md`. Auth dan endpoint domain menyusul per fase
+(issue `[backend]` di GitHub).
 
 Alamat utama `/` membuka dashboard publik tanpa login: agregat semua pesantren terdaftar plus pemilih pesantren. Tidak ada landing page dan tidak ada redirect. Tombol **Masuk** mengarah ke `/login`. Laporan dapat dikirim publik tanpa login (`/lapor`) atau oleh Pengelola Pesantren; semua laporan wajib validasi pengelola sebelum tampil di dashboard.
 

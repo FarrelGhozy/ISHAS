@@ -14,7 +14,16 @@ Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
       ke v15; lengkapi DDL (kolom hilang, FK, `sequences`, `index_history`,
       `lapor_drafts`, `k3_*`, `instrument_versions`); perdetail API/storage;
       skrip issues idempoten + label fase/milestone/blocked-by.
-- [ ] Review pemilik; lalu eksekusi per fase (0–6) + swap adapter bertahap.
+- [x] Fase 0 (issue #3): `apps/api` (Bun+TS+MySQL) — migrasi schema v15, seed
+      `--mode=demo|empty`, `GET /health`. Verifikasi: migrate + seed demo/empty +
+      3 test + health lulus; lint + typecheck bersih (28 Sep 2026).
+- [ ] Fase 1 (issue #4): baca publik + lapor + penilaian-mandiri.
+- [ ] Fase 2 (issue #5): validasi + lifecycle + lokasi/denah + tindak lanjut.
+- [ ] Fase 3 (issue #6): bank live + dokumen PDF + dataset/impor.
+- [ ] Fase 4 (issue #7): SAM-iSAFE + bank.
+- [ ] Fase 5 (issue #8): admin + audit + notifikasi + storage lokal.
+- [ ] Fase 6 (issue #9): auth server + RBAC.
+- [ ] Adapter frontend bertahap (issue #10) + review pemilik.
 
 ## Perbaikan invarian seed + bug alur data frontend — 28 September 2026 — `IN PROGRESS`
 
