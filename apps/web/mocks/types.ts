@@ -374,12 +374,86 @@ export type IshasState = {
   instrumentVersions: InstrumentVersion[]; // warisan versioning (bacaan legacy)
   activeInstrumentVersionId: string | null; // warisan versioning (bacaan legacy)
   instrumentDocs: InstrumentDoc[]; // D-16: pustaka PDF per indikator
+  samCategories: SamCategory[]; // D-26: bank kategori SAM-iSAFE
+  samQuestions: SamQuestion[]; // D-26: bank pertanyaan SAM-iSAFE
+  samAssessments: SamAssessment[]; // D-26: pengamatan Validator
+  samFollowUps: SamFollowUp[]; // D-26.e: tindak lanjut temuan SAM-iSAFE
   auditEvents: AuditEvent[];
   notifications: Notification[];
   // Riwayat indeks ilustratif per pesantren (periode lampau). Titik periode berjalan
   // TIDAK disimpan: selalu dihitung dari snapshot `Diterima` (aturan ilustrasi D-04).
   indexHistory: Record<string, IndexPoint[]>;
   counters: { report: number; institution: number };
+};
+
+// D-26: SAM-iSAFE khusus Validator — bank dinamis + pengamatan.
+// Skor per soal 0/1/2; maksimum dinamis = COUNT(aktif) x 2.
+export type SamAssessmentStatus = "Draft" | "Berlangsung" | "Selesai";
+export type SamRiskLevel = "Risiko Rendah" | "Risiko Sedang" | "Risiko Tinggi";
+export type SamCategory = {
+  id: string; // 'SAM-KAT-01' stabil
+  name: string;
+  description: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+export type SamQuestion = {
+  id: string; // 'SAM-Q-001' stabil
+  categoryId: string;
+  text: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+export type SamAnswer = {
+  score: 0 | 1 | 2;
+  note: string;
+  evidenceName?: string; // D-26.e: nama foto bukti (blob privat IndexedDB)
+  evidenceAssetId?: string; // D-26.e: ID blob bukti privat perangkat-lokal
+};
+// D-26.e: tindak lanjut temuan SAM-iSAFE (skor 0/1), dikelola Validator.
+export type SamFollowUpStatus =
+  | "Belum ditindaklanjuti"
+  | "Berjalan"
+  | "Selesai"
+  | "Dibatalkan";
+export type SamFollowUp = {
+  id: string; // 'SMF-0001' berurutan
+  assessmentId: string; // FK SamAssessment.id
+  questionId: string; // FK SamQuestion.id (temuan sumber)
+  title: string; // turunan teks pertanyaan
+  note?: string;
+  pic: string; // penanggung jawab
+  dueDate: string; // tanggal ISO, tidak masa lalu
+  status: SamFollowUpStatus;
+  createdBy?: string; // FK User.id
+  createdAt: string;
+  updatedAt: string;
+  doneAt?: string;
+  cancelReason?: string; // wajib min 10 bila Dibatalkan
+};
+export type SamAssessment = {
+  id: string; // 'SAM-0001' berurutan
+  institutionCode: string;
+  areaId?: string;
+  manualLocation?: string;
+  observedAt: string; // tanggal ISO
+  observedTime?: string; // 'HH:MM'
+  kind: string; // Rutin/Khusus/Pasca Insiden/Evaluasi
+  observerName: string;
+  note?: string;
+  observerAccountId?: string;
+  status: SamAssessmentStatus;
+  answers: Record<string, SamAnswer>;
+  totalScore: number;
+  maxScore: number;
+  percent: number;
+  riskLevel: SamRiskLevel;
+  createdAt: string;
+  completedAt?: string;
+  reviewedBy?: string; // D-26.e: nama Validator pereview
+  reviewedById?: string; // D-26.e: FK User.id pereview
+  reviewedAt?: string;
+  reviewNote?: string;
 };
 
 export type PlanPoint = { x: number; y: number };

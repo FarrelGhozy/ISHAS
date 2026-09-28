@@ -39,6 +39,9 @@ import {
   isJawabanTemuan,
   skorLaporanBeku,
 } from "../instrument-bank";
+import { samActiveQuestions, samCompute } from "../sam-isafe";
+import { isEvidenceAssetId } from "../adapters/report-evidence";
+import type { SamFollowUpStatus } from "../types";
 
 type Listener = () => void;
 
@@ -2276,6 +2279,472 @@ export const storeActions = {
       }
     });
     return { ok: true, id: pertama };
+  },
+
+  // D-26: SAM-iSAFE khusus Validator (semua akun Validator aktif).
+  // Bank dinamis + pengamatan dengan skor maksimum dinamis.
+  createSamAssessment(
+    actor: { id?: string },
+    input: {
+      institutionCode: string;
+      areaId?: string;
+      manualLocation?: string;
+      observedAt: string;
+      observedTime?: string;
+      kind: string;
+      observerName: string;
+      note?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat pengamatan." };
+    }
+    const institution = currentState.institutions.find(
+      (item) => item.code === input.institutionCode,
+    );
+    if (!institution || institution.status !== "Aktif") {
+      return { ok: false, error: "Pilih pesantren terdaftar." };
+    }
+    const areaOk =
+      !input.areaId ||
+      currentState.areas.some(
+        (area) => area.id === input.areaId && area.institutionCode === input.institutionCode,
+      );
+    if (!areaOk) return { ok: false, error: "Area tidak sesuai pesantren." };
+    if (!input.manualLocation?.trim() && !input.areaId) {
+      return { ok: false, error: "Lokasi wajib diisi (area atau deskripsi manual)." };
+    }
+    if (!input.observedAt) return { ok: false, error: "Tanggal pengamatan wajib diisi." };
+    if (input.observerName.trim().length < 2) {
+      return { ok: false, error: "Nama pengamat minimal 2 karakter." };
+    }
+    let id = "";
+    setState((draft) => {
+      const n = draft.samAssessments.length + 1;
+      id = `SAM-${String(n).padStart(4, "0")}`;
+      const stampedAt = nowIso();
+      draft.samAssessments.unshift({
+        id,
+        institutionCode: input.institutionCode,
+        areaId: input.areaId || undefined,
+        manualLocation: input.manualLocation?.trim() || undefined,
+        observedAt: input.observedAt,
+        observedTime: input.observedTime || undefined,
+        kind: input.kind,
+        observerName: input.observerName.trim(),
+        note: input.note?.trim() || undefined,
+        observerAccountId: account.id,
+        status: "Berlangsung",
+        answers: {},
+        totalScore: 0,
+        maxScore: samActiveQuestions(draft.samQuestions).length * 2,
+        percent: 0,
+        riskLevel: "Risiko Tinggi",
+        createdAt: stampedAt,
+      });
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: id,
+        institutionCode: input.institutionCode,
+        action: "Membuat pengamatan SAM-iSAFE",
+      });
+    });
+    return { ok: true, id };
+  },
+
+  saveSamAnswer(
+    actor: { id?: string },
+    input: {
+      assessmentId: string;
+      questionId: string;
+      score: number;
+      note?: string;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengisi." };
+    }
+    if (![0, 1, 2].includes(input.score)) {
+      return { ok: false, error: "Nilai harus 0, 1, atau 2." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === input.assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status === "Selesai") {
+      return { ok: false, error: "Pengamatan selesai tidak dapat diubah." };
+    }
+    const question = currentState.samQuestions.find((item) => item.id === input.questionId);
+    if (!question || !question.isActive) {
+      return { ok: false, error: "Pertanyaan tidak aktif." };
+    }
+    // D-26.e: bukti opsional; bila terisi, ID aset + nama wajib sah.
+    const evidenceName = input.evidenceName?.trim() ?? "";
+    const evidenceAssetId = input.evidenceAssetId?.trim() ?? "";
+    if (evidenceAssetId || evidenceName) {
+      if (!isEvidenceAssetId(evidenceAssetId)) {
+        return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
+      }
+      if (!evidenceName) {
+        return { ok: false, error: "Nama bukti wajib mengikuti berkas yang diunggah." };
+      }
+    }
+    setState((draft) => {
+      const item = draft.samAssessments.find((entry) => entry.id === input.assessmentId)!;
+      item.answers[input.questionId] = {
+        score: input.score as 0 | 1 | 2,
+        note: input.note?.trim() ?? "",
+        evidenceName: evidenceName || undefined,
+        evidenceAssetId: evidenceAssetId || undefined,
+      };
+      const hitung = samCompute(item, draft.samQuestions);
+      item.totalScore = hitung.total;
+      item.maxScore = hitung.max;
+      item.percent = hitung.percent;
+      item.riskLevel = hitung.risk;
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: hapus draft pengamatan (Berlangsung saja, teraudit).
+  deleteSamDraft(actor: { id?: string }, assessmentId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus draft." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status === "Selesai") {
+      return { ok: false, error: "Pengamatan selesai tidak dapat dihapus." };
+    }
+    setState((draft) => {
+      draft.samAssessments = draft.samAssessments.filter((entry) => entry.id !== assessmentId);
+      draft.samFollowUps = draft.samFollowUps.filter(
+        (entry) => entry.assessmentId !== assessmentId,
+      );
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: assessmentId,
+        institutionCode: target.institutionCode,
+        action: "Menghapus draft pengamatan SAM-iSAFE",
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: buat tindak lanjut dari temuan (jawaban skor 0/1).
+  createSamFollowUp(
+    actor: { id?: string },
+    input: {
+      assessmentId: string;
+      questionId: string;
+      pic: string;
+      dueDate: string;
+      note?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat tindak lanjut." };
+    }
+    const assessment = currentState.samAssessments.find(
+      (item) => item.id === input.assessmentId,
+    );
+    if (!assessment) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    const question = currentState.samQuestions.find((item) => item.id === input.questionId);
+    if (!question) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const answer = assessment.answers[input.questionId];
+    if (!answer || answer.score > 1) {
+      return { ok: false, error: "Tindak lanjut hanya untuk temuan (skor 0 atau 1)." };
+    }
+    if (
+      currentState.samFollowUps.some(
+        (item) =>
+          item.assessmentId === input.assessmentId &&
+          item.questionId === input.questionId &&
+          item.status !== "Dibatalkan",
+      )
+    ) {
+      return { ok: false, error: "Temuan ini sudah mempunyai tindak lanjut aktif." };
+    }
+    const pic = input.pic.trim();
+    if (pic.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    if (!input.dueDate) return { ok: false, error: "Tenggat wajib diisi." };
+    if (input.dueDate < assessment.observedAt) {
+      return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
+    }
+    let id = "";
+    setState((draft) => {
+      const n = draft.samFollowUps.length + 1;
+      id = `SMF-${String(n).padStart(4, "0")}`;
+      const stampedAt = nowIso();
+      draft.samFollowUps.push({
+        id,
+        assessmentId: input.assessmentId,
+        questionId: input.questionId,
+        title: question.text,
+        note: input.note?.trim() || undefined,
+        pic,
+        dueDate: input.dueDate,
+        status: "Belum ditindaklanjuti",
+        createdBy: account.id,
+        createdAt: stampedAt,
+        updatedAt: stampedAt,
+      });
+      audit(draft, account, {
+        objectType: "SamFollowUp",
+        objectId: id,
+        institutionCode: assessment.institutionCode,
+        action: "Membuat tindak lanjut SAM-iSAFE",
+        note: `${assessment.id} · ${pic}`,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  // D-26.e: ubah status/PIC/tenggat/catatan tindak lanjut.
+  updateSamFollowUp(
+    actor: { id?: string },
+    followUpId: string,
+    input: { status?: SamFollowUpStatus; pic?: string; dueDate?: string; note?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah tindak lanjut." };
+    }
+    const target = currentState.samFollowUps.find((item) => item.id === followUpId);
+    if (!target) return { ok: false, error: "Tindak lanjut tidak ditemukan." };
+    if (target.status === "Dibatalkan") {
+      return { ok: false, error: "Tindak lanjut yang dibatalkan tidak dapat diubah." };
+    }
+    if (input.status && !["Belum ditindaklanjuti", "Berjalan", "Selesai"].includes(input.status)) {
+      return { ok: false, error: "Status tidak sah. Pembatalan memakai aksi Batal." };
+    }
+    if (input.pic !== undefined && input.pic.trim().length < 2) {
+      return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    }
+    setState((draft) => {
+      const item = draft.samFollowUps.find((entry) => entry.id === followUpId)!;
+      if (input.status) {
+        item.status = input.status;
+        item.doneAt = input.status === "Selesai" ? nowIso() : undefined;
+      }
+      if (input.pic !== undefined) item.pic = input.pic.trim();
+      if (input.dueDate) item.dueDate = input.dueDate;
+      if (input.note !== undefined) item.note = input.note.trim() || undefined;
+      item.updatedAt = nowIso();
+      audit(draft, account, {
+        objectType: "SamFollowUp",
+        objectId: followUpId,
+        action: "Mengubah tindak lanjut SAM-iSAFE",
+        note: input.status ?? "Perbarui rencana",
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: batalkan tindak lanjut dengan alasan min 10 karakter.
+  cancelSamFollowUp(actor: { id?: string }, followUpId: string, reason: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membatalkan." };
+    }
+    const target = currentState.samFollowUps.find((item) => item.id === followUpId);
+    if (!target) return { ok: false, error: "Tindak lanjut tidak ditemukan." };
+    if (target.status === "Selesai" || target.status === "Dibatalkan") {
+      return { ok: false, error: "Tindak lanjut selesai/batal tidak dapat dibatalkan." };
+    }
+    if (reason.trim().length < 10) {
+      return { ok: false, error: "Alasan pembatalan minimal 10 karakter." };
+    }
+    setState((draft) => {
+      const item = draft.samFollowUps.find((entry) => entry.id === followUpId)!;
+      item.status = "Dibatalkan";
+      item.cancelReason = reason.trim();
+      item.updatedAt = nowIso();
+      audit(draft, account, {
+        objectType: "SamFollowUp",
+        objectId: followUpId,
+        action: "Membatalkan tindak lanjut SAM-iSAFE",
+        note: reason.trim(),
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: tandai pengamatan Selesai sebagai Ditinjau (review supervisor).
+  reviewSamAssessment(actor: { id?: string }, assessmentId: string, note?: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mereview." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status !== "Selesai") {
+      return { ok: false, error: "Hanya pengamatan Selesai yang dapat ditinjau." };
+    }
+    setState((draft) => {
+      const item = draft.samAssessments.find((entry) => entry.id === assessmentId)!;
+      item.reviewedBy = account.name;
+      item.reviewedById = account.id;
+      item.reviewedAt = nowIso();
+      item.reviewNote = note?.trim() || undefined;
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: assessmentId,
+        institutionCode: item.institutionCode,
+        action: "Meninjau pengamatan SAM-iSAFE",
+        note: note?.trim() || undefined,
+      });
+    });
+    return { ok: true };
+  },
+
+  completeSamAssessment(actor: { id?: string }, assessmentId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menyelesaikan." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    const kurang = samActiveQuestions(currentState.samQuestions).filter(
+      (item) => !target.answers[item.id],
+    );
+    if (kurang.length > 0) {
+      return { ok: false, error: `Masih ada ${kurang.length} pertanyaan belum dinilai.` };
+    }
+    setState((draft) => {
+      const item = draft.samAssessments.find((entry) => entry.id === assessmentId)!;
+      const hitung = samCompute(item, draft.samQuestions);
+      item.totalScore = hitung.total;
+      item.maxScore = hitung.max;
+      item.percent = hitung.percent;
+      item.riskLevel = hitung.risk;
+      item.status = "Selesai";
+      item.completedAt = nowIso();
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: item.id,
+        institutionCode: item.institutionCode,
+        action: "Menyelesaikan pengamatan SAM-iSAFE",
+        note: `${hitung.total}/${hitung.max} (${hitung.percent}%)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  addSamCategory(actor: { id?: string }, input: { name: string; description?: string }): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah kategori." };
+    }
+    const name = input.name.trim();
+    if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    let id = "";
+    setState((draft) => {
+      const order = Math.max(0, ...draft.samCategories.map((item) => item.sortOrder)) + 1;
+      id = `SAM-KAT-${String(order).padStart(2, "0")}`;
+      draft.samCategories.push({
+        id,
+        name,
+        description: input.description?.trim() || "",
+        sortOrder: order,
+        isActive: true,
+      });
+      audit(draft, account, {
+        objectType: "SamCategory",
+        objectId: id,
+        action: "Menambah kategori SAM-iSAFE",
+        note: name,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  addSamQuestion(
+    actor: { id?: string },
+    input: { categoryId: string; text: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah pertanyaan." };
+    }
+    const category = currentState.samCategories.find((item) => item.id === input.categoryId);
+    if (!category) return { ok: false, error: "Kategori tidak ditemukan." };
+    const text = input.text.trim();
+    if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    let id = "";
+    setState((draft) => {
+      const order =
+        Math.max(
+          0,
+          ...draft.samQuestions
+            .filter((item) => item.categoryId === input.categoryId)
+            .map((item) => item.sortOrder),
+        ) + 1;
+      const n = draft.samQuestions.length + 1;
+      id = `SAM-Q-${String(n).padStart(3, "0")}`;
+      draft.samQuestions.push({
+        id,
+        categoryId: input.categoryId,
+        text,
+        sortOrder: order,
+        isActive: true,
+      });
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: id,
+        action: "Menambah pertanyaan SAM-iSAFE",
+        note: category.name,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  setSamQuestionActive(
+    actor: { id?: string },
+    questionId: string,
+    isActive: boolean,
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    setState((draft) => {
+      draft.samQuestions.find((item) => item.id === questionId)!.isActive = isActive;
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: isActive ? "Mengaktifkan pertanyaan SAM-iSAFE" : "Menonaktifkan pertanyaan",
+      });
+    });
+    return { ok: true };
   },
 };
 

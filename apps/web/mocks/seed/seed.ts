@@ -19,15 +19,20 @@
 // - Admin: 4 pesantren (Aktif/Persiapan + Aktif-tanpa-akun-Pesantren), 5 pengguna.
 // - Validator: INS-v1.0 arsip (riwayat) + INS-v1.1 Published aktif (10 indikator).
 
-import type { Instrument, IshasState } from "../types";
+import type { Instrument, IshasState, SamAnswer, SamAssessment } from "../types";
 import { buildBankLiveDariVersi } from "../instrument-bank";
+import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED, samCompute } from "../sam-isafe";
 
 const T = {
   now: "2026-09-08T09:00:00.000Z",
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 11,
+  schemaVersion: 13,
+  samCategories: structuredClone(SAM_CATEGORIES_SEED),
+  samQuestions: structuredClone(SAM_QUESTIONS_SEED),
+  samAssessments: [],
+  samFollowUps: [],
   // D-24: bank live diisi setelah objek (diturunkan dari INS-v1.1, tanpa duplikasi).
   instrument: {} as Instrument,
   campusPlans: [
@@ -2379,6 +2384,111 @@ export const SEED: IshasState = {
 SEED.instrument = buildBankLiveDariVersi(
   SEED.instrumentVersions.find((v) => v.id === "INS-v1.1") ?? SEED.instrumentVersions[0],
 );
+
+// D-26.e: demo pengamatan SAM-iSAFE — tren naik 55.6 → 72.2 → 87.0 +
+// dua tindak lanjut + satu review, agar dashboard/grafik langsung terisi.
+function samDemoAssessment(
+  id: string,
+  institutionCode: string,
+  observedAt: string,
+  observerName: string,
+  observerAccountId: string,
+  scores: (0 | 1 | 2)[],
+  notes: Record<string, string>,
+  extra?: Partial<SamAssessment>,
+): SamAssessment {
+  const answers: Record<string, SamAnswer> = {};
+  SAM_QUESTIONS_SEED.forEach((item, index) => {
+    answers[item.id] = { score: scores[index] ?? 2, note: notes[item.id] ?? "" };
+  });
+  const hitung = samCompute({ answers }, SAM_QUESTIONS_SEED);
+  return {
+    id,
+    institutionCode,
+    manualLocation: institutionCode === "PSN-0018" ? "Asrama Putra Blok A" : "Gedung Kelas",
+    observedAt,
+    observedTime: "08:30",
+    kind: "Pemeriksaan Rutin",
+    observerName,
+    observerAccountId,
+    status: "Selesai",
+    answers,
+    totalScore: hitung.total,
+    maxScore: hitung.max,
+    percent: hitung.percent,
+    riskLevel: hitung.risk,
+    createdAt: `${observedAt}T08:00:00.000Z`,
+    completedAt: `${observedAt}T10:00:00.000Z`,
+    ...extra,
+  };
+}
+SEED.samAssessments = [
+  samDemoAssessment(
+    "SAM-0001",
+    "PSN-0018",
+    "2026-09-05",
+    "M. Ridwan",
+    "USR-002",
+    [1, 1, 2, 1, 0, 1, 1, 2, 1, 1, 1, 0, 1, 1, 1, 2, 1, 0, 1, 1, 2, 1, 1, 2, 1, 1, 2],
+    {
+      "SAM-Q-005": "Jalur evakuasi terhalang barang.",
+      "SAM-Q-012": "Tim tanggap darurat belum dibentuk.",
+      "SAM-Q-018": "Tanda titik kumpul belum terpasang.",
+    },
+    {
+      reviewedBy: "Sari Dewi",
+      reviewedById: "USR-005",
+      reviewedAt: "2026-09-06T09:00:00.000Z",
+      reviewNote: "Hasil diperiksa; tiga temuan diteruskan ke tindak lanjut.",
+    },
+  ),
+  samDemoAssessment(
+    "SAM-0002",
+    "PSN-0018",
+    "2026-09-18",
+    "M. Ridwan",
+    "USR-002",
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    { "SAM-Q-013": "Briefing belum rutin tiap pekan." },
+  ),
+  samDemoAssessment(
+    "SAM-0003",
+    "PSN-0019",
+    "2026-09-27",
+    "Sari Dewi",
+    "USR-005",
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1],
+    {},
+  ),
+];
+SEED.samFollowUps = [
+  {
+    id: "SMF-0001",
+    assessmentId: "SAM-0001",
+    questionId: "SAM-Q-005",
+    title: "Koridor, tangga, pintu keluar, dan jalur evakuasi tidak terhalang serta dalam kondisi aman.",
+    note: "Pindahkan barang ke gudang sarpras.",
+    pic: "Bagian Sarpras",
+    dueDate: "2026-09-30",
+    status: "Berjalan",
+    createdBy: "USR-002",
+    createdAt: "2026-09-06T10:00:00.000Z",
+    updatedAt: "2026-09-20T10:00:00.000Z",
+  },
+  {
+    id: "SMF-0002",
+    assessmentId: "SAM-0001",
+    questionId: "SAM-Q-012",
+    title: "Komite keselamatan, tim tanggap darurat, atau klub keselamatan siswa telah dibentuk dan aktif.",
+    pic: "Pembina Asrama",
+    dueDate: "2026-09-25",
+    status: "Selesai",
+    createdBy: "USR-002",
+    createdAt: "2026-09-06T10:05:00.000Z",
+    updatedAt: "2026-09-24T15:00:00.000Z",
+    doneAt: "2026-09-24T15:00:00.000Z",
+  },
+];
 
 // Explicit fictional observations for the campus illustration, not migrated floor coordinates.
 for (const finding of SEED.findings.filter((item) => item.locationSnapshot)) {

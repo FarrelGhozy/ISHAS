@@ -4,10 +4,11 @@
 
 import { SEED } from "../seed/seed";
 import { buildBankLiveDariVersi } from "../instrument-bank";
+import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED } from "../sam-isafe";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 11;
-export const MOCK_STORAGE_KEY = "ishas-mock-v11";
+export const MOCK_SCHEMA_VERSION = 13;
+export const MOCK_STORAGE_KEY = "ishas-mock-v13";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -173,6 +174,30 @@ export function migrateV10(value: unknown): unknown {
   return migrated;
 }
 
+// D-26: v11 → v12 menambah bank + pengamatan SAM-iSAFE tanpa menyentuh data lama.
+export function migrateV11(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 11)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 12;
+  if (!Array.isArray(migrated.samCategories))
+    migrated.samCategories = structuredClone(SAM_CATEGORIES_SEED);
+  if (!Array.isArray(migrated.samQuestions))
+    migrated.samQuestions = structuredClone(SAM_QUESTIONS_SEED);
+  if (!Array.isArray(migrated.samAssessments)) migrated.samAssessments = [];
+  return migrated;
+}
+
+// D-26.e: v12 → v13 menambah tindak lanjut + review + bukti SAM-iSAFE.
+export function migrateV12(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 12)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 13;
+  if (!Array.isArray(migrated.samFollowUps)) migrated.samFollowUps = [];
+  return migrated;
+}
+
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
@@ -213,6 +238,10 @@ function isValidState(value: unknown): value is IshasState {
   return (
     state.schemaVersion === MOCK_SCHEMA_VERSION &&
     arrays.every(Array.isArray) &&
+    Array.isArray(state.samCategories) &&
+    Array.isArray(state.samQuestions) &&
+    Array.isArray(state.samAssessments) &&
+    Array.isArray(state.samFollowUps) &&
     bankValid &&
     state.users.every((u) => u && typeof u.id === "string" && Array.isArray(u.institutionCodes)) &&
     state.instrumentVersions.every(
@@ -239,6 +268,7 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v12") ??
       localStorage.getItem("ishas-mock-v10") ??
       localStorage.getItem("ishas-mock-v9") ??
       localStorage.getItem("ishas-mock-v8") ??
@@ -247,8 +277,12 @@ export function loadState(): IshasState {
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV10(
-        migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+      const parsed: unknown = migrateV12(
+        migrateV11(
+          migrateV10(
+            migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+          ),
+        ),
       );
       if (isValidState(parsed)) return parsed;
     }

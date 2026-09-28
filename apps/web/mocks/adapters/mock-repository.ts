@@ -159,6 +159,50 @@ export const mockRepository = {
       };
     }
   },
+  // D-26.e: bukti foto jawaban SAM-iSAFE — pola sama /lapor
+  // (PNG/JPEG/WebP, 5 MB/20 MP, blob privat IndexedDB). Hanya Validator aktif.
+  async uploadSamEvidence(
+    actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const epoch = assetEpoch;
+    try {
+      if (resettingAssets)
+        return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      const state = getState();
+      const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
+      if (!account || account.status !== "Aktif" || account.roleId !== "validator")
+        return { ok: false, error: "Hanya Validator aktif yang dapat mengunggah bukti." };
+      if (!selectRegisteredInstitutions(state).some((item) => item.code === institutionCode))
+        return { ok: false, error: "Pilih pesantren terdaftar sebelum mengunggah bukti." };
+      const error = validateEvidenceFile(file);
+      if (error) return { ok: false, error };
+      const bitmap = await createImageBitmap(file);
+      const pixels = bitmap.width * bitmap.height;
+      bitmap.close();
+      if (pixels > 20_000_000)
+        return {
+          ok: false,
+          error: "Resolusi gambar terlalu besar. Gunakan gambar maksimal 20 megapiksel.",
+        };
+      if (resettingAssets || epoch !== assetEpoch)
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      const id = `evidence-asset-${crypto.randomUUID()}`;
+      await putEvidenceAsset(id, { institutionCode, name: file.name.trim(), blob: file });
+      if (resettingAssets || epoch !== assetEpoch) {
+        await deleteEvidenceAsset(id);
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      }
+      return { ok: true, id };
+    } catch {
+      return {
+        ok: false,
+        error:
+          "Gambar gagal dibaca atau disimpan. Pilih gambar yang valid dan periksa penyimpanan browser.",
+      };
+    }
+  },
   // D-21: bukti penyelesaian tindak lanjut — pola sama /lapor
   // (PNG/JPEG/WebP, 5 MB/20 MP, blob privat IndexedDB). Hanya Pesantren aktif.
   async uploadCompletionEvidence(
