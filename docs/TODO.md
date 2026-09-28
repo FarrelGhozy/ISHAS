@@ -65,7 +65,15 @@ Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
       (29 Sep 2026). Adapter ruang Validator SAM: `useValidatorState` + method
       bank/pengamatan/tindak lanjut/`uploadSamEvidence` + `EvidencePreview`
       backend; 238 test frontend + build lulus.
-- [ ] Fase 5 (issue #8): admin + audit + notifikasi + storage lokal.
+- [x] Fase 5 (issue #8): admin (pesantren + pengguna + proteksi + audit filter +
+      reset demo) + notifikasi baca + storage penuh (tmp→rename, `owner_ref`,
+      sweep yatim) + migrasi aset IndexedDB→server terkunci flag (D-30.f).
+      Verifikasi: lint + typecheck + 71 test (unit + integrasi DB) + build lulus
+      (29 Sep 2026). Adapter ruang Super Admin: `useAdminState` +
+      `useWorkspaceState` (shell), method admin/notifikasi/migrasi, `reset()`
+      via endpoint, tombol tandai-dibaca, kartu migrasi aset; 242 test frontend
+      + build lulus. Catatan: `sharp` belum dipakai (decode menggantung di
+      lingkungan ini); validasi magic-bytes + dimensi tetap.
 - [ ] Fase 6 (issue #9): auth server + RBAC.
 - [ ] Cek visual 3 viewport adapter publik/Pesantren/Validator termasuk SAM +
       review pemilik (Fase 1–4/#10).

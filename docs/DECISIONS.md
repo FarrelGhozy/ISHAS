@@ -786,6 +786,35 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Batas terverifikasi: lint + typecheck + 65 test backend + 238 test frontend +
   build lulus; smoke endpoint SAM OK; cek visual 3 viewport belum dijalankan.
 
+## D-30.f — Fase 5 backend + adapter Super Admin, notifikasi, storage — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 5`, "semaksimal mungkin … kalau frontend butuh
+  perbaikan langsung diperbaiki"): kerjakan backend issue #8 sekaligus adapter
+  frontend admin, notifikasi, storage, dan migrasi aset.
+- Backend `apps/api`: Super Admin — `POST/PATCH` pesantren (kode `PSN-XXXX` dari
+  max+1) + status, pengguna (id `USR-NNN`, status awal `Menunggu`, peran tak
+  diubah, proteksi admin terakhir/demo/akun sendiri), reset sandi (audit), audit
+  global + filter pelaku, `POST /admin/reset-demo` (bersihkan storage + seed), dan
+  `GET /admin/state`. Modul `domain/admin.ts`, `repo/admin.ts`, `routes/admin.ts`.
+- Notifikasi: `GET /notifications?account=` + `POST /notifications/read`
+  (aksi `markNotificationsRead` ditambahkan ke store mock agar paritas).
+- Storage penuh: `tmp-uploads/` + rename atomik, `owner_ref` diisi saat submit
+  (lapor/self-assessment/SAM/penyelesaian), job yatim `sweepOrphans` + skrip
+  `bun run sweep` + `POST /admin/storage/sweep`. `sharp` **tidak** dipakai
+  (uji coba install: proses decode menggantung di lingkungan ini); validasi tetap
+  magic-bytes + dimensi (`image.ts`) + header `%PDF-` — dicatat sebagai batas.
+- Migrasi sekali-jalan IndexedDB → server: migrasi `0003_app_settings.sql`
+  (tabel `app_settings`), `POST /admin/migrate/assets` + `GET
+  /admin/migrate/status` (flag `indexeddb_migrated`); frontend mengekspor blob
+  perangkat (`mocks/adapters/device-assets.ts`) lalu membersihkan IndexedDB.
+- Frontend `apps/web`: `useAdminState` + `useWorkspaceState` (shell role-aware),
+  method admin/notifikasi/migrasi di `http-repository`/`repository`, `reset()`
+  beralih ke endpoint + refresh semua cache, tombol "Tandai semua dibaca" di
+  modal notifikasi, dan kartu "Migrasi aset perangkat" di `/admin/pengaturan`.
+- Batas terverifikasi: lint + typecheck + 71 test backend + 242 test frontend +
+  build lulus; smoke endpoint admin/notifikasi/sweep OK; cek visual 3 viewport
+  belum dijalankan.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

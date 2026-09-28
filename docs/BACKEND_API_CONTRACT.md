@@ -201,8 +201,15 @@ prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_K
   `POST /admin/users` (nama ≥2, email valid+unik, Pesantren tepat 1 pesantren
   Aktif → status awal `Menunggu` + aktivasi eksplisit), `PATCH /admin/users/:id`
   (peran tak diubah), `POST /admin/users/:id/status|reset-password|delete`
-  (proteksi admin terakhir + akun sendiri), `GET /admin/audit` (filter pelaku),
-  `POST /admin/reset-demo` (`--mode=demo`, audit).
+  (proteksi admin terakhir + akun sendiri), `GET /admin/audit?actor=&object=&
+  institution=&page=&limit=` (filter pelaku), `GET /admin/state` (proyeksi penuh
+  untuk adapter), `POST /admin/reset-demo` (bersihkan storage + seed ulang).
+  Kode pesantren baru = `max(PSN-*)+1`; id pengguna baru = `max(USR-*)+1`.
+- Storage (D-30.f): `POST /admin/storage/sweep` body `{olderThanHours?}` menghapus
+  baris `file_assets` staging (`owner_ref NULL`, kind `*evidence`) yang lebih tua
+  + file `tmp-uploads/` kedaluwarsa. `POST /admin/migrate/assets` (sekali jalan,
+  flag `indexeddb_migrated`) menerima `{items:[{kind,assetId,... ,base64}]}`;
+  `GET /admin/migrate/status` → `{migrated, at}`.
 - Dataset (D-25): `GET /validator/dataset?institution=&includeNonRegistered=`
   (filter utama terdaftar + toggle audit + chip status),
   `GET /validator/dataset/export?format=csv|json` (whitelist D-02),
@@ -210,7 +217,9 @@ prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_K
   mengembalikan pratinjau `{valid,errors}` (D-25: parse CSV/JSON server-side);
   `apply:true` menyisipkan baris valid sebagai `Menunggu validasi` + snapshot beku
   + audit + notifikasi pemilik, tidak langsung publik.
-- `GET /notifications?account=` (filter penerima), `POST /notifications/read`.
+- `GET /notifications?account=` (filter penerima; akun sendiri atau Super Admin),
+  `POST /notifications/read` body `{ids?}` — tandai dibaca (semua bila `ids`
+  kosong); id frontend `NOT-<n>` dipetakan ke `notifications.id`.
 
 ## 13. Aturan publikasi audit (D-25.b)
 
@@ -230,6 +239,11 @@ institusi pada filter, bukan nama/kontak pelapor.
 | `GET /health` | publik | `{ok:true,data:{status:"ok",db:"ok",version,uptime}}`; dipakai issue Fase 0 |
 | `GET /api/files/:assetId` | sesuai `visibility`+scope (`BACKEND_STORAGE.md` §4) | Stream blob, `Content-Disposition: inline`, `nosniff`, `Cache-Control: private, max-age=3600` |
 | `POST /uploads/*` | sesuai matriks §1 | Endpoint staging per jenis (report/self/sam/completion/campus/instrument-doc) |
+| `POST /admin/*` | Super Admin aktif | Admin, audit, reset, sweep, migrasi (§12) |
+| `GET/POST /notifications` | akun sesi | Daftar + tandai dibaca |
+
+Tidak ada respons API yang memuat `stored_path`/path storage absolut; blob hanya
+disajikan lewat `GET /api/files/:assetId` (atau alias `/docs/:indicatorId/blob`).
 
 CORS/lingkungan: dev memakai Vite proxy (same-origin, cookie `SameSite=Lax`
 cukup). Bila frontend dan API beda origin di produksi, wajib

@@ -646,7 +646,18 @@ CREATE TABLE index_history (
   CONSTRAINT fk_index_inst FOREIGN KEY (institution_code) REFERENCES institutions(code),
   UNIQUE KEY uq_index_period (institution_code, period)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Setelan aplikasi + flag sekali-jalan (migrasi 0003), mis. `indexeddb_migrated`.
+CREATE TABLE app_settings (
+  setting_key VARCHAR(64) PRIMARY KEY,
+  setting_value VARCHAR(255) NOT NULL,
+  updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
+
+Catatan: `POST /admin/reset-demo` men-truncate seluruh tabel (termasuk
+`app_settings`) lalu menanam ulang seed demo, sehingga flag migrasi aset ikut
+kembali ke kondisi awal.
 
 ## 10. Seed: satu file, dua mode
 

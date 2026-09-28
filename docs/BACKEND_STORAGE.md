@@ -70,7 +70,7 @@ sebelum itu baris asset berstatus staging dan disapu job malam bila >24 jam.
 
 | Jenis | Batas | Cek |
 |---|---|---|
-| Bukti gambar (4 alur: lapor, jawaban mandiri, SAM, penyelesaian) | PNG/JPEG/WebP, 0–5 MB, nama 1–200, ≤20 MP | `Content-Length` dulu → magic bytes (`89 50 4E 47` / `FF D8 FF` / `RIFF....WEBP`) → decode (`sharp`, pengganti `createImageBitmap`) → resolusi → sha256 |
+| Bukti gambar (4 alur: lapor, jawaban mandiri, SAM, penyelesaian) | PNG/JPEG/WebP, 0–5 MB, nama 1–200, ≤20 MP | `Content-Length` dulu → magic bytes (`89 50 4E 47` / `FF D8 FF` / `RIFF....WEBP`) → dimensi header (`image.ts`, pengganti `createImageBitmap`) → resolusi → sha256 |
 | Denah | PNG/JPEG/WebP ≤5 MB, sisi pendek ≥800 px | Sama, tanpa batas 20 MP |
 | PDF indikator | `application/pdf` + `.pdf` + header `%PDF-`, 0–10 MB, nama ≤200 | 5 byte pertama wajib `25 50 44 46 2D` |
 | Impor dataset | CSV/JSON teks, ≤200 baris | Bukan biner; validasi per baris di API |
@@ -115,7 +115,14 @@ Aturan yatim lebih rinci:
   disk sampai migrasi menyintesis PDF; jangan dianggap yatim sebelum seed selesai.
 - Reset demo (`POST /admin/reset-demo`) menjalankan pembersihan blok yang sama
   untuk seluruh kind (cermin `clearCampusAssets`/`clearEvidenceAssets`/
-  `clearInstrumentDocAssets`).
+  `clearInstrumentDocAssets`) — implementasi: `clearStorageDir()` lalu seed ulang.
+
+Implementasi Fase 5 (D-30.f): tulis via `tmp-uploads/` + `rename` atomik;
+`owner_ref` diisi saat submit (lapor/penilaian/SAM/penyelesaian); job yatim
+`src/storage-jobs.ts` dijalankan skrip `bun run sweep` atau `POST
+/admin/storage/sweep`. Catatan: `sharp` (decode penuh) **belum dipakai** —
+percobaan install menunjukkan proses decode menggantung di lingkungan prototipe,
+jadi validasi memakai magic-bytes + dimensi header. Ditandai sebagai batas.
 
 ## 6. Migrasi satu kali dari IndexedDB
 
@@ -123,3 +130,11 @@ Skrip Bun + halaman ekspor sekali-pakai di frontend: baca 3 DB IndexedDB →
 kirim blob + metadata ke `POST /admin/migrate/assets` (Super Admin, sekali
 jalan, dikunci flag) → server simpan via jalur §3–§5. Seed PDF contoh
 disintesis ulang atau diganti PDF asli dosen.
+
+Implementasi Fase 5 (D-30.f): `mocks/adapters/device-assets.ts` mengekspor blob
+denah/bukti/dokumen perangkat (base64); halaman `/admin/pengaturan` mengirim ke
+endpoint lalu membersihkan IndexedDB (`clearCampusAssets`/`clearEvidenceAssets`/
+`clearInstrumentDocAssets`). Flag `indexeddb_migrated` di tabel `app_settings`
+(migrasi `0003`) membuat aksi hanya sekali; `GET /admin/migrate/status` dipakai
+UI untuk menyembunyikan tombol. Metadata domain yang belum bisa direkonsiliasi
+penuh (mis. versi denah) dicatat sebagai batas, bukan diklaim sempurna.
