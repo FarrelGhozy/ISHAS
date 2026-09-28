@@ -7,6 +7,7 @@ import {
   selectValidationQueue,
   selectValidatedReports,
   selectReportsByInstitution,
+  selectReportsForManager,
 } from "./selectors";
 
 describe("selector", () => {
@@ -14,9 +15,9 @@ describe("selector", () => {
     storeActions.resetMockData();
   });
 
-  test("terdaftar = Aktif DAN pengelola aktif", () => {
+  test("terdaftar = Aktif DAN pesantren aktif", () => {
     const codes = selectRegisteredInstitutions(getState()).map((i) => i.code);
-    // PSN-0020 Aktif tanpa pengelola → tidak terdaftar; PSN-0021 Persiapan → tidak.
+    // PSN-0020 Aktif tanpa pesantren → tidak terdaftar; PSN-0021 Persiapan → tidak.
     expect(codes).toEqual(["PSN-0018", "PSN-0019"]);
   });
 
@@ -61,7 +62,7 @@ describe("aturan aksi", () => {
 
   test("terima dengan placeholder Belum ditentukan ditolak sistem", () => {
     const result = storeActions.acceptReport(
-      { id: "USR-003", name: "uji", role: "Pengelola Pesantren" },
+      { id: "USR-003", name: "uji", role: "Pesantren" },
       "RPT-0001",
       "Belum ditentukan" as never,
       "Belum ditentukan" as never,
@@ -77,7 +78,7 @@ describe("aturan aksi", () => {
 
   test("tolak dengan alasan sah mengubah status + menyimpan alasan", () => {
     const result = storeActions.rejectReport(
-      { name: "uji", id: "USR-003", role: "Pengelola Pesantren" },
+      { name: "uji", id: "USR-003", role: "Pesantren" },
       "RPT-0001",
       "Temuan sudah ditangani sejak Agustus.",
     );
@@ -87,9 +88,9 @@ describe("aturan aksi", () => {
     expect(report?.handlingStatus).toBe("Ditolak");
   });
 
-  test("pengelola tidak dapat memoderasi laporan di luar scope", () => {
+  test("pesantren tidak dapat memoderasi laporan di luar scope", () => {
     const result = storeActions.acceptReport(
-      { id: "USR-003", name: "Uji", role: "Pengelola Pesantren" },
+      { id: "USR-003", name: "Uji", role: "Pesantren" },
       "RPT-0002",
       "Sedang",
       "Sedang",
@@ -103,13 +104,13 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(7);
+    expect(state.schemaVersion).toBe(13);
     expect(selectRegisteredInstitutions(state).length).toBe(2);
   });
 });
 
 describe("lifecycle tindak lanjut V2-06", () => {
-  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pengelola Pesantren" };
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
 
   beforeEach(() => storeActions.resetMockData());
 
@@ -158,7 +159,7 @@ describe("lifecycle tindak lanjut V2-06", () => {
     expect(storeActions.deleteCompletedReport(manager, "RPT-0005", "Arsip laporan lama").ok).toBe(
       false,
     );
-    const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pengelola Pesantren" };
+    const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
     expect(
       storeActions.deleteCompletedReport(otherManager, "RPT-0005", "Arsip laporan lama").ok,
     ).toBe(true);
@@ -175,7 +176,7 @@ describe("lifecycle tindak lanjut V2-06", () => {
 });
 
 describe("lokasi dan tindak lanjut V2-07", () => {
-  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pengelola Pesantren" };
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
 
   beforeEach(() => storeActions.resetMockData());
 
@@ -217,7 +218,7 @@ describe("lokasi dan tindak lanjut V2-07", () => {
     );
     expect(
       storeActions.updateRecommendation(manager, id, {
-        note: "Bukti diperiksa pengelola.",
+        note: "Bukti diperiksa pesantren.",
         verify: true,
       }).ok,
     ).toBe(true);
@@ -225,6 +226,150 @@ describe("lokasi dan tindak lanjut V2-07", () => {
     expect(getState().reports.find((item) => item.id === "RPT-0003")?.handlingStatus).toBe(
       "Completed",
     );
+  });
+
+  test("progres dinormalisasi ke titik slider terdekat (D-20)", () => {
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Progres dibulatkan ke titik slider.",
+        progress: 30,
+      }).ok,
+    ).toBe(true);
+    expect(getState().recommendations.find((item) => item.id === "REC-RPT-0003-1")?.progress).toBe(
+      25,
+    );
+  });
+
+  test("rekomendasi terminal (Terverifikasi/Dibatalkan) menolak pembaruan progres", () => {
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0011-1", {
+        note: "Coba ubah yang sudah selesai.",
+        progress: 50,
+      }).ok,
+    ).toBe(false);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0009-1", {
+        note: "Coba ubah yang dibatalkan.",
+        progress: 50,
+      }).ok,
+    ).toBe(false);
+  });
+
+  test("bukti 100% menerima assetId sah dan menolak format palsu (D-21)", () => {
+    const valid = "evidence-asset-123e4567-e89b-12d3-a456-426614174000";
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Selesai dengan bukti upload.",
+        progress: 100,
+        evidenceName: "tangga.jpg",
+        evidenceAssetId: valid,
+      }).ok,
+    ).toBe(true);
+    expect(
+      getState().recommendations.find((item) => item.id === "REC-RPT-0003-1")
+        ?.completionEvidenceAssetId,
+    ).toBe(valid);
+    storeActions.resetMockData();
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Selesai dengan bukti palsu.",
+        progress: 100,
+        evidenceName: "tangga.jpg",
+        evidenceAssetId: "evidence-asset-palsu",
+      }).ok,
+    ).toBe(false);
+  });
+});
+
+describe("pembatalan tindak lanjut D-21", () => {
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
+  const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
+
+  beforeEach(() => storeActions.resetMockData());
+
+  test("alasan pendek ditolak; alasan sah membatalkan + temuan ikut + audit", () => {
+    expect(storeActions.cancelRecommendation(manager, "REC-RPT-0003-1", "pendek").ok).toBe(false);
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0003-1", "Perbaikan dialihkan ke program kerja bakti mingguan.").ok,
+    ).toBe(true);
+    const rec = getState().recommendations.find((item) => item.id === "REC-RPT-0003-1");
+    expect(rec?.status).toBe("Dibatalkan");
+    expect(rec?.canceledReason).toContain("kerja bakti");
+    expect(rec?.canceledBy).toBe("USR-003");
+    expect(rec?.canceledAt).toBeTruthy();
+    expect(
+      getState().findings.find((item) => item.recommendationId === "REC-RPT-0003-1")?.status,
+    ).toBe("Dibatalkan");
+    expect(
+      getState().auditEvents.some(
+        (event) =>
+          event.objectId === "REC-RPT-0003-1" && event.action === "Membatalkan tindak lanjut",
+      ),
+    ).toBe(true);
+    // Laporan induk tetap seperti semula (seed RPT-0003 Pending), tidak menjadi Completed.
+    expect(getState().reports.find((item) => item.id === "RPT-0003")?.handlingStatus).toBe(
+      "Pending",
+    );
+  });
+
+  test("batal dari Menunggu verifikasi bisa; dari Terverifikasi/Dibatalkan ditolak", () => {
+    expect(
+      storeActions.cancelRecommendation(otherManager, "REC-RPT-0015-1", "Tandon sudah berfungsi normal sehingga penanganan lanjutan tidak diperlukan.").ok,
+    ).toBe(true);
+    expect(
+      getState().recommendations.find((item) => item.id === "REC-RPT-0015-1")?.status,
+    ).toBe("Dibatalkan");
+    expect(
+      storeActions.cancelRecommendation(otherManager, "REC-RPT-0005-1", "Alasan pembatalan yang cukup panjang.").ok,
+    ).toBe(false);
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0009-1", "Alasan pembatalan yang cukup panjang.").ok,
+    ).toBe(false);
+  });
+
+  test("Dibatalkan menghalangi Completed otomatis pada laporan banyak temuan", () => {
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0010-2", "Jalur kabel diputuskan memakai rute lain yang sudah ada.").ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-1", {
+        note: "Selesai dan diverifikasi.",
+        progress: 100,
+        evidenceName: "kabel.jpg",
+      }).ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-1", {
+        note: "Verifikasi.",
+        verify: true,
+      }).ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-3", {
+        note: "Selesai dan diverifikasi.",
+        progress: 100,
+        evidenceName: "evakuasi.jpg",
+      }).ok,
+    ).toBe(true);
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0010-3", {
+        note: "Verifikasi.",
+        verify: true,
+      }).ok,
+    ).toBe(true);
+    // 1 Dibatalkan + 3 Terverifikasi → laporan tetap Proses, bukan Completed.
+    expect(getState().reports.find((item) => item.id === "RPT-0010")?.handlingStatus).toBe(
+      "Proses",
+    );
+  });
+
+  test("pesantren tidak dapat membatalkan di luar scope", () => {
+    expect(
+      storeActions.cancelRecommendation(manager, "REC-RPT-0013-1", "Alasan pembatalan yang cukup panjang untuk uji scope.").ok,
+    ).toBe(false);
+    expect(
+      getState().recommendations.find((item) => item.id === "REC-RPT-0013-1")?.status,
+    ).toBe("Belum ditindaklanjuti");
   });
 });
 
@@ -261,11 +406,11 @@ describe("lapor-cepat V2-03", () => {
     );
     expect(audit).toBeDefined();
 
-    // Notifikasi hanya ke pengelola pemilik scope (USR-003), bukan ke scope lain.
+    // Notifikasi hanya ke pesantren pemilik scope (USR-003), bukan ke scope lain.
     const notes = getState().notifications.filter((n) => n.sourceObjectId === result.id);
     expect(notes.length).toBe(1);
     expect(notes[0].recipientAccountId).toBe("USR-003");
-    expect(notes[0].targetUrl).toBe("/pengelola/validasi-laporan");
+    expect(notes[0].targetUrl).toBe("/pesantren/validasi-laporan");
   });
 
   test("laporan baru TIDAK masuk selector validated (dashboard steril)", () => {
@@ -321,13 +466,45 @@ describe("lapor-cepat V2-03", () => {
     expect(getState().reports.filter((r) => r.id === first.id).length).toBe(1);
   });
 
-  test("pengelola yang mengirim → email akun tersimpan, nama laporan tetap editable", () => {
+  test("usulan mandiri tersimpan terpisah; keputusan final tetap Belum ditentukan", () => {
+    const result = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, reporterSeverity: "Tinggi", reporterPriority: "Sedang" },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const report = getState().reports.find((r) => r.id === result.id);
+    expect(report?.reporterSeverity).toBe("Tinggi");
+    expect(report?.reporterPriority).toBe("Sedang");
+    expect(report?.severity).toBe("Belum ditentukan");
+    expect(report?.priority).toBe("Belum ditentukan");
+  });
+
+  test("usulan tak dikenal ditolak dengan pesan persis", () => {
+    const result = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, reporterSeverity: "Kritis" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("Usulan tingkat keparahan tidak dikenal.");
+  });
+
+  test("aspek di luar kategori ditolak tanpa menyebut indikator", () => {
+    const result = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, categoryId: "KAT-KESEHATAN", aspectId: "ASP-KES-001" },
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("Kategori/aspek tidak konsisten.");
+  });
+
+  test("pesantren yang mengirim → email akun tersimpan, nama laporan tetap editable", () => {
     const result = storeActions.submitPublicReport(
       {
         id: "USR-003",
         name: "Ust. K.H. Mustofa Kamal",
-        email: "pengelola@ishas.demo",
-        role: "Pengelola Pesantren",
+        email: "pesantren@ishas.demo",
+        role: "Pesantren",
       },
       { ...VALID, reporterName: "Nama diubah manual" },
     );
@@ -335,7 +512,61 @@ describe("lapor-cepat V2-03", () => {
     if (!result.ok) return;
     const report = getState().reports.find((r) => r.id === result.id);
     expect(report?.reporterName).toBe("Nama diubah manual");
-    expect(report?.reporterAccountEmail).toBe("pengelola@ishas.demo");
+    expect(report?.reporterAccountEmail).toBe("pesantren@ishas.demo");
+  });
+});
+
+describe("perbaikan pesantren D-23", () => {
+  const manager = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal", role: "Pesantren" };
+  const otherManager = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
+
+  beforeEach(() => storeActions.resetMockData());
+
+  test("kelola tidak memuat arsip Completed", () => {
+    expect(
+      selectReportsForManager(getState(), "PSN-0019").some((r) => r.id === "RPT-0005"),
+    ).toBe(true);
+    expect(
+      storeActions.archiveCompletedReport(otherManager, "RPT-0005", "Arsip laporan lama").ok,
+    ).toBe(true);
+    expect(
+      selectReportsForManager(getState(), "PSN-0019").some((r) => r.id === "RPT-0005"),
+    ).toBe(false);
+  });
+
+  test("level Ekstrem eksplisit per temuan + teraudit + scope", () => {
+    expect(storeActions.setFindingLevel(manager, "RSK-RPT-0003-1", "Ekstrem").ok).toBe(true);
+    expect(getState().findings.find((f) => f.id === "RSK-RPT-0003-1")?.level).toBe("Ekstrem");
+    expect(
+      getState().auditEvents.some(
+        (e) => e.objectId === "RSK-RPT-0003-1" && e.action === "Mengubah tingkat risiko temuan",
+      ),
+    ).toBe(true);
+    expect(storeActions.setFindingLevel(otherManager, "RSK-RPT-0003-1", "Tinggi").ok).toBe(false);
+    expect(storeActions.setFindingLevel(manager, "RSK-RPT-0003-1", "Kritis" as never).ok).toBe(
+      false,
+    );
+  });
+
+  test("progres tepi dinormalisasi ke titik slider (12→0, 88→100)", () => {
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Progres kecil dibulatkan ke nol.",
+        progress: 12,
+      }).ok,
+    ).toBe(true);
+    expect(getState().recommendations.find((r) => r.id === "REC-RPT-0003-1")?.progress).toBe(0);
+    storeActions.resetMockData();
+    expect(
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Progres besar dibulatkan ke seratus dengan bukti.",
+        progress: 88,
+        evidenceName: "tangga.jpg",
+      }).ok,
+    ).toBe(true);
+    const rec = getState().recommendations.find((r) => r.id === "REC-RPT-0003-1");
+    expect(rec?.progress).toBe(100);
+    expect(rec?.status).toBe("Menunggu verifikasi");
   });
 });
 
@@ -349,7 +580,7 @@ describe("regresi review frontend", () => {
   };
   beforeEach(() => storeActions.resetMockData());
 
-  test("Super Admin/Peneliti dan akun tak dikenal ditolak di lapisan data", () => {
+  test("Super Admin/Validator dan akun tak dikenal ditolak di lapisan data", () => {
     for (const id of ["USR-001", "USR-002", "USR-tidak-ada"]) {
       expect(storeActions.submitPublicReport({ id, name: "uji" }, input).ok).toBe(false);
     }

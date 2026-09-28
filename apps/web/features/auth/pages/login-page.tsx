@@ -1,4 +1,4 @@
-// `/login` — panel kiri gradien marun + 3 kartu akun (tanpa asesor).
+// `/login` — panel kiri gradien biru + 3 kartu akun (tanpa asesor).
 // Login menunjuk ID akun; tujuan setelah login diperiksa terhadap peran aktif (ROUTES §3).
 
 import { useState } from "react";
@@ -29,7 +29,7 @@ export function LoginPage() {
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       <div
         className="hidden flex-col justify-between p-10 text-white lg:flex"
-        style={{ background: "linear-gradient(145deg, #3f0710, #6d0c18, #9f1239)" }}
+        style={{ background: "linear-gradient(145deg, #063A73, #0066CC, #007EFF)" }}
       >
         <IshasMark inverse variant="login" />
         <div>
@@ -39,7 +39,7 @@ export function LoginPage() {
             Kerja, dan Lingkungan Pesantren
           </h1>
           <p className="mt-3 max-w-md text-xs leading-relaxed text-white/80">
-            Laporan publik divalidasi pengelola pondok sebelum tampil di dashboard. Instrumen
+            Laporan publik divalidasi akun Pesantren sebelum tampil di dashboard. Instrumen
             berversi; seluruh angka pada prototipe adalah data ilustrasi.
           </p>
         </div>
@@ -68,7 +68,7 @@ export function LoginPage() {
           <button
             key={acc.id}
             type="button"
-            className="surface flex items-center gap-3 px-4 py-3 text-left transition hover:border-marun-border hover:bg-marun-bg"
+            className="surface flex items-center gap-3 px-4 py-3 text-left transition hover:border-brand-border hover:bg-brand-bg"
             onClick={() => login(acc.id, acc.roleId)}
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-white">

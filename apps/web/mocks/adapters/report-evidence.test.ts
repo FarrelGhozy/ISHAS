@@ -18,7 +18,7 @@ const descriptors = Object.fromEntries(
   ]),
 );
 const assets = new Map<string, unknown>();
-const manager = { id: "USR-003", name: "Penguji", role: "Pengelola Pesantren" };
+const manager = { id: "USR-003", name: "Penguji", role: "Pesantren" };
 const input = {
   institutionCode: "PSN-0018",
   reporterName: "Penguji",
@@ -219,4 +219,84 @@ test("reset demo membersihkan blob bukti dan referensi laporan", async () => {
   await mockRepository.reset();
   expect(await getEvidenceAsset(uploaded.id)).toBeUndefined();
   expect(getState().reports.every((report) => !report.evidenceAssetId)).toBe(true);
+});
+
+test("upload bukti penyelesaian (D-21): pesantren scope sah; publik/lintas scope ditolak", async () => {
+  const ok = await mockRepository.uploadCompletionEvidence(
+    manager,
+    input.institutionCode,
+    file(),
+  );
+  expect(ok.ok).toBe(true);
+  if (!ok.ok || !ok.id) throw Error("Upload gagal");
+  expect((await getEvidenceAsset(ok.id))?.name).toBe("bukti.png");
+  // Publik tanpa login ditolak.
+  expect(
+    (await mockRepository.uploadCompletionEvidence({ name: "Publik" }, input.institutionCode, file()))
+      .ok,
+  ).toBe(false);
+  // Lintas scope ditolak.
+  expect(
+    (
+      await mockRepository.uploadCompletionEvidence(
+        { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" },
+        input.institutionCode,
+        file(),
+      )
+    ).ok,
+  ).toBe(false);
+  // MIME salah ditolak.
+  expect(
+    (
+      await mockRepository.uploadCompletionEvidence(
+        manager,
+        input.institutionCode,
+        new File(["x"], "bukti.svg", { type: "image/svg+xml" }),
+      )
+    ).ok,
+  ).toBe(false);
+});
+
+test("updateTindakLanjut menolak asset palsu/nama tak cocok/lintas scope (D-21)", async () => {
+  const uploaded = await mockRepository.uploadCompletionEvidence(
+    manager,
+    input.institutionCode,
+    file(),
+  );
+  if (!uploaded.ok || !uploaded.id) throw Error("Upload gagal");
+  const actor = { id: "USR-003", name: "Penguji", role: "Pesantren" };
+  // Asset palsu.
+  expect(
+    (
+      await mockRepository.updateTindakLanjut(actor, "REC-RPT-0003-1", {
+        note: "Selesai.",
+        progress: 100,
+        evidenceName: "bukti.png",
+        evidenceAssetId: "evidence-asset-00000000-0000-0000-0000-000000000000",
+      })
+    ).ok,
+  ).toBe(false);
+  // Nama tak cocok.
+  expect(
+    (
+      await mockRepository.updateTindakLanjut(actor, "REC-RPT-0003-1", {
+        note: "Selesai.",
+        progress: 100,
+        evidenceName: "salah.png",
+        evidenceAssetId: uploaded.id,
+      })
+    ).ok,
+  ).toBe(false);
+  // Sah: Berjalan → Menunggu verifikasi dengan asset.
+  const good = await mockRepository.updateTindakLanjut(actor, "REC-RPT-0003-1", {
+    note: "Selesai dengan bukti upload.",
+    progress: 100,
+    evidenceName: "bukti.png",
+    evidenceAssetId: uploaded.id,
+  });
+  expect(good.ok).toBe(true);
+  expect(
+    getState().recommendations.find((item) => item.id === "REC-RPT-0003-1")
+      ?.completionEvidenceAssetId,
+  ).toBe(uploaded.id);
 });

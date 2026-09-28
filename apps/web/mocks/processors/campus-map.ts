@@ -79,7 +79,8 @@ export function selectPublicCampusMap(state: IshasState, code?: string) {
   );
   const reportById = new Map(reports.map((report) => [report.id, report]));
   const items: PublicMapItem[] = state.findings
-    .filter((finding) => reportById.has(finding.reportId))
+    // D-21: temuan Dibatalkan bukan risiko aktif — tidak menjadi pin.
+    .filter((finding) => reportById.has(finding.reportId) && finding.status !== "Dibatalkan")
     .map((finding, index) => {
       const report = reportById.get(finding.reportId)!;
       const location = finding.locationSnapshot;

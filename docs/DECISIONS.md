@@ -411,3 +411,276 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   audit mencatat `Menambahkan dokumen indikator`. Ini catatan prototipe, bukan
   perubahan struktur ilmiah instrumen.
 - Dokumen terdampak: WIREFRAMES §9, FLOWS §8, DATA_MODEL §0, TODO.
+
+## D-19 — Lapor-cepat tanpa indikator + usulan mandiri + detail validasi lengkap — DISETUJUI 27 September 2026
+
+- Arahan pemilik: form `/lapor` tidak memakai `Indikator terkait`; pelapor hanya
+  memilih `Kategori` → `Aspek` (opsional) lalu menilai mandiri `Tingkat keparahan`
+  dan `Prioritas perbaikan` (opsional, default `Belum ditentukan`).
+- **D-19.a — Usulan vs keputusan:** nilai pelapor disimpan sebagai usulan
+  (`reporterSeverity/reporterPriority`); `severity/priority` final tetap diisi
+  akun Pesantren saat Terima (tanpa default). Halaman validasi menampilkan usulan
+  sebagai pre-fill yang wajib ditinjau/diubah sebelum konfirmasi.
+- **D-19.b — Detail validasi:** modal `/pesantren/validasi-laporan` menampilkan
+  seluruh isi kiriman publik (identitas, kontak internal, kategori/aspek,
+  lokasi + teks denah, bukti gambar, waktu, jejak keputusan).
+- Dokumen terdampak: FLOWS §2/§4, DATA_MODEL (schema v8→v9), KATEGORI_K3 §7,
+  WIREFRAMES §2/§4, TODO. D-02 tetap berlaku: kontak/usulan internal tidak publik.
+
+## D-20 — Slider progres tindak lanjut 5 titik — DISETUJUI 27 September 2026
+
+- Arahan pemilik: input `Progres (%)` pada tindak lanjut Pesantren memakai
+  slider dengan titik `0/25/50/75/100` (bukan ketikan bebas).
+- **D-20.a — Titik dan label:** `0% Belum mulai · 25% Dimulai · 50% Setengah
+  jalan · 75% Hampir selesai · 100% Selesai` (label tahap usulan prototipe).
+- **D-20.b — Pembulatan:** nilai lama yang bukan kelipatan 25 ditampilkan dan
+  disimpan ke titik terdekat; store menormalisasi (bukan menolak). Seed tidak
+  dimigrasi sehingga agregat dashboard tidak bergeser.
+- Aturan `100% wajib bukti + catatan` dan alur verifikasi tidak berubah.
+- Dokumen terdampak: FLOWS §6, WIREFRAMES §5, TODO. Scope Stage 07.
+
+## D-21 — Pembatalan tindak lanjut + bukti upload + detail relasi — DISETUJUI 27 September 2026
+
+- Arahan pemilik pada evaluasi `/pesantren/tindak-lanjut`: halaman terlihat kosong,
+  detail kurang, belum bisa upload bukti, dan butuh aksi batal.
+  Jawaban pemilik atas tiga pertanyaan klarifikasi: hapus = batalkan perbaikan
+  (bukan hapus permanen/arsip); upload bukti samakan dengan `/lapor`;
+  detail kartu memakai panel relasi penuh laporan induk.
+- **D-21.a — Batal per rekomendasi:** `Dibatalkan` adalah status terminal per
+  `Recommendation` (baris tidak dihapus). Boleh dari `Belum ditindaklanjuti /
+  Berjalan / Menunggu verifikasi`; tidak dari `Terverifikasi / Dibatalkan`.
+  Wajib alasan min 10 karakter + `canceledBy/canceledAt` + audit
+  `Membatalkan tindak lanjut`. Temuan tertaut ikut `Dibatalkan`.
+  Laporan induk tetap `Proses`; `Completed` hanya bila seluruh rekomendasi
+  `Terverifikasi` (D-05 tetap; `Dibatalkan` menghalangi `Completed` otomatis).
+  Tanpa buka-kembali pada prototipe ini.
+- **D-21.b — Bukti penyelesaian:** pola sama dengan `/lapor` (PNG/JPEG/WebP,
+  5 MB/20 megapiksel, blob privat IndexedDB, pratinjau + lepas/ganti).
+  Wajib saat progres 100%. Disimpan sebagai `completionEvidence` (nama) +
+  `completionEvidenceAssetId` (blob). Seed lama hanya nama = label `Bukti lama`.
+- **D-21.c — Publik:** status `Dibatalkan` tampil publik beserta
+  `alasan pembatalan` (amendemen D-02 terbatas untuk transparansi penanganan).
+  Bukti penyelesaian, tenggat, dan catatan internal tetap tidak publik.
+  Nama PIC/validator tetap publik sesuai D-02.
+- **D-21.d — Detail kelola:** kartu Pesantren menampilkan panel baca relasi
+  laporan induk (nomor, kanal, judul, deskripsi, kategori/aspek + usulan,
+  severity/priority final, lokasi, bukti pelapor privat, validator/waktu,
+  temuan tertaut) + tautan ke `/pesantren/validasi-laporan`.
+  Empty state menjelaskan penyebab kosong (menunggu validasi / filter / arsip /
+  beda scope).
+- Dokumen terdampak: FLOWS §5–§6, DATA_MODEL (schema v9→v10), ROLES §2/§6,
+  WIREFRAMES §5/§8, DATA_REQUIREMENTS §6, DESIGN_SYSTEM §2, TODO, STAGE_07.
+  Scope Stage 07; status stage lain tidak berubah sepihak.
+
+## D-22 — Denah tampil pratinjau kecil, klik untuk besar — DISETUJUI 27 September 2026
+
+- Arahan pemilik: denah tampil terlalu besar (satu layar penuh); tampilkan kecil
+  dulu, klik baru menjadi besar agar enak dilihat.
+- **D-22.a — Pratinjau:** denah baca (peta publik `/peta-risiko` + panel dashboard,
+  `SavedLocation` pada detail validasi/jawaban/tindak lanjut, pratinjau denah aktif
+  `/pesantren/lokasi`) tampil sebagai tombol pratinjau kecil (tinggi terbatas) +
+  label `Lihat denah besar`; klik membuka tampilan penuh + tombol `Tutup`.
+  Pin/isi tetap sama, hanya ukurannya yang bertahap.
+- **D-22.b — Batas:** form penandaan titik (`LocationPicker` pada `/lapor` dan
+  `/penilaian-mandiri`) tetap tampil penuh agar titik presisi; tidak termasuk
+  pratinjau. Tanpa perubahan data, hak akses, atau status stage lain.
+- Dokumen terdampak: WIREFRAMES §5, TODO. Scope lintas Stage 04/07 baca-saja;
+  status stage lain tidak berubah sepihak.
+
+## D-17 — Rename peran Peneliti → Validator dan Pengelola Pesantren → Pesantren — DISETUJUI 27 September 2026
+
+- Arahan pemilik: sebutan `Peneliti` terlalu mewah; ganti menjadi `Validator`
+  dengan fungsi tetap sama (kelola instrumen, versioning, scoring, validasi &
+  publikasi, data dan dokumen indikator). Sebutan `Peneliti` tidak dipakai lagi
+  untuk peran login.
+
+## D-18 — Identitas visual biru — DISETUJUI 27 September 2026
+
+- Arahan pemilik: identitas utama aplikasi berubah dari marun menjadi biru.
+  Palet contoh yang diberikan (`#000000`, `#F5F5F5`, `#E74C3C`, `#2A3F54`,
+  `#3498DB`, `#007EFF`) menjadi arah visual, bukan kewajiban memakai setiap
+  nilai persis.
+- Token identitas baru memakai biru utama `#007EFF`, biru aksen `#3498DB`,
+  teks judul `#2A3F54`, dan turunan biru lembut untuk latar/border interaksi.
+  Warna bahaya tetap merah dan tidak menjadi warna merek.
+- Ruang lingkup: tombol utama, navigasi aktif, fokus, banner, grafik,
+  halaman login, logo browser, dan komponen yang sebelumnya memakai aksen
+  marun. Struktur, copy, data, hak akses, serta pemetaan status tidak berubah.
+- Dokumen terdampak: `DESIGN_SYSTEM.md`, `README.md`, `TODO.md`, planning,
+  serta implementasi frontend. Verifikasi visual dan teknis dicatat pada
+  Stage 09 sebelum status REVIEW diminta.
+- Arahan lanjutan pemilik: `Pengelola Pesantren` disingkat menjadi `Pesantren`
+  untuk peran akun lokal pondok. Fungsi tetap sama (validasi laporan, kelola
+  lokasi/denah, tindak lanjut, laporan scope-nya). Contoh: `/pengelola/tindak-lanjut`
+  menjadi `/pesantren/tindak-lanjut`.
+- **D-17.a — Identitas peran:** `RoleId peneliti → validator`, `RoleLabel Peneliti → Validator`;
+  `RoleId pengelola → pesantren`, `RoleLabel Pengelola Pesantren → Pesantren`.
+  Email demo `peneliti@ishas.demo → validator@ishas.demo`,
+  `peneliti2@ → validator2@`, `pengelola@ → pesantren@`, `pengelola2@ → pesantren2@`.
+  Nama orang tetap (gelar `Dr.` dilepas agar tidak mewah).
+- **D-17.b — Route workspace:** `/peneliti/* → /validator/*` (7 route);
+  `/pengelola/* → /pesantren/*` (4 route: `validasi-laporan`, `lokasi`,
+  `tindak-lanjut`, `laporan`). URL lama `/peneliti/*` dan `/pengelola/*`
+  dialihkan ke URL baru. Profil publik `/pesantren/:kode` tetap; route statis
+  workspace (`/pesantren/validasi-laporan` dsb) lebih diutamakan daripada
+  `:kode` dinamis.
+- **D-17.c — Bedakan dari istilah lama:** peran `Pesantren` (akun) dibedakan dari
+  `Pesantren terdaftar` (lembaga Aktif + punya akun Pesantren aktif). Kata
+  `validator` pada `validatedBy/nama validator/PIC/Divalidasi oleh` tetap merujuk
+  aksi akun Pesantren yang memoderasi laporan, bukan peran Validator instrumen.
+  Kata kerja `mengelola/dikelola/pengelolaan` dan frasa ilmiah `tim penelitian`
+  tidak diganti.
+- **D-17.d — Migrasi:** schema mock `v7 → v8`; mapping `roleId` lama ke baru pada
+  `users`, `reporterAccountEmail`, `targetUrl` notifikasi, dan `validatedByRole`
+  (`Pengelola Pesantren → Pesantren`); reset demo kembali ke seed baru.
+- Dokumen terdampak: AGENTS (istilah), README, ROLES, ROUTES, FLOWS, DATA_MODEL,
+  WIREFRAMES, TEST_PLAN, TODO, planning stage, dan seluruh `apps/web/` role-aware.
+
+## D-23 — Validasi ruang kerja Pesantren + perbaikan alur — DISETUJUI 27 September 2026
+
+- Arahan pemilik: `ok kerjakan` atas evaluasi perbandingan `main` vs cabang
+  `validator` untuk bagian Pesantren (validasi isi, data flow, kekurangan,
+  rancangan perbaikan).
+- **D-23.a — Sumber status:** jalur utama `Pending/Proses/Completed` bergerak
+  lewat kartu tindak lanjut (`updateRecommendation` otomatis menutup laporan bila
+  seluruh rekomendasi `Terverifikasi`). `updateHandlingStatus` manual tetap sah
+  untuk laporan tanpa rekomendasi + langkah mundur/arsip; UI Validasi hanya
+  `Terima/Tolak`, tidak ada kontrol status manual di sana.
+- **D-23.b — Ekstrem terjangkau:** `severity/priority` tetap
+  `Tinggi/Sedang/Rendah` (tanpa `Ekstrem`). Level temuan `Ekstrem` diubah
+  eksplisit per temuan oleh Pesantren (`setFindingLevel`, teraudit); bukan rumus
+  turunan otomatis. Seed 1 Ekstrem tetap ilustrasi, bukan ambang ilmiah final.
+- **D-23.c — Deprecasi lembut:** `verifyFinding` dan `savePlanVersion` (denah
+  per lantai) tetap berfungsi + peringatan konsol, tetapi bukan jalur utama.
+  Jalur utama verifikasi = `updateRecommendation(verify:true)`; jalur utama
+  denah = `publishCampusPlan` gambaran besar. Tidak ada hapus mendadak agar
+  test lama tetap hijau.
+- **D-23.d — Arsip vs kelola:** `selectReportsForManager` tidak memuat laporan
+  yang sudah `archivedAt`. Progres laporan Pesantren = rata-rata rekomendasi
+  non-`Dibatalkan` (0 bila kosong). Laporan induk yang rekomendasinya
+  `Dibatalkan` tetap pada status berjalan (`Pending/Proses`); `Dibatalkan`
+  menghalangi `Completed` otomatis + ada hint next-step di UI.
+- **D-23.e — Filter validasi:** antrean mendukung filter status + kanal
+  (`lapor-cepat/penilaian-mandiri`) + severity + pencarian
+  (nomor/judul/pelapor/deskripsi); baris memuat chip kanal + lokasi +
+  handling agar konteks jelas sebelum `Periksa`.
+- Dokumen terdampak: FLOWS §4–§6, DATA_MODEL §0/§4, WIREFRAMES §4–§5, TODO,
+  STAGE_07 (+ catatan lintas Stage 05–06 tanpa mengubah status stage lain).
+  Scope Stage 07 + sentuhan baca Validasi; status stage lain tidak berubah sepihak.
+
+## D-24 — Bank instrumen live tanpa versioning + bobot per opsi + PDF per laporan — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan`): versioning dihapus. Sekali isi langsung selesai;
+  ganti soal di tengah jalan berarti penilai mengulang dari awal. Instrumen
+  kurang jelas karena tidak bisa tambah/edit isi; Validator harus bisa mengubah
+  penuh. Tambah jawaban frekuensi + tingkat keparahan; Validator mengatur tipe
+  jawaban per indikator (ya-tidak, kualitas, frekuensi kejadian, tingkat
+  keparahan) + bobot tiap opsi. Sistem memakai bank data.
+- **D-24.a — Bank live:** satu instrumen live `INS-LIVE` yang langsung diedit
+  Validator (tambah/edit/hapus dimensi + indikator, atur kategori/aspek, tipe
+  jawaban, opsi + bobot). Tanpa `Draft/Published/Archived`, tanpa halaman
+  Versioning, tanpa kunci versi D-10. Perubahan langsung aktif untuk pengisian
+  baru + peringatan `draft berjalan harus mengulang`.
+- **D-24.b — Draft checksum:** draft penilaian tetap tersimpan di browser per
+  pesantren (`SELF-<kode>`, lanjutkan via `activeIndex`). Draft menyimpan
+  `instrumentChecksum`; checksum beda = draft basi: kirim dikunci, autosave
+  berhenti, pelapor wajib buang draft dan mulai baru. Default ter-record di
+  browser; reload normal tidak menghilangkan draft yang checksum-nya sama.
+- **D-24.c — Tipe + bobot:** tiap indikator punya `options[]` (`value, label,
+  weight 0–100, isFinding`) + `weight` pengali indikator (default 1). Skor
+  laporan = persentase rata-rata terbobot (N/A dilewati, bukan nol). Opsi lama
+  (`likert-1-5`, `boolean-ya-tidak`, `likert-1-2-tidak`) hanya dibaca untuk
+  snapshot lama; indikator baru memakai 4 tipe D-24.
+- **D-24.d — Snapshot beku + PDF:** tiap kirim membekukan copy soal + opsi +
+  bobot + jawaban + `scorePercent` + `byDimension` pada snapshot; `Report`
+  menyimpan `scorePercent` + `pdfGeneratedAt`. PDF laporan dibuat saat kirim
+  (render cetak browser, frontend-only) dan baru tampil publik setelah
+  `Diterima` Pesantren (moderasi D-02/D-03 tetap). Satu pondok dengan N penilai
+  = N PDF pada `/laporan`; agregat memakai rata-rata `%` per pesantren.
+  Registrasi penilai di atas `/penilaian-mandiri` (nama penilai + pesantren +
+  kontak opsional).
+- **D-24.e — Migrasi:** schema mock `v10 → v11`; bank live dibangun dari
+  `INS-v1.1` (opsi/bobot default per tipe); `instrumentVersions` lama
+  dipertahankan sebagai bacaan legacy + deprecasi lembut agar snapshot lama
+  tetap tampil; fungsi versioning lama tidak dipakai UI baru. Reset demo
+  kembali ke seed bank live.
+- Dokumen terdampak: FLOWS §3/§7, DATA_MODEL (schema v11), ROLES §4,
+  ROUTES (hapus menu Versioning), WIREFRAMES §3/§6, KATEGORI_K3 §8,
+  DATA_REQUIREMENTS §2/§4, TEST_PLAN, TODO, STAGE_08. Scope Stage 08 +
+  sentuhan baca laporan; status stage lain tidak berubah sepihak.
+
+## D-26 — SAM-iSAFE khusus Validator (bank dinamis, MVP) — DISETUJUI 28 September 2026
+
+- Arahan pemilik: SAM-iSAFE menjadi halaman baru di ruang Validator
+  (satu entri navbar), dipakai untuk penilaian oleh Validator. Fase 1 hanya
+  Validator; tidak tampil di dashboard publik maupun ruang Pesantren.
+  Pembahasan tampil di Pesantren menyusul bila MVP sudah pas.
+- **D-26.a — Bank dinamis:** kategori + pertanyaan SAM-iSAFE adalah bank data
+  (`samCategories/samQuestions`), bukan array hard-code. Validator (semua akun
+  Validator aktif) boleh tambah kategori dan tambah/aktifkan pertanyaan.
+  Skor maksimum dinamis: `COUNT(aktif) x 2`; persen = `total/max x 100`.
+  Rumus `Total/50` pada poster tidak dipakai.
+- **D-26.b — Checklist awal:** 27 soal persis panduan dosen (Fisik 5,
+  Kesehatan 5, Sosial/Tata kelola 5, Darurat 5, Perilaku 7). Ambang
+  prototipe: `>=80 Risiko Rendah, 60-79 Risiko Sedang, <60 Risiko Tinggi`.
+  Asumsi prototipe, bukan ketentuan ilmiah final.
+- **D-26.c — Scope:** Validator memilih pesantren terdaftar mana pun
+  (Validator general, tidak terikat satu pesantren). Foto bukti ditunda fase 2.
+- **D-26.d — Pengecualian D-03 terbatas:** Validator boleh membuat/mengisi
+  SAM-iSAFE saat login. Larangan kirim lapor-cepat/penilaian-mandiri saat
+  login tetap berlaku.
+- Dokumen terdampak: ROLES §4, ROUTES §2, FLOWS §baru, DATA_MODEL schema v12,
+  WIREFRAMES §validator, TODO, stage `STAGE_SAM_ISAFE.md`.
+
+## D-26.e — SAM-iSAFE fase 2 (bukti, tindak lanjut, tren, cetak, review) — DISETUJUI 27 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 2` + UI profesional): lengkapi modul
+  SAM-iSAFE khusus Validator tanpa mengubah scope D-26.a–D-26.d
+  (tetap Validator-only, tidak publik/Pesantren).
+- **Bukti foto:** tiap jawaban boleh satu foto (PNG/JPEG/WebP, 5 MB/20 MP,
+  pola sama `/lapor`, blob privat IndexedDB). Wajib dianjurkan bila skor 0,
+  tetap opsional agar alur lapangan tidak terhambat.
+- **Tindak lanjut:** tiap temuan (skor 0/1) dapat dibuatkan tindak lanjut
+  (PIC + tenggat wajib, catatan opsional) dengan status
+  `Belum ditindaklanjuti → Berjalan → Selesai`, plus `Dibatalkan` beralasan
+  min 10 karakter. Dikelola Validator di halaman detail pengamatan.
+- **Tren + statistik:** halaman riwayat memuat grafik perkembangan persen
+  antar pengamatan Selesai dan rata-rata per kategori; murni ilustratif.
+- **Cetak/PDF:** halaman detail memakai tombol cetak browser
+  (`window.print`, pola `/laporan/:id`); tanpa PDF server.
+- **Review supervisor:** pengamatan Selesai dapat ditandai `Ditinjau`
+  oleh akun Validator (nama + waktu + catatan teraudit).
+- **Audit:** halaman detail memuat jejak audit pengamatan tersebut.
+- **UI profesional:** rapikan seluruh halaman SAM-iSAFE mengikuti token
+  `DESIGN_SYSTEM.md` (tanpa kelas `.status`/warna merek baru).
+- Dokumen terdampak: DATA_MODEL schema v13, TODO, stage `STAGE_SAM_ISAFE_FASE2.md`.
+
+## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator
+  sekaligus (Scoring, Validasi & publikasi, Data penelitian) karena tampilan
+  beda dari halaman lain dan alurnya membingungkan.
+- **D-25.a — Istilah:** `Validator` = ex-`Peneliti` (kelola bank, bobot,
+  audit skor, audit publikasi, dataset). `Pesantren` = ex-`Pengelola`
+  pondok (satu-satunya yang `Terima/Tolak` laporan + isi
+  `severity/priority`). `Divalidasi oleh / nama validator` pada publik =
+  akun Pesantren penerima, bukan peran Validator (D-17.c tetap berlaku).
+- **D-25.b — Rename label:** menu `Validasi & publikasi` menjadi
+  `Audit publikasi`. Route `/validator/validasi-publikasi` tetap (kompatibel
+  + redirect lama) — hanya label, H1, dan docs yang berubah. Alasan: hindari
+  tabrakan dengan `Validasi laporan` milik Pesantren. Kriteria layak publik
+  eksplisit 5 poin: snapshot lengkap + `Diterima` + `scorePercent` ada +
+  `pdfGeneratedAt` ada + checksum cocok (beda = label bank berubah, snapshot
+  tetap beku).
+- **D-25.c — Dataset maksimal:** filter utama hanya pesantren terdaftar
+  (konsisten pemilih publik + D-08) + toggle `Sertakan non-terdaftar (audit
+  internal)` dengan chip status. Ekspor CSV/JSON memakai whitelist D-02
+  (tanpa nama/kontak pelapor, bukti, jawaban mentah, alasan tolak, audit
+  mentah). Impor = upload → validasi → pratinjau → terapkan sebagai
+  `Menunggu validasi` (masuk antrean Pesantren, tidak langsung publik;
+  DATA_REQUIREMENTS §9 tetap). Staging in-memory, tanpa migrasi schema
+  (tetap v11).
+- Dokumen terdampak: ROLES §4, ROUTES §2, FLOWS §7, WIREFRAMES §6,
+  DATA_REQUIREMENTS §9, TEST_PLAN §3/§7, TODO, STAGE_08. Scope Stage 08 +
+  sentuhan baca laporan/dashboard validator; status stage lain tidak berubah
+  sepihak.

@@ -3,14 +3,14 @@ import { getState, storeActions } from "./mock-store";
 import { loadState, MOCK_STORAGE_KEY } from "./state";
 import { SEED } from "../seed/seed";
 
-const PENELITI = { id: "USR-002", name: "Dr. M. Ridwan" };
+const PENELITI = { id: "USR-002", name: "M. Ridwan" };
 const PENGELOLA = { id: "USR-003", name: "Ust. K.H. Mustofa Kamal" };
 
 beforeEach(() => {
   storeActions.resetMockData();
 });
 
-test("hanya peneliti aktif yang dapat mengelola berkas", () => {
+test("hanya validator aktif yang dapat mengelola berkas", () => {
   const input = {
     indicatorId: "IND-K3L-002",
     fileName: "detail.pdf",
@@ -52,7 +52,7 @@ test("unggah, ubah visibilitas, dan hapus berkas teraudit", () => {
 
 const MANUAL_INPUT = {
   code: "IND-DOC-001",
-  title: "Dokumen tambahan peneliti",
+  title: "Dokumen tambahan validator",
   categoryId: "KAT-KESELAMATAN",
   aspectId: "ASP-KES-001",
   fileName: "tambahan.pdf",
@@ -83,7 +83,7 @@ test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () =
   let doc = getState().instrumentDocs.find((d) => d.manual)!;
   expect(doc.indicatorId).toBe("IND-DOC-001");
   expect(doc.indicatorCode).toBe("IND-DOC-001");
-  expect(doc.indicatorTitle).toBe("Dokumen tambahan peneliti");
+  expect(doc.indicatorTitle).toBe("Dokumen tambahan validator");
   expect(doc.visibility).toBe("Privat"); // default aman
   expect(doc.assetId).toBe(MANUAL_INPUT.assetId);
   expect(getState().auditEvents[0].action).toBe("Menambahkan dokumen indikator");
@@ -98,10 +98,10 @@ test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () =
   doc = getState().instrumentDocs.find((d) => d.indicatorId === "IND-DOC-001")!;
   expect(doc.fileName).toBe("tambahan-v2.pdf");
   expect(doc.manual).toBe(true);
-  expect(doc.indicatorTitle).toBe("Dokumen tambahan peneliti");
+  expect(doc.indicatorTitle).toBe("Dokumen tambahan validator");
 });
 
-test("migrasi v6 ke v7 mempertahankan record dan menambah instrumentDocs", () => {
+test("migrasi v6 ke v13 mempertahankan record dan menambah instrumentDocs", () => {
   const v6 = JSON.stringify({
     ...structuredClone(SEED),
     schemaVersion: 6,
@@ -113,10 +113,10 @@ test("migrasi v6 ke v7 mempertahankan record dan menambah instrumentDocs", () =>
   });
   try {
     const loaded = loadState();
-    expect(loaded.schemaVersion).toBe(7);
+    expect(loaded.schemaVersion).toBe(13);
     expect(loaded.reports.length).toBe(SEED.reports.length);
     expect(loaded.instrumentDocs.length).toBe(SEED.instrumentDocs.length);
-    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v7");
+    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v13");
   } finally {
     Reflect.deleteProperty(globalThis, "localStorage");
   }

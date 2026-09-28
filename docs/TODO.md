@@ -1,6 +1,178 @@
 # TODO — Kontrol Kerja Aktif
 
-## Perapihan format kode apps/web — 23 September 2026 — `IN PROGRESS`
+## SAM-iSAFE fase 2 Validator (D-26.e) — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan fase 2` + UI profesional):
+foto bukti per jawaban, tindak lanjut temuan, grafik perkembangan + statistik,
+cetak browser, review `Ditinjau`, jejak audit di detail, polish seluruh halaman
+SAM-iSAFE. Tetap Validator-only. Stage: `planning/STAGE_SAM_ISAFE_FASE2.md`.
+
+- [x] Catat D-26.e + stage IN PROGRESS sebelum mengubah kode.
+- [x] Kode + migrasi v12→v13 + seed demo + test.
+- [x] Verifikasi teknis: lint + typecheck + 198 test + build lulus (27 Sep 2026; +17 test SAM fase 2/store).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (dashboard, foto, tindak lanjut, cetak, review, audit): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## SAM-iSAFE khusus Validator (D-26) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik: satu navbar Validator, bank dinamis,
+27 soal awal, maks dinamis, ambang prototipe 80/60, khusus Validator fase 1.
+Stage: `planning/STAGE_SAM_ISAFE.md`.
+
+- [x] Catat D-26 + stage IN PROGRESS sebelum mengubah kode.
+- [x] Kode + migrasi v11→v12 + seed + test (lint + typecheck + 185 test + build lulus, 28 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (riwayat → baru → detail → bank): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## Pematangan Super Admin + deadlock onboarding — 27 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (kerja penuh + ikuti flow: pesantren ada
+dan Aktif dulu, baru tambah akun Pesantren). Cakupan: docs (FLOWS §1/§5,
+DATA_MODEL §1–§2, STAGE_08, STAGE_09, TODO) + `apps/web` (store deadlock,
+form pesantren/pengguna, dashboard, hak-akses, audit, pengaturan) + test.
+Revisi D-17/D-19–D-25 yang kode selesai dipindah ke `REVIEW` (visual + review
+pemilik menyusul); Stage 00/07/08/09 tetap `IN PROGRESS`.
+
+- [x] Perbaiki deadlock: `setInstitutionStatus(Aktif)` tanpa syarat akun; `addUser` Pesantren tetap wajib pesantren Aktif; akun baru default `Menunggu` + aktivasi eksplisit.
+- [x] Form pesantren wajib nama/kota/alamat/PJ + detail terdaftar + konfirmasi efek pemilih; seed 4 alamat internal.
+- [x] Dashboard terdaftar-vs-Aktif, matriks hak-akses baca, filter pelaku audit, teks reset seed v11.
+- [x] Sinkron docs + test alur end-to-end store (Persiapan → Aktif → Menunggu → Aktif = terdaftar → Nonaktif = hilang).
+- [x] Kelola akun via popup: buat (nama/email/sandi + konfirmasi/peran/scope → `Menunggu`), ubah (peran tidak diganti), reset sandi demo teraudit, hapus berkonfirmasi + proteksi akun sendiri/admin terakhir/demo tunggal. Sandi tidak disimpan di browser (login kartu).
+- [x] Verifikasi: lint + typecheck + 177 test + build lulus (27 Sep 2026; +2 test kelola akun).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (tambah → aktif → akun → pemilih).
+- [ ] Review pemilik.
+
+## Audit publikasi + dataset maksimal Validator (D-25) — 28 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan` Opsi B): rapikan Scoring +
+Audit publikasi (ex Validasi & publikasi) + Data penelitian sekaligus —
+tampilan konsisten + alur jelas + istilah Validator vs Pesantren diluruskan.
+Keputusan D-25. Cakupan: docs + UI validator + selector/ekspor/impor aman +
+test. Schema tetap v11 (tanpa migrasi). Scope Stage 08 + sentuhan baca
+laporan/dashboard validator; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-25 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-25, ROLES §4, ROUTES §2, FLOWS §7, WIREFRAMES §6, REQUIREMENTS §9, TEST_PLAN §3, STAGE_08).
+- [x] Kode + test (label Audit publikasi, filter terdaftar, nama dimensi, link PDF, checklist 5 kriteria, provenance, ekspor whitelist, impor→Menunggu validasi).
+- [x] Verifikasi teknis: lint + typecheck + 175 test + build lulus (28 Sep 2026; naik dari 163).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (Scoring filter/link, Audit checklist, Dataset ekspor/impor, dashboard alur): belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
+## Bank instrumen live + bobot + PDF per laporan (D-24) — 28 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): hapus versioning, bank
+instrumen live edit-penuh Validator, 4 tipe jawaban + bobot per opsi,
+draft checksum (berubah = ulang), snapshot beku + skor % + PDF per laporan
+penilaian (tampil publik setelah Diterima), registrasi penilai.
+Keputusan D-24. Cakupan: docs + schema v10→v11 + store/processor + UI
+validator/penilaian-mandiri/laporan publik + seed + test. Scope Stage 08 +
+sentuhan baca laporan; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-24 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-24, FLOWS §3/§7, DATA_MODEL schema v11, ROLES, ROUTES, WIREFRAMES §3/§5/§6, KATEGORI §6/§8, REQUIREMENTS §1/§4, TEST_PLAN §3/§7, README, STAGE_08).
+- [x] Kode + migrasi v10→v11 + seed bank live + snapshot beku + skor % + PDF artifact (`/laporan/:id`).
+- [x] Verifikasi: lint + typecheck + 157 test + build lulus (28 Sep 2026).
+- [x] Perbaikan lanjutan (28 Sep 2026): anti loop autosave (dep checksum + skip bila sama),
+  draft tersimpan tanpa nama + pesantren terakhir diingat, hint kurang-apa per soal,
+  panel Acuan bobot di atas Bank instrumen. Verifikasi: lint + typecheck + 163 test lulus.
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (bank CRUD, isi→kirim→validasi→PDF, panel bobot, reload draft): belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
+## Validasi ruang kerja Pesantren + perbaikan alur (D-23) — 27 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): bandingkan `main` vs
+cabang `validator` untuk bagian Pesantren, evaluasi kekurangan data flow, dan
+perbaiki. Keputusan D-23 (sumber status, Ekstrem eksplisit per temuan,
+deprecasi lembut, arsip keluar dari kelola, filter validasi lengkap).
+Cakupan: docs + schema tetap v10 (tanpa migrasi) + store/selector + UI
+validasi/lokasi/tindak-lanjut/laporan + test. Scope Stage 07 + sentuhan baca
+Validasi; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-23 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-23, FLOWS §4–§6, DATA_MODEL §4, WIREFRAMES §4–§5, TODO, STAGE_07).
+- [x] Kode + test (selector arsip, `setFindingLevel` Ekstrem, filter validasi, lantai per-gedung, sync kartu, progres non-Dibatalkan).
+- [x] Verifikasi: lint + typecheck + 149 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard di browser: belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
+## Denah pratinjau kecil + klik perbesar (D-22) — 27 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik: denah baca tampil satu layar penuh; jadikan
+pratinjau kecil dulu (`Lihat denah besar` → penuh → `Tutup`). Keputusan D-22.
+Cakupan: docs + shared `TombolDenahBesar` + peta publik + `SavedLocation` +
+manager denah + test render. Form penandaan titik tetap penuh. Status stage lain
+tidak berubah sepihak.
+
+- [x] Catat D-22 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Kode + test (shared `TombolDenahBesar`/`SavedLocation` di `denah-preview.tsx`, peta publik pratinjau + pin/daftar terpecah, manager denah; 2 test render baru).
+- [x] Verifikasi: lint + typecheck + 146 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard buka/tutup denah di browser: belum dijalankan di lingkungan ini (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
+## Pembatalan + bukti upload + detail tindak lanjut (D-21) — 27 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik: `/pesantren/tindak-lanjut` terlihat kosong,
+detail kurang, belum bisa upload bukti, dan butuh aksi batal perbaikan beralasan
+yang tampil di dashboard umum. Keputusan D-21 (`Dibatalkan` per rekomendasi +
+alasan min 10 + tampil publik; upload bukti pola `/lapor`; panel relasi penuh).
+Cakupan: docs + schema v9→v10 + store/repository + UI kelola/publik + seed +
+test. Scope Stage 07; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-21 + revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-21, FLOWS §5–§6, DATA_MODEL, ROLES, WIREFRAMES §5/§8, DATA_REQUIREMENTS §6, DESIGN_SYSTEM §2, TODO).
+- [x] Kode + migrasi v9→v10 + seed contoh Dibatalkan (RPT-0009 + alasan publik).
+- [x] Verifikasi: lint + typecheck + 144 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard slider/upload/dialog + alur klik browser: belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## Slider progres tindak lanjut 5 titik (D-20) — 27 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik: `Progres (%)` pada kartu tindak lanjut
+Pesantren memakai slider titik `0/25/50/75/100` + label tahap; nilai lama
+dibulatkan ke titik terdekat saat tampil/simpan. Keputusan D-20. Cakupan:
+docs + shared `ProgressSlider` + kartu tindak lanjut + normalisasi store +
+test. Scope Stage 07; status stage lain tidak berubah sepihak.
+
+- [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-20, FLOWS, WIREFRAMES, TODO).
+- [x] Kode + test.
+- [x] Verifikasi: lint + typecheck + 133 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard slider di browser: belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## Revisi lapor-cepat + validasi (D-19) — 27 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik: `/lapor` tanpa `Indikator terkait`
+(hanya `Kategori → Aspek` opsional + usulan mandiri `Tingkat keparahan` /
+`Prioritas perbaikan` opsional); `severity/priority` final tetap diputus
+Pesantren; detail `/pesantren/validasi-laporan` dilengkapi. Keputusan D-19.
+Cakupan: docs + `apps/web/` (types, store v8→v9, repository, validasi
+lapor-cepat, draft, form `/lapor`, detail validasi) + test. Status stage lain
+tidak berubah sepihak.
+
+- [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-19, FLOWS, DATA_MODEL, KATEGORI_K3, WIREFRAMES, TODO).
+- [x] Kode + migrasi v8→v9 + seed usulan.
+- [x] Verifikasi: lint + typecheck + 128 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + alur klik browser (/lapor tanpa indikator + usulan, validasi detail lengkap + gambar bukti): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## Rename peran Peneliti→Validator + Pengelola→Pesantren — 27 September 2026 — `REVIEW`
+
+Revisi atas arahan langsung pemilik: `Peneliti` menjadi `Validator` (fungsi tetap),
+`Pengelola Pesantren` menjadi `Pesantren` (fungsi tetap); `/peneliti/*` menjadi
+`/validator/*`, `/pengelola/*` menjadi `/pesantren/*` (contoh: `/pesantren/tindak-lanjut`).
+Keputusan D-17. Cakupan: docs normatif + `apps/web/` role-aware + migrasi schema v7→v8
++ redirect URL lama. Status stage lain tidak berubah sepihak.
+
+- [x] Catat revisi IN PROGRESS dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs (AGENTS, DECISIONS D-17, ROLES, ROUTES, FLOWS, DATA_MODEL, WIREFRAMES, README + sisa: TEST_PLAN, BACKLOG, DATA_REQUIREMENTS, VALIDATION_REVIEW V-19, DASHBOARD_*, KATEGORI, RISK_MAP, planning stages, TODO).
+- [x] Rename kode + migrasi v8 + redirect.
+- [x] Verifikasi: lint + typecheck + 123 test + build lulus (27 Sep 2026).
+- [ ] Cek visual 3 viewport + alur klik browser (login 3 kartu, guard direct URL, redirect lama, validasi→terbit): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## Perapihan format kode apps/web — 23 September 2026 — `REVIEW`
 
 Revisi atas arahan langsung pemilik: rapikan format seluruh kode `apps/web/`
 yang berantakan (baris raksasa gaya minified) agar mudah dibaca. Whitespace-only,
@@ -33,7 +205,7 @@ menyusul. Keputusan D-16; stage: [STAGE_DOKUMEN_INDIKATOR.md](../planning/STAGE_
   - [ ] Verifikasi lint + typecheck + test + build + cek visual 3 viewport.
 - [ ] Review pemilik; DONE hanya setelah disetujui. Stage: `REVIEW`.
 
-## Infrastruktur Docker Compose + `.env` — 21 September 2026 — `IN PROGRESS`
+## Infrastruktur Docker Compose + `.env` — 21 September 2026 — `REVIEW`
 
 Revisi lintas fitur atas arahan pemilik: proyek memakai Docker Compose dengan
 environment dari `.env`. Cakupan: `docker-compose.yml` root (service `web-dev` +
@@ -46,12 +218,14 @@ Stage 01–06 tetap `REVIEW`).
 - [x] Builder produksi memakai Node (`node:22-slim`, Bun dari npm) karena `react-router build` memerlukan kondisi ekspor Node (`renderToPipeableStream`); `bun.lock` tetap sumber kebenaran dependensi.
 - [x] Verifikasi 21 Sep 2026: `compose config` kedua profile; prod (`/`, `/hasil`, `/lapor`, `/peta-risiko`, `/login` HTTP 200 + konten aplikasi), dev (`/` 200, Vite client 200, bind mount live/hot reload); lint + typecheck + 106 test + build lulus.
 - [x] Sinkronisasi 23 Sep 2026: perbaiki `bun run dev` EACCES (`.react-router/` milik root dari container dev). `.react-router/`/`build/` dev diisolasi di volume Compose; `vite.config.ts` baca `PORT` + `VITE_ALLOWED_HOSTS` dari env (default 3003 + daftar host tetap, container dev tetap listen 3003). Verifikasi: dev lokal + dev Docker (`/` HTTP 200) jalan bergantian, `.react-router` host tetap milik pengguna; lint + typecheck + 106 test + build lulus.
+- [ ] Review pemilik; DONE hanya setelah disetujui.
 
 ## Kontrol terkini — 18 September 2026
 
 Revisi dashboard untuk REVIEW: [STAGE_DASHBOARD_POLISH.md](../planning/STAGE_DASHBOARD_POLISH.md).
 Arahan pemilik sudah menetapkan dashboard publik mengikuti referensi pertama,
-tema/warna tetap, empat kategori dipertahankan, fokus penyempurnaan.
+empat kategori dipertahankan, fokus penyempurnaan. D-18 kemudian mengganti
+identitas marun menjadi biru.
 Checklist pada stage revisi menjadi kontrol pekerjaan sesi ini. Bagian historis
 “tanpa kode”, “BACKLOG”, dan “menunggu jawaban D-13” di bawah tidak lagi membatasi
 izin implementasi ini. Stage 03 dan 04 berstatus REVIEW sesuai file stage dan
@@ -235,7 +409,7 @@ Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` bel
 
 ## Stage 09 — Admin + sinkron dokumen + rilis REVIEW — `IN PROGRESS`
 
-- [x] Tambah pesantren Persiapan + buat akun pengelola; tanpa opsi asesor.
+- [x] Tambah pesantren Persiapan + buat akun Pesantren; tanpa opsi asesor.
 - [ ] Uji penuh `TEST_PLAN.md` (lint, typecheck, test, build lulus; route/visual menyusul).
 - [ ] Isi `Hasil Pemeriksaan` sesuai hasil nyata tiap stage. Stage `DONE` yang telah disetujui tidak diturunkan menjadi `REVIEW`; review integrasi dicatat di Stage 09.
 
@@ -244,7 +418,7 @@ Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` bel
 - Skala severity/priority resmi (sementara `Tinggi/Sedang/Rendah`).
 - Rumus indeks, bobot, ambang kategori, recommendation rule resmi.
 - Halaman perkenalan `/perkenalan` di aplikasi ISHAS (menunggu keputusan).
-- Rename `/pengelola` → `/pesantren`.
+- ~~Rename `/pengelola` → `/pesantren`~~ — dikerjakan via D-17 (27 Sep 2026).
 - D-04–D-12: arti hasil/agregat, temuan/status/riwayat, pesantren/akun, draft/versi, lokasi awal, tampilan.
 
 ## Review ulang frontend Stage 01–03 — 8 September 2026

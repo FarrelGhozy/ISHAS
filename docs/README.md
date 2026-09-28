@@ -4,8 +4,8 @@
 
 Frontend tersedia di `apps/web/`. Revisi utama untuk REVIEW:
 [penyempurnaan dashboard](../planning/STAGE_DASHBOARD_POLISH.md), diizinkan pemilik
-untuk responsivitas, visualisasi, dokumentasi/alur data, dan sinkronisasi stage,
-tanpa perubahan tema/warna. Kontrak:
+untuk responsivitas, visualisasi, dokumentasi/alur data, dan sinkronisasi stage.
+Identitas biru D-18 menggantikan batas tema/warna pada catatan ini. Kontrak:
 [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md). Status tiap stage di
 [planning/README.md](../planning/README.md); DONE hanya setelah persetujuan.
 
@@ -47,7 +47,7 @@ Keputusan pemilik 8 September 2026: **ISHAS dibangun sebagai aplikasi**
 (React Router, file dipecah per folder, dijalankan dengan bun 1.4; lihat D-01 di `DECISIONS.md`).
 Seluruh prototipe memakai data dummy; backend dan rumus final belum termasuk.
 Data publik mengikuti D-02 (ringkasan saja + nama validator/PIC) dan hak melapor mengikuti
-D-03 (publik + pengelola; Super Admin/Peneliti harus keluar dahulu).
+D-03 (publik + Pesantren; Super Admin/Validator harus keluar dahulu).
 Backend, rumus ilmiah final, unggah file ke server, dan PDF/Excel nyata belum termasuk.
 Denah dan gambar bukti Pelaporan dapat dipilih sebagai file lokal dan tersimpan
 di IndexedDB pada perangkat/origin browser yang sama. Bukti tidak dibuka publik;
@@ -74,20 +74,20 @@ Perubahan arah produk tidak mengesahkan rumus, skala, atau kategori ilmiah.
 ## Arah utama (arahan tercatat; rincian terbuka ditandai)
 
 1. Aplikasi ISHAS **tidak mempunyai landing page**; `/` langsung menjadi dashboard pesantren publik. Keputusan halaman perkenalan masih menunggu.
-2. Peran **Asesor dihapus dari kemampuan operasional produk**. Tidak ada akun, menu, hak akses, atau data penugasan untuk peran itu. Penggantinya adalah **penilaian mandiri (self-assessment)**: dapat diisi publik tanpa login dan pengelola (D-03); Super Admin/Peneliti tidak dapat mengirim saat login.
+2. Peran **Asesor dihapus dari kemampuan operasional produk**. Tidak ada akun, menu, hak akses, atau data penugasan untuk peran itu. Penggantinya adalah **penilaian mandiri (self-assessment)**: dapat diisi publik tanpa login dan Pesantren (D-03); Super Admin/Validator tidak dapat mengirim saat login.
 3. Dashboard pesantren bersifat **publik tanpa login**: menampilkan **agregat semua pesantren terdaftar** (bukan satu pesantren hard-code) plus **pemilih pesantren** untuk memfilter ke satu lembaga.
-4. `/login` hanya untuk **tiga peran**: Super Admin, Peneliti, Pengelola Pesantren. Demo asesor tidak ada.
-5. **Semua laporan — baik dari pelapor tanpa login maupun yang login — wajib validasi pengelola** sebelum tampil di dashboard. Tidak ada jalur pintas tampil langsung.
-6. **Nama pelapor selalu dicatat** pada setiap laporan. Jika pelapor login sebagai pengelola, field nama terisi otomatis dari akun dan tetap dapat diubah manual per laporan. Opsi "tampil anonim" tidak dibangun (D-02). Hak melapor: hanya publik tanpa login dan pengelola (D-03); pengelola boleh melapor ke pesantren lain sebagai pelapor umum. Nama pelapor tidak tampil publik (D-02); nama validator/PIC boleh tampil (D-02).
+4. `/login` hanya untuk **tiga peran**: Super Admin, Validator, Pesantren. Demo asesor tidak ada.
+5. **Semua laporan — baik dari pelapor tanpa login maupun yang login — wajib validasi akun Pesantren** sebelum tampil di dashboard. Tidak ada jalur pintas tampil langsung.
+6. **Nama pelapor selalu dicatat** pada setiap laporan. Jika pelapor login sebagai Pesantren, field nama terisi otomatis dari akun dan tetap dapat diubah manual per laporan. Opsi "tampil anonim" tidak dibangun (D-02). Hak melapor: hanya publik tanpa login dan Pesantren (D-03); Pesantren boleh melapor ke pesantren lain sebagai pelapor umum. Nama pelapor tidak tampil publik (D-02); nama validator/PIC boleh tampil (D-02).
 
 ## Istilah baku (wajib dipakai persis di UI dan dokumen)
 
-- **Super Admin** — admin sistem; mengelola pesantren dan akun pengelola. (Bukan "Admin" saja agar tidak tertukar dengan pengelola pondok.)
-- **Pengelola Pesantren (mitra)** — admin lokal pondok; validasi laporan, menentukan severity/priority, mengelola status penanganan, lokasi, dan tindak lanjut. Label singkat di UI: `Pengelola Pesantren`.
-- **Peneliti** — pengelola instrumen dan konfigurasi penilaian.
+- **Super Admin** — admin sistem; mengelola pesantren dan akun Pesantren. (Bukan "Admin" saja agar tidak tertukar dengan akun Pesantren.)
+- **Pesantren (mitra)** — admin lokal pondok; validasi laporan, menentukan severity/priority, mengelola status penanganan, lokasi, dan tindak lanjut. Label singkat di UI: `Pesantren` (D-17; bedakan dari `Pesantren terdaftar` untuk lembaga).
+- **Validator** — pengelola instrumen dan konfigurasi penilaian (D-17; dulu `Peneliti`).
 - **Publik / Pelapor** — pengguna tanpa login; melihat dashboard dan melapor dengan mengisi nama. Bukan sebuah "role login".
 - **Tanpa login** menjelaskan keadaan sesi. **Tampil anonim** tidak lagi relevan: opsi penyamaran tidak dibangun (D-02, 8 September 2026) — nama pelapor selalu tampil apa adanya secara internal, dan publik tidak menampilkan nama pelapor sama sekali.
-- **Pesantren terdaftar** — pesantren berstatus `Aktif` DAN memiliki minimal satu akun pengelola aktif. Hanya pesantren terdaftar yang muncul di pemilih publik dan dapat dilaporkan. Definisi ini menggantikan anggapan "semua data di tabel institutions".
+- **Pesantren terdaftar** — pesantren berstatus `Aktif` DAN memiliki minimal satu akun Pesantren aktif. Hanya pesantren terdaftar yang muncul di pemilih publik dan dapat dilaporkan. Definisi ini menggantikan anggapan "semua data di tabel institutions".
 - **Laporan** — satu kiriman dari pelapor, terdiri dari dua kanal: `lapor-cepat` (form ringan) dan `penilaian-mandiri` (instrumen penuh). Keduanya memakai lifecycle status yang sama.
 - **Tervalidasi / tampil di dashboard** — artinya `validationStatus: Diterima`. Laporan `Menunggu validasi` atau `Ditolak` tidak pernah tampil di dashboard, hasil, peta, rekomendasi, maupun laporan pimpinan.
 
@@ -114,7 +114,7 @@ Perubahan arah produk tidak mengesahkan rumus, skala, atau kategori ilmiah.
 
 - Semua angka, skor, kategori, severity, priority, dan rekomendasi adalah **data dummy** berlabel jelas (`Data ilustrasi` / `data dummy` / `Simulasi prototipe`). Dilarang menyajikannya sebagai ketentuan ilmiah final.
 - Instrumen Published dikunci; perubahan lewat versi baru (clone snapshot).
-- Laporan yang tampil di dashboard selalu tertelusur ke: versi instrumen (untuk penilaian mandiri), bukti, area/lokasi, pelapor, validator, dan audit event.
+- Laporan yang tampil di dashboard selalu tertelusur ke: snapshot beku bank instrumen (untuk penilaian mandiri: soal + opsi + bobot + skor %, D-24), bukti, area/lokasi, pelapor, validator, dan audit event.
 - Ketertelusuran internal berbeda dari keterbukaan publik. Batas bidang publik sudah diputuskan (D-02, 8 September 2026): ringkasan saja + nama validator/PIC; matriks bidang di `DATA_REQUIREMENTS.md` §6.
 - `Diterima` berarti diterima pengelola melalui moderasi, bukan sertifikasi keselamatan atau validasi ilmiah instrumen. `Completed` adalah status penanganan, bukan skor K3L baru.
 - Guard frontend hanya simulasi UX; otorisasi nyata wajib di backend nanti.

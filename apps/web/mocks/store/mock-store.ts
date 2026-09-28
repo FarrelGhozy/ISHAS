@@ -6,11 +6,17 @@
 import { useSyncExternalStore } from "react";
 import type {
   Area,
+  FrozenIndicator,
+  IndicatorAnswer,
   Institution,
+  InstrumentAnswerType,
   InstrumentDoc,
   InstrumentDocVisibility,
+  InstrumentIndicator,
+  InstrumentOption,
   Report,
   RiskFinding,
+  RiskLevel,
   SelfAssessmentDraft,
   Severity,
   Priority,
@@ -26,6 +32,16 @@ import { selectRegisteredInstitutions } from "./selectors";
 import { K3_ASPECT_MAP, K3_CATEGORY_MAP } from "../kategori-k3";
 import type { IshasState } from "../types";
 import { snapshotLocation, validateMapLocation } from "../processors/campus-map";
+import {
+  BANK_ID,
+  defaultOptionsForType,
+  hitungChecksumInstrument,
+  isJawabanTemuan,
+  skorLaporanBeku,
+} from "../instrument-bank";
+import { samActiveQuestions, samCompute } from "../sam-isafe";
+import { isEvidenceAssetId } from "../adapters/report-evidence";
+import type { SamFollowUpStatus } from "../types";
 
 type Listener = () => void;
 
@@ -108,6 +124,23 @@ export type ActionResult = { ok: true; id?: string } | { ok: false; error: strin
 
 export type ReportActor = { id?: string; name: string; email?: string; role?: string };
 
+// D-24: setiap perubahan bank memperbarui waktu + checksum (draft basi = ulang).
+function touchBank(bank: IshasState["instrument"]): void {
+  bank.updatedAt = nowIso();
+  bank.checksum = hitungChecksumInstrument(bank.dimensions);
+}
+
+function findBankIndicator(
+  state: IshasState,
+  id: string,
+): { dimensionId: string; indicator: InstrumentIndicator } | null {
+  for (const dim of state.instrument.dimensions) {
+    const indicator = dim.indicators.find((i) => i.id === id);
+    if (indicator) return { dimensionId: dim.id, indicator };
+  }
+  return null;
+}
+
 // Idempotency kirim-ganda (V2-03): requestId yang sama mengembalikan id yang sama
 // tanpa membuat record kedua. Disimpan di memori (sesi halaman); draft dibersihkan
 // setelah sukses sehingga kiriman baru selalu memakai requestId baru.
@@ -128,7 +161,7 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       account.institutionCodes.length !== 1 ||
       account.institutionCodes[0] !== input.institutionCode ||
       !institution
@@ -211,7 +244,8 @@ export const storeActions = {
       manualLocation?: string;
       categoryId?: string;
       aspectId?: string;
-      indicatorId?: string;
+      reporterSeverity?: string;
+      reporterPriority?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;
@@ -222,11 +256,11 @@ export const storeActions = {
     // Recheck the account at the data boundary, including direct adapter calls.
     if (actor.id) {
       const account = currentState.users.find((u) => u.id === actor.id);
-      if (!account || account.status !== "Aktif" || account.roleId !== "pengelola") {
+      if (!account || account.status !== "Aktif" || account.roleId !== "pesantren") {
         return {
           ok: false,
           error:
-            "Hanya publik tanpa login dan Pengelola Pesantren aktif yang dapat mengirim laporan.",
+            "Hanya publik tanpa login dan Pesantren aktif yang dapat mengirim laporan.",
         };
       }
       actor = { id: account.id, name: account.name, email: account.email, role: account.role };
@@ -276,36 +310,39 @@ export const storeActions = {
     if (input.areaId && !ownedAreas.some((a) => a.id === input.areaId)) {
       return { ok: false, error: "Lokasi/area tidak sah untuk pesantren ini." };
     }
-    // D-15 cascading opsional: konsistensi kategori → aspek → indikator dicek di
-    // versi Published aktif; tanpa pilihan tetap sah.
-    const activeVersion = currentState.instrumentVersions.find(
-      (v) => v.id === currentState.activeInstrumentVersionId && v.status === "Published",
-    );
+    // D-19/D-24: lapor-cepat baru tanpa indikator; cascading kategori → aspek
+    // dicek di bank live; tanpa pilihan tetap sah.
+    const bankDims = currentState.instrument?.dimensions ?? [];
+    const legacyDims =
+      currentState.instrumentVersions.find(
+        (v) => v.id === currentState.activeInstrumentVersionId && v.status === "Published",
+      )?.dimensions ?? [];
+    const refDims = bankDims.length ? bankDims : legacyDims;
     const categoryId = input.categoryId?.trim() || undefined;
     const aspectId = input.aspectId?.trim() || undefined;
-    const indicatorId = input.indicatorId?.trim() || undefined;
     if (aspectId && !categoryId) return { ok: false, error: "Pilih kategori terlebih dahulu." };
-    if (indicatorId && !aspectId) return { ok: false, error: "Pilih aspek terlebih dahulu." };
     if (
       categoryId &&
-      activeVersion &&
-      !activeVersion.dimensions.some((d) => (d.categoryId ?? d.id) === categoryId)
+      refDims.length &&
+      !refDims.some((d) => (d.categoryId ?? d.id) === categoryId)
     ) {
       return { ok: false, error: "Kategori tidak dikenal." };
     }
-    if (aspectId && activeVersion) {
-      const dim = activeVersion.dimensions.find((d) => (d.categoryId ?? d.id) === categoryId);
+    if (aspectId && refDims.length) {
+      const dim = refDims.find((d) => (d.categoryId ?? d.id) === categoryId);
       if (!dim || !(dim.aspects ?? []).some((a) => a.id === aspectId)) {
-        return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
+        return { ok: false, error: "Kategori/aspek tidak konsisten." };
       }
-      if (
-        indicatorId &&
-        !dim.indicators.some((i) => i.id === indicatorId && i.aspectId === aspectId)
-      ) {
-        return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
-      }
-    } else if (indicatorId && activeVersion) {
-      return { ok: false, error: "Kategori/aspek/indikator tidak konsisten." };
+    }
+    // D-19: usulan mandiri opsional; nilai tak dikenal ditolak agar konsisten.
+    const levels = ["Belum ditentukan", "Tinggi", "Sedang", "Rendah"];
+    const reporterSeverity = input.reporterSeverity?.trim() || "Belum ditentukan";
+    const reporterPriority = input.reporterPriority?.trim() || "Belum ditentukan";
+    if (!levels.includes(reporterSeverity)) {
+      return { ok: false, error: "Usulan tingkat keparahan tidak dikenal." };
+    }
+    if (!levels.includes(reporterPriority)) {
+      return { ok: false, error: "Usulan prioritas perbaikan tidak dikenal." };
     }
     const mapError = validateMapLocation(
       currentState,
@@ -343,7 +380,8 @@ export const storeActions = {
           reporterAccountEmail: actor.email ?? undefined,
           categoryId: categoryId as Report["categoryId"],
           aspectId,
-          indicatorId,
+          reporterSeverity: reporterSeverity as Report["reporterSeverity"],
+          reporterPriority: reporterPriority as Report["reporterPriority"],
           title,
           description,
           areaId: input.areaId,
@@ -596,11 +634,22 @@ export const storeActions = {
     });
   },
 
+  // D-23.c: jalur legacy. Tetap berfungsi agar test lama hijau; jalur utama
+  // verifikasi adalah updateRecommendation(verify:true).
   verifyFinding(
     actor: { id?: string; name: string; role?: string },
     findingId: string,
     note: string,
   ): ActionResult {
+    if (
+      typeof console !== "undefined" &&
+      typeof process !== "undefined" &&
+      process.env?.NODE_ENV !== "production"
+    ) {
+      console.warn(
+        "[ISHAS] verifyFinding usang — pakai updateRecommendation(verify:true) (D-23.c).",
+      );
+    }
     if (!note.trim()) return { ok: false, error: "Catatan verifikasi wajib diisi." };
     const finding = currentState.findings.find((item) => item.id === findingId);
     if (!finding) return { ok: false, error: "Temuan tidak ditemukan." };
@@ -629,6 +678,39 @@ export const storeActions = {
     });
   },
 
+  // D-23.b: ubah tingkat risiko per temuan (termasuk Ekstrem) secara eksplisit.
+  // Severity laporan tetap Tinggi/Sedang/Rendah; tanpa rumus turunan otomatis.
+  setFindingLevel(
+    actor: { id?: string; name: string; role?: string },
+    findingId: string,
+    level: RiskLevel,
+  ): ActionResult {
+    const allowed: RiskLevel[] = ["Rendah", "Sedang", "Tinggi", "Ekstrem"];
+    if (!allowed.includes(level)) return { ok: false, error: "Tingkat risiko tidak dikenal." };
+    const finding = currentState.findings.find((item) => item.id === findingId);
+    if (!finding) return { ok: false, error: "Temuan tidak ditemukan." };
+    return setStateReport(actor, finding.reportId, (draft, report) => {
+      if (report.validationStatus !== "Diterima" || report.archivedAt) {
+        return {
+          ok: false,
+          error: "Tingkat risiko hanya untuk temuan laporan Diterima yang belum diarsipkan.",
+        };
+      }
+      const target = draft.findings.find((item) => item.id === findingId);
+      if (!target) return { ok: false, error: "Temuan tidak ditemukan." };
+      target.level = level;
+      target.severityText = level;
+      audit(draft, actor, {
+        objectType: "RiskFinding",
+        objectId: findingId,
+        institutionCode: report.institutionCode,
+        action: "Mengubah tingkat risiko temuan",
+        note: level,
+      });
+      return { ok: true };
+    });
+  },
+
   addBuilding(
     actor: { id?: string; name: string; role?: string },
     input: { code: string; name: string },
@@ -637,10 +719,10 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       account.institutionCodes.length !== 1
     )
-      return { ok: false, error: "Hanya Pengelola Pesantren aktif yang dapat mengelola lokasi." };
+      return { ok: false, error: "Hanya Pesantren aktif yang dapat mengelola lokasi." };
     const code = input.code.trim().toUpperCase();
     const name = input.name.trim();
     if (code.length < 2 || name.length < 2)
@@ -691,7 +773,7 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !building ||
       !account.institutionCodes.includes(building.institutionCode)
     )
@@ -735,7 +817,7 @@ export const storeActions = {
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !building ||
       !account.institutionCodes.includes(building.institutionCode)
     )
@@ -767,17 +849,28 @@ export const storeActions = {
     return { ok: true, id };
   },
 
+  // D-23.c: denah per lantai legacy (historis). Jalur utama adalah
+  // publishCampusPlan gambaran besar. Tetap berfungsi + warn.
   savePlanVersion(
     actor: { id?: string; name: string; role?: string },
     buildingId: string,
     floorId: string,
     fileName: string,
   ): ActionResult {
+    if (
+      typeof console !== "undefined" &&
+      typeof process !== "undefined" &&
+      process.env?.NODE_ENV !== "production"
+    ) {
+      console.warn(
+        "[ISHAS] savePlanVersion usang — pakai publishCampusPlan gambaran besar (D-23.c).",
+      );
+    }
     const account = currentState.users.find((item) => item.id === actor.id);
     const building = currentState.buildings.find((item) => item.id === buildingId);
     if (
       !account ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !building ||
       !account.institutionCodes.includes(building.institutionCode)
     )
@@ -822,6 +915,7 @@ export const storeActions = {
       note: string;
       progress?: number;
       evidenceName?: string;
+      evidenceAssetId?: string;
       verify?: boolean;
     },
   ): ActionResult {
@@ -844,6 +938,9 @@ export const storeActions = {
         if (target.status !== "Menunggu verifikasi")
           return { ok: false, error: "Rekomendasi belum diajukan untuk verifikasi." };
         target.status = "Terverifikasi";
+        target.verifiedBy = actor.id;
+        target.verifiedAt = nowIso();
+        target.updatedAt = target.verifiedAt;
         draft.findings
           .filter((item) => item.recommendationId === target.id)
           .forEach((item) => {
@@ -863,18 +960,36 @@ export const storeActions = {
         target.owner = input.owner.trim();
         target.dueDate = input.dueDate;
         target.status = "Berjalan";
+        target.updatedAt = nowIso();
         report.handlingStatus = "Proses";
       } else {
+        // D-21: hanya Berjalan yang dapat diperbarui progresnya.
+        // Menunggu verifikasi (kunci verifikasi), Terverifikasi/Dibatalkan (terminal) ditolak.
+        if (target.status !== "Berjalan")
+          return {
+            ok: false,
+            error: "Hanya rekomendasi Berjalan yang dapat diperbarui progresnya.",
+          };
         const progress = input.progress;
-        if (progress === undefined || progress < 0 || progress > 100)
+        if (progress === undefined || !Number.isFinite(progress) || progress < 0 || progress > 100)
           return { ok: false, error: "Progres harus antara 0 dan 100." };
-        target.progress = progress;
-        if (progress === 100) {
+        // D-20: normalisasi ke titik slider terdekat (0/25/50/75/100).
+        const snapped = Math.min(100, Math.max(0, Math.round(progress / 25) * 25));
+        target.progress = snapped;
+        if (snapped === 100) {
           if (!input.evidenceName?.trim())
             return { ok: false, error: "Bukti penyelesaian wajib diisi saat mengajukan selesai." };
+          if (
+            input.evidenceAssetId &&
+            !/^evidence-asset-[0-9a-f-]{36}$/.test(input.evidenceAssetId)
+          )
+            return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
           target.completionEvidence = input.evidenceName.trim();
+          // D-21: blob upload bila ada; nama saja = "Bukti lama" (seed/legacy).
+          target.completionEvidenceAssetId = input.evidenceAssetId;
           target.status = "Menunggu verifikasi";
         }
+        target.updatedAt = nowIso();
       }
       target.lastNote = note;
       if (
@@ -894,9 +1009,61 @@ export const storeActions = {
     });
   },
 
+  // D-21: batalkan perbaikan per rekomendasi (bukan hapus baris/arsip laporan).
+  // Terminal; baris tetap tampil internal + publik beserta alasan.
+  cancelRecommendation(
+    actor: { id?: string; name: string; role?: string },
+    recommendationId: string,
+    reason: string,
+  ): ActionResult {
+    const recommendation = currentState.recommendations.find(
+      (item) => item.id === recommendationId,
+    );
+    if (!recommendation) return { ok: false, error: "Rekomendasi tidak ditemukan." };
+    const trimmed = reason.trim();
+    if (trimmed.length < 10)
+      return { ok: false, error: "Alasan pembatalan minimal 10 karakter." };
+    return setStateReport(actor, recommendation.reportId, (draft, report) => {
+      const target = draft.recommendations.find((item) => item.id === recommendationId)!;
+      if (report.validationStatus !== "Diterima" || report.archivedAt) {
+        return {
+          ok: false,
+          error: "Tindak lanjut hanya untuk laporan Diterima yang belum diarsipkan.",
+        };
+      }
+      if (
+        target.status !== "Belum ditindaklanjuti" &&
+        target.status !== "Berjalan" &&
+        target.status !== "Menunggu verifikasi"
+      )
+        return { ok: false, error: "Hanya perbaikan yang belum selesai yang dapat dibatalkan." };
+      target.status = "Dibatalkan";
+      target.canceledReason = trimmed;
+      target.canceledBy = actor.id;
+      target.canceledAt = nowIso();
+      target.updatedAt = target.canceledAt;
+      draft.findings
+        .filter((item) => item.recommendationId === target.id)
+        .forEach((item) => {
+          item.status = "Dibatalkan";
+        });
+      // Laporan induk tetap Proses/Pending; Dibatalkan menghalangi Completed
+      // otomatis karena syarat every(Terverifikasi) tak terpenuhi.
+      audit(draft, actor, {
+        objectType: "Recommendation",
+        objectId: target.id,
+        institutionCode: report.institutionCode,
+        action: "Membatalkan tindak lanjut",
+        note: trimmed,
+      });
+      return { ok: true };
+    });
+  },
+
   saveSelfAssessmentDraft(draftInput: SelfAssessmentDraft): ActionResult {
-    // Boundary validation (D-10/D-11): tolak scope tak terdaftar / versi non-Published.
-    // Nama dibiarkan fleksibel saat autosave; validasi panjang final ada di submit.
+    // Boundary validation (D-24/D-11): tolak scope tak terdaftar.
+    // Checksum dicatat apa adanya (UI menilai basi/tidaknya); nama fleksibel
+    // saat autosave, validasi panjang final ada di submit.
     if (
       draftInput.institutionCode &&
       !selectRegisteredInstitutions(currentState).some(
@@ -905,15 +1072,15 @@ export const storeActions = {
     ) {
       return { ok: false, error: "Pesantren tidak tersedia untuk pelaporan." };
     }
-    const version = currentState.instrumentVersions.find(
-      (item) => item.id === draftInput.instrumentVersionId,
-    );
-    if (!version || version.status !== "Published") {
-      return { ok: false, error: "Instrumen Published tidak tersedia." };
+    if (!currentState.instrument || !currentState.instrument.dimensions.length) {
+      return { ok: false, error: "Belum ada instrumen." };
     }
     setState((draft) => {
       draft.selfAssessmentDrafts[draftInput.id] = {
         ...draftInput,
+        instrumentVersionId: draftInput.instrumentVersionId || BANK_ID,
+        instrumentChecksum:
+          draftInput.instrumentChecksum ?? currentState.instrument.checksum,
         updatedAt: nowIso(),
       };
     });
@@ -937,15 +1104,15 @@ export const storeActions = {
     draftId: string,
   ): ActionResult {
     // Penegakan D-03 di boundary data (sama seperti lapor-cepat): hanya publik
-    // tanpa login + pengelola aktif. UI saja tidak cukup (panggilan adapter langsung).
+    // tanpa login + akun Pesantren aktif. UI saja tidak cukup (panggilan adapter langsung).
     let sender: ReportActor = actor;
     if (actor.id) {
       const account = currentState.users.find((u) => u.id === actor.id);
-      if (!account || account.status !== "Aktif" || account.roleId !== "pengelola") {
+      if (!account || account.status !== "Aktif" || account.roleId !== "pesantren") {
         return {
           ok: false,
           error:
-            "Hanya publik tanpa login dan Pengelola Pesantren aktif yang dapat mengirim penilaian.",
+            "Hanya publik tanpa login dan Pesantren aktif yang dapat mengirim penilaian.",
         };
       }
       sender = { id: account.id, name: account.name, email: account.email, role: account.role };
@@ -959,17 +1126,17 @@ export const storeActions = {
         result = { ok: false, error: "Draft tidak ditemukan." };
         return;
       }
-      const instrument = draft.instrumentVersions.find((item) => item.id === d.instrumentVersionId);
-      // D-10: draft terikat versi lama yang sudah diarsip tidak boleh dikirim.
-      if (!instrument) {
-        result = { ok: false, error: "Instrumen Published tidak tersedia." };
+      const instrument = draft.instrument;
+      if (!instrument || !instrument.dimensions.length) {
+        result = { ok: false, error: "Belum ada instrumen." };
         return;
       }
-      if (instrument.status !== "Published") {
+      // D-24: soal berubah di tengah jalan = draft basi, wajib ulang dari awal.
+      if (d.instrumentChecksum && d.instrumentChecksum !== instrument.checksum) {
         result = {
           ok: false,
           error:
-            "Versi instrumen draft sudah diarsipkan. Mulai penilaian baru dengan versi Published terbaru.",
+            "Instrumen berubah saat Anda mengisi. Buang draft lama dan mulai penilaian baru.",
         };
         return;
       }
@@ -985,13 +1152,19 @@ export const storeActions = {
         result = { ok: false, error: "Nama maksimal 100 karakter." };
         return;
       }
+      if ((d.contact?.trim().length ?? 0) > 100) {
+        result = { ok: false, error: "Kontak maksimal 100 karakter." };
+        return;
+      }
       const indicators = instrument.dimensions.flatMap((dimension) => dimension.indicators);
       for (const indicator of indicators) {
         const answer = d.answers[indicator.id];
         const manualLocation = answer?.manualLocation?.trim() ?? "";
         const hasLocation = Boolean(answer?.areaId) || manualLocation.length >= 3;
+        const nilaiSah = indicator.options.map((o) => o.value);
         if (
           !answer?.value ||
+          (indicator.required !== false && !nilaiSah.includes(answer.value)) ||
           (indicator.evidenceRequired && !answer.evidenceName?.trim()) ||
           (indicator.locationRequired && !hasLocation) ||
           (answer.value === "N/A" && (answer.note?.trim().length ?? 0) < 10)
@@ -1018,6 +1191,41 @@ export const storeActions = {
           return;
         }
       }
+      // D-24: bekukan soal + opsi + bobot + hitung skor % saat kirim.
+      const frozen: FrozenIndicator[] = instrument.dimensions.flatMap((dimension) =>
+        dimension.indicators.map((indicator) => ({
+          id: indicator.id,
+          code: indicator.code,
+          title: indicator.title,
+          prompt: indicator.prompt,
+          dimensionId: dimension.id,
+          dimensionName: dimension.name,
+          categoryId: indicator.categoryId,
+          aspectId: indicator.aspectId,
+          answerType: indicator.answerType,
+          weight: indicator.weight ?? 1,
+          options: structuredClone(indicator.options),
+        })),
+      );
+      const builtAnswers: Record<string, IndicatorAnswer> = {};
+      for (const [k, v] of Object.entries(d.answers)) {
+        builtAnswers[k] = {
+          value: v.value ?? "",
+          note: v.note ?? "",
+          evidenceName: v.evidenceName ?? "",
+          areaId: v.areaId ?? "",
+          manualLocation: v.manualLocation?.trim() || undefined,
+          planPoint: v.planPoint ?? null,
+          locationSnapshot: snapshotLocation(
+            draft,
+            d.institutionCode,
+            v.areaId,
+            v.manualLocation,
+            v.locationSnapshot,
+          ),
+        };
+      }
+      const { scorePercent, byDimension } = skorLaporanBeku(frozen, builtAnswers);
       const n = draft.counters.report;
       draft.counters.report = n + 1;
       const id = `RPT-${String(n).padStart(4, "0")}`;
@@ -1030,9 +1238,13 @@ export const storeActions = {
         reporterName,
         reporterUserId: sender.id,
         reporterAccountEmail: sender.email ?? undefined,
+        contact: d.contact?.trim() || undefined,
         title: "Penilaian mandiri K3L",
         description: "Ringkasan jawaban penilaian mandiri terkirim.",
-        instrumentVersionId: d.instrumentVersionId,
+        instrumentVersionId: BANK_ID,
+        instrumentChecksum: instrument.checksum,
+        scorePercent,
+        pdfGeneratedAt: stampedAt,
         validationStatus: "Menunggu validasi",
         severity: "Belum ditentukan",
         priority: "Belum ditentukan",
@@ -1043,28 +1255,13 @@ export const storeActions = {
       });
       draft.selfAssessmentSnapshots.push({
         reportId: id,
-        instrumentVersionId: d.instrumentVersionId,
+        instrumentVersionId: BANK_ID,
+        instrumentChecksum: instrument.checksum,
         submittedAt: nowIso(),
-        answers: Object.fromEntries(
-          Object.entries(d.answers).map(([k, v]) => [
-            k,
-            {
-              value: v.value ?? "",
-              note: v.note ?? "",
-              evidenceName: v.evidenceName ?? "",
-              areaId: v.areaId ?? "",
-              manualLocation: v.manualLocation?.trim() || undefined,
-              planPoint: v.planPoint ?? null,
-              locationSnapshot: snapshotLocation(
-                draft,
-                d.institutionCode,
-                v.areaId,
-                v.manualLocation,
-                v.locationSnapshot,
-              ),
-            },
-          ]),
-        ),
+        answers: builtAnswers,
+        frozenIndicators: frozen,
+        scorePercent,
+        byDimension,
       });
       delete draft.selfAssessmentDrafts[draftId];
       audit(draft, sender, {
@@ -1084,21 +1281,21 @@ export const storeActions = {
     if (name.length < 2) return { ok: false, error: "Nama pengguna minimal 2 karakter." };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return { ok: false, error: "Format email tidak valid." };
-    // D-09 (9 Sep 2026): Super Admin dapat membuat Super Admin, Peneliti, Pengelola.
-    // Pengelola wajib tepat 1 pesantren Aktif; admin/peneliti tanpa scope lembaga.
+    // D-09 (9 Sep 2026): Super Admin dapat membuat Super Admin, Validator, Pesantren.
+    // Pesantren wajib tepat 1 pesantren Aktif; admin/validator tanpa scope lembaga.
     if (
-      user.roleId === "pengelola" &&
+      user.roleId === "pesantren" &&
       (user.institutionCodes.length !== 1 ||
         !currentState.institutions.some(
           (item) => item.code === user.institutionCodes[0] && item.status === "Aktif",
         ))
     )
-      return { ok: false, error: "Pengelola wajib terhubung ke satu pesantren aktif." };
+      return { ok: false, error: "Pesantren wajib terhubung ke satu pesantren aktif." };
     if (
-      (user.roleId === "admin" || user.roleId === "peneliti") &&
+      (user.roleId === "admin" || user.roleId === "validator") &&
       user.institutionCodes.length !== 0
     )
-      return { ok: false, error: "Super Admin dan Peneliti tidak terikat pesantren." };
+      return { ok: false, error: "Super Admin dan Validator tidak terikat pesantren." };
     if (getState().users.some((u) => u.email.toLowerCase() === email)) {
       return { ok: false, error: "Email sudah digunakan pada data demo." };
     }
@@ -1120,12 +1317,20 @@ export const storeActions = {
   addInstitution(institution: Institution): ActionResult {
     const name = institution.name.trim();
     const location = institution.location.trim();
+    const address = (institution.address ?? "").trim();
+    const manager = (institution.manager ?? "").trim();
     if (name.length < 3) return { ok: false, error: "Nama pesantren minimal 3 karakter." };
-    if (location.length < 3) return { ok: false, error: "Lokasi minimal 3 karakter." };
+    if (name.length > 120) return { ok: false, error: "Nama pesantren maksimal 120 karakter." };
+    if (location.length < 3) return { ok: false, error: "Kota/kabupaten minimal 3 karakter." };
+    // FLOWS §1: alamat lengkap + penanggung jawab wajib saat tambah pesantren.
+    if (address.length < 10) return { ok: false, error: "Alamat lengkap minimal 10 karakter." };
+    if (manager.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
     if (currentState.institutions.some((item) => item.name.toLowerCase() === name.toLowerCase()))
       return { ok: false, error: "Nama pesantren sudah digunakan." };
+    if (currentState.institutions.some((item) => item.code === institution.code))
+      return { ok: false, error: "Kode pesantren sudah digunakan." };
     setState((draft) => {
-      draft.institutions.push({ ...institution, name, location });
+      draft.institutions.push({ ...institution, name, location, address, manager });
       draft.counters.institution += 1;
       audit(
         draft,
@@ -1162,19 +1367,114 @@ export const storeActions = {
     return { ok: true };
   },
 
+  updateUser(
+    userId: string,
+    patch: { name: string; email: string; institutionCode: string },
+  ): ActionResult {
+    const target = currentState.users.find((item) => item.id === userId);
+    if (!target) return { ok: false, error: "Pengguna tidak ditemukan." };
+    const name = patch.name.trim();
+    const email = patch.email.trim().toLowerCase();
+    if (name.length < 2) return { ok: false, error: "Nama pengguna minimal 2 karakter." };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return { ok: false, error: "Format email tidak valid." };
+    if (
+      getState().users.some((u) => u.id !== userId && u.email.toLowerCase() === email)
+    ) {
+      return { ok: false, error: "Email sudah digunakan pada data demo." };
+    }
+    // Peran tidak diubah di sini (ganti peran = buat akun baru) agar scope
+    // lembaga tidak tertukar diam-diam. Pesantren tetap wajib satu pesantren Aktif.
+    if (target.roleId === "pesantren") {
+      const institution = currentState.institutions.find((x) => x.code === patch.institutionCode);
+      if (!institution || institution.status !== "Aktif")
+        return { ok: false, error: "Pesantren wajib terhubung ke satu pesantren aktif." };
+    }
+    setState((draft) => {
+      const user = draft.users.find((item) => item.id === userId)!;
+      user.name = name;
+      user.email = email;
+      user.initials = name
+        .split(" ")
+        .filter(Boolean)
+        .map((x) => x[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+      if (user.roleId === "pesantren") {
+        const institution = draft.institutions.find((x) => x.code === patch.institutionCode)!;
+        user.institution = institution.name;
+        user.institutionCodes = [institution.code];
+      }
+      audit(
+        draft,
+        { name: "Super Admin" },
+        { objectType: "User", objectId: userId, action: "Mengubah data pengguna" },
+      );
+    });
+    return { ok: true };
+  },
+
+  deleteUser(userId: string): ActionResult {
+    const target = currentState.users.find((item) => item.id === userId);
+    if (!target) return { ok: false, error: "Pengguna tidak ditemukan." };
+    // Akun terakhir yang ditunjuk kartu login demo tidak boleh hilang agar
+    // tiap peran tetap bisa masuk; proteksi akun sendiri ada di UI.
+    if (
+      target.roleId === "admin" &&
+      currentState.users.filter((item) => item.roleId === "admin").length === 1
+    )
+      return { ok: false, error: "Super Admin terakhir tidak dapat dihapus." };
+    if (
+      ["USR-001", "USR-002", "USR-003"].includes(userId) &&
+      currentState.users.filter((item) => item.roleId === target.roleId).length === 1
+    )
+      return { ok: false, error: "Akun demo peran ini tidak dapat dihapus." };
+    setState((draft) => {
+      const index = draft.users.findIndex((item) => item.id === userId)!;
+      const [removed] = draft.users.splice(index, 1);
+      audit(
+        draft,
+        { name: "Super Admin" },
+        {
+          objectType: "User",
+          objectId: userId,
+          action: "Menghapus akun pengguna",
+          note: `${removed.name} · ${removed.email} · ${removed.role}`,
+        },
+      );
+    });
+    return { ok: true };
+  },
+
+  resetUserPassword(userId: string): ActionResult {
+    const target = currentState.users.find((item) => item.id === userId);
+    if (!target) return { ok: false, error: "Pengguna tidak ditemukan." };
+    // Prototipe tidak menyimpan kata sandi di browser (login demo memakai
+    // kartu akun); reset dicatat sebagai jejak administrasi + akun kembali
+    // memakai kredensial demo. Backend nyata wajib menyimpan hash, bukan teks.
+    setState((draft) => {
+      audit(
+        draft,
+        { name: "Super Admin" },
+        {
+          objectType: "User",
+          objectId: userId,
+          action: "Mereset kata sandi",
+          note: "Demo: kembali ke kredensial demo; sandi tidak disimpan di browser.",
+        },
+      );
+    });
+    return { ok: true };
+  },
+
   setInstitutionStatus(code: string, status: Institution["status"]): ActionResult {
     const target = currentState.institutions.find((item) => item.code === code);
     if (!target) return { ok: false, error: "Pesantren tidak ditemukan." };
-    if (
-      status === "Aktif" &&
-      !currentState.users.some(
-        (item) =>
-          item.roleId === "pengelola" &&
-          item.status === "Aktif" &&
-          item.institutionCodes.includes(code),
-      )
-    )
-      return { ok: false, error: "Tetapkan minimal satu pengelola aktif sebelum aktivasi." };
+    // FLOWS §1 + D-08/D-09: pesantren boleh Persiapan → Aktif tanpa akun dulu.
+    // Syarat "terdaftar" (muncul di pemilih publik) tetap Aktif + punya akun
+    // Pesantren aktif — diperiksa di selector, bukan di aktivasi ini.
+    // Akun Pesantren baru justru wajib memilih pesantren Aktif (lihat addUser).
     setState((draft) => {
       const institution = draft.institutions.find((item) => item.code === code)!;
       institution.status = status;
@@ -1215,7 +1515,7 @@ export const storeActions = {
       draft.instrumentVersions.push(copy);
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         {
           objectType: "InstrumentVersion",
           objectId: id,
@@ -1250,7 +1550,7 @@ export const storeActions = {
       });
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         {
           objectType: "InstrumentVersion",
           objectId: versionId,
@@ -1316,11 +1616,11 @@ export const storeActions = {
         categoryId: (input.categoryId ??
           dim.categoryId) as InstrumentVersion["dimensions"][number]["indicators"][number]["categoryId"],
         aspectId: input.aspectId,
-        findingTrigger: "ilustrasi: dikaji pengelola saat validasi",
+        findingTrigger: "ilustrasi: dikaji Pesantren saat validasi",
       });
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         {
           objectType: "InstrumentVersion",
           objectId: versionId,
@@ -1338,6 +1638,8 @@ export const storeActions = {
   },
 
   publishInstrument(id: string): ActionResult {
+    // Warisan versioning (D-24: tidak dipakai UI baru; dipertahankan agar
+    // test/migrasi lama tetap hijau — deprecasi lembut).
     const target = currentState.instrumentVersions.find((item) => item.id === id);
     if (!target) return { ok: false, error: "Versi instrumen tidak ditemukan." };
     if (target.status !== "Draft")
@@ -1357,8 +1659,289 @@ export const storeActions = {
       draft.activeInstrumentVersionId = id;
       audit(
         draft,
-        { name: "Peneliti" },
+        { name: "Validator" },
         { objectType: "InstrumentVersion", objectId: id, action: "Mempublikasikan instrumen" },
+      );
+    });
+    return { ok: true };
+  },
+
+  // ---- D-24: bank instrumen live (edit penuh, langsung aktif) ----
+
+  addBankDimension(name: string, categoryId?: string): ActionResult {
+    const clean = name.trim();
+    if (clean.length < 3) return { ok: false, error: "Nama dimensi minimal 3 karakter." };
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    let id = "";
+    setState((draft) => {
+      const bank = draft.instrument;
+      let n = bank.dimensions.length + 1;
+      id = `DIM-${String(n).padStart(2, "0")}`;
+      while (bank.dimensions.some((d) => d.id === id)) {
+        n += 1;
+        id = `DIM-${String(n).padStart(2, "0")}`;
+      }
+      bank.dimensions.push({
+        id,
+        name: clean,
+        categoryId: (categoryId || undefined) as InstrumentIndicator["categoryId"],
+        indicators: [],
+      });
+      touchBank(bank);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Menambah dimensi", note: clean },
+      );
+    });
+    return { ok: true, id };
+  },
+
+  updateBankDimension(id: string, patch: { name?: string; categoryId?: string }): ActionResult {
+    const target = currentState.instrument.dimensions.find((d) => d.id === id);
+    if (!target) return { ok: false, error: "Dimensi tidak ditemukan." };
+    const name = patch.name?.trim() ?? target.name;
+    if (name.length < 3) return { ok: false, error: "Nama dimensi minimal 3 karakter." };
+    const categoryId = patch.categoryId?.trim() || undefined;
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    setState((draft) => {
+      const dim = draft.instrument.dimensions.find((d) => d.id === id)!;
+      dim.name = name;
+      dim.categoryId = (categoryId || undefined) as InstrumentIndicator["categoryId"];
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Mengubah dimensi", note: name },
+      );
+    });
+    return { ok: true };
+  },
+
+  deleteBankDimension(id: string): ActionResult {
+    const target = currentState.instrument.dimensions.find((d) => d.id === id);
+    if (!target) return { ok: false, error: "Dimensi tidak ditemukan." };
+    const used = currentState.selfAssessmentSnapshots.some((s) =>
+      Object.keys(s.answers ?? {}).some((key) =>
+        target.indicators.some((i) => i.id === key),
+      ),
+    );
+    setState((draft) => {
+      draft.instrument.dimensions = draft.instrument.dimensions.filter((d) => d.id !== id);
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        {
+          objectType: "Instrument",
+          objectId: id,
+          action: "Menghapus dimensi",
+          note: used ? `${target.name} (punya riwayat snapshot beku)` : target.name,
+        },
+      );
+    });
+    return { ok: true };
+  },
+
+  addBankIndicator(
+    dimensionId: string,
+    input: {
+      code: string;
+      title: string;
+      prompt: string;
+      answerType: InstrumentAnswerType;
+      required: boolean;
+      evidenceRequired: boolean;
+      locationRequired: boolean;
+      categoryId?: string;
+      aspectId?: string;
+    },
+  ): ActionResult {
+    const code = input.code.trim();
+    const title = input.title.trim();
+    const prompt = input.prompt.trim();
+    if (!code) return { ok: false, error: "Kode indikator wajib diisi." };
+    if (title.length < 5) return { ok: false, error: "Judul indikator minimal 5 karakter." };
+    if (prompt.length < 10) return { ok: false, error: "Prompt minimal 10 karakter." };
+    if (!["ya-tidak", "kualitas-1-5", "frekuensi", "keparahan"].includes(input.answerType))
+      return { ok: false, error: "Tipe jawaban tidak dikenal." };
+    const dim = currentState.instrument.dimensions.find((d) => d.id === dimensionId);
+    if (!dim) return { ok: false, error: "Dimensi tidak ditemukan." };
+    if (
+      currentState.instrument.dimensions
+        .flatMap((d) => d.indicators)
+        .some((i) => i.code.toLowerCase() === code.toLowerCase())
+    )
+      return { ok: false, error: "Kode indikator sudah digunakan." };
+    const categoryId = input.categoryId?.trim() || undefined;
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    const aspectId = input.aspectId?.trim() || undefined;
+    if (
+      aspectId &&
+      (!K3_ASPECT_MAP[aspectId] ||
+        (categoryId ?? dim.categoryId) !== K3_ASPECT_MAP[aspectId].categoryId)
+    )
+      return { ok: false, error: "Aspek tidak sesuai kategori." };
+    let id = "";
+    setState((draft) => {
+      const bank = draft.instrument;
+      const target = bank.dimensions.find((d) => d.id === dimensionId)!;
+      let n = bank.dimensions.flatMap((d) => d.indicators).length + 1;
+      id = `IND-K3L-${String(n).padStart(3, "0")}`;
+      while (bank.dimensions.flatMap((d) => d.indicators).some((i) => i.id === id)) {
+        n += 1;
+        id = `IND-K3L-${String(n).padStart(3, "0")}`;
+      }
+      target.indicators.push({
+        id,
+        code,
+        title,
+        prompt,
+        categoryId: (categoryId ?? target.categoryId) as InstrumentIndicator["categoryId"],
+        aspectId,
+        answerType: input.answerType,
+        required: input.required,
+        evidenceRequired: input.evidenceRequired,
+        locationRequired: input.locationRequired,
+        weight: 1,
+        options: defaultOptionsForType(input.answerType),
+      });
+      touchBank(bank);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Menambah indikator", note: `${code} · ${title}` },
+      );
+    });
+    return { ok: true, id };
+  },
+
+  updateBankIndicator(
+    id: string,
+    patch: {
+      code?: string;
+      title?: string;
+      prompt?: string;
+      answerType?: InstrumentAnswerType;
+      required?: boolean;
+      evidenceRequired?: boolean;
+      locationRequired?: boolean;
+      categoryId?: string;
+      aspectId?: string;
+    },
+  ): ActionResult {
+    const found = findBankIndicator(currentState, id);
+    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    const code = patch.code?.trim() ?? found.indicator.code;
+    const title = patch.title?.trim() ?? found.indicator.title;
+    const prompt = patch.prompt?.trim() ?? found.indicator.prompt;
+    if (!code) return { ok: false, error: "Kode indikator wajib diisi." };
+    if (title.length < 5) return { ok: false, error: "Judul indikator minimal 5 karakter." };
+    if (prompt.length < 10) return { ok: false, error: "Prompt minimal 10 karakter." };
+    if (
+      patch.answerType &&
+      !["ya-tidak", "kualitas-1-5", "frekuensi", "keparahan"].includes(patch.answerType)
+    )
+      return { ok: false, error: "Tipe jawaban tidak dikenal." };
+    if (
+      currentState.instrument.dimensions
+        .flatMap((d) => d.indicators)
+        .some((i) => i.id !== id && i.code.toLowerCase() === code.toLowerCase())
+    )
+      return { ok: false, error: "Kode indikator sudah digunakan." };
+    const categoryId = patch.categoryId?.trim() || found.indicator.categoryId;
+    if (categoryId && !K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP])
+      return { ok: false, error: "Kategori tidak dikenal." };
+    const aspectId = patch.aspectId?.trim() || undefined;
+    if (aspectId && (!K3_ASPECT_MAP[aspectId] || K3_ASPECT_MAP[aspectId].categoryId !== categoryId))
+      return { ok: false, error: "Aspek tidak sesuai kategori." };
+    setState((draft) => {
+      const live = findBankIndicator(draft, id)!;
+      const nextType = patch.answerType ?? live.indicator.answerType;
+      const typeChanged = nextType !== live.indicator.answerType;
+      Object.assign(live.indicator, {
+        code,
+        title,
+        prompt,
+        answerType: nextType,
+        required: patch.required ?? live.indicator.required,
+        evidenceRequired: patch.evidenceRequired ?? live.indicator.evidenceRequired,
+        locationRequired: patch.locationRequired ?? live.indicator.locationRequired,
+        categoryId: (categoryId || undefined) as InstrumentIndicator["categoryId"],
+        aspectId,
+      });
+      // Ganti tipe = opsi kembali ke bawaan (bobot lama tidak lagi bermakna).
+      if (typeChanged) live.indicator.options = defaultOptionsForType(nextType);
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Mengubah indikator", note: `${code} · ${title}` },
+      );
+    });
+    return { ok: true };
+  },
+
+  deleteBankIndicator(id: string): ActionResult {
+    const found = findBankIndicator(currentState, id);
+    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    setState((draft) => {
+      for (const dim of draft.instrument.dimensions)
+        dim.indicators = dim.indicators.filter((i) => i.id !== id);
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        {
+          objectType: "Instrument",
+          objectId: id,
+          action: "Menghapus indikator",
+          note: `${found.indicator.code} (snapshot lama tetap beku)`,
+        },
+      );
+    });
+    return { ok: true };
+  },
+
+  // Tombol Atur Bobot: bobot tiap opsi 0–100 + flag temuan + pengali indikator.
+  setBankIndicatorOptions(
+    id: string,
+    options: InstrumentOption[],
+    weight?: number,
+  ): ActionResult {
+    const found = findBankIndicator(currentState, id);
+    if (!found) return { ok: false, error: "Indikator tidak ditemukan." };
+    if (options.length < 2) return { ok: false, error: "Minimal 2 opsi jawaban." };
+    const seen = new Set<string>();
+    for (const o of options) {
+      const value = o.value.trim();
+      const label = o.label.trim();
+      if (!value) return { ok: false, error: "Nilai opsi tidak boleh kosong." };
+      if (!label) return { ok: false, error: "Label opsi tidak boleh kosong." };
+      if (!Number.isFinite(o.weight) || o.weight < 0 || o.weight > 100)
+        return { ok: false, error: "Bobot opsi harus 0–100." };
+      if (seen.has(value.toLowerCase())) return { ok: false, error: "Nilai opsi tidak boleh ganda." };
+      seen.add(value.toLowerCase());
+    }
+    if (weight !== undefined && (!Number.isFinite(weight) || weight <= 0 || weight > 10))
+      return { ok: false, error: "Pengali indikator harus 0–10." };
+    setState((draft) => {
+      const live = findBankIndicator(draft, id)!;
+      live.indicator.options = options.map((o) => ({
+        value: o.value.trim(),
+        label: o.label.trim(),
+        weight: Math.round(o.weight),
+        isFinding: Boolean(o.isFinding),
+      }));
+      if (weight !== undefined) live.indicator.weight = weight;
+      touchBank(draft.instrument);
+      audit(
+        draft,
+        { name: "Validator" },
+        { objectType: "Instrument", objectId: id, action: "Mengatur bobot jawaban" },
       );
     });
     return { ok: true };
@@ -1379,10 +1962,10 @@ export const storeActions = {
     },
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return {
         ok: false,
-        error: "Hanya akun Peneliti aktif yang dapat mengelola berkas indikator.",
+        error: "Hanya akun Validator aktif yang dapat mengelola berkas indikator.",
       };
     }
     const indicatorId = input.indicatorId.trim();
@@ -1443,7 +2026,7 @@ export const storeActions = {
     return { ok: true, id };
   },
 
-  // D-16.g: Peneliti membuat entri dokumen indikator baru di luar katalog versi.
+  // D-16.g: Validator membuat entri dokumen indikator baru di luar katalog versi.
   // Metadata indikator di-denormalisasi; InstrumentVersion tidak diubah.
   createInstrumentDocEntry(
     actor: { id?: string; name: string; role?: string },
@@ -1459,10 +2042,10 @@ export const storeActions = {
     },
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return {
         ok: false,
-        error: "Hanya akun Peneliti aktif yang dapat menambah dokumen indikator.",
+        error: "Hanya akun Validator aktif yang dapat menambah dokumen indikator.",
       };
     }
     const code = input.code.trim();
@@ -1494,9 +2077,14 @@ export const storeActions = {
     if (typeof input.assetId !== "string" || !input.assetId) {
       return { ok: false, error: "Berkas belum tersimpan. Unggah ulang PDF." };
     }
-    const catalogCodes = currentState.instrumentVersions.flatMap((v) =>
-      v.dimensions.flatMap((d) => d.indicators.map((i) => i.code.toLowerCase())),
-    );
+    const catalogCodes = [
+      ...currentState.instrument.dimensions.flatMap((d) =>
+        d.indicators.map((i) => i.code.toLowerCase()),
+      ),
+      ...currentState.instrumentVersions.flatMap((v) =>
+        v.dimensions.flatMap((d) => d.indicators.map((i) => i.code.toLowerCase())),
+      ),
+    ];
     const manualCodes = currentState.instrumentDocs
       .filter((doc) => doc.manual)
       .map((doc) => (doc.indicatorCode ?? "").toLowerCase());
@@ -1545,10 +2133,10 @@ export const storeActions = {
     visibility: InstrumentDocVisibility,
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return {
         ok: false,
-        error: "Hanya akun Peneliti aktif yang dapat mengubah visibilitas berkas.",
+        error: "Hanya akun Validator aktif yang dapat mengubah visibilitas berkas.",
       };
     }
     if (visibility !== "Public" && visibility !== "Privat") {
@@ -1576,8 +2164,8 @@ export const storeActions = {
     indicatorId: string,
   ): ActionResult {
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
-    if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
-      return { ok: false, error: "Hanya akun Peneliti aktif yang dapat menghapus berkas." };
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus berkas." };
     }
     const target = currentState.instrumentDocs.find((item) => item.indicatorId === indicatorId);
     if (!target) return { ok: false, error: "Berkas indikator belum diunggah." };
@@ -1590,6 +2178,570 @@ export const storeActions = {
         objectId: target.id,
         action: "Menghapus berkas indikator",
         note: target.fileName,
+      });
+    });
+    return { ok: true };
+  },
+
+  importResearchDataset(
+    actor: { id?: string; name: string; role?: string },
+    rows: { institutionCode: string; reporterName: string; scorePercent: number | null; title: string }[],
+  ): ActionResult {
+    // D-25: hanya Validator aktif; tiap baris jadi Menunggu validasi
+    // (masuk antrean Pesantren, tidak langsung publik).
+    const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengimpor dataset." };
+    }
+    if (!rows.length) {
+      return { ok: false, error: "Tidak ada baris valid untuk diimpor." };
+    }
+    if (rows.length > 200) {
+      return { ok: false, error: "Maksimal 200 baris per impor." };
+    }
+    const terdaftar = new Set(selectRegisteredInstitutions(currentState).map((i) => i.code));
+    for (const [i, row] of rows.entries()) {
+      if (!terdaftar.has(row.institutionCode)) {
+        return { ok: false, error: `Baris ${i + 1}: bukan pesantren terdaftar.` };
+      }
+      if (row.reporterName.trim().length < 2 || row.reporterName.trim().length > 100) {
+        return { ok: false, error: `Baris ${i + 1}: nama 2–100 karakter.` };
+      }
+      if (
+        row.scorePercent !== null &&
+        (!Number.isFinite(row.scorePercent) || row.scorePercent < 0 || row.scorePercent > 100)
+      ) {
+        return { ok: false, error: `Baris ${i + 1}: scorePercent 0–100.` };
+      }
+    }
+    let pertama = "";
+    setState((draft) => {
+      const bank = draft.instrument;
+      const beku: FrozenIndicator[] = (bank?.dimensions ?? []).flatMap((dimension) =>
+        dimension.indicators.map((indicator) => ({
+          id: indicator.id,
+          code: indicator.code,
+          title: indicator.title,
+          prompt: indicator.prompt,
+          dimensionId: dimension.id,
+          dimensionName: dimension.name,
+          categoryId: indicator.categoryId,
+          aspectId: indicator.aspectId,
+          answerType: indicator.answerType,
+          weight: indicator.weight ?? 1,
+          options: structuredClone(indicator.options),
+        })),
+      );
+      for (const row of rows) {
+        const n = draft.counters.report;
+        draft.counters.report = n + 1;
+        const id = `RPT-${String(n).padStart(4, "0")}`;
+        if (!pertama) {
+          pertama = id;
+        }
+        const stampedAt = nowIso();
+        draft.reports.push({
+          id,
+          channel: "penilaian-mandiri",
+          institutionCode: row.institutionCode,
+          reporterName: row.reporterName.trim(),
+          title: row.title.trim() || "Penilaian mandiri K3L (impor)",
+          description: "Baris impor dataset penelitian; menunggu validasi Pesantren.",
+          instrumentVersionId: BANK_ID,
+          instrumentChecksum: bank?.checksum,
+          scorePercent: row.scorePercent,
+          pdfGeneratedAt: stampedAt,
+          validationStatus: "Menunggu validasi",
+          severity: "Belum ditentukan",
+          priority: "Belum ditentukan",
+          handlingStatus: "Menunggu validasi",
+          createdAt: stampedAt,
+          submittedAt: stampedAt,
+          updatedAt: stampedAt,
+        });
+        draft.selfAssessmentSnapshots.push({
+          reportId: id,
+          instrumentVersionId: BANK_ID,
+          instrumentChecksum: bank?.checksum,
+          submittedAt: stampedAt,
+          answers: {},
+          frozenIndicators: beku,
+          scorePercent: row.scorePercent,
+          byDimension: {},
+        });
+        audit(draft, account, {
+          objectType: "Report",
+          objectId: id,
+          institutionCode: row.institutionCode,
+          action: "Mengimpor dataset penelitian",
+        });
+        notifyOwners(draft, row.institutionCode, id);
+      }
+    });
+    return { ok: true, id: pertama };
+  },
+
+  // D-26: SAM-iSAFE khusus Validator (semua akun Validator aktif).
+  // Bank dinamis + pengamatan dengan skor maksimum dinamis.
+  createSamAssessment(
+    actor: { id?: string },
+    input: {
+      institutionCode: string;
+      areaId?: string;
+      manualLocation?: string;
+      observedAt: string;
+      observedTime?: string;
+      kind: string;
+      observerName: string;
+      note?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat pengamatan." };
+    }
+    const institution = currentState.institutions.find(
+      (item) => item.code === input.institutionCode,
+    );
+    if (!institution || institution.status !== "Aktif") {
+      return { ok: false, error: "Pilih pesantren terdaftar." };
+    }
+    const areaOk =
+      !input.areaId ||
+      currentState.areas.some(
+        (area) => area.id === input.areaId && area.institutionCode === input.institutionCode,
+      );
+    if (!areaOk) return { ok: false, error: "Area tidak sesuai pesantren." };
+    if (!input.manualLocation?.trim() && !input.areaId) {
+      return { ok: false, error: "Lokasi wajib diisi (area atau deskripsi manual)." };
+    }
+    if (!input.observedAt) return { ok: false, error: "Tanggal pengamatan wajib diisi." };
+    if (input.observerName.trim().length < 2) {
+      return { ok: false, error: "Nama pengamat minimal 2 karakter." };
+    }
+    let id = "";
+    setState((draft) => {
+      const n = draft.samAssessments.length + 1;
+      id = `SAM-${String(n).padStart(4, "0")}`;
+      const stampedAt = nowIso();
+      draft.samAssessments.unshift({
+        id,
+        institutionCode: input.institutionCode,
+        areaId: input.areaId || undefined,
+        manualLocation: input.manualLocation?.trim() || undefined,
+        observedAt: input.observedAt,
+        observedTime: input.observedTime || undefined,
+        kind: input.kind,
+        observerName: input.observerName.trim(),
+        note: input.note?.trim() || undefined,
+        observerAccountId: account.id,
+        status: "Berlangsung",
+        answers: {},
+        totalScore: 0,
+        maxScore: samActiveQuestions(draft.samQuestions).length * 2,
+        percent: 0,
+        riskLevel: "Risiko Tinggi",
+        createdAt: stampedAt,
+      });
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: id,
+        institutionCode: input.institutionCode,
+        action: "Membuat pengamatan SAM-iSAFE",
+      });
+    });
+    return { ok: true, id };
+  },
+
+  saveSamAnswer(
+    actor: { id?: string },
+    input: {
+      assessmentId: string;
+      questionId: string;
+      score: number;
+      note?: string;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengisi." };
+    }
+    if (![0, 1, 2].includes(input.score)) {
+      return { ok: false, error: "Nilai harus 0, 1, atau 2." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === input.assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status === "Selesai") {
+      return { ok: false, error: "Pengamatan selesai tidak dapat diubah." };
+    }
+    const question = currentState.samQuestions.find((item) => item.id === input.questionId);
+    if (!question || !question.isActive) {
+      return { ok: false, error: "Pertanyaan tidak aktif." };
+    }
+    // D-26.e: bukti opsional; bila terisi, ID aset + nama wajib sah.
+    const evidenceName = input.evidenceName?.trim() ?? "";
+    const evidenceAssetId = input.evidenceAssetId?.trim() ?? "";
+    if (evidenceAssetId || evidenceName) {
+      if (!isEvidenceAssetId(evidenceAssetId)) {
+        return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
+      }
+      if (!evidenceName) {
+        return { ok: false, error: "Nama bukti wajib mengikuti berkas yang diunggah." };
+      }
+    }
+    setState((draft) => {
+      const item = draft.samAssessments.find((entry) => entry.id === input.assessmentId)!;
+      item.answers[input.questionId] = {
+        score: input.score as 0 | 1 | 2,
+        note: input.note?.trim() ?? "",
+        evidenceName: evidenceName || undefined,
+        evidenceAssetId: evidenceAssetId || undefined,
+      };
+      const hitung = samCompute(item, draft.samQuestions);
+      item.totalScore = hitung.total;
+      item.maxScore = hitung.max;
+      item.percent = hitung.percent;
+      item.riskLevel = hitung.risk;
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: hapus draft pengamatan (Berlangsung saja, teraudit).
+  deleteSamDraft(actor: { id?: string }, assessmentId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus draft." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status === "Selesai") {
+      return { ok: false, error: "Pengamatan selesai tidak dapat dihapus." };
+    }
+    setState((draft) => {
+      draft.samAssessments = draft.samAssessments.filter((entry) => entry.id !== assessmentId);
+      draft.samFollowUps = draft.samFollowUps.filter(
+        (entry) => entry.assessmentId !== assessmentId,
+      );
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: assessmentId,
+        institutionCode: target.institutionCode,
+        action: "Menghapus draft pengamatan SAM-iSAFE",
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: buat tindak lanjut dari temuan (jawaban skor 0/1).
+  createSamFollowUp(
+    actor: { id?: string },
+    input: {
+      assessmentId: string;
+      questionId: string;
+      pic: string;
+      dueDate: string;
+      note?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat tindak lanjut." };
+    }
+    const assessment = currentState.samAssessments.find(
+      (item) => item.id === input.assessmentId,
+    );
+    if (!assessment) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    const question = currentState.samQuestions.find((item) => item.id === input.questionId);
+    if (!question) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const answer = assessment.answers[input.questionId];
+    if (!answer || answer.score > 1) {
+      return { ok: false, error: "Tindak lanjut hanya untuk temuan (skor 0 atau 1)." };
+    }
+    if (
+      currentState.samFollowUps.some(
+        (item) =>
+          item.assessmentId === input.assessmentId &&
+          item.questionId === input.questionId &&
+          item.status !== "Dibatalkan",
+      )
+    ) {
+      return { ok: false, error: "Temuan ini sudah mempunyai tindak lanjut aktif." };
+    }
+    const pic = input.pic.trim();
+    if (pic.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    if (!input.dueDate) return { ok: false, error: "Tenggat wajib diisi." };
+    if (input.dueDate < assessment.observedAt) {
+      return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
+    }
+    let id = "";
+    setState((draft) => {
+      const n = draft.samFollowUps.length + 1;
+      id = `SMF-${String(n).padStart(4, "0")}`;
+      const stampedAt = nowIso();
+      draft.samFollowUps.push({
+        id,
+        assessmentId: input.assessmentId,
+        questionId: input.questionId,
+        title: question.text,
+        note: input.note?.trim() || undefined,
+        pic,
+        dueDate: input.dueDate,
+        status: "Belum ditindaklanjuti",
+        createdBy: account.id,
+        createdAt: stampedAt,
+        updatedAt: stampedAt,
+      });
+      audit(draft, account, {
+        objectType: "SamFollowUp",
+        objectId: id,
+        institutionCode: assessment.institutionCode,
+        action: "Membuat tindak lanjut SAM-iSAFE",
+        note: `${assessment.id} · ${pic}`,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  // D-26.e: ubah status/PIC/tenggat/catatan tindak lanjut.
+  updateSamFollowUp(
+    actor: { id?: string },
+    followUpId: string,
+    input: { status?: SamFollowUpStatus; pic?: string; dueDate?: string; note?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah tindak lanjut." };
+    }
+    const target = currentState.samFollowUps.find((item) => item.id === followUpId);
+    if (!target) return { ok: false, error: "Tindak lanjut tidak ditemukan." };
+    if (target.status === "Dibatalkan") {
+      return { ok: false, error: "Tindak lanjut yang dibatalkan tidak dapat diubah." };
+    }
+    if (input.status && !["Belum ditindaklanjuti", "Berjalan", "Selesai"].includes(input.status)) {
+      return { ok: false, error: "Status tidak sah. Pembatalan memakai aksi Batal." };
+    }
+    if (input.pic !== undefined && input.pic.trim().length < 2) {
+      return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    }
+    setState((draft) => {
+      const item = draft.samFollowUps.find((entry) => entry.id === followUpId)!;
+      if (input.status) {
+        item.status = input.status;
+        item.doneAt = input.status === "Selesai" ? nowIso() : undefined;
+      }
+      if (input.pic !== undefined) item.pic = input.pic.trim();
+      if (input.dueDate) item.dueDate = input.dueDate;
+      if (input.note !== undefined) item.note = input.note.trim() || undefined;
+      item.updatedAt = nowIso();
+      audit(draft, account, {
+        objectType: "SamFollowUp",
+        objectId: followUpId,
+        action: "Mengubah tindak lanjut SAM-iSAFE",
+        note: input.status ?? "Perbarui rencana",
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: batalkan tindak lanjut dengan alasan min 10 karakter.
+  cancelSamFollowUp(actor: { id?: string }, followUpId: string, reason: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membatalkan." };
+    }
+    const target = currentState.samFollowUps.find((item) => item.id === followUpId);
+    if (!target) return { ok: false, error: "Tindak lanjut tidak ditemukan." };
+    if (target.status === "Selesai" || target.status === "Dibatalkan") {
+      return { ok: false, error: "Tindak lanjut selesai/batal tidak dapat dibatalkan." };
+    }
+    if (reason.trim().length < 10) {
+      return { ok: false, error: "Alasan pembatalan minimal 10 karakter." };
+    }
+    setState((draft) => {
+      const item = draft.samFollowUps.find((entry) => entry.id === followUpId)!;
+      item.status = "Dibatalkan";
+      item.cancelReason = reason.trim();
+      item.updatedAt = nowIso();
+      audit(draft, account, {
+        objectType: "SamFollowUp",
+        objectId: followUpId,
+        action: "Membatalkan tindak lanjut SAM-iSAFE",
+        note: reason.trim(),
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.e: tandai pengamatan Selesai sebagai Ditinjau (review supervisor).
+  reviewSamAssessment(actor: { id?: string }, assessmentId: string, note?: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mereview." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status !== "Selesai") {
+      return { ok: false, error: "Hanya pengamatan Selesai yang dapat ditinjau." };
+    }
+    setState((draft) => {
+      const item = draft.samAssessments.find((entry) => entry.id === assessmentId)!;
+      item.reviewedBy = account.name;
+      item.reviewedById = account.id;
+      item.reviewedAt = nowIso();
+      item.reviewNote = note?.trim() || undefined;
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: assessmentId,
+        institutionCode: item.institutionCode,
+        action: "Meninjau pengamatan SAM-iSAFE",
+        note: note?.trim() || undefined,
+      });
+    });
+    return { ok: true };
+  },
+
+  completeSamAssessment(actor: { id?: string }, assessmentId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menyelesaikan." };
+    }
+    const target = currentState.samAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    const kurang = samActiveQuestions(currentState.samQuestions).filter(
+      (item) => !target.answers[item.id],
+    );
+    if (kurang.length > 0) {
+      return { ok: false, error: `Masih ada ${kurang.length} pertanyaan belum dinilai.` };
+    }
+    setState((draft) => {
+      const item = draft.samAssessments.find((entry) => entry.id === assessmentId)!;
+      const hitung = samCompute(item, draft.samQuestions);
+      item.totalScore = hitung.total;
+      item.maxScore = hitung.max;
+      item.percent = hitung.percent;
+      item.riskLevel = hitung.risk;
+      item.status = "Selesai";
+      item.completedAt = nowIso();
+      audit(draft, account, {
+        objectType: "SamAssessment",
+        objectId: item.id,
+        institutionCode: item.institutionCode,
+        action: "Menyelesaikan pengamatan SAM-iSAFE",
+        note: `${hitung.total}/${hitung.max} (${hitung.percent}%)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  addSamCategory(actor: { id?: string }, input: { name: string; description?: string }): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah kategori." };
+    }
+    const name = input.name.trim();
+    if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    let id = "";
+    setState((draft) => {
+      const order = Math.max(0, ...draft.samCategories.map((item) => item.sortOrder)) + 1;
+      id = `SAM-KAT-${String(order).padStart(2, "0")}`;
+      draft.samCategories.push({
+        id,
+        name,
+        description: input.description?.trim() || "",
+        sortOrder: order,
+        isActive: true,
+      });
+      audit(draft, account, {
+        objectType: "SamCategory",
+        objectId: id,
+        action: "Menambah kategori SAM-iSAFE",
+        note: name,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  addSamQuestion(
+    actor: { id?: string },
+    input: { categoryId: string; text: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah pertanyaan." };
+    }
+    const category = currentState.samCategories.find((item) => item.id === input.categoryId);
+    if (!category) return { ok: false, error: "Kategori tidak ditemukan." };
+    const text = input.text.trim();
+    if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    let id = "";
+    setState((draft) => {
+      const order =
+        Math.max(
+          0,
+          ...draft.samQuestions
+            .filter((item) => item.categoryId === input.categoryId)
+            .map((item) => item.sortOrder),
+        ) + 1;
+      const n = draft.samQuestions.length + 1;
+      id = `SAM-Q-${String(n).padStart(3, "0")}`;
+      draft.samQuestions.push({
+        id,
+        categoryId: input.categoryId,
+        text,
+        sortOrder: order,
+        isActive: true,
+      });
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: id,
+        action: "Menambah pertanyaan SAM-iSAFE",
+        note: category.name,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  setSamQuestionActive(
+    actor: { id?: string },
+    questionId: string,
+    isActive: boolean,
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    setState((draft) => {
+      draft.samQuestions.find((item) => item.id === questionId)!.isActive = isActive;
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: isActive ? "Mengaktifkan pertanyaan SAM-iSAFE" : "Menonaktifkan pertanyaan",
       });
     });
     return { ok: true };
@@ -1613,14 +2765,25 @@ function ensureDerivedWork(
     return;
   }
   const snapshot = draft.selfAssessmentSnapshots.find((s) => s.reportId === report.id);
-  // Pemicu ilustratif per tipe jawaban; bukan ambang ilmiah final.
-  const indicators =
-    draft.instrumentVersions
+  // D-24: pemicu dari opsi beku dulu; fallback bank live; terakhir versi warisan.
+  const frozenById = new Map((snapshot?.frozenIndicators ?? []).map((f) => [f.id, f]));
+  const liveById = new Map(
+    draft.instrument.dimensions.flatMap((d) => d.indicators.map((i) => [i.id, i] as const)),
+  );
+  const legacyById = new Map(
+    (draft.instrumentVersions
       .find((version) => version.id === report.instrumentVersionId)
-      ?.dimensions.flatMap((dimension) => dimension.indicators) ?? [];
+      ?.dimensions.flatMap((dimension) => dimension.indicators) ?? []
+    ).map((i) => [i.id, i] as const),
+  );
   const candidates = snapshot
     ? Object.entries(snapshot.answers).filter(([id, answer]) => {
-        const type = indicators.find((entry) => entry.id === id)?.answerType;
+        const frozen = frozenById.get(id);
+        if (frozen) return isJawabanTemuan(frozen, answer.value);
+        const live = liveById.get(id);
+        if (live) return isJawabanTemuan(live, answer.value);
+        const legacy = legacyById.get(id);
+        const type = legacy?.answerType;
         return type === "likert-1-5"
           ? ["1", "2"].includes(answer.value)
           : type === "likert-1-2-tidak"
@@ -1643,17 +2806,20 @@ function ensureDerivedWork(
       snapshotLocation(draft, report.institutionCode, area?.id, manualLocation);
     const building = draft.buildings.find((b) => b.id === area?.buildingId);
     const location = `${locationSnapshot.locationText}${locationSnapshot.floorNote ? ` · ${locationSnapshot.floorNote}` : ""}`;
-    const indicator = indicators.find((entry) => entry.id === sourceAnswerId);
+    const indicator =
+      frozenById.get(sourceAnswerId) ?? liveById.get(sourceAnswerId) ?? legacyById.get(sourceAnswerId);
     const issue = indicator ? indicator.title : report.title;
     const n = draft.findings.filter((f) => f.reportId === report.id).length + 1;
     const recommendationId = `REC-${report.id}-${n}`;
     const level = severity === "Belum ditentukan" ? "Sedang" : severity;
-    // D-15: wariskan relasi kategori/aspek dari indikator; lapor-cepat memakai
-    // pilihan pelapor bila ada (tanpa menebak dari judul).
+    // D-15/D-24: wariskan relasi kategori/aspek dari indikator; lapor-cepat
+    // memakai pilihan pelapor bila ada (tanpa menebak dari judul).
+    const liveDims = draft.instrument.dimensions;
     const versionDims =
       draft.instrumentVersions.find((v) => v.id === report.instrumentVersionId)?.dimensions ?? [];
     const dimOfIndicator = indicator
-      ? versionDims.find((d) => d.indicators.some((i) => i.id === indicator.id))
+      ? (liveDims.find((d) => d.indicators.some((i) => i.id === indicator.id)) ??
+        versionDims.find((d) => d.indicators.some((i) => i.id === indicator.id)))
       : undefined;
     draft.findings.push({
       id: `RSK-${report.id}-${n}`,
@@ -1682,11 +2848,11 @@ function ensureDerivedWork(
           : (report.indicatorId ?? "Tidak menggunakan instrumen"),
       recommendation: `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
       status: "Belum ditindaklanjuti",
-      hazard: "Menunggu kajian pengelola",
-      impact: "Menunggu kajian pengelola",
+      hazard: "Menunggu kajian Pesantren",
+      impact: "Menunggu kajian Pesantren",
       likelihood: "Belum dinilai",
       severityText: level,
-      exposedPeople: "Menunggu kajian pengelola",
+      exposedPeople: "Menunggu kajian Pesantren",
       existingControl: "—",
       evidence: sourceAnswer?.evidenceName ?? report.evidenceName ?? "",
       observedAt: report.createdAt,
@@ -1741,7 +2907,7 @@ function setStateReport(
     if (
       !account ||
       account.status !== "Aktif" ||
-      account.roleId !== "pengelola" ||
+      account.roleId !== "pesantren" ||
       !account.institutionCodes.includes(report.institutionCode)
     ) {
       result = { ok: false, error: "Anda tidak berwenang mengubah laporan pesantren ini." };
@@ -1755,7 +2921,7 @@ function setStateReport(
 function notifyOwners(draft: IshasState, institutionCode: string, reportId: string): void {
   const owners = draft.users.filter(
     (u) =>
-      u.roleId === "pengelola" &&
+      u.roleId === "pesantren" &&
       u.status === "Aktif" &&
       u.institutionCodes.includes(institutionCode),
   );
@@ -1765,7 +2931,7 @@ function notifyOwners(draft: IshasState, institutionCode: string, reportId: stri
       institutionCode,
       sourceObjectId: reportId,
       message: `Laporan baru ${reportId} menunggu validasi.`,
-      targetUrl: "/pengelola/validasi-laporan",
+      targetUrl: "/pesantren/validasi-laporan",
     });
   }
 }

@@ -1,5 +1,5 @@
 // Panel `Perkembangan indeks` — WIREFRAMES.md §1 region 3.
-// Grafik area SVG: stroke #be123c 3px, gradien 24%→0, grid #e2e8f0, label #64748b 11px.
+// Grafik area SVG: stroke #3498DB 3px, gradien 24%→0, grid #e2e8f0, label #64748b 11px.
 // Tinggi minimum 225px; hanya render setelah panel terlihat (TEST_PLAN §4).
 
 import { useEffect, useId, useRef, useState } from "react";
@@ -125,8 +125,8 @@ function GrafikArea({
     >
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#be123c" stopOpacity="0.24" />
-          <stop offset="100%" stopColor="#be123c" stopOpacity="0" />
+          <stop offset="0%" stopColor="#3498DB" stopOpacity="0.24" />
+          <stop offset="100%" stopColor="#3498DB" stopOpacity="0" />
         </linearGradient>
       </defs>
       {[0, 25, 50, 75, 100].map((v) => (
@@ -148,14 +148,14 @@ function GrafikArea({
       <path
         d={garis}
         fill="none"
-        stroke="#be123c"
+        stroke="#3498DB"
         strokeWidth="3"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
       {series.map((p, i) => (
         <g key={p.period}>
-          <circle cx={x(i)} cy={y(p.index)} r={i === series.length - 1 ? 4.5 : 3} fill="#be123c" />
+          <circle cx={x(i)} cy={y(p.index)} r={i === series.length - 1 ? 4.5 : 3} fill="#3498DB" />
           <text x={x(i)} y={TINGGI - 8} textAnchor="middle" fontSize="11" fill="#64748b">
             {width < 420 ? p.period.split(" ")[0] : p.period}
           </text>

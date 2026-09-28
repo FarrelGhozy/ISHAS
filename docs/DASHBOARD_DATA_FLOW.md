@@ -8,10 +8,10 @@ Tema dan token warna tetap. Prototipe frontend memakai schema v6; backend belum 
 
 ```mermaid
 flowchart TD
-  A[Publik atau Pengelola Pesantren] --> B[Lapor cepat atau penilaian mandiri]
+  A[Publik atau Pesantren] --> B[Lapor cepat atau penilaian mandiri]
   B --> C[Repository: validasi scope, lokasi, versi dan kategori]
   C --> D[Menunggu validasi: risiko Belum ditentukan]
-  D --> E[Pengelola pemilik pesantren memeriksa]
+  D --> E[Pesantren pemilik pesantren memeriksa]
   E -->|Tolak: alasan minimum 10 karakter| F[Ditolak: tidak tampil publik]
   E -->|Terima: severity dan priority wajib| G[Diterima: temuan dan rekomendasi]
   G --> H[Shared store: audit dan notifikasi]
@@ -22,7 +22,7 @@ flowchart TD
   L --> M[Arsip: tetap internal, dikeluarkan dari publik]
 ```
 
-Sesi login tidak mengubah dataset publik. Pengelola boleh memoderasi laporannya
+Sesi login tidak mengubah dataset publik. Pesantren boleh memoderasi laporannya
 sendiri (D-06); audit membedakan pengirim dan validator. Mutasi lintas halaman
 melalui repository/store, bukan state lokal. Blob bukti/denah berada di IndexedDB;
 record/draft menyimpan ID, bukan file server atau kredensial produksi.
@@ -37,7 +37,7 @@ record/draft menyimpan ID, bukan file server atau kredensial produksi.
 | Katalog kategori | Indikator unik instrumen Published | Draft/Archived tidak menambah katalog; tidak berubah saat filter pesantren |
 | Sesuai/tidak sesuai | Jawaban snapshot laporan publik | Definisi tipe/kategori dari versi snapshot asal; kosong/N/A/nilai di luar skala tidak diklasifikasi |
 | Distribusi risiko/kategori/lokasi | Temuan terkait laporan publik | Satu record temuan; jumlah per kategori dan per lokasi sama dengan donat |
-| Risiko tinggi / ekstrem | Temuan Tinggi atau Ekstrem belum Terverifikasi | Subset aktif; tidak wajib sama dengan penjumlahan seluruh kategori donat |
+| Risiko tinggi / ekstrem | Temuan Tinggi atau Ekstrem belum Terverifikasi/Dibatalkan (D-21) | Subset aktif; tidak wajib sama dengan penjumlahan seluruh kategori donat |
 | Kanal dan aktivitas | Laporan publik | Jumlah kiriman; aktivitas berdasarkan createdAt, bukan tanggal validasi |
 | Status/progres tindak lanjut | Rekomendasi terkait laporan publik | Jumlah pekerjaan; progres rata-rata, null bila kosong |
 | Peta | Proyeksi publik temuan/lokasi | Satu pesantren; pin asli per versi denah, tanpa titik centroid otomatis |

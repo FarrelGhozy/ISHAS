@@ -16,21 +16,30 @@ Pemeriksaan rilis/route semua peran belum lengkap; stage tetap IN PROGRESS.
 **Tujuan:** melengkapi sisi Super Admin, menyinkronkan seluruh dokumen,
 dan menjalankan uji rilis penuh sebelum meminta persetujuan.
 
+## Revisi aktif — identitas biru (D-18, 27 September 2026)
+
+- [x] Ganti token dan pemakaian identitas marun menjadi biru pada antarmuka,
+  grafik, halaman masuk, serta ikon browser; status bahaya tetap merah.
+- [x] Sinkronkan dokumen warna yang terdampak dan jalankan lint, typecheck,
+  test, build, serta pemeriksaan visual. Pemeriksaan 27 September: desktop
+  1440×900, tablet 834×1112, dan ponsel pada viewport bawaan tampil tanpa
+  overflow; lint, typecheck, 123 test, dan build lulus.
+
 ## Ruang lingkup
 
 ### 1. Super Admin (`/admin/*`, login admin)
 
 - [x] `pesantren`: tambah (`Persiapan`) + daftar status dan onboarding.
- (konfirmasi + penjelasan efek ke pemilih publik); detail (pengelola, akun, status assessment/onboarding).
-- [x] `pengguna`: buat akun `Pengelola Pesantren` pada satu pesantren Aktif; email duplikat ditolak.
+ (konfirmasi + penjelasan efek ke pemilih publik); detail (akun Pesantren, status assessment/onboarding).
+- [x] `pengguna`: buat akun `Pesantren` pada satu pesantren Aktif; email duplikat ditolak.
  email duplikat ditolak; TIDAK ADA opsi Asesor di dropdown/filter/fallback.
-- [ ] Menambah pengelola pertama yang aktif → pesantren MUNCUL di pemilih publik (dibuktikan end-to-end);
- menonaktifkan pengelola terakhir → pesantren HILANG dari pemilih (arsip `Diterima` tetap tampil).
+- [ ] Menambah akun Pesantren pertama yang aktif → pesantren MUNCUL di pemilih publik (dibuktikan end-to-end);
+ menonaktifkan akun Pesantren terakhir → pesantren HILANG dari pemilih (arsip `Diterima` tetap tampil).
 - [x] `hak-akses`: matriks 3 peran + publik.
 - [x] `audit-log`: pencarian jejak kirim/terima/tolak/status/hapus .
 - [ ] `pengaturan`: preferensi non-ilmiah + konfirmasi tindakan berisiko + reset data demo ke seed.
 
-### 2. Peneliti — verifikasi fungsi dan hubungan data
+### 2. Validator — verifikasi fungsi dan hubungan data
 
 - [ ] Pastikan tidak ada teks/dependensi asesor tersisa; Published aktif menjadi sumber Stage 08
  (uji publikasi versi baru → self-assessment memakai snapshot baru tanpa merusak hasil lama).
@@ -61,4 +70,14 @@ adalah dokumen milik proyek ISHAS yang baru.
 
 ## Hasil Pemeriksaan
 
+- 27 September 2026 (pematangan Super Admin, IN PROGRESS): deadlock onboarding
+  diperbaiki mengikuti FLOWS §1 (Persiapan → Aktif bebas → akun Pesantren
+  Menunggu → Aktif = terdaftar); form pesantren wajib 4 field + detail +
+  konfirmasi efek pemilih; akun baru default Menunggu; dashboard bedakan
+  terdaftar-vs-Aktif dan internal-vs-publik; hak-akses jadi matriks baca;
+  audit tambah filter pelaku; pengaturan betulkan seed v11. Test store
+  end-to-end (termasuk hilang-terdaftar saat akun terakhir nonaktif) ditulis.
+  Lanjutan: kelola akun via popup (buat + sandi/konfirmasi → Menunggu, ubah,
+  reset sandi demo teraudit, hapus + proteksi diri/admin terakhir).
+  Verifikasi lint/typecheck/test/build + cek visual browser menyusul.
 - 9 September 2026: lint, typecheck, 52 test, build, dan pemeriksaan whitespace lulus.

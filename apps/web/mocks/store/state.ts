@@ -3,10 +3,12 @@
 // Dilarang menyimpan kata sandi/token.
 
 import { SEED } from "../seed/seed";
+import { buildBankLiveDariVersi } from "../instrument-bank";
+import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED } from "../sam-isafe";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 7;
-export const MOCK_STORAGE_KEY = "ishas-mock-v7";
+export const MOCK_SCHEMA_VERSION = 13;
+export const MOCK_STORAGE_KEY = "ishas-mock-v13";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -68,6 +70,134 @@ export function migrateV6(value: unknown): unknown {
   return migrated;
 }
 
+// D-17: v7 → v8 rename peran peneliti→validator, pengelola→pesantren.
+// Mempertahankan seluruh record/ID; hanya memetakan roleId, email demo,
+// targetUrl notifikasi, dan validatedByRole.
+export function migrateV7(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 7)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 8;
+  migrated.users?.forEach((user) => {
+    if (user.roleId === ("peneliti" as never)) {
+      user.roleId = "validator" as never;
+    }
+    if (user.roleId === ("pengelola" as never)) {
+      user.roleId = "pesantren" as never;
+    }
+    if (user.role === ("Peneliti" as never)) {
+      user.role = "Validator" as never;
+    }
+    if (user.role === ("Pengelola Pesantren" as never)) {
+      user.role = "Pesantren" as never;
+    }
+    if (user.email === "peneliti@ishas.demo") user.email = "validator@ishas.demo";
+    if (user.email === "peneliti2@ishas.demo") user.email = "validator2@ishas.demo";
+    if (user.email === "pengelola@ishas.demo") user.email = "pesantren@ishas.demo";
+    if (user.email === "pengelola2@ishas.demo") user.email = "pesantren2@ishas.demo";
+  });
+  migrated.reports?.forEach((report) => {
+    if (report.reporterAccountEmail === "peneliti@ishas.demo")
+      report.reporterAccountEmail = "validator@ishas.demo";
+    if (report.reporterAccountEmail === "peneliti2@ishas.demo")
+      report.reporterAccountEmail = "validator2@ishas.demo";
+    if (report.reporterAccountEmail === "pengelola@ishas.demo")
+      report.reporterAccountEmail = "pesantren@ishas.demo";
+    if (report.reporterAccountEmail === "pengelola2@ishas.demo")
+      report.reporterAccountEmail = "pesantren2@ishas.demo";
+    if (report.validatedByRole === "Pengelola Pesantren") report.validatedByRole = "Pesantren";
+    if (report.validatedByRole === "Peneliti") report.validatedByRole = "Validator";
+  });
+  migrated.notifications?.forEach((notification) => {
+    if (typeof notification.targetUrl === "string") {
+      notification.targetUrl = notification.targetUrl
+        .replaceAll("/peneliti/", "/validator/")
+        .replaceAll("/pengelola/", "/pesantren/");
+    }
+  });
+  return migrated;
+}
+
+// D-19: v8 → v9 usulan mandiri lapor-cepat + lapor-cepat baru tanpa indikator.
+// Mempertahankan seluruh record/ID; usulan lama yang kosong menjadi 'Belum ditentukan'.
+export function migrateV8(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 8)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 9;
+  migrated.reports?.forEach((report) => {
+    if (
+      report.reporterSeverity !== "Tinggi" &&
+      report.reporterSeverity !== "Sedang" &&
+      report.reporterSeverity !== "Rendah"
+    ) {
+      report.reporterSeverity = "Belum ditentukan";
+    }
+    if (
+      report.reporterPriority !== "Tinggi" &&
+      report.reporterPriority !== "Sedang" &&
+      report.reporterPriority !== "Rendah"
+    ) {
+      report.reporterPriority = "Belum ditentukan";
+    }
+  });
+  return migrated;
+}
+
+// D-21: v9 → v10 pembatalan tindak lanjut + bukti upload.
+// Mempertahankan seluruh record/ID; status lama tak dikenal dipetakan aman;
+// field bukti/cancel opsional (seed lama = nama file saja = "Bukti lama").
+export function migrateV9(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 9)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 10;
+  return migrateV10(migrated);
+}
+
+// D-24: v10 → v11 bank instrumen live tanpa versioning.
+// Mempertahankan seluruh record/ID; bank dibangun dari versi aktif warisan
+// (atau Published pertama bila aktif hilang); snapshot lama tetap dibaca
+// lewat instrumentVersions (fallback legacy) tanpa penulisan ulang.
+export function migrateV10(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 10)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 11;
+  if (!migrated.instrument || typeof migrated.instrument !== "object") {
+    const source =
+      migrated.instrumentVersions.find((v) => v.id === migrated.activeInstrumentVersionId) ??
+      migrated.instrumentVersions.find((v) => v.status === "Published") ??
+      migrated.instrumentVersions[0];
+    if (source) migrated.instrument = buildBankLiveDariVersi(source);
+  }
+  return migrated;
+}
+
+// D-26: v11 → v12 menambah bank + pengamatan SAM-iSAFE tanpa menyentuh data lama.
+export function migrateV11(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 11)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 12;
+  if (!Array.isArray(migrated.samCategories))
+    migrated.samCategories = structuredClone(SAM_CATEGORIES_SEED);
+  if (!Array.isArray(migrated.samQuestions))
+    migrated.samQuestions = structuredClone(SAM_QUESTIONS_SEED);
+  if (!Array.isArray(migrated.samAssessments)) migrated.samAssessments = [];
+  return migrated;
+}
+
+// D-26.e: v12 → v13 menambah tindak lanjut + review + bukti SAM-iSAFE.
+export function migrateV12(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 12)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 13;
+  if (!Array.isArray(migrated.samFollowUps)) migrated.samFollowUps = [];
+  return migrated;
+}
+
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
@@ -86,9 +216,33 @@ function isValidState(value: unknown): value is IshasState {
     state.auditEvents,
     state.notifications,
   ];
+  const bank = state.instrument;
+  const bankValid =
+    bank &&
+    typeof bank === "object" &&
+    typeof bank.checksum === "string" &&
+    Array.isArray(bank.dimensions) &&
+    bank.dimensions.every(
+      (d) =>
+        d &&
+        typeof d === "object" &&
+        Array.isArray(d.indicators) &&
+        d.indicators.every(
+          (i) =>
+            i &&
+            typeof i === "object" &&
+            Array.isArray(i.options) &&
+            i.options.every((o) => o && typeof o.value === "string"),
+        ),
+    );
   return (
     state.schemaVersion === MOCK_SCHEMA_VERSION &&
     arrays.every(Array.isArray) &&
+    Array.isArray(state.samCategories) &&
+    Array.isArray(state.samQuestions) &&
+    Array.isArray(state.samAssessments) &&
+    Array.isArray(state.samFollowUps) &&
+    bankValid &&
     state.users.every((u) => u && typeof u.id === "string" && Array.isArray(u.institutionCodes)) &&
     state.instrumentVersions.every(
       (v) =>
@@ -114,11 +268,22 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v12") ??
+      localStorage.getItem("ishas-mock-v10") ??
+      localStorage.getItem("ishas-mock-v9") ??
+      localStorage.getItem("ishas-mock-v8") ??
+      localStorage.getItem("ishas-mock-v7") ??
       localStorage.getItem("ishas-mock-v6") ??
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV6(migrateV5(migrateV4(JSON.parse(raw))));
+      const parsed: unknown = migrateV12(
+        migrateV11(
+          migrateV10(
+            migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+          ),
+        ),
+      );
       if (isValidState(parsed)) return parsed;
     }
   } catch {

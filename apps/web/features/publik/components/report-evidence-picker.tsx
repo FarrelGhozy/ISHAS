@@ -43,7 +43,7 @@ export function ReportEvidencePicker({
         Gambar bukti (opsional)
       </label>
       <p id="lapor-foto-hint" className="mb-2 text-sm text-secondary-text">
-        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Bukti hanya untuk pengelola,
+        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Bukti hanya untuk akun Pesantren,
         tidak tampil publik.
       </p>
       <input
@@ -52,7 +52,7 @@ export function ReportEvidencePicker({
         accept="image/png,image/jpeg,image/webp"
         disabled={disabled || busy || !institutionCode}
         aria-describedby="lapor-foto-hint"
-        className="min-h-11 w-full min-w-0 rounded-lg border border-line-soft p-2 text-sm file:mr-2 file:rounded file:border-0 file:bg-marun-bg file:px-3 file:py-2 file:font-semibold file:text-primary disabled:opacity-60"
+        className="min-h-11 w-full min-w-0 rounded-lg border border-line-soft p-2 text-sm file:mr-2 file:rounded file:border-0 file:bg-brand-bg file:px-3 file:py-2 file:font-semibold file:text-primary disabled:opacity-60"
         onChange={async (event) => {
           const file = event.target.files?.[0];
           event.target.value = ""; // Memungkinkan memilih ulang file yang sama.

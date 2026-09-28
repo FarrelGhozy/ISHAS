@@ -35,12 +35,32 @@ tindak lanjut yang menggerakkan status, dan laporan pimpinan scope sendiri.
 - [x] Perbarui progres (0–100) + catatan + bukti penyelesaian dummy → ajukan selesai →
  verifikasi pengelola → `Completed`/`Terverifikasi` (terhubung Stage 06).
 - [x] Filter status/prioritas + pencarian; bedakan visual `Berjalan`/`Menunggu verifikasi`/`Terverifikasi`.
+- [ ] Revisi D-21 (IN PROGRESS 27 Sep 2026): panel relasi laporan induk penuh +
+ upload bukti penyelesaian (pola `/lapor`: PNG/JPEG/WebP 5MB/20MP + pratinjau +
+ lepas/ganti, wajib saat 100%) + batal per rekomendasi (`Dibatalkan` terminal,
+ alasan min 10 + tampil publik, baris tidak dihapus, temuan tertaut ikut,
+ laporan induk tetap `Proses`) + filter `Dibatalkan` + empty state penjelas +
+ publik `/tindak-lanjut` tampil `Dibatalkan` + alasan (bukti/tenggat/catatan
+ tetap privat). Schema v9→v10 + migrasi + seed contoh + test.
 
-### 3. Laporan pengelola (`/pengelola/laporan`)
+### 3. Laporan pengelola (`/pesantren/laporan`)
 
 - [x] Pratinjau ringkasan pimpinan scope sendiri + dimensi + status tindak lanjut +
- metadata (periode, versi instrumen, waktu buat, pembuat) + simulasi unduh PDF/Excel berlabel dummy.
+  metadata (periode, versi instrumen, waktu buat, pembuat) + simulasi unduh PDF/Excel berlabel dummy.
 - [x] Riwayat laporan tersimpan (periode + versi + pembuat).
+- [x] Revisi D-23 (IN PROGRESS 27 Sep 2026): progres rata-rata non-`Dibatalkan`,
+  tanggal data terbaru (bukan render-time), tautan silang Validasi/Tindak lanjut,
+  versi instrumen per baris riwayat, hint `Dibatalkan` menghalangi `Completed`;
+  arsip keluar dari antrean kelola (`selectReportsForManager`).
+  Verifikasi: lint + typecheck + 149 test + build lulus; cek visual browser menyusul.
+
+### 4. Revisi D-23 lintas Validasi (tanpa mengubah status Stage 05–06)
+
+- [x] Filter antrean: status + kanal + severity + pencarian deskripsi; baris memuat
+  chip kanal + lokasi + handling; pre-fill usulan tanpa opsi `Belum ditentukan`;
+  arsip tidak tampil di kelola.
+- [x] Editor tingkat risiko per temuan (`Rendah/Sedang/Tinggi/Ekstrem`, teraudit);
+  `verifyFinding`/`savePlanVersion` deprecasi lembut; lantai per-gedung; sync kartu.
 
 ## Acceptance criteria
 

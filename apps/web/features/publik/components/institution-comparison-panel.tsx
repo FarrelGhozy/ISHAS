@@ -16,7 +16,7 @@ export function InstitutionComparisonPanel({ items }: { items: InstitutionCompar
   return (
     <section className="surface overflow-hidden" aria-labelledby="institution-comparison-title">
       <div className="flex flex-wrap items-start gap-3 border-b border-line p-4">
-        <span className="grid h-9 w-9 place-items-center rounded-md bg-marun-bg text-primary">
+        <span className="grid h-9 w-9 place-items-center rounded-md bg-brand-bg text-primary">
           <Building2 size={17} aria-hidden />
         </span>
         <div>

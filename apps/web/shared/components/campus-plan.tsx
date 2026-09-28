@@ -147,7 +147,7 @@ export function LocationPicker({
         </p>
       </div>
       {stale ? (
-        <p role="alert" className="rounded bg-marun-bg p-3 text-sm text-primary">
+        <p role="alert" className="rounded bg-brand-bg p-3 text-sm text-primary">
           Denah telah berubah. Pilih ulang titik pada versi terbaru atau hapus titik lama sebelum
           mengirim.
         </p>
@@ -173,7 +173,7 @@ export function LocationPicker({
             Versi {plan.revision} ·{" "}
             {plan.illustration
               ? "Ilustrasi denah · bukan lokasi sebenarnya"
-              : "Denah unggahan pengelola"}
+              : "Denah unggahan Pesantren"}
           </p>
           <details>
             <summary className="cursor-pointer text-sm font-semibold text-primary">
@@ -254,43 +254,5 @@ export function LocationPicker({
         />
       </label>
     </section>
-  );
-}
-
-export function SavedLocation({
-  plans,
-  location,
-}: {
-  plans: CampusPlanVersion[];
-  location?: LocationSnapshot;
-}) {
-  const plan = plans.find((item) => item.id === location?.campusPlanVersionId);
-  if (!location)
-    return <p className="mt-2 text-sm text-secondary-text">Tidak ada titik denah tercatat.</p>;
-  return (
-    <div className="mt-3 space-y-2">
-      <p className="text-sm text-secondary-text">
-        {location.locationText} {location.floorNote ? `· ${location.floorNote}` : ""}
-      </p>
-      {plan && location.point ? (
-        <>
-          <CampusPlan key={plan.id} plan={plan}>
-            <span
-              aria-hidden
-              className="absolute -translate-x-1/2 -translate-y-full text-primary"
-              style={{ left: `${location.point.x}%`, top: `${location.point.y}%` }}
-            >
-              <MapPin size={30} fill="white" />
-            </span>
-          </CampusPlan>
-          <p className="text-sm text-secondary-text">
-            Versi denah {plan.revision} · titik {location.point.x}% / {location.point.y}%
-            (hanya-baca)
-          </p>
-        </>
-      ) : (
-        <p className="text-sm text-secondary-text">Laporan ini tidak memiliki titik denah.</p>
-      )}
-    </div>
   );
 }

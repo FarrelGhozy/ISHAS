@@ -1,30 +1,40 @@
 // Seed V2 kaya demo — docs DATA_MODEL.md §5.
 // Skenario seed mengikuti DATA_REQUIREMENTS §8 opsi (a): PSN-0020 `Aktif` tanpa
-// pengelola aktif sehingga TIDAK terdaftar (2 pesantren terdaftar: PSN-0018,
+// akun Pesantren aktif sehingga TIDAK terdaftar (2 pesantren terdaftar: PSN-0018,
 // PSN-0019 — kasus batas "Aktif tapi tidak terdaftar" untuk demo D-08/D-09).
-// Cara login akun pengelola kedua menunggu D-09 — akun ada di data, belum di kartu login.
+// Cara login akun Pesantren kedua menunggu D-09 — akun ada di data, belum di kartu login.
 //
-// Komposisi dirancang agar setiap halaman publik/pengelola/admin/peneliti
+// Komposisi dirancang agar setiap halaman publik/pesantren/admin/validator
 // mempunyai data untuk didemo ke dosen:
-// - Publik: 9 laporan Diterima non-arsip (5 lapor-cepat + 4 penilaian-mandiri),
-//   13 temuan (Ekstrem 1, Tinggi 4, Sedang 6, Rendah 1 + 1 Terverifikasi),
-//   13 rekomendasi (Belum 3, Berjalan 8, Menunggu verifikasi 1, Terverifikasi 1),
+// - Publik: 9 laporan Diterima tampil publik (5 lapor-cepat + 4 penilaian-mandiri)
+//   + 2 Completed internal (demo arsip D-07),
+//   15 temuan (Ekstrem 1, Tinggi 4, Sedang 7, Rendah 3; 1 Dibatalkan demo D-21),
+//   15 rekomendasi (Belum 3, Berjalan 7, Menunggu verifikasi 1, Terverifikasi 3,
+//   Dibatalkan 1 demo D-21),
 //   seluruh 4 kategori K3 + baris Belum dipetakan, 2 snapshot INS-v1.1 terbaru
 //   sebagai sumber indeks (kontras 58 vs 70), tren 6 periode + periode berjalan,
 //   denah + titik untuk kedua pesantren terdaftar.
-// - Pengelola: + 2 Menunggu (antrean 1 vs 2), 2 Completed internal (demo arsip
+// - Pesantren: + 2 Menunggu (antrean 1 vs 2), 2 Completed internal (demo arsip
 //   D-07), 2 Ditolak (demo arsip penolakan), lokasi 4 gedung/12 area.
-// - Admin: 4 pesantren (Aktif/Persiapan + Aktif-tanpa-pengelola), 5 pengguna.
-// - Peneliti: INS-v1.0 arsip (riwayat) + INS-v1.1 Published aktif (10 indikator).
+// - Admin: 4 pesantren (Aktif/Persiapan + Aktif-tanpa-akun-Pesantren), 5 pengguna.
+// - Validator: INS-v1.0 arsip (riwayat) + INS-v1.1 Published aktif (10 indikator).
 
-import type { IshasState } from "../types";
+import type { Instrument, IshasState, SamAnswer, SamAssessment } from "../types";
+import { buildBankLiveDariVersi } from "../instrument-bank";
+import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED, samCompute } from "../sam-isafe";
 
 const T = {
   now: "2026-09-08T09:00:00.000Z",
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 7,
+  schemaVersion: 13,
+  samCategories: structuredClone(SAM_CATEGORIES_SEED),
+  samQuestions: structuredClone(SAM_QUESTIONS_SEED),
+  samAssessments: [],
+  samFollowUps: [],
+  // D-24: bank live diisi setelah objek (diturunkan dari INS-v1.1, tanpa duplikasi).
+  instrument: {} as Instrument,
   campusPlans: [
     {
       id: "CAMPUS-PSN-0018-v1",
@@ -55,6 +65,7 @@ export const SEED: IshasState = {
       activeCampusPlanVersionId: "CAMPUS-PSN-0018-v1",
       name: "PP Al-Hikmah Malang",
       location: "Kota Malang",
+      address: "Jl. Pesantren No. 18, Kota Malang",
       manager: "Ust. K.H. Mustofa Kamal",
       assessment: "Berjalan",
       status: "Aktif",
@@ -64,6 +75,7 @@ export const SEED: IshasState = {
       activeCampusPlanVersionId: "CAMPUS-PSN-0019-v1",
       name: "PP Nurul Iman Batu",
       location: "Kota Batu",
+      address: "Jl. Pesantren No. 19, Kota Batu",
       manager: "H. Siti Aminah",
       assessment: "Berjalan",
       status: "Aktif",
@@ -72,6 +84,7 @@ export const SEED: IshasState = {
       code: "PSN-0020",
       name: "PP Darussalam Kediri",
       location: "Kota Kediri",
+      address: "Jl. Pesantren No. 20, Kota Kediri",
       manager: "Ust. Abdul Hakim",
       assessment: "Belum dimulai",
       status: "Aktif",
@@ -80,6 +93,7 @@ export const SEED: IshasState = {
       code: "PSN-0021",
       name: "PP Miftahul Ulum Probolinggo",
       location: "Kota Probolinggo",
+      address: "Jl. Pesantren No. 21, Kota Probolinggo",
       manager: "Ust. Syaiful Bahri",
       assessment: "Belum dimulai",
       status: "Persiapan",
@@ -100,11 +114,11 @@ export const SEED: IshasState = {
     },
     {
       id: "USR-002",
-      name: "Dr. M. Ridwan",
-      email: "peneliti@ishas.demo",
+      name: "M. Ridwan",
+      email: "validator@ishas.demo",
       initials: "MR",
-      role: "Peneliti",
-      roleId: "peneliti",
+      role: "Validator",
+      roleId: "validator",
       institution: "Seluruh sistem",
       institutionCodes: [],
       status: "Aktif",
@@ -113,10 +127,10 @@ export const SEED: IshasState = {
     {
       id: "USR-003",
       name: "Ust. K.H. Mustofa Kamal",
-      email: "pengelola@ishas.demo",
+      email: "pesantren@ishas.demo",
       initials: "MK",
-      role: "Pengelola Pesantren",
-      roleId: "pengelola",
+      role: "Pesantren",
+      roleId: "pesantren",
       institution: "PP Al-Hikmah Malang",
       institutionCodes: ["PSN-0018"],
       status: "Aktif",
@@ -125,10 +139,10 @@ export const SEED: IshasState = {
     {
       id: "USR-004",
       name: "H. Siti Aminah",
-      email: "pengelola2@ishas.demo",
+      email: "pesantren2@ishas.demo",
       initials: "SA",
-      role: "Pengelola Pesantren",
-      roleId: "pengelola",
+      role: "Pesantren",
+      roleId: "pesantren",
       institution: "PP Nurul Iman Batu",
       institutionCodes: ["PSN-0019"],
       status: "Aktif",
@@ -137,10 +151,10 @@ export const SEED: IshasState = {
     {
       id: "USR-005",
       name: "Sari Dewi",
-      email: "peneliti2@ishas.demo",
+      email: "validator2@ishas.demo",
       initials: "SD",
-      role: "Peneliti",
-      roleId: "peneliti",
+      role: "Validator",
+      roleId: "validator",
       institution: "Seluruh sistem",
       institutionCodes: [],
       status: "Aktif",
@@ -152,6 +166,10 @@ export const SEED: IshasState = {
       id: "RPT-0001",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      categoryId: "KAT-KESELAMATAN",
+      aspectId: "ASP-KES-001",
+      reporterSeverity: "Tinggi",
+      reporterPriority: "Sedang",
       reporterName: "Santri Blok A",
       title: "Kabel terbuka di koridor lantai 2",
       description:
@@ -171,7 +189,7 @@ export const SEED: IshasState = {
       channel: "penilaian-mandiri",
       institutionCode: "PSN-0019",
       reporterName: "H. Siti Aminah",
-      reporterAccountEmail: "pengelola2@ishas.demo",
+      reporterAccountEmail: "pesantren2@ishas.demo",
       title: "Penilaian mandiri K3L — PP Nurul Iman Batu",
       description:
         "Ringkasan: beberapa indikator sanitasi dan kelistrikan berisiko; snapshot jawaban tersimpan untuk validasi.",
@@ -188,6 +206,8 @@ export const SEED: IshasState = {
       id: "RPT-0003",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Tinggi",
       reporterName: "Ustaz Rahmat",
       title: "Slip lantai tangga asrama putra",
       description:
@@ -200,7 +220,7 @@ export const SEED: IshasState = {
       handlingStatus: "Pending",
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-05T09:00:00.000Z",
       createdAt: "2026-09-04T07:20:00.000Z",
       submittedAt: "2026-09-04T07:20:00.000Z",
@@ -211,7 +231,7 @@ export const SEED: IshasState = {
       channel: "penilaian-mandiri",
       institutionCode: "PSN-0018",
       reporterName: "Ust. K.H. Mustofa Kamal",
-      reporterAccountEmail: "pengelola@ishas.demo",
+      reporterAccountEmail: "pesantren@ishas.demo",
       title: "Penilaian mandiri K3L — PP Al-Hikmah Malang",
       description:
         "Ringkasan: indikator proteksi listrik dan jalur evakuasi berisiko; hasil dimensi ilustratif tersedia.",
@@ -222,7 +242,7 @@ export const SEED: IshasState = {
       handlingStatus: "Proses",
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-03T11:00:00.000Z",
       createdAt: "2026-09-02T09:40:00.000Z",
       submittedAt: "2026-09-02T09:40:00.000Z",
@@ -243,7 +263,7 @@ export const SEED: IshasState = {
       handlingStatus: "Completed",
       validatedBy: "USR-004",
       validatedByName: "H. Siti Aminah",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-01T10:00:00.000Z",
       createdAt: "2026-08-30T08:00:00.000Z",
       submittedAt: "2026-08-30T08:00:00.000Z",
@@ -264,7 +284,7 @@ export const SEED: IshasState = {
       handlingStatus: "Ditolak",
       validatedBy: "USR-004",
       validatedByName: "H. Siti Aminah",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-08-31T09:30:00.000Z",
       createdAt: "2026-08-30T14:00:00.000Z",
       submittedAt: "2026-08-30T14:00:00.000Z",
@@ -275,7 +295,7 @@ export const SEED: IshasState = {
       channel: "penilaian-mandiri",
       institutionCode: "PSN-0019",
       reporterName: "H. Siti Aminah",
-      reporterAccountEmail: "pengelola2@ishas.demo",
+      reporterAccountEmail: "pesantren2@ishas.demo",
       title: "Penilaian mandiri K3L — PP Nurul Iman Batu",
       description:
         "Ringkasan: ketersediaan air bersih menurun di dapur utama; indikator lain terjaga.",
@@ -286,7 +306,7 @@ export const SEED: IshasState = {
       handlingStatus: "Proses",
       validatedBy: "USR-004",
       validatedByName: "H. Siti Aminah",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-06T09:00:00.000Z",
       createdAt: "2026-09-05T14:00:00.000Z",
       submittedAt: "2026-09-05T14:00:00.000Z",
@@ -299,6 +319,8 @@ export const SEED: IshasState = {
       categoryId: "KAT-KESELAMATAN",
       aspectId: "ASP-KES-002",
       indicatorId: "IND-K3L-003",
+      reporterSeverity: "Tinggi",
+      reporterPriority: "Tinggi",
       reporterName: "Takmir Musala",
       title: "APAR kedaluwarsa dan kabel terkelupas di musala",
       description:
@@ -314,7 +336,7 @@ export const SEED: IshasState = {
         "Risiko kebakaran dinilai Ekstrem: APAR mati + sumber api potensial di ruang padat.",
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-08-29T10:00:00.000Z",
       createdAt: "2026-08-28T16:40:00.000Z",
       submittedAt: "2026-08-28T16:40:00.000Z",
@@ -326,6 +348,8 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0018",
       categoryId: "KAT-LINGKUNGAN",
       aspectId: "ASP-LING-001",
+      reporterSeverity: "Rendah",
+      reporterPriority: "Sedang",
       reporterName: "Pustakawan — Ruang Baca",
       title: "Sampah dedaunan menumpuk di sisi perpustakaan",
       description:
@@ -338,7 +362,7 @@ export const SEED: IshasState = {
       handlingStatus: "Pending",
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-06T14:00:00.000Z",
       createdAt: "2026-09-06T09:10:00.000Z",
       submittedAt: "2026-09-06T09:10:00.000Z",
@@ -349,7 +373,7 @@ export const SEED: IshasState = {
       channel: "penilaian-mandiri",
       institutionCode: "PSN-0018",
       reporterName: "Ust. K.H. Mustofa Kamal",
-      reporterAccountEmail: "pengelola@ishas.demo",
+      reporterAccountEmail: "pesantren@ishas.demo",
       title: "Penilaian mandiri K3L — PP Al-Hikmah Malang (INS-v1.1)",
       description:
         "Ringkasan: instalasi listrik, jalur evakuasi, dan pengelolaan sampah belum sesuai; ventilasi dan dukungan sosial terjaga.",
@@ -360,7 +384,7 @@ export const SEED: IshasState = {
       handlingStatus: "Proses",
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-07T09:00:00.000Z",
       createdAt: "2026-09-06T15:00:00.000Z",
       submittedAt: "2026-09-06T15:00:00.000Z",
@@ -370,6 +394,8 @@ export const SEED: IshasState = {
       id: "RPT-0011",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      reporterSeverity: "Rendah",
+      reporterPriority: "Rendah",
       reporterName: "Santri Blok B",
       title: "Keran wudu bocor di musala lantai 1",
       description:
@@ -384,7 +410,7 @@ export const SEED: IshasState = {
       validationNote: "Selesai diperbaiki tukang ledeng; sudah diverifikasi pengelola.",
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-08-23T09:00:00.000Z",
       createdAt: "2026-08-22T07:30:00.000Z",
       submittedAt: "2026-08-22T07:30:00.000Z",
@@ -394,6 +420,8 @@ export const SEED: IshasState = {
       id: "RPT-0012",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Rendah",
       reporterName: "Warga Sekitar — Jl. Mangga",
       title: "Lampu taman mati di gerbang depan",
       description: "Lampu taman depan gerbang mati dan area menjadi gelap pada malam hari.",
@@ -406,7 +434,7 @@ export const SEED: IshasState = {
         "Lampu sudah diperbaiki teknisi pada 20 Agustus; kondisi saat laporan dibuat sudah menyala kembali.",
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-08-29T11:00:00.000Z",
       createdAt: "2026-08-25T19:00:00.000Z",
       submittedAt: "2026-08-25T19:00:00.000Z",
@@ -418,6 +446,8 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       categoryId: "KAT-KESEHATAN",
       aspectId: "ASP-SEH-003",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Tinggi",
       reporterName: "Musyrifah Asrama Putri",
       title: "Ventilasi kamar santri pengap dan berdebu",
       description:
@@ -431,7 +461,7 @@ export const SEED: IshasState = {
       handlingStatus: "Pending",
       validatedBy: "USR-004",
       validatedByName: "H. Siti Aminah",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-02T10:00:00.000Z",
       createdAt: "2026-09-01T20:15:00.000Z",
       submittedAt: "2026-09-01T20:15:00.000Z",
@@ -442,7 +472,7 @@ export const SEED: IshasState = {
       channel: "penilaian-mandiri",
       institutionCode: "PSN-0019",
       reporterName: "H. Siti Aminah",
-      reporterAccountEmail: "pengelola2@ishas.demo",
+      reporterAccountEmail: "pesantren2@ishas.demo",
       title: "Penilaian mandiri K3L — PP Nurul Iman Batu (INS-v1.1)",
       description:
         "Ringkasan: drainase sisi dapur tergenang saat hujan dan jadwal piket santri terlalu padat; indikator lain terjaga baik.",
@@ -453,7 +483,7 @@ export const SEED: IshasState = {
       handlingStatus: "Proses",
       validatedBy: "USR-004",
       validatedByName: "H. Siti Aminah",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-09-07T16:00:00.000Z",
       createdAt: "2026-09-07T10:00:00.000Z",
       submittedAt: "2026-09-07T10:00:00.000Z",
@@ -466,6 +496,8 @@ export const SEED: IshasState = {
       categoryId: "KAT-KESEHATAN",
       aspectId: "ASP-SEH-001",
       indicatorId: "IND-K3L-004",
+      reporterSeverity: "Tinggi",
+      reporterPriority: "Tinggi",
       reporterName: "Petugas Dapur Utama",
       title: "Air keran dapur keruh dan berbau sejak dua hari",
       description:
@@ -481,7 +513,7 @@ export const SEED: IshasState = {
         "Sudah berkoordinasi dengan PDAM dan menguras tandon; menunggu verifikasi akhir pengelola.",
       validatedBy: "USR-004",
       validatedByName: "H. Siti Aminah",
-      validatedByRole: "Pengelola Pesantren",
+      validatedByRole: "Pesantren",
       validatedAt: "2026-08-31T09:00:00.000Z",
       createdAt: "2026-08-30T06:50:00.000Z",
       submittedAt: "2026-08-30T06:50:00.000Z",
@@ -493,6 +525,8 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       categoryId: "KAT-KESELAMATAN",
       aspectId: "ASP-KES-004",
+      reporterSeverity: "Sedang",
+      reporterPriority: "Sedang",
       reporterName: "Santriwati Kamar 3",
       title: "Lantai toilet asrama putri licin dan berlumut",
       description:
@@ -946,7 +980,7 @@ export const SEED: IshasState = {
       issue: "Sampah dedaunan menumpuk di sisi perpustakaan",
       indicator: "Tidak menggunakan instrumen",
       recommendation: "Bersihkan tumpukan dan jadwalkan angkut sampah taman mingguan.",
-      status: "Belum ditindaklanjuti",
+      status: "Dibatalkan", // D-21: contoh pembatalan; laporan induk tetap Proses
       hazard: "Sarang nyamuk / vektor penyakit",
       impact: "Demam berdarah di lingkungan kelas",
       likelihood: "Jarang",
@@ -1384,10 +1418,14 @@ export const SEED: IshasState = {
       location: "Gedung Kelas · Lantai 2 · Perpustakaan",
       source: "IND-LAPOR-CEPAT · RPT-0009",
       action: "Bersihkan tumpukan dan jadwalkan angkut sampah taman mingguan.",
-      status: "Belum ditindaklanjuti",
+      status: "Dibatalkan", // D-21: contoh batal beralasan; tampil publik + alasan
       owner: "Ust. K.H. Mustofa Kamal",
       dueDate: "2026-10-08",
       progress: 0,
+      canceledReason:
+        "Penanganan dialihkan ke program kerja bakti mingguan santri sehingga tidak lagi menjadi pekerjaan perbaikan terpisah.",
+      canceledBy: "USR-003",
+      canceledAt: "2026-09-07T10:00:00.000Z",
     },
     {
       id: "REC-RPT-0010-1",
@@ -2141,7 +2179,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0003",
       actorAccountId: "USR-003",
       actorName: "Ust. K.H. Mustofa Kamal",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0018",
       action: "Memvalidasi laporan",
       at: "2026-09-05T09:00:00.000Z",
@@ -2152,7 +2190,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0006",
       actorAccountId: "USR-004",
       actorName: "H. Siti Aminah",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0019",
       action: "Menolak laporan",
       at: "2026-08-31T09:30:00.000Z",
@@ -2174,7 +2212,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0007",
       actorAccountId: "USR-004",
       actorName: "H. Siti Aminah",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0019",
       action: "Memvalidasi laporan",
       at: "2026-09-06T09:00:00.000Z",
@@ -2185,7 +2223,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0008",
       actorAccountId: "USR-003",
       actorName: "Ust. K.H. Mustofa Kamal",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0018",
       action: "Memvalidasi laporan",
       at: "2026-08-29T10:00:00.000Z",
@@ -2197,7 +2235,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0009",
       actorAccountId: "USR-003",
       actorName: "Ust. K.H. Mustofa Kamal",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0018",
       action: "Memvalidasi laporan",
       at: "2026-09-06T14:00:00.000Z",
@@ -2208,7 +2246,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0010",
       actorAccountId: "USR-003",
       actorName: "Ust. K.H. Mustofa Kamal",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0018",
       action: "Memvalidasi laporan",
       at: "2026-09-07T09:00:00.000Z",
@@ -2220,7 +2258,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0011",
       actorAccountId: "USR-003",
       actorName: "Ust. K.H. Mustofa Kamal",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0018",
       action: "Mengubah status penanganan",
       at: "2026-09-01T10:00:00.000Z",
@@ -2232,7 +2270,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0012",
       actorAccountId: "USR-003",
       actorName: "Ust. K.H. Mustofa Kamal",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0018",
       action: "Menolak laporan",
       at: "2026-08-29T11:00:00.000Z",
@@ -2244,7 +2282,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0013",
       actorAccountId: "USR-004",
       actorName: "H. Siti Aminah",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0019",
       action: "Memvalidasi laporan",
       at: "2026-09-02T10:00:00.000Z",
@@ -2255,7 +2293,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0014",
       actorAccountId: "USR-004",
       actorName: "H. Siti Aminah",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0019",
       action: "Memvalidasi laporan",
       at: "2026-09-07T16:00:00.000Z",
@@ -2267,7 +2305,7 @@ export const SEED: IshasState = {
       objectId: "RPT-0015",
       actorAccountId: "USR-004",
       actorName: "H. Siti Aminah",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0019",
       action: "Memvalidasi laporan",
       at: "2026-08-31T09:00:00.000Z",
@@ -2278,7 +2316,7 @@ export const SEED: IshasState = {
       objectId: "REC-RPT-0015-1",
       actorAccountId: "USR-004",
       actorName: "H. Siti Aminah",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0019",
       action: "Memperbarui tindak lanjut",
       at: "2026-09-05T11:00:00.000Z",
@@ -2300,7 +2338,7 @@ export const SEED: IshasState = {
       objectId: "RSK-RPT-0010-4",
       actorAccountId: "USR-003",
       actorName: "Ust. K.H. Mustofa Kamal",
-      actorRole: "Pengelola Pesantren",
+      actorRole: "Pesantren",
       institutionCode: "PSN-0018",
       action: "Memverifikasi tindak lanjut",
       at: "2026-09-07T15:00:00.000Z",
@@ -2314,7 +2352,7 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0018",
       sourceObjectId: "RPT-0001",
       message: "Laporan baru RPT-0001 menunggu validasi.",
-      targetUrl: "/pengelola/validasi-laporan",
+      targetUrl: "/pesantren/validasi-laporan",
       at: "2026-09-07T08:15:00.000Z",
       read: false,
     },
@@ -2324,7 +2362,7 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       sourceObjectId: "RPT-0002",
       message: "Laporan baru RPT-0002 menunggu validasi.",
-      targetUrl: "/pengelola/validasi-laporan",
+      targetUrl: "/pesantren/validasi-laporan",
       at: "2026-09-07T10:30:00.000Z",
       read: false,
     },
@@ -2334,13 +2372,123 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       sourceObjectId: "RPT-0016",
       message: "Laporan baru RPT-0016 menunggu validasi.",
-      targetUrl: "/pengelola/validasi-laporan",
+      targetUrl: "/pesantren/validasi-laporan",
       at: "2026-09-08T08:00:00.000Z",
       read: false,
     },
   ],
   counters: { report: 17, institution: 22 },
 };
+
+// D-24: bank instrumen live = turunan INS-v1.1 (sumber tunggal soal + bobot bawaan).
+SEED.instrument = buildBankLiveDariVersi(
+  SEED.instrumentVersions.find((v) => v.id === "INS-v1.1") ?? SEED.instrumentVersions[0],
+);
+
+// D-26.e: demo pengamatan SAM-iSAFE — tren naik 55.6 → 72.2 → 87.0 +
+// dua tindak lanjut + satu review, agar dashboard/grafik langsung terisi.
+function samDemoAssessment(
+  id: string,
+  institutionCode: string,
+  observedAt: string,
+  observerName: string,
+  observerAccountId: string,
+  scores: (0 | 1 | 2)[],
+  notes: Record<string, string>,
+  extra?: Partial<SamAssessment>,
+): SamAssessment {
+  const answers: Record<string, SamAnswer> = {};
+  SAM_QUESTIONS_SEED.forEach((item, index) => {
+    answers[item.id] = { score: scores[index] ?? 2, note: notes[item.id] ?? "" };
+  });
+  const hitung = samCompute({ answers }, SAM_QUESTIONS_SEED);
+  return {
+    id,
+    institutionCode,
+    manualLocation: institutionCode === "PSN-0018" ? "Asrama Putra Blok A" : "Gedung Kelas",
+    observedAt,
+    observedTime: "08:30",
+    kind: "Pemeriksaan Rutin",
+    observerName,
+    observerAccountId,
+    status: "Selesai",
+    answers,
+    totalScore: hitung.total,
+    maxScore: hitung.max,
+    percent: hitung.percent,
+    riskLevel: hitung.risk,
+    createdAt: `${observedAt}T08:00:00.000Z`,
+    completedAt: `${observedAt}T10:00:00.000Z`,
+    ...extra,
+  };
+}
+SEED.samAssessments = [
+  samDemoAssessment(
+    "SAM-0001",
+    "PSN-0018",
+    "2026-09-05",
+    "M. Ridwan",
+    "USR-002",
+    [1, 1, 2, 1, 0, 1, 1, 2, 1, 1, 1, 0, 1, 1, 1, 2, 1, 0, 1, 1, 2, 1, 1, 2, 1, 1, 2],
+    {
+      "SAM-Q-005": "Jalur evakuasi terhalang barang.",
+      "SAM-Q-012": "Tim tanggap darurat belum dibentuk.",
+      "SAM-Q-018": "Tanda titik kumpul belum terpasang.",
+    },
+    {
+      reviewedBy: "Sari Dewi",
+      reviewedById: "USR-005",
+      reviewedAt: "2026-09-06T09:00:00.000Z",
+      reviewNote: "Hasil diperiksa; tiga temuan diteruskan ke tindak lanjut.",
+    },
+  ),
+  samDemoAssessment(
+    "SAM-0002",
+    "PSN-0018",
+    "2026-09-18",
+    "M. Ridwan",
+    "USR-002",
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    { "SAM-Q-013": "Briefing belum rutin tiap pekan." },
+  ),
+  samDemoAssessment(
+    "SAM-0003",
+    "PSN-0019",
+    "2026-09-27",
+    "Sari Dewi",
+    "USR-005",
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1],
+    {},
+  ),
+];
+SEED.samFollowUps = [
+  {
+    id: "SMF-0001",
+    assessmentId: "SAM-0001",
+    questionId: "SAM-Q-005",
+    title: "Koridor, tangga, pintu keluar, dan jalur evakuasi tidak terhalang serta dalam kondisi aman.",
+    note: "Pindahkan barang ke gudang sarpras.",
+    pic: "Bagian Sarpras",
+    dueDate: "2026-09-30",
+    status: "Berjalan",
+    createdBy: "USR-002",
+    createdAt: "2026-09-06T10:00:00.000Z",
+    updatedAt: "2026-09-20T10:00:00.000Z",
+  },
+  {
+    id: "SMF-0002",
+    assessmentId: "SAM-0001",
+    questionId: "SAM-Q-012",
+    title: "Komite keselamatan, tim tanggap darurat, atau klub keselamatan siswa telah dibentuk dan aktif.",
+    pic: "Pembina Asrama",
+    dueDate: "2026-09-25",
+    status: "Selesai",
+    createdBy: "USR-002",
+    createdAt: "2026-09-06T10:05:00.000Z",
+    updatedAt: "2026-09-24T15:00:00.000Z",
+    doneAt: "2026-09-24T15:00:00.000Z",
+  },
+];
 
 // Explicit fictional observations for the campus illustration, not migrated floor coordinates.
 for (const finding of SEED.findings.filter((item) => item.locationSnapshot)) {

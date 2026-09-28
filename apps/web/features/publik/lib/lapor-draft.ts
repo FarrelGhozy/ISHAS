@@ -39,7 +39,18 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
       manualLocation: typeof parsed.manualLocation === "string" ? parsed.manualLocation : "",
       categoryId: typeof parsed.categoryId === "string" ? parsed.categoryId : "",
       aspectId: typeof parsed.aspectId === "string" ? parsed.aspectId : "",
-      indicatorId: typeof parsed.indicatorId === "string" ? parsed.indicatorId : "",
+      reporterSeverity:
+        parsed.reporterSeverity === "Tinggi" ||
+        parsed.reporterSeverity === "Sedang" ||
+        parsed.reporterSeverity === "Rendah"
+          ? parsed.reporterSeverity
+          : "Belum ditentukan",
+      reporterPriority:
+        parsed.reporterPriority === "Tinggi" ||
+        parsed.reporterPriority === "Sedang" ||
+        parsed.reporterPriority === "Rendah"
+          ? parsed.reporterPriority
+          : "Belum ditentukan",
       title: typeof parsed.title === "string" ? parsed.title : "",
       description: typeof parsed.description === "string" ? parsed.description : "",
       evidenceName: typeof parsed.evidenceName === "string" ? parsed.evidenceName : "",
@@ -90,7 +101,8 @@ export function isLaporEmpty(values: LaporValues): boolean {
     !values.locationSnapshot?.floorNote &&
     values.categoryId === "" &&
     values.aspectId === "" &&
-    values.indicatorId === ""
+    values.reporterSeverity === "Belum ditentukan" &&
+    values.reporterPriority === "Belum ditentukan"
   );
 }
 

@@ -16,7 +16,7 @@ export function ScopeBanner({
     <div className="scope-banner flex-wrap">
       <Building2 size={18} aria-hidden />
       <span>Pesantren aktif: {scopeLabel}</span>
-      <span aria-hidden className="text-marun-border">
+      <span aria-hidden className="text-brand-border">
         |
       </span>
       <span>

@@ -126,7 +126,7 @@ export const mockRepository = {
       const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
       if (
         actor.id
-          ? !account || account.status !== "Aktif" || account.roleId !== "pengelola"
+          ? !account || account.status !== "Aktif" || account.roleId !== "pesantren"
           : actor.role && !["Publik", "Publik / Pelapor"].includes(actor.role)
       )
         return { ok: false, error: "Akun ini tidak dapat mengunggah bukti pelaporan." };
@@ -159,7 +159,143 @@ export const mockRepository = {
       };
     }
   },
-  // D-16: pustaka detail indikator — hanya Peneliti aktif yang dapat mengunggah.
+  // D-26.e: bukti foto jawaban SAM-iSAFE — pola sama /lapor
+  // (PNG/JPEG/WebP, 5 MB/20 MP, blob privat IndexedDB). Hanya Validator aktif.
+  async uploadSamEvidence(
+    actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const epoch = assetEpoch;
+    try {
+      if (resettingAssets)
+        return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      const state = getState();
+      const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
+      if (!account || account.status !== "Aktif" || account.roleId !== "validator")
+        return { ok: false, error: "Hanya Validator aktif yang dapat mengunggah bukti." };
+      if (!selectRegisteredInstitutions(state).some((item) => item.code === institutionCode))
+        return { ok: false, error: "Pilih pesantren terdaftar sebelum mengunggah bukti." };
+      const error = validateEvidenceFile(file);
+      if (error) return { ok: false, error };
+      const bitmap = await createImageBitmap(file);
+      const pixels = bitmap.width * bitmap.height;
+      bitmap.close();
+      if (pixels > 20_000_000)
+        return {
+          ok: false,
+          error: "Resolusi gambar terlalu besar. Gunakan gambar maksimal 20 megapiksel.",
+        };
+      if (resettingAssets || epoch !== assetEpoch)
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      const id = `evidence-asset-${crypto.randomUUID()}`;
+      await putEvidenceAsset(id, { institutionCode, name: file.name.trim(), blob: file });
+      if (resettingAssets || epoch !== assetEpoch) {
+        await deleteEvidenceAsset(id);
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      }
+      return { ok: true, id };
+    } catch {
+      return {
+        ok: false,
+        error:
+          "Gambar gagal dibaca atau disimpan. Pilih gambar yang valid dan periksa penyimpanan browser.",
+      };
+    }
+  },
+  // D-21: bukti penyelesaian tindak lanjut — pola sama /lapor
+  // (PNG/JPEG/WebP, 5 MB/20 MP, blob privat IndexedDB). Hanya Pesantren aktif.
+  async uploadCompletionEvidence(
+    actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const epoch = assetEpoch;
+    try {
+      if (resettingAssets)
+        return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      const state = getState();
+      const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
+      if (!account || account.status !== "Aktif" || account.roleId !== "pesantren")
+        return { ok: false, error: "Hanya Pesantren aktif yang dapat mengunggah bukti." };
+      if (!account.institutionCodes.includes(institutionCode))
+        return { ok: false, error: "Anda tidak berwenang mengunggah bukti pesantren ini." };
+      if (!selectRegisteredInstitutions(state).some((item) => item.code === institutionCode))
+        return { ok: false, error: "Pilih pesantren terdaftar sebelum mengunggah bukti." };
+      const error = validateEvidenceFile(file);
+      if (error) return { ok: false, error };
+      const bitmap = await createImageBitmap(file);
+      const pixels = bitmap.width * bitmap.height;
+      bitmap.close();
+      if (pixels > 20_000_000)
+        return {
+          ok: false,
+          error: "Resolusi gambar terlalu besar. Gunakan gambar maksimal 20 megapiksel.",
+        };
+      if (resettingAssets || epoch !== assetEpoch)
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      const id = `evidence-asset-${crypto.randomUUID()}`;
+      await putEvidenceAsset(id, { institutionCode, name: file.name.trim(), blob: file });
+      if (resettingAssets || epoch !== assetEpoch) {
+        await deleteEvidenceAsset(id);
+        return { ok: false, error: "Demo telah direset. Pilih gambar kembali." };
+      }
+      return { ok: true, id };
+    } catch {
+      return {
+        ok: false,
+        error:
+          "Gambar gagal dibaca atau disimpan. Pilih gambar yang valid dan periksa penyimpanan browser.",
+      };
+    }
+  },
+  // D-21: simpan tindak lanjut dengan validasi blob bukti (bukan nama bebas).
+  async updateTindakLanjut(
+    actor: ReportActor,
+    recommendationId: string,
+    input: {
+      owner?: string;
+      dueDate?: string;
+      note: string;
+      progress?: number;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+      verify?: boolean;
+    },
+  ): Promise<ActionResult> {
+    try {
+      if (resettingAssets)
+        return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
+      if (input.evidenceAssetId) {
+        if (!/^evidence-asset-[0-9a-f-]{36}$/.test(input.evidenceAssetId))
+          return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
+        if (!input.evidenceName?.trim())
+          return { ok: false, error: "Nama bukti wajib mengikuti berkas yang diunggah." };
+        const asset = await getEvidenceAsset(input.evidenceAssetId);
+        const state = getState();
+        const rec = state.recommendations.find((item) => item.id === recommendationId);
+        const report = rec && state.reports.find((item) => item.id === rec.reportId);
+        if (
+          !asset ||
+          !report ||
+          asset.institutionCode !== report.institutionCode ||
+          asset.name !== input.evidenceName.trim()
+        )
+          return {
+            ok: false,
+            error:
+              "Gambar bukti tidak tersedia atau tidak sesuai. Pilih ulang atau lepas lampiran.",
+          };
+      }
+      return storeActions.updateRecommendation(actor, recommendationId, input);
+    } catch {
+      return {
+        ok: false,
+        error: "Bukti tidak dapat diperiksa. Catatan tetap tersimpan; coba lagi.",
+      };
+    }
+  },
+  // D-16: pustaka detail indikator — hanya Validator aktif yang dapat mengunggah.
   async uploadInstrumentDoc(
     actor: ReportActor,
     indicatorId: string,
@@ -173,8 +309,8 @@ export const mockRepository = {
         return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
       const state = getState();
       const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
-      if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
-        return { ok: false, error: "Hanya akun Peneliti aktif yang dapat mengunggah berkas." };
+      if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+        return { ok: false, error: "Hanya akun Validator aktif yang dapat mengunggah berkas." };
       }
       const invalid = validateInstrumentDocFile(file);
       if (invalid) return { ok: false, error: invalid };
@@ -221,8 +357,8 @@ export const mockRepository = {
         return { ok: false, error: "Reset demo sedang berlangsung. Coba lagi setelah selesai." };
       const state = getState();
       const account = actor.id ? state.users.find((item) => item.id === actor.id) : undefined;
-      if (!account || account.status !== "Aktif" || account.roleId !== "peneliti") {
-        return { ok: false, error: "Hanya akun Peneliti aktif yang dapat menambah dokumen." };
+      if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+        return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah dokumen." };
       }
       const invalid = validateInstrumentDocFile(file);
       if (invalid) return { ok: false, error: invalid };
@@ -268,13 +404,15 @@ export const mockRepository = {
     const account = viewer.id ? state.users.find((item) => item.id === viewer.id) : undefined;
     const canOpen =
       doc.visibility === "Public" ||
-      (account?.status === "Aktif" && account?.roleId === "peneliti");
-    if (!canOpen) return { ok: false, error: "Berkas Privat hanya dapat dibuka oleh Peneliti." };
+      (account?.status === "Aktif" && account?.roleId === "validator");
+    if (!canOpen) return { ok: false, error: "Berkas Privat hanya dapat dibuka oleh Validator." };
     try {
       if (isSeedInstrumentDocAssetId(doc.assetId)) {
-        const found = state.instrumentVersions
-          .flatMap((v) => v.dimensions.flatMap((d) => d.indicators))
-          .find((i) => i.id === indicatorId);
+        const found =
+          state.instrument.dimensions.flatMap((d) => d.indicators).find((i) => i.id === indicatorId) ??
+          state.instrumentVersions
+            .flatMap((v) => v.dimensions.flatMap((d) => d.indicators))
+            .find((i) => i.id === indicatorId);
         return {
           ok: true,
           blob: buildSeedPdfBlob(found?.code ?? indicatorId, found?.title ?? "", doc.fileName),
@@ -285,7 +423,7 @@ export const mockRepository = {
       if (!asset)
         return {
           ok: false,
-          error: "Berkas tidak tersedia pada perangkat ini. Unggah ulang melalui ruang Peneliti.",
+            error: "Berkas tidak tersedia pada perangkat ini. Unggah ulang melalui ruang Validator.",
         };
       return { ok: true, blob: asset.blob, fileName: doc.fileName };
     } catch {
@@ -313,7 +451,8 @@ export const mockRepository = {
       manualLocation?: string;
       categoryId?: string;
       aspectId?: string;
-      indicatorId?: string;
+      reporterSeverity?: string;
+      reporterPriority?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;
@@ -353,7 +492,9 @@ export const mockRepository = {
     id: string;
     institutionCode: string;
     reporterName: string;
+    contact?: string;
     instrumentVersionId: string;
+    instrumentChecksum?: string;
     answers: Record<string, Partial<import("../types").IndicatorAnswer>>;
     activeIndex: number;
     updatedAt: string;

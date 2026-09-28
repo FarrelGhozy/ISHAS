@@ -1,6 +1,6 @@
 // `/lapor` — form laporan cepat satu langkah (V2-03: FLOWS §2, WIREFRAMES §2).
-// Tanpa login maupun login pengelola (nama otomatis, tetap editable — D-03).
-// Super Admin/Peneliti: baca saja, kirim nonaktif + pesan keluar dari akun.
+// Tanpa login maupun login pesantren (nama otomatis, tetap editable — D-03).
+// Super Admin/Validator: baca saja, kirim nonaktif + pesan keluar dari akun.
 // Draft per pesantren bertahan saat refresh; kirim-ganda dicegah via tombol terkunci
 // + requestId idempotency yang sama bila klik ganda terjadi sebelum render ulang.
 
@@ -35,7 +35,8 @@ const FOCUS_ORDER: (keyof LaporValues)[] = [
   "manualLocation",
   "categoryId",
   "aspectId",
-  "indicatorId",
+  "reporterSeverity",
+  "reporterPriority",
   "title",
   "description",
   "contact",
@@ -65,7 +66,7 @@ function LaporPageContent() {
   const registeredCodes = useMemo(() => registered.map((i) => i.code), [registered]);
 
   const blocked = user !== null && !canSubmitReport(user.roleId);
-  const isPrefilledManager = user?.roleId === "pengelola";
+  const isPrefilledManager = user?.roleId === "pesantren";
 
   const param = searchParams.get("pesantren");
   const paramValid = param !== null && registeredCodes.includes(param);
@@ -85,7 +86,7 @@ function LaporPageContent() {
       return {
         ...EMPTY_LAPOR_VALUES,
         institutionCode: initialCode,
-        reporterName: user?.roleId === "pengelola" ? (user.name ?? "") : "",
+        reporterName: user?.roleId === "pesantren" ? (user.name ?? "") : "",
       };
     }
     if (paramInvalid)
@@ -95,7 +96,7 @@ function LaporPageContent() {
     if (mirror && (!isLaporEmpty(mirror) || mirror.institutionCode)) return mirror;
     return {
       ...EMPTY_LAPOR_VALUES,
-      reporterName: user?.roleId === "pengelola" ? (user.name ?? "") : "",
+      reporterName: user?.roleId === "pesantren" ? (user.name ?? "") : "",
     };
   });
   const [touched, setTouched] = useState<Partial<Record<keyof LaporValues, boolean>>>({});
@@ -127,29 +128,23 @@ function LaporPageContent() {
   );
   const mapError = validateMapLocation(state, values.institutionCode, values.locationSnapshot);
 
-  // D-15 cascading: opsi dari versi instrumen Published aktif (single source di seed).
-  const activeVersion = state.instrumentVersions.find(
-    (v) => v.id === state.activeInstrumentVersionId && v.status === "Published",
-  );
+  // D-15/D-24 cascading: opsi dari bank live (fallback versi warisan).
+  const bankDims = state.instrument?.dimensions ?? [];
+  const legacyDims =
+    state.instrumentVersions.find(
+      (v) => v.id === state.activeInstrumentVersionId && v.status === "Published",
+    )?.dimensions ?? [];
+  const refDims = bankDims.length ? bankDims : legacyDims;
   const categoryOptions = useMemo(
-    () =>
-      (activeVersion?.dimensions ?? []).map((d) => ({ id: d.categoryId ?? d.id, name: d.name })),
-    [activeVersion],
+    () => refDims.map((d) => ({ id: d.categoryId ?? d.id, name: d.name })),
+    [refDims],
   );
   const categoryIds = useMemo(() => categoryOptions.map((c) => c.id), [categoryOptions]);
   const aspectOptions = useMemo(() => {
-    const dim = activeVersion?.dimensions.find((d) => (d.categoryId ?? d.id) === values.categoryId);
+    const dim = refDims.find((d) => (d.categoryId ?? d.id) === values.categoryId);
     return (dim?.aspects ?? []).map((a) => ({ id: a.id, name: a.name }));
-  }, [activeVersion, values.categoryId]);
+  }, [refDims, values.categoryId]);
   const aspectIds = useMemo(() => aspectOptions.map((a) => a.id), [aspectOptions]);
-  const indicatorOptions = useMemo(() => {
-    if (!activeVersion || !values.aspectId) return [];
-    return activeVersion.dimensions
-      .flatMap((d) => d.indicators)
-      .filter((i) => i.aspectId === values.aspectId)
-      .map((i) => ({ id: i.id, name: `${i.code} · ${i.title}` }));
-  }, [activeVersion, values.aspectId]);
-  const indicatorIds = useMemo(() => indicatorOptions.map((i) => i.id), [indicatorOptions]);
 
   const errors = useMemo(
     () =>
@@ -159,9 +154,8 @@ function LaporPageContent() {
         selectedHasNoAreas,
         categoryIds,
         aspectIdsOfCategory: aspectIds,
-        indicatorIdsOfAspect: indicatorIds,
       }),
-    [values, registeredCodes, areaIds, selectedHasNoAreas, categoryIds, aspectIds, indicatorIds],
+    [values, registeredCodes, areaIds, selectedHasNoAreas, categoryIds, aspectIds],
   );
   const visibleErrors = useMemo(() => {
     const out: typeof errors = {};
@@ -251,8 +245,7 @@ function LaporPageContent() {
       ...v,
       [field]: value,
       ...(field === "areaId" ? { locationSnapshot: undefined } : {}),
-      ...(field === "categoryId" ? { aspectId: "", indicatorId: "" } : {}),
-      ...(field === "aspectId" ? { indicatorId: "" } : {}),
+      ...(field === "categoryId" ? { aspectId: "" } : {}),
     }));
   }
 
@@ -270,7 +263,8 @@ function LaporPageContent() {
       manualLocation: true,
       categoryId: true,
       aspectId: true,
-      indicatorId: true,
+      reporterSeverity: true,
+      reporterPriority: true,
       title: true,
       description: true,
       contact: true,
@@ -301,7 +295,8 @@ function LaporPageContent() {
         manualLocation: values.manualLocation.trim() || undefined,
         categoryId: values.categoryId || undefined,
         aspectId: values.aspectId || undefined,
-        indicatorId: values.indicatorId || undefined,
+        reporterSeverity: values.reporterSeverity,
+        reporterPriority: values.reporterPriority,
         evidenceName: values.evidenceName.trim() || undefined,
         evidenceAssetId: values.evidenceAssetId,
         contact: values.contact.trim() || undefined,
@@ -334,8 +329,8 @@ function LaporPageContent() {
         <p className="kicker">Laporan publik</p>
         <h1 className="text-xl font-extrabold text-heading">Laporkan temuan bahaya</h1>
         <p className="mt-1 text-sm text-secondary-text">
-          Laporan Anda tidak langsung tampil; pengelola pondok memvalidasi dan menentukan tingkat
-          bahaya terlebih dahulu.
+          Laporan Anda tidak langsung tampil; akun Pesantren memvalidasi dan menentukan tingkat
+          bahaya final terlebih dahulu. Usulan Anda di bawah membantu penilaian awal.
         </p>
       </header>
 
@@ -421,7 +416,6 @@ function LaporPageContent() {
         areasEmpty={selectedHasNoAreas}
         categories={categoryOptions}
         aspects={aspectOptions}
-        indicators={indicatorOptions}
         readOnly={blocked || submitting || evidenceUploading}
         submitting={submitting}
         submitDisabled={blocked || submitting || !canSubmit}

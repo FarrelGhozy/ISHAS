@@ -79,7 +79,7 @@ export default function PublicLayout() {
             {user ? (
               <>
                 <span className="flex min-h-11 min-w-0 items-center gap-2 rounded-[7px] border border-line-soft bg-white px-2">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-marun-bg text-xs font-extrabold text-primary">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-brand-bg text-xs font-extrabold text-primary">
                     {user.initials}
                   </span>
                   <span className="min-w-0 break-words leading-tight">

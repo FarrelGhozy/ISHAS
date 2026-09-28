@@ -23,7 +23,7 @@ tidak pernah warna saja. Warna aksen grafik boleh berbeda tetapi bukan satu-satu
 ## 2. Aspek / sub-aspek awal (ID stabil)
 
 Aspek adalah pengelompokan indikator di dalam satu kategori. Daftar awal berasal dari
-contoh cakupan brief; Peneliti dapat menambah aspek lewat Draft instrumen (FLOWS §7).
+contoh cakupan brief; Validator dapat menambah aspek lewat Draft instrumen (FLOWS §7).
 
 | Aspek ID | Kategori | Nama aspek |
 |---|---|---|
@@ -70,7 +70,7 @@ Aturan turunan temuan (ilustratif, sama seperti D-14.b, diperluas ke indikator b
 - `likert-1-5` bernilai `1/2` → temuan.
 - `likert-1-2-tidak` bernilai `1/Tidak` → temuan (nilai `2` = Sesuai, bukan temuan).
 - `boolean-ya-tidak` bernilai `Tidak` → temuan.
-- `severity/priority` tetap **hanya pengelola saat Terima** (FLOWS §4, D-15.c).
+- `severity/priority` tetap **hanya akun Pesantren saat Terima** (FLOWS §4, D-15.c).
   Form publik tidak berisi Likelihood/Severity/Risk Score/Rekomendasi.
 
 ## 4. Mapping dimensi lama → struktur baru
@@ -110,7 +110,7 @@ DIM-001 → Keselamatan; DIM-002 → campuran (dipetakan per indikator, bukan pe
 
 Untuk setiap kategori (ditambah baris `Belum dipetakan` untuk lapor-cepat tanpa indikator):
 
-- jumlah indikator (katalog instrumen Published (`INS-v1.1` pada seed), bukan jumlah jawaban)
+- jumlah indikator (katalog bank live D-24 (turunan `INS-v1.1` pada seed), bukan jumlah jawaban)
 - jumlah temuan (temuan `Diterima` + belum arsip + scope filter)
 - jumlah sesuai / tidak sesuai (dari snapshot `Diterima`; sesuai = jawaban tidak memicu temuan)
 - jumlah risiko Rendah / Sedang / Tinggi / Ekstrem (satu hitung per ID temuan)
@@ -122,19 +122,24 @@ di [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md).
 
 ## 7. Kontrak form (D-15.c)
 
-Alur lapor-cepat (opsional, tidak wajib — laporan tanpa kategori tetap sah):
+Alur lapor-cepat (opsional, tidak wajib — laporan tanpa kategori tetap sah; D-19):
 
 ```
-Lokasi → Kategori → Aspek → Indikator terkait (opsional)
+Lokasi → Kategori → Aspek (tanpa Indikator)
+  → Usulan mandiri (Tingkat keparahan + Prioritas, opsional)
   → Kondisi/Judul → Temuan/Deskripsi → Potensi bahaya (deskripsi)
-  → Foto → Kirim (risiko diisi pengelola saat validasi)
+  → Foto → Kirim (keputusan risiko final oleh akun Pesantren saat validasi)
 ```
 
-- Memilih kategori memfilter aspek; memilih aspek memfilter indikator (cascading).
+- Memilih kategori memfilter aspek. `Indikator terkait` tidak tampil pada
+  lapor-cepat baru; data lama yang masih menyimpan `indicatorId` tetap dibaca.
 - Penilaian-mandiri: navigasi dikelompokkan Kategori → Aspek → Indikator;
   versi Published terkunci; draft lama terkunci kirim (D-10).
-- Validasi: `aspectId` harus milik `categoryId`; `indicatorId` harus milik `aspectId`.
-  Pelanggaran ditolak dengan pesan "Kategori/aspek/indikator tidak konsisten."
+- Validasi: `aspectId` harus milik `categoryId`. Usulan pelapor
+  (`reporterSeverity/reporterPriority`) ditinjau ulang; `severity/priority`
+  final tetap **hanya akun Pesantren saat Terima** (FLOWS §4, D-15.c, D-19).
+  Pelanggaran konsistensi ditolak dengan pesan "Kategori/aspek tidak konsisten."
+  Form publik tidak berisi Likelihood/Risk Score/Rekomendasi final.
 
 ## 8. Migrasi & seed
 
@@ -142,7 +147,10 @@ Lokasi → Kategori → Aspek → Indikator terkait (opsional)
   record/ID, hanya menambah field (`categoryId/aspectId` fallback, `level` tetap valid).
 - `INS-v1.0` → `Archived`; `INS-v1.1` (4 kategori, 10 indikator) → `Published` + aktif.
   Snapshot lama tetap merujuk `INS-v1.0` dan tidak dihitung ulang.
-- `resetMockData` kembali ke seed `INS-v1.1` + histori `INS-v1.0`.
+- **Amendemen D-24 (schema `10 → 11`):** bank live `INS-LIVE` diturunkan dari
+  `INS-v1.1` (tipe warisan dipetakan, nilai lama tetap sah); `instrumentVersions`
+  lama hanya bacaan legacy; snapshot baru membeku (soal + opsi + bobot +
+  `scorePercent`); `resetMockData` kembali ke seed bank live.
 
 ## 9. Responsif & non-tujuan
 

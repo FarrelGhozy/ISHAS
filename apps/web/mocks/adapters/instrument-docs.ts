@@ -62,7 +62,7 @@ export function buildSeedPdfBlob(code: string, title: string, fileName: string):
     `Berkas: ${fileName}`,
     "",
     "Berkas contoh ini dibuat otomatis di browser untuk demo.",
-    "Unggah PDF sebenarnya melalui ruang Peneliti untuk menggantinya.",
+    "Unggah PDF sebenarnya melalui ruang Validator untuk menggantinya.",
   ];
   const content = lines
     .map((line, i) => `50 ${780 - i * 22} Td (${escapePdfText(line)}) Tj`)

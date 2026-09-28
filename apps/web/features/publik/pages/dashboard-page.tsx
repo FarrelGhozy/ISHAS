@@ -81,7 +81,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         title={isKnown ? "Pesantren tidak tersedia untuk publik" : "Pesantren tidak ditemukan"}
         description={
           isKnown
-            ? `Kode "${rawParam}" tercatat tetapi tidak memenuhi syarat Pesantren terdaftar (Aktif + pengelola aktif). Hasil lama tidak tampil publik sesuai D-08.`
+            ? `Kode "${rawParam}" tercatat tetapi tidak memenuhi syarat Pesantren terdaftar (Aktif + akun Pesantren aktif). Hasil lama tidak tampil publik sesuai D-08.`
             : `Kode "${rawParam}" tidak dikenal. Periksa kembali tautan atau pilih pesantren dari dashboard.`
         }
         action={
@@ -101,6 +101,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
       selfAssessmentSnapshots: state.selfAssessmentSnapshots,
       instrumentVersions: state.instrumentVersions,
       indexHistory: state.indexHistory,
+      instrument: state.instrument,
     },
     scopeCodes,
   );
@@ -127,6 +128,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
           selfAssessmentSnapshots: state.selfAssessmentSnapshots,
           instrumentVersions: state.instrumentVersions,
           indexHistory: state.indexHistory,
+          instrument: state.instrument,
         },
         [institution.code],
       );
@@ -136,21 +138,26 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
         location: institution.location,
         index: institutionSummary.currentIndex,
         reports: institutionReports.length,
-        activeFindings: institutionFindings.filter((finding) => finding.status !== "Terverifikasi")
-          .length,
+        activeFindings: institutionFindings.filter(
+          (finding) => finding.status !== "Terverifikasi" && finding.status !== "Dibatalkan",
+        ).length,
         progress: ringkasTindakLanjut(institutionRecommendations).rataProgress,
       };
     });
 
   const temuanPrioritas = pilihTemuanPrioritas(findings, 4);
   const reportById = new Map(reports.map((r) => [r.id, r]));
+  // D-24: kiriman baru memakai bank live; label warisan hanya untuk histori lama.
   const instrumentLabel =
-    summary.instrumentVersionIds.length === 1
-      ? (state.instrumentVersions.find((v) => v.id === summary.instrumentVersionIds[0])?.label ??
-        null)
-      : summary.instrumentVersionIds.length > 1
-        ? "Beberapa versi instrumen"
-        : null;
+    summary.instrumentVersionIds.length === 0
+      ? null
+      : summary.instrumentVersionIds.every((id) => id === "INS-LIVE")
+        ? (state.instrument.label ?? null)
+        : summary.instrumentVersionIds.length > 1
+          ? "Beberapa sumber penilaian"
+          : (state.instrumentVersions.find((v) => v.id === summary.instrumentVersionIds[0])?.label ??
+            state.instrument.label ??
+            null);
 
   if (registered.length === 0) {
     return (
@@ -252,6 +259,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
                 reportById.has(snapshot.reportId),
               )}
               versions={state.instrumentVersions}
+              instrument={state.instrument}
             />
             <IndexTrendPanel summary={summary} />
           </div>
@@ -263,6 +271,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
             areas={state.areas.filter((area) => scopeCodes.includes(area.institutionCode))}
             distribution={insight.distribution}
             reports={reports}
+            instrument={state.instrument}
           />
           <RekapKategoriPanel
             reports={reports}
@@ -271,6 +280,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
               reportById.has(snapshot.reportId),
             )}
             versions={state.instrumentVersions}
+            instrument={state.instrument}
           />
           <DashboardDocPanel />
           <FindingsPanel

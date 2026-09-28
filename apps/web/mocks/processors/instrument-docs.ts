@@ -21,38 +21,51 @@ export type DocFilter = {
   visibility: "Semua" | InstrumentDocVisibility;
 };
 
-/** Baris per indikator dari versi aktif (fallback Published pertama). */
+/** Baris per indikator dari bank live (D-24; fallback versi warisan). */
 export function selectIndicatorDocRows(state: {
   instrumentVersions: IshasState["instrumentVersions"];
   activeInstrumentVersionId: IshasState["activeInstrumentVersionId"];
   instrumentDocs: IshasState["instrumentDocs"];
+  instrument?: IshasState["instrument"];
 }): IndicatorDocRow[] {
+  const bankDims = state.instrument?.dimensions ?? [];
   const version =
     state.instrumentVersions.find((v) => v.id === state.activeInstrumentVersionId) ??
     state.instrumentVersions.find((v) => v.status === "Published") ??
     state.instrumentVersions[0];
+  const dims = bankDims.length
+    ? bankDims.map((d) => ({
+        name: d.name,
+        categoryId: d.categoryId,
+        indicators: d.indicators.map((i) => ({
+          id: i.id,
+          code: i.code,
+          title: i.title,
+          categoryId: i.categoryId,
+          aspectId: i.aspectId,
+        })),
+      }))
+    : (version?.dimensions ?? []);
   const docs = new Map((state.instrumentDocs ?? []).map((d) => [d.indicatorId, d]));
-  const catalogRows = version
-    ? version.dimensions.flatMap((dim) =>
-        dim.indicators.map((ind) => {
-          const categoryId = ind.categoryId ?? dim.categoryId ?? "";
-          const aspectId = ind.aspectId ?? "";
-          return {
-            indicatorId: ind.id,
-            code: ind.code,
-            title: ind.title,
-            categoryId,
-            categoryName:
-              (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) ||
-              dim.name,
-            aspectId,
-            aspectName: (aspectId && K3_ASPECT_MAP[aspectId]?.name) || "",
-            doc: docs.get(ind.id) ?? null,
-          } satisfies IndicatorDocRow;
-        }),
-      )
-    : [];
-  // D-16.g: entri dokumen buatan Peneliti (tidak ada di katalog versi) tetap tampil.
+  const catalogRows = dims.flatMap((dim) =>
+    dim.indicators.map((ind) => {
+      const categoryId = ind.categoryId ?? dim.categoryId ?? "";
+      const aspectId = ind.aspectId ?? "";
+      return {
+        indicatorId: ind.id,
+        code: ind.code,
+        title: ind.title,
+        categoryId,
+        categoryName:
+          (categoryId && K3_CATEGORY_MAP[categoryId as keyof typeof K3_CATEGORY_MAP]?.name) ||
+          dim.name,
+        aspectId,
+        aspectName: (aspectId && K3_ASPECT_MAP[aspectId]?.name) || "",
+        doc: docs.get(ind.id) ?? null,
+      } satisfies IndicatorDocRow;
+    }),
+  );
+  // D-16.g: entri dokumen buatan Validator (tidak ada di katalog versi) tetap tampil.
   const known = new Set(catalogRows.map((row) => row.indicatorId));
   const manualRows = (state.instrumentDocs ?? [])
     .filter((doc) => doc.manual && !known.has(doc.indicatorId))

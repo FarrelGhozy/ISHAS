@@ -11,14 +11,14 @@ checklist yang belum diverifikasi tetap terbuka.
 **Status:** REVIEW
 **Catatan review:** diaktifkan eksplisit oleh pemilik pada sesi 8 September 2026 ("kerjakan
 stage 3"). D-02/D-03 telah dijawab (8 September 2026): tanpa opsi anonim; kirim hanya publik +
-pengelola; Super Admin/Peneliti kirim nonaktif. Jawaban sesi ini: D-11 interim = kunci kirim +
-pesan hubungi pengelola bila area kosong (mengikuti FLOWS §2; keputusan final D-11 tetap
+Pesantren; Super Admin/Validator kirim nonaktif. Jawaban sesi ini: D-11 interim = kunci kirim +
+pesan hubungi akun Pesantren bila area kosong (mengikuti FLOWS §2; keputusan final D-11 tetap
 menunggu); draft interim = satu draft per pesantren di perangkat, bertahan setelah logout/ganti
 akun (cermin `ishas-draft-v2:lapor:*`; kebijakan final D-10 tetap menunggu).
 Dialog `/lapor` dari `/` bersifat opsional ("dapat") — sesi ini membangun halaman kanonis
 `/lapor` saja; CTA dashboard tetap menaut ke URL kanonis.
 **Dependensi:** Stage 01 tersedia (model + seed + area), Stage 02 disarankan (CTA sudah ada).
-**Tujuan:** form laporan satu langkah yang bisa dikirim tanpa login maupun saat login pengelola,
+**Tujuan:** form laporan satu langkah yang bisa dikirim tanpa login maupun saat login Pesantren,
 dengan validasi ketat dan layar sukses bernomor — tanpa pernah tampil langsung di dashboard.
 
 ## Ruang lingkup
@@ -26,10 +26,10 @@ dengan validasi ketat dan layar sukses bernomor — tanpa pernah tampil langsung
 ### 1. Form (satu langkah, tanpa wizard; urutan field tetap)
 
 - [x] Nama pelapor* (2–100 karakter, tanpa opsi anonim — D-02) + penjelasan penyimpanan nama.
- Bila login pengelola: terisi otomatis `nama akun` + label peran; tetap editable.
- Bila login Super Admin/Peneliti: kirim nonaktif + pesan keluar dari akun (D-03).
+ Bila login Pesantren: terisi otomatis `nama akun` + label peran; tetap editable.
+ Bila login Super Admin/Validator: kirim nonaktif + pesan keluar dari akun (D-03).
 - [x] Pesantren* (dropdown HANYA terdaftar, `kode — nama`; tidak ada isi manual).
-- [x] Lokasi/area* (dropdown area milik pesantren terpilih; kosong → pesan hubungi pengelola, submit dikunci).
+- [x] Lokasi/area* (dropdown area milik pesantren terpilih; kosong → pesan hubungi akun Pesantren, submit dikunci).
 - [x] Judul temuan* (10–140) + Deskripsi* (min 20 + hint 4 pertanyaan panduan) +
  Foto (opsional, nama file dummy) + Kontak (opsional, maks 100).
 - [x] Error inline per field dengan kalimat persis `WIREFRAMES.md` §2; tombol **Kirim laporan**
@@ -42,7 +42,7 @@ dengan validasi ketat dan layar sukses bernomor — tanpa pernah tampil langsung
 
 - [x] Sukses → `submitPublicReport`: `RPT-XXXX` berurutan, `Menunggu validasi` ganda
  (validation + handling), severity/priority `Belum ditentukan` + audit `Mengirim laporan publik` +
- notifikasi ke pengelola pemilik scope (`/pengelola/validasi-laporan`).
+ notifikasi ke akun Pesantren pemilik scope (`/pesantren/validasi-laporan`).
 - [x] Layar sukses persis `WIREFRAMES.md` §2 (nomor + chip + penjelasan belum tampil + tombol kembali).
 - [x] Laporan TIDAK masuk selector validated (dashboard/hasil/peta tetap steril) — dibuktikan test.
 - [x] Draft form (input belum dikirim) bertahan saat refresh (localStorage per pesantren).
@@ -59,7 +59,7 @@ dengan validasi ketat dan layar sukses bernomor — tanpa pernah tampil langsung
 
 ## Acceptance criteria
 
-- [x] Skenario TEST_PLAN §3 nomor 1, 2, 7 lulus pada sisi pengiriman/data; pemeriksaan UI antrean pengelola dilengkapi bersama Stage 05 dan dicatat belum diuji sampai tersedia.
+- [x] Skenario TEST_PLAN §3 nomor 1, 2, 7 lulus pada sisi pengiriman/data; pemeriksaan UI antrean Pesantren dilengkapi bersama Stage 05 dan dicatat belum diuji sampai tersedia.
 - [x] Copy + status + warna persis WIREFRAMES §2 dan DESIGN_SYSTEM §2.
 - [ ] Visual 1440/834/390 + keyboard penuh sampai tombol kirim; TEST_PLAN §1 baris 3.
 - [x] Lint, typecheck, test, build lulus.
@@ -78,13 +78,13 @@ Route (12/#): #3 terimplementasi, verifikasi render browser menyusul — `/lapor
  `?pesantren=PSN-9999` menampilkan "Pesantren tidak tersedia untuk pelaporan." +
  meminta pilihan eksplisit (logika + pesan diverifikasi telaah kode; piksel menyusul).
  Baris 1–2, 4–12: tidak regresi (file di luar lingkup Stage 03 tak disentuh).
-Guard/sesi: lulus sisi data — D-03: Super Admin/Peneliti kirim nonaktif + pesan keluar
- dari akun; pengelola nama otomatis + editable + email akun tersimpan
+Guard/sesi: lulus sisi data — D-03: Super Admin/Validator kirim nonaktif + pesan keluar
+ dari akun; nama akun Pesantren otomatis + editable + email akun tersimpan
  (dibuktikan test store). Uji guard browser penuh menyusul pola Stage 01.
 Skenario E2E (1-8): #1, #2, #7 LULUS sisi pengiriman/data (test store: RPT-0008 berurutan,
  Menunggu validasi ganda, Belum ditentukan, audit + notifikasi scope USR-003,
  steril dari selector validated, idempotency requestId, scope isolation area).
- #3–#6, #8: BELUM DIUJI — menunggu Stage 05/06/08. UI antrean pengelola menyusul Stage 05.
+ #3–#6, #8: BELUM DIUJI — menunggu Stage 05/06/08. UI antrean Pesantren menyusul Stage 05.
 Visual 1440/834/390: BELUM DIUJI di browser — Chrome MCP tak tersedia di perangkat ini.
  Pola kode memakai konstruksi yang sama dengan Stage 02 yang lulus (max-w-2xl, flex-col,
  flex-wrap, tanpa lebar tetap/tabel); verifikasi piksel menyusul sebelum DONE.
@@ -110,8 +110,8 @@ Catatan/regresi: implementasi mengikuti interim D-11 (kunci kirim) + draft per p
 
 Hasil review ulang: draft dua pesantren terisolasi dan pulih setelah refresh; URL invalid
 tidak memulihkan tujuan lama; batal benar-benar menghapus draft yang dipilih; kegagalan
-localStorage tampil sebagai error. Lapisan data menolak akun Super Admin/Peneliti/tidak
-dikenal dan menyimpan laporan secara atomik. Pengiriman anonim dan pengelola lintas pesantren,
+localStorage tampil sebagai error. Lapisan data menolak akun Super Admin/Validator/tidak
+dikenal dan menyimpan laporan secara atomik. Pengiriman anonim dan Pesantren lintas pesantren,
 idempotensi, fokus layar sukses, dialog batal, audit, notifikasi scope, serta isolasi dashboard
 lulus di browser. Visual lulus pada lima viewport tanpa overflow. Total 45 test, lint,
 typecheck, dan build lulus.

@@ -31,7 +31,7 @@ login tiga peran, dan `/` merender dashboard publik.
 - [x] Buat aplikasi React Router (framework mode, Vite, TypeScript) di folder terkonfirmasi;
  jalankan dengan bun (`bun install`, `bun run dev`).
 - [x] Pecah folder per area sejak awal: `app/routes/` (route file), `features/<area>/`
- (publik, validasi, admin, peneliti, auth), `shared/` (layout, components, auth, navigation),
+ (publik, validasi, admin, validator, auth), `shared/` (layout, components, auth, navigation),
  `mocks/` (seed, store, adapters, processors) — tidak ada file raksasa.
 - [x] Token visual `DESIGN_SYSTEM.md` §1 (hex persis) dipasang sebagai style dasar
  (Tailwind v4 mengikuti pola rujukan — konfirmasi pemilik bila berbeda).
@@ -54,12 +54,12 @@ login tiga peran, dan `/` merender dashboard publik.
 
 ### 3. Akun + guard (dibangun tanpa asesor sejak awal)
 
-- [x] `shared/auth/`: akun demo 3 peran (admin/peneliti/pengelola, data persis ROLES §2–4);
- sesi menunjuk ID akun, bukan role saja (prasyarat isolasi scope dua pengelola).
+- [x] `shared/auth/`: akun demo 3 peran (admin/validator/pesantren, data persis ROLES §2–4);
+ sesi menunjuk ID akun, bukan role saja (prasyarat isolasi scope dua akun Pesantren).
 - [x] Guard workspace: tanpa sesi → `/login` (kembali ke URL tujuan); role salah → `/akses-ditolak`;
  scope diperiksa pada pembacaan data DAN aksi simpan berbasis ID.
 - [x] Route `/lapor` + `/penilaian-mandiri`: dapat dibaca semua sesi; aksi kirim nonaktif
- untuk Super Admin/Peneliti dengan pesan keluar dari akun (D-03).
+ untuk Super Admin/Validator dengan pesan keluar dari akun (D-03).
 - [x] Route tidak dikenal → halaman tidak ditemukan yang ramah (bukan crash).
 
 ### 4. `/` publik
@@ -70,7 +70,7 @@ login tiga peran, dan `/` merender dashboard publik.
 
 ## Di luar ruang lingkup (dilarang di stage ini)
 
-Penyimpanan snapshot jawaban/hasil, identitas sesi lengkap, serta pemetaan Peneliti
+Penyimpanan snapshot jawaban/hasil, identitas sesi lengkap, serta pemetaan Validator
 dirumuskan di fondasi bersama DATA_REQUIREMENTS; daftar field di atas belum kontrak lengkap.
 
 - Form lapor, antrean validasi, lifecycle penuh, self-assessment, halaman baca publik (Stage 02…Stage 08).
@@ -91,14 +91,14 @@ dirumuskan di fondasi bersama DATA_REQUIREMENTS; daftar field di atas belum kont
  `bun run build` (SPA mode) hijau. Grep `asesor|assessor|assignment` bersih di kode aktif
  (satu-satunya penyebutan: halaman pesan penghentian `/asesor/*`, yang memang diwajibkan).
 - Route (smoke browser, chromium headless): `/` tanpa login = dashboard + pemilih (hanya 2 pesantren
- terdaftar — PSN-0020 Aktif tanpa pengelola tidak muncul, sesuai DATA_REQUIREMENTS §8 opsi a);
+ terdaftar — PSN-0020 Aktif tanpa akun Pesantren tidak muncul, sesuai DATA_REQUIREMENTS §8 opsi a);
  `/lapor`, `/penilaian-mandiri`, `/pesantren/PSN-0018`, `/pesantren/XXX` (empty state, bukan crash),
  `/asesor/*` (pesan penghentian), route tak dikenal (halaman ramah) — semua tanpa error konsol.
-- Guard/sesi: anonim buka `/admin/*`,`/pengelola/*` → redirect `/login`; login pengelola mendarat di
- `/pengelola/validasi-laporan` sesuai ROUTES §5; pengelola membuka `/admin/*` → `/akses-ditolak`;
- admin membuka `/pengelola/*` → `/akses-ditolak`; refresh tidak menghapus sesi (sessionStorage
+- Guard/sesi: anonim buka `/admin/*`,`/pesantren/*` → redirect `/login`; login Pesantren mendarat di
+ `/pesantren/validasi-laporan` sesuai ROUTES §5; Pesantren membuka `/admin/*` → `/akses-ditolak`;
+ admin membuka `/pesantren/*` → `/akses-ditolak`; refresh tidak menghapus sesi (sessionStorage
  `ishas-session-v2` menunjuk ID akun); isi `/` sama saat login + identitas di header.
-- Isolasi scope: antrean pengelola PSN-0018 hanya memuat RPT-0001; RPT-0002 (PSN-0019) tidak tampil.
+- Isolasi scope: antrean Pesantren PSN-0018 hanya memuat RPT-0001; RPT-0002 (PSN-0019) tidak tampil.
 - D-03: sesi Super Admin di `/lapor` melihat pesan kirim dinonaktifkan; D-02: tidak ada panel count
  antrean di `/`; nama validator tampil pada kartu temuan; ID keputusan (D-xx) dibersihkan dari copy UI.
 - Reset demo via `/admin/pengaturan`: seed dikembalikan dan tersimpan ke `ishas-mock-v4`.

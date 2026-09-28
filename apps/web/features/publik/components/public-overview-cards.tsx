@@ -14,7 +14,7 @@ function OverviewCard({
 }) {
   return (
     <article className="surface flex min-w-0 items-center gap-3 p-4">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-marun-bg text-primary">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-brand-bg text-primary">
         <Icon size={20} aria-hidden />
       </span>
       <div className="min-w-0">

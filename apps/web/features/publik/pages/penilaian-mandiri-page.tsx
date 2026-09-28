@@ -17,45 +17,31 @@ import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { EmptyState } from "~/shared/components/empty-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { canSubmitReport } from "~/shared/auth/session";
-import type { IndicatorAnswer, InstrumentVersion } from "~/mocks/types";
+import type { IndicatorAnswer, InstrumentIndicator } from "~/mocks/types";
 import { LocationPicker } from "~/shared/components/campus-plan";
 import { validateMapLocation } from "~/mocks/processors/campus-map";
+import {
+  bacaPesantrenTerakhir,
+  draftPenilaianSama,
+  ingatPesantren,
+  kurangApa,
+} from "../lib/penilaian-draft";
 
-type Indicator = InstrumentVersion["dimensions"][number]["indicators"][number];
+type Indicator = InstrumentIndicator;
 
 const fieldClass =
   "mt-1.5 min-h-11 w-full rounded-lg border border-line-soft bg-white px-3 text-sm text-heading";
 
 function answerIsComplete(indicator: Indicator, answer?: Partial<IndicatorAnswer>) {
   const hasLocation = Boolean(answer?.areaId) || (answer?.manualLocation?.trim().length ?? 0) >= 3;
+  const nilaiSah = indicator.options.map((o) => o.value);
   return Boolean(
     answer?.value &&
+    (indicator.required === false || nilaiSah.includes(answer.value)) &&
     (!indicator.evidenceRequired || answer.evidenceName?.trim()) &&
     (!indicator.locationRequired || hasLocation) &&
     (answer.value !== "N/A" || (answer.note?.trim().length ?? 0) >= 10),
   );
-}
-
-function answerOptions(type: Indicator["answerType"]) {
-  if (type === "boolean-ya-tidak")
-    return [
-      { value: "Ya", label: "Ya" },
-      { value: "Tidak", label: "Tidak" },
-    ];
-  if (type === "likert-1-2-tidak")
-    return [
-      { value: "1", label: "1 — Belum sesuai" },
-      { value: "2", label: "2 — Sesuai" },
-      { value: "Tidak", label: "Tidak tersedia" },
-    ];
-  return [
-    { value: "1", label: "1 — Sangat kurang" },
-    { value: "2", label: "2 — Kurang" },
-    { value: "3", label: "3 — Cukup" },
-    { value: "4", label: "4 — Baik" },
-    { value: "5", label: "5 — Sangat baik" },
-    { value: "N/A", label: "Tidak dapat dinilai" },
-  ];
 }
 
 export function PenilaianMandiriPage() {
@@ -68,21 +54,26 @@ export function PenilaianMandiriPage() {
   const paramInvalid = param !== null && !paramValid;
   // ROUTES §1: preset ?pesantren= dihormati bila terdaftar; kode tak dikenal tidak
   // diganti diam-diam — minta pilihan eksplisit (seperti /lapor).
-  const initialInstitution = paramValid && param ? param : (user?.institutionCodes[0] ?? "");
+  // Tanpa param dan tanpa login, pakai pesantren terakhir pada perangkat ini
+  // agar draft tidak hilang saat reload.
+  const initialInstitution =
+    paramValid && param
+      ? param
+      : (user?.institutionCodes[0] ?? bacaPesantrenTerakhir(registeredCodes));
   const initialDraft = state.selfAssessmentDrafts[`SELF-${initialInstitution}`];
   const [institutionCode, setInstitutionCode] = useState(initialInstitution);
   const [reporterName, setReporterName] = useState(initialDraft?.reporterName ?? user?.name ?? "");
+  const [contact, setContact] = useState(initialDraft?.contact ?? "");
   const [active, setActive] = useState(initialDraft?.activeIndex ?? 0);
   const [answers, setAnswers] = useState<Record<string, Partial<IndicatorAnswer>>>(
     initialDraft?.answers ?? {},
   );
-  const [draftVersionId, setDraftVersionId] = useState(initialDraft?.instrumentVersionId ?? "");
+  const [draftChecksum, setDraftChecksum] = useState(initialDraft?.instrumentChecksum ?? "");
   const [notice, setNotice] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const blocked = user !== null && !canSubmitReport(user.roleId);
-  const instrument = state.instrumentVersions.find(
-    (item) => item.id === state.activeInstrumentVersionId && item.status === "Published",
-  );
+  // D-24: satu bank live sumber soal; tanpa versi.
+  const instrument = state.instrument;
   const indicators = useMemo(
     () => instrument?.dimensions.flatMap((dimension) => dimension.indicators) ?? [],
     [instrument],
@@ -99,12 +90,11 @@ export function PenilaianMandiriPage() {
     .find(Boolean);
   const draftId = `SELF-${institutionCode || "baru"}`;
   const storedDraft = state.selfAssessmentDrafts[draftId];
-  const effectiveVersionId =
-    draftVersionId || storedDraft?.instrumentVersionId || instrument?.id || "";
-  // D-10: draft terikat versi lama yang sudah diarsip tidak boleh dikirim.
-  // Versi draft tidak diganti diam-diam saat Published baru terbit.
+  const effectiveChecksum =
+    draftChecksum || storedDraft?.instrumentChecksum || instrument?.checksum || "";
+  // D-24: soal berubah di tengah jalan = draft basi, wajib ulang dari awal.
   const draftStale = Boolean(
-    instrument && effectiveVersionId && effectiveVersionId !== instrument.id,
+    instrument && effectiveChecksum && effectiveChecksum !== instrument.checksum,
   );
   const current = indicators[active];
   const dimension = instrument?.dimensions.find((item) =>
@@ -123,27 +113,32 @@ export function PenilaianMandiriPage() {
   const valid =
     identityComplete && completedCount === indicators.length && !draftStale && !mapError;
 
+  // Autosave tanpa menunggu nama (nama divalidasi saat kirim) agar jawaban
+  // tidak hilang bila reload sebelum identitas diisi. Tulis hanya bila isi
+  // berubah (anti loop save-render-save yang memakan RAM).
+  const checksumBank = instrument?.checksum ?? "";
+  const [tersimpanPada, setTersimpanPada] = useState("");
   useEffect(() => {
-    if (
-      !institutionCode ||
-      !instrument ||
-      reporterName.trim().length < 2 ||
-      submittedId ||
-      draftStale
-    )
-      return;
+    if (!institutionCode || !instrument || submittedId || draftStale) return;
     if (blocked) return;
+    const payload = {
+      reporterName: reporterName.trim(),
+      contact: contact.trim() || undefined,
+      instrumentChecksum: effectiveChecksum || instrument.checksum,
+      answers,
+      activeIndex: active,
+    };
+    if (draftPenilaianSama(storedDraft, payload)) return;
     try {
       const result = mockRepository.saveSelfAssessmentDraft({
         id: draftId,
         institutionCode,
-        reporterName: reporterName.trim(),
-        instrumentVersionId: effectiveVersionId || instrument.id,
-        answers,
-        activeIndex: active,
+        instrumentVersionId: "INS-LIVE",
         updatedAt: new Date().toISOString(),
+        ...payload,
       });
       if (!result.ok) setNotice(result.error);
+      else setTersimpanPada(new Date().toLocaleTimeString("id-ID"));
     } catch (error) {
       setNotice(
         error instanceof Error ? error.message : "Draft belum tersimpan. Jangan tutup halaman.",
@@ -152,13 +147,14 @@ export function PenilaianMandiriPage() {
   }, [
     institutionCode,
     reporterName,
+    contact,
     answers,
     active,
     draftId,
     submittedId,
     draftStale,
-    effectiveVersionId,
-    instrument?.id,
+    effectiveChecksum,
+    checksumBank,
     blocked,
   ]);
 
@@ -169,7 +165,8 @@ export function PenilaianMandiriPage() {
         description={`Anda login sebagai ${user?.role}. Keluar dari akun untuk mengisi penilaian sebagai publik.`}
       />
     );
-  if (!instrument) return <EmptyState title="Belum ada instrumen yang dipublikasikan." />;
+  if (!instrument || !instrument.dimensions.length)
+    return <EmptyState title="Belum ada instrumen." />;
   if (submittedId)
     return (
       <section className="surface mx-auto flex max-w-2xl flex-col items-center px-6 py-12 text-center">
@@ -182,7 +179,7 @@ export function PenilaianMandiriPage() {
         </h1>
         <p className="mt-2 max-w-lg text-sm text-secondary-text">
           Penilaian <strong className="text-heading">{submittedId}</strong> akan diperiksa oleh
-          pengelola pesantren sebelum digunakan dalam hasil K3L.
+          akun Pesantren sebelum digunakan dalam hasil K3L.
         </p>
         <button
           type="button"
@@ -192,6 +189,7 @@ export function PenilaianMandiriPage() {
             setAnswers({});
             setActive(0);
             setNotice("");
+            setTersimpanPada("");
           }}
         >
           Isi penilaian baru
@@ -200,11 +198,13 @@ export function PenilaianMandiriPage() {
     );
 
   const selectInstitution = (code: string) => {
+    ingatPesantren(code);
     const nextDraft = state.selfAssessmentDrafts[`SELF-${code}`];
     setInstitutionCode(code);
     setReporterName(nextDraft?.reporterName ?? user?.name ?? "");
+    setContact(nextDraft?.contact ?? "");
     setAnswers(nextDraft?.answers ?? {});
-    setDraftVersionId(nextDraft?.instrumentVersionId ?? instrument?.id ?? "");
+    setDraftChecksum(nextDraft?.instrumentChecksum ?? instrument?.checksum ?? "");
     setActive(Math.min(nextDraft?.activeIndex ?? 0, Math.max(indicators.length - 1, 0)));
     setNotice("");
     const next = new URLSearchParams(searchParams);
@@ -216,8 +216,9 @@ export function PenilaianMandiriPage() {
     if (storedDraft) mockRepository.deleteSelfAssessmentDraft(draftId);
     setAnswers({});
     setActive(0);
-    setDraftVersionId(instrument?.id ?? "");
+    setDraftChecksum(instrument?.checksum ?? "");
     setNotice("");
+    setTersimpanPada("");
   };
   const setAnswer = (key: keyof IndicatorAnswer, value: string) => {
     if (!current) return;
@@ -238,7 +239,7 @@ export function PenilaianMandiriPage() {
     }
     if (draftStale) {
       setNotice(
-        "Versi instrumen draft sudah diarsipkan. Buang draft lama dan mulai penilaian baru dengan versi Published terbaru.",
+        "Instrumen berubah saat Anda mengisi. Buang draft lama dan mulai penilaian baru.",
       );
       return;
     }
@@ -258,7 +259,9 @@ export function PenilaianMandiriPage() {
         id: draftId,
         institutionCode,
         reporterName: reporterName.trim(),
-        instrumentVersionId: effectiveVersionId,
+        contact: contact.trim() || undefined,
+        instrumentVersionId: "INS-LIVE",
+        instrumentChecksum: effectiveChecksum || instrument.checksum,
         answers,
         activeIndex: active,
         updatedAt: new Date().toISOString(),
@@ -282,8 +285,8 @@ export function PenilaianMandiriPage() {
           <p className="kicker">Penilaian mandiri</p>
           <h1 className="text-2xl font-extrabold text-heading">Periksa kondisi K3L pesantren</h1>
           <p className="mt-1 max-w-2xl text-sm text-secondary-text">
-            Jawab sesuai kondisi yang Anda lihat. Data tersimpan otomatis di perangkat ini dan baru
-            dikirim setelah seluruh isian lengkap.
+            Jawab sesuai kondisi yang Anda lihat. Satu penilai menghasilkan satu laporan PDF.
+            Data tersimpan otomatis di perangkat ini dan baru dikirim setelah seluruh isian lengkap.
           </p>
         </div>
         <span className="status status-neutral w-fit">
@@ -307,11 +310,12 @@ export function PenilaianMandiriPage() {
               1
             </span>
             <h2 id="identity-title" className="font-extrabold text-heading">
-              Identitas penilaian
+              Registrasi penilai
             </h2>
           </div>
           <p className="ml-9 text-xs text-secondary-text">
-            Pilih pesantren agar daftar lokasi dan draft yang sesuai dapat dimuat.
+            Satu penilai menghasilkan satu laporan. Pilih pesantren agar daftar
+            lokasi dan draft yang sesuai dapat dimuat.
           </p>
         </div>
         <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
@@ -331,7 +335,7 @@ export function PenilaianMandiriPage() {
             </select>
           </label>
           <label className="text-sm font-bold text-heading">
-            Nama pengisi <span className="text-primary">*</span>
+            Nama penilai <span className="text-primary">*</span>
             <input
               className={fieldClass}
               value={reporterName}
@@ -340,8 +344,18 @@ export function PenilaianMandiriPage() {
               autoComplete="name"
             />
             <span className="mt-1 block text-xs font-normal text-secondary-text">
-              Nama dicatat sebagai pengisi penilaian.
+              Nama dicatat sebagai penilai pada laporan PDF.
             </span>
+          </label>
+          <label className="text-sm font-bold text-heading sm:col-span-2">
+            Kontak <span className="font-normal text-secondary-text">(opsional)</span>
+            <input
+              className={fieldClass}
+              value={contact}
+              onChange={(event) => setContact(event.target.value)}
+              placeholder="Nomor HP atau email untuk klarifikasi"
+              maxLength={100}
+            />
           </label>
         </div>
       </section>
@@ -389,7 +403,7 @@ export function PenilaianMandiriPage() {
                         type="button"
                         key={indicator.id}
                         aria-current={selected ? "step" : undefined}
-                        className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 text-left text-sm font-semibold transition ${selected ? "bg-marun-bg text-primary ring-1 ring-marun-border" : "text-body-text hover:bg-strip"}`}
+                        className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 text-left text-sm font-semibold transition ${selected ? "bg-brand-bg text-primary ring-1 ring-brand-border" : "text-body-text hover:bg-strip"}`}
                         onClick={() => {
                           setActive(index);
                           setNotice("");
@@ -411,7 +425,9 @@ export function PenilaianMandiriPage() {
           <div className="border-t border-line bg-strip px-4 py-3 text-xs text-secondary-text">
             <span className="flex items-center gap-1.5 font-semibold">
               <Save size={14} />
-              Draft tersimpan otomatis
+              {tersimpanPada
+                ? `Draft tersimpan otomatis · ${tersimpanPada}`
+                : "Draft tersimpan otomatis di perangkat ini"}
             </span>
           </div>
         </aside>
@@ -457,12 +473,12 @@ export function PenilaianMandiriPage() {
                     Pilih jawaban <span className="text-primary">*</span>
                   </legend>
                   <div
-                    className={`mt-2 grid gap-2 ${current.answerType === "likert-1-5" ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-3"}`}
+                    className={`mt-2 grid gap-2 ${current.options.length > 3 ? "sm:grid-cols-2 xl:grid-cols-3" : "sm:grid-cols-3"}`}
                   >
-                    {answerOptions(current.answerType).map((option) => (
+                    {current.options.map((option) => (
                       <label
                         key={option.value}
-                        className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-semibold transition ${answer.value === option.value ? "border-primary bg-marun-bg text-primary ring-1 ring-primary" : "border-line-soft bg-white text-heading hover:border-primary"}`}
+                        className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm font-semibold transition ${answer.value === option.value ? "border-primary bg-brand-bg text-primary ring-1 ring-primary" : "border-line-soft bg-white text-heading hover:border-primary"}`}
                       >
                         <input
                           type="radio"
@@ -477,6 +493,11 @@ export function PenilaianMandiriPage() {
                     ))}
                   </div>
                 </fieldset>
+                {current && kurangApa(current, answer).length ? (
+                  <p className="mt-2 text-xs font-semibold text-secondary-text">
+                    Kurang: {kurangApa(current, answer).join(" · ")}
+                  </p>
+                ) : null}
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   {current.locationRequired ? (
                     <div>
@@ -583,7 +604,7 @@ export function PenilaianMandiriPage() {
                 >
                   {answerIsComplete(current, answer)
                     ? "Pertanyaan ini lengkap"
-                    : "Lengkapi isian wajib"}
+                    : `Kurang: ${kurangApa(current, answer).join(" · ")}`}
                 </span>
                 <button
                   type="button"
@@ -604,12 +625,12 @@ export function PenilaianMandiriPage() {
           {draftStale ? (
             <p
               role="alert"
-              className="flex flex-wrap items-center gap-2 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-border bg-brand-bg p-3 text-sm font-semibold text-primary"
             >
               <AlertCircle size={18} />
-              Draft ini terikat {effectiveVersionId} yang sudah diarsip. Kirim dikunci —{" "}
+              Instrumen berubah saat Anda mengisi. Kirim dikunci —{" "}
               <button type="button" className="text-button" onClick={discardStaleDraft}>
-                buang draft lama dan mulai baru ({instrument?.id})
+                buang draft lama dan mulai baru
               </button>
               .
             </p>
@@ -617,7 +638,7 @@ export function PenilaianMandiriPage() {
           {mapError ? (
             <p
               role="alert"
-              className="rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"
+              className="rounded-lg border border-brand-border bg-brand-bg p-3 text-sm font-semibold text-primary"
             >
               {mapError} Periksa kembali titik pada jawaban sebelum mengirim penilaian.
             </p>
@@ -653,7 +674,7 @@ export function PenilaianMandiriPage() {
             {notice ? (
               <p
                 role="alert"
-                className="mt-4 flex items-start gap-2 rounded-lg border border-marun-border bg-marun-bg p-3 text-sm font-semibold text-primary"
+                className="mt-4 flex items-start gap-2 rounded-lg border border-brand-border bg-brand-bg p-3 text-sm font-semibold text-primary"
               >
                 <AlertCircle size={18} />
                 {notice}

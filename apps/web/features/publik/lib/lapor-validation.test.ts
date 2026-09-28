@@ -10,7 +10,8 @@ const BASE: LaporValues = {
   manualLocation: "",
   categoryId: "",
   aspectId: "",
-  indicatorId: "",
+  reporterSeverity: "Belum ditentukan",
+  reporterPriority: "Belum ditentukan",
   title: "Kabel terbuka di koridor lantai 2",
   description: "Kabel listrik menggantung di koridor lantai 2 asrama sejak kemarin.",
   evidenceName: "",
@@ -59,25 +60,29 @@ describe("validateLapor", () => {
     expect(errors.contact).toBe("Kontak maksimal 100 karakter.");
   });
 
-  test("cascading D-15: aspek tanpa kategori → ditolak", () => {
+  test("cascading D-19: aspek tanpa kategori → ditolak", () => {
     const errors = validateLapor({ ...BASE, aspectId: "ASP-KES-001" }, CTX);
     expect(errors.aspectId).toBe("Pilih kategori terlebih dahulu.");
   });
 
-  test("cascading D-15: indikator tanpa aspek → ditolak", () => {
+  test("usulan mandiri tak dikenal → ditolak", () => {
     const errors = validateLapor(
-      { ...BASE, categoryId: "KAT-KESELAMATAN", indicatorId: "IND-K3L-001" },
-      {
-        ...CTX,
-        categoryIds: ["KAT-KESELAMATAN"],
-        aspectIdsOfCategory: ["ASP-KES-001"],
-        indicatorIdsOfAspect: [],
-      },
+      { ...BASE, reporterSeverity: "Kritis", reporterPriority: "Segera" },
+      CTX,
     );
-    expect(errors.indicatorId).toBe("Pilih aspek terlebih dahulu.");
+    expect(errors.reporterSeverity).toBe("Usulan tingkat keparahan tidak dikenal.");
+    expect(errors.reporterPriority).toBe("Usulan prioritas perbaikan tidak dikenal.");
   });
 
-  test("cascading D-15: aspek di luar kategori → ditolak", () => {
+  test("usulan mandiri sah → tanpa error", () => {
+    const errors = validateLapor(
+      { ...BASE, reporterSeverity: "Tinggi", reporterPriority: "Sedang" },
+      CTX,
+    );
+    expect(errors).toEqual({});
+  });
+
+  test("cascading D-19: aspek di luar kategori → ditolak", () => {
     const errors = validateLapor(
       { ...BASE, categoryId: "KAT-KESEHATAN", aspectId: "ASP-KES-001" },
       { ...CTX, categoryIds: ["KAT-KESEHATAN"], aspectIdsOfCategory: ["ASP-SEH-001"] },
@@ -85,19 +90,17 @@ describe("validateLapor", () => {
     expect(errors.aspectId).toBe("Aspek tidak termasuk kategori ini.");
   });
 
-  test("cascading D-15: pilihan konsisten → tanpa error", () => {
+  test("cascading D-19: pilihan konsisten → tanpa error", () => {
     const errors = validateLapor(
       {
         ...BASE,
         categoryId: "KAT-KESELAMATAN",
         aspectId: "ASP-KES-001",
-        indicatorId: "IND-K3L-001",
       },
       {
         ...CTX,
         categoryIds: ["KAT-KESELAMATAN"],
         aspectIdsOfCategory: ["ASP-KES-001"],
-        indicatorIdsOfAspect: ["IND-K3L-001"],
       },
     );
     expect(errors).toEqual({});

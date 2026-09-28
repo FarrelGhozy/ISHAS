@@ -1,22 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { MapPin, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { useMockState } from "~/mocks/store/mock-store";
 import {
   clusterMapItems,
   selectPublicCampusMap,
-  type PublicMapItem,
 } from "~/mocks/processors/campus-map";
 import { CampusPlan } from "~/shared/components/campus-plan";
+import { TombolDenahBesar } from "~/shared/components/denah-preview";
+import { PetaPin, PetaDaftarTemuan, PetaRingkasanTitik, URUTAN_LEVEL } from "./peta-pin";
 import { StatusChip } from "~/shared/components/status-chip";
-
-const rank: Record<string, number> = { Ekstrem: 0, Tinggi: 1, Sedang: 2, Rendah: 3 };
-const color: Record<string, string> = {
-  Ekstrem: "#7f1d1d",
-  Tinggi: "#b91c1c",
-  Sedang: "#b45309",
-  Rendah: "#047857",
-};
 
 export function PublicCampusMap({
   institutionCode,
@@ -39,6 +32,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
   const [params, setParams] = useSearchParams();
   const [opened, setOpened] = useState<string[]>([]);
   const [zoom, setZoom] = useState(1);
+  const [besar, setBesar] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 320, height: 213 });
   const { plans, activeId, items } = selectPublicCampusMap(state, institutionCode);
@@ -62,7 +56,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
     );
     observer.observe(canvas);
     return () => observer.disconnect();
-  }, [plan?.id, compact]);
+  }, [plan?.id, compact, besar]);
   const detail = filtered.filter((item) => opened.includes(item.key));
   const institution = state.institutions.find((item) => item.code === institutionCode);
   const update = (key: string, value: string) => {
@@ -151,7 +145,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
                     onChange={(event) => update("risiko", event.target.value)}
                   >
                     <option value="">Semua tingkat</option>
-                    {Object.keys(rank).map((level) => (
+                    {Object.keys(URUTAN_LEVEL).map((level) => (
                       <option key={level}>{level}</option>
                     ))}
                   </select>
@@ -177,76 +171,61 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
               </p>
             ) : null}
             {plan ? (
-              <>
-                {!compact ? (
-                  <div className="flex flex-wrap gap-2">
+              besar ? (
+                <>
+                  {!compact ? (
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => setZoom((value) => (value === 1 ? 2 : 1))}
+                      >
+                        {zoom === 1 ? "Perbesar denah" : "Ukuran normal"}
+                      </button>
+                      <span className="self-center text-sm text-secondary-text">
+                        {zoom === 2
+                          ? "Geser area denah untuk melihat bagian lain."
+                          : "Klik penanda atau pilih temuan di daftar."}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div
+                    className="max-w-full overflow-auto rounded-lg"
+                    style={{ maxHeight: compact ? undefined : "70vh" }}
+                  >
+                    <div ref={canvasRef} style={{ width: `${compact ? 100 : zoom * 100}%` }}>
+                      <CampusPlan key={plan.id} plan={plan}>
+                        <PetaPin groups={groups} opened={opened} onBuka={setOpened} />
+                      </CampusPlan>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={() => setZoom((value) => (value === 1 ? 2 : 1))}
+                      onClick={() => setBesar(false)}
                     >
-                      {zoom === 1 ? "Perbesar denah" : "Ukuran normal"}
+                      Tutup denah besar
                     </button>
-                    <span className="self-center text-sm text-secondary-text">
-                      {zoom === 2
-                        ? "Geser area denah untuk melihat bagian lain."
-                        : "Klik penanda atau pilih temuan di daftar."}
-                    </span>
+                    <p className="text-xs text-secondary-text">
+                      Versi {plan.revision} ·{" "}
+                      {plan.illustration
+                        ? "Ilustrasi denah · bukan lokasi sebenarnya"
+                        : "Denah gambaran besar pesantren"}
+                    </p>
                   </div>
-                ) : null}
-                <div
-                  className="max-w-full overflow-auto rounded-lg"
-                  style={{ maxHeight: compact ? undefined : "70vh" }}
-                >
-                  <div ref={canvasRef} style={{ width: `${compact ? 100 : zoom * 100}%` }}>
-                    <CampusPlan key={plan.id} plan={plan}>
-                      {groups.map((group, index) => {
-                        const highest = [...group].sort((a, b) => rank[a.level] - rank[b.level])[0];
-                        const selected = group.some((item) => opened.includes(item.key));
-                        return (
-                          <button
-                            type="button"
-                            key={group[0].key}
-                            aria-pressed={selected}
-                            aria-label={
-                              group.length > 1
-                                ? `${group.length} temuan. Tingkat tertinggi ${highest.level}`
-                                : `${highest.issue}. Risiko ${highest.level}. ${highest.floor}`
-                            }
-                            className={`absolute grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-2 border-white shadow-md focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 ${selected ? "ring-2 ring-primary ring-offset-2" : ""}`}
-                            style={{
-                              left: `clamp(22px, ${group[0].point!.x}%, calc(100% - 22px))`,
-                              top: `clamp(22px, ${group[0].point!.y}%, calc(100% - 22px))`,
-                              backgroundColor: group.length > 1 ? "#102a35" : color[highest.level],
-                              color: "white",
-                            }}
-                            onClick={() => setOpened(group.map((item) => item.key))}
-                          >
-                            {group.length > 1 ? (
-                              <strong>{group.length}</strong>
-                            ) : (
-                              <span className="flex items-center gap-0.5">
-                                {highest.level === "Rendah" ? (
-                                  <CheckCircle2 size={15} />
-                                ) : (
-                                  <AlertTriangle size={15} />
-                                )}
-                                <strong className="text-sm">{index + 1}</strong>
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </CampusPlan>
-                  </div>
-                </div>
-                <p className="text-xs text-secondary-text">
-                  Versi {plan.revision} ·{" "}
-                  {plan.illustration
-                    ? "Ilustrasi denah · bukan lokasi sebenarnya"
-                    : "Denah gambaran besar pesantren"}
-                </p>
-              </>
+                </>
+              ) : (
+                <>
+                  <TombolDenahBesar plan={plan} onBuka={() => setBesar(true)} />
+                  <p className="text-xs text-secondary-text">
+                    Versi {plan.revision} ·{" "}
+                    {plan.illustration
+                      ? "Ilustrasi denah · bukan lokasi sebenarnya"
+                      : "Denah gambaran besar pesantren"}
+                  </p>
+                </>
+              )
             ) : (
               <p role="status" className="rounded-lg bg-strip p-4 text-sm text-secondary-text">
                 Denah pesantren belum tersedia. Ringkasan lokasi temuan tetap dapat dibaca.
@@ -264,7 +243,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
               pada versi lain · {unplaced.length} tanpa titik
             </p>
             {other.length ? (
-              <p role="status" className="rounded bg-marun-bg p-3 text-sm text-primary">
+              <p role="status" className="rounded bg-brand-bg p-3 text-sm text-primary">
                 Ada {other.length} temuan pada versi denah sebelumnya/lain. Pilih versinya untuk
                 melihat titik; titik tidak dipindahkan otomatis.
               </p>
@@ -283,22 +262,7 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
                 )}
               </div>
             ) : null}
-            {detail.length ? (
-              <div
-                className="space-y-2 rounded-lg border border-marun-border bg-marun-bg p-3"
-                aria-live="polite"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold">Ringkasan titik</h3>
-                  <button type="button" className="secondary-button" onClick={() => setOpened([])}>
-                    Tutup
-                  </button>
-                </div>
-                {detail.map((item) => (
-                  <MapDetail key={item.key} item={item} />
-                ))}
-              </div>
-            ) : null}
+            <PetaRingkasanTitik detail={detail} onTutup={() => setOpened([])} />
             {compact ? (
               <>
                 {unplaced.length ? (
@@ -311,60 +275,21 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
                 </Link>
               </>
             ) : (
-              <section className="space-y-2" aria-label="Daftar temuan pada peta">
-                <h3 className="font-bold text-heading">Daftar temuan ({filtered.length})</h3>
-                {filtered.map((item) => (
-                  <div
-                    key={item.key}
-                    className={`rounded-lg border p-3 ${opened.includes(item.key) ? "border-primary bg-marun-bg" : "border-line"}`}
-                  >
-                    <MapDetail item={item} />
-                    <p className="mt-2 text-sm text-secondary-text">
-                      {item.point
-                        ? `Titik pada versi ${plans.find((entry) => entry.id === item.versionId)?.revision ?? "—"}`
-                        : "Belum memiliki titik"}
-                    </p>
-                    {item.point ? (
-                      <button
-                        className="secondary-button mt-2"
-                        type="button"
-                        onClick={() => {
-                          const next = new URLSearchParams(params);
-                          next.set("denah", item.versionId!);
-                          setParams(next);
-                          setOpened([item.key]);
-                        }}
-                      >
-                        Sorot titik
-                      </button>
-                    ) : null}
-                  </div>
-                ))}
-              </section>
+              <PetaDaftarTemuan
+                filtered={filtered}
+                plans={plans}
+                opened={opened}
+                onSorot={(item) => {
+                  const next = new URLSearchParams(params);
+                  next.set("denah", item.versionId!);
+                  setParams(next);
+                  setOpened([item.key]);
+                }}
+              />
             )}
           </>
         )}
       </div>
     </article>
-  );
-}
-
-function MapDetail({ item }: { item: PublicMapItem }) {
-  return (
-    <div>
-      <div className="flex flex-wrap gap-2">
-        <StatusChip value={item.level} />
-        <StatusChip value={item.status} />
-      </div>
-      <h4 className="mt-2 text-sm font-bold text-heading">{item.issue}</h4>
-      <p className="mt-1 text-sm text-secondary-text">
-        {item.location}
-        {item.floor ? ` · ${item.floor}` : ""}
-      </p>
-      {item.validator ? (
-        <p className="mt-1 text-sm text-secondary-text">Validator: {item.validator}</p>
-      ) : null}
-      {item.pic ? <p className="text-sm text-secondary-text">PIC: {item.pic}</p> : null}
-    </div>
   );
 }

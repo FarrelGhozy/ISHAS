@@ -18,7 +18,7 @@ Tulis hasilnya di bagian `Hasil Pemeriksaan` file stage (tanggal + lulus/gagal +
 
 Periksa hasil navigasi, isi, sesi, dan scope yang benar. Route yang memang mengalihkan pengguna
 tidak wajib merespons HTTP 200 pada permintaan awal; periksa tujuan serta tidak ada loop/kebocoran konten.
-Inventaris ROUTES memuat 29 pola kanonis (D-16 menambah `/dokumen` + `/peneliti/dokumen-instrumen`); tabel berikut mengelompokkan kasus, bukan menghitung URL unik.
+Inventaris ROUTES memuat 29 pola kanonis (D-16 menambah `/dokumen` + `/validator/dokumen-instrumen`); tabel berikut mengelompokkan kasus, bukan menghitung URL unik.
 Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 
 | # | URL | Kondisi | Harapan |
@@ -32,8 +32,8 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 | 7 | `/pesantren/XXX-tak-dikenal` | tanpa login | empty state, bukan crash |
 | 8 | `/login` | — | tepat 3 kartu akun, tanpa asesor |
 | 9 | `/admin/*` (6 route) | admin / anonim / peran salah | allowed / → `/login` / → `/akses-ditolak` |
-| 10 | `/peneliti/*` (7 route) | peneliti / anonim / peran salah | allowed / → `/login` / → `/akses-ditolak` |
-| 11 | `/pengelola/validasi-laporan` dkk | pengelola / anonim / peran salah | allowed scope sendiri / → `/login` / → `/akses-ditolak` |
+| 10 | `/validator/*` (7 route) | validator / anonim / peran salah | allowed / → `/login` / → `/akses-ditolak` |
+| 11 | `/pesantren/validasi-laporan` dkk | pesantren / anonim / peran salah | allowed scope sendiri / → `/login` / → `/akses-ditolak` |
 | 12 | `/asesor/*` (sisa lama) | siapa pun | pesan penghapusan + tombol ke `/penilaian-mandiri` |
 
 ## 2. Matriks guard dan sesi
@@ -45,19 +45,19 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 - State tidak kompatibel yang dibaca dari key : pemulihan mengikuti aturan versi; tombol reset mengembalikan seed.
 
 Catatan key/reset: aplikasi ISHAS terpisah (D-01) sehingga tidak ada data browser lama pada origin aplikasi;
-key (`ishas-mock-v4` + sesi/draft) murni baru. Uji dua akun pengelola
+key (`ishas-mock-v4` + sesi/draft) murni baru. Uji dua akun Pesantren
 dengan role sama untuk memastikan sesi menunjuk ID akun, bukan role saja.
 
 ## 3. Alur kritis ujung-ke-ujung (skenario wajib)
 
-1. **Lapor tanpa login:** isi form → kirim → nomor `RPT-XXXX` + `Menunggu validasi` → TIDAK tampil di dashboard → muncul di antrean pengelola pemilik scope (tidak di scope lain).
-2. **Lapor saat login pengelola:** nama terisi otomatis + dapat diubah → perilaku tampil sama seperti tanpa login.
+1. **Lapor tanpa login:** isi form → kirim → nomor `RPT-XXXX` + `Menunggu validasi` → TIDAK tampil di dashboard → muncul di antrean Pesantren pemilik scope (tidak di scope lain).
+2. **Lapor saat login Pesantren:** nama terisi otomatis + dapat diubah → perilaku tampil sama seperti tanpa login.
 3. **Terima:** tanpa severity/priority DITOLAK sistem → lengkap → tampil di dashboard/hasil/peta + audit + notifikasi.
-4. **Tolak:** tanpa alasan DITOLAK sistem → lengkap → arsip pengelola pemilik, tidak tampil publik; validator/waktu/alasan tersimpan.
+4. **Tolak:** tanpa alasan DITOLAK sistem → lengkap → arsip Pesantren pemilik, tidak tampil publik; validator/waktu/alasan tersimpan.
 5. **Lifecycle:** Pending→Proses tanpa PIC/tenggat DITOLAK → lengkap → Proses→Completed tanpa bukti DITOLAK → lengkap → hapus/arsip hanya sesuai D-07. Audit tidak ikut penghapusan laporan biasa; reset demo adalah tindakan berbeda.
-6. **Scope isolation:** pengelola A tidak melihat laporan pesantren B di antrean, filter, maupun notifikasi.
+6. **Scope isolation:** akun Pesantren A tidak melihat laporan pesantren B di antrean, filter, maupun notifikasi.
 7. **Pesantren tak terdaftar:** tidak muncul di pemilih; lapor langsung via URL dengan kode tak valid DITOLAK dengan pesan.
-8. **Self-assessment:** tanpa Published → form terkunci + pesan; kirim tak lengkap DITOLAK; refresh melanjutkan draft; kirim → antrean → terima → hasil berlabel kanal.
+8. **Self-assessment (D-24, D-25):** bank kosong → form terkunci + pesan; registrasi penilai wajib; kirim tak lengkap DITOLAK; refresh melanjutkan draft (checksum sama); bank berubah → kirim DITOLAK + wajib ulang; kirim → snapshot beku + skor % + PDF → antrean → terima → tampil publik sebagai PDF + agregat %; Scoring/Audit/Dataset membaca beku yang sama + filter terdaftar + ekspor whitelist + impor hanya jadi `Menunggu validasi`.
 
 ## 4. Visual dan aksesibilitas (3 viewport: 1440×900, 834×1112, 390×844)
 
@@ -99,17 +99,18 @@ Skenario berikut menjadi calon acceptance test setelah keputusan terkait disetuj
 
 | ID | Skenario | Hal yang harus dibuktikan / keputusan penghambat |
 |---|---|---|
-| U-01 | Akun pengelola A memasukkan ID laporan/area/tindakan pesantren B | Tindakan dan sumber data menolak scope salah, bukan sekadar menyembunyikan menu |
+| U-01 | Akun Pesantren A memasukkan ID laporan/area/tindakan pesantren B | Tindakan dan sumber data menolak scope salah, bukan sekadar menyembunyikan menu |
 | U-02 | Nama laporan berbeda dari nama akun login | Audit tetap menunjuk akun pengirim, tampilan nama mengikuti D-02/D-03 |
 | U-03 | Kirim, hapus draft, lalu buka kiriman untuk validasi | Seluruh jawaban/bukti/lokasi yang terkirim masih dapat ditelusuri dari snapshot |
 | U-04 | Kirim dua kali atau ulang setelah respons terputus | Satu kiriman dan satu set temuan/audit kirim; jika gagal, draft tidak hilang |
-| U-05 | Dua pengelola memutuskan laporan sama | Keputusan lama tidak menimpa keputusan yang sudah tersimpan tanpa deteksi |
-| U-06 | Instrumen baru terbit saat draft versi lama belum dikirim | Versi tidak berubah diam-diam; kebijakan kirim mengikuti D-10 |
+| U-05 | Dua akun Pesantren memutuskan laporan sama | Keputusan lama tidak menimpa keputusan yang sudah tersimpan tanpa deteksi |
+| U-06 | Bank berubah saat draft belum dikirim (D-24) | Checksum beda = kirim ditolak + wajib ulang; skor/PDF lama tetap beku (pengganti D-10) |
 | U-07 | Satu penilaian menghasilkan dua temuan, satu selesai | Status induk/progres mengikuti D-05, tidak otomatis menutup seluruh laporan |
 | U-08 | Penilaian diterima tanpa temuan / seluruh jawaban N/A | Tidak memaksakan severity fiktif atau skor nol; kebijakan D-04/D-05 |
-| U-09 | Banyak kiriman untuk pesantren/periode sama, termasuk versi berbeda | Agregat, tren, dan dataset mengikuti D-04; unit/versi sumber jelas |
+| U-09 | Banyak kiriman untuk pesantren/periode sama, termasuk bobot berbeda (D-24) | Agregat memakai rata-rata skor % beku per pesantren; tiap laporan = satu PDF |
+| U-09b | Validator tambah/edit/hapus indikator + atur bobot (D-24) | Perubahan langsung aktif; validasi kode unik/bobot 0–100; draft basi wajib ulang; snapshot lama tidak berubah |
 | U-10 | Unggah denah baru atau ubah nama area | Titik dan sumber penilaian historis tetap menunjuk versi/ID semula |
-| U-11 | Nonaktifkan pesantren atau pengelola terakhir saat form terbuka | Kirim memeriksa ulang kelayakan; arsip/antrean/sesi mengikuti D-08 |
+| U-11 | Nonaktifkan pesantren atau akun Pesantren terakhir saat form terbuka | Kirim memeriksa ulang kelayakan; arsip/antrean/sesi mengikuti D-08 |
 | U-12 | Buka kembali atau hapus/arsip laporan Completed | Status rekomendasi, progres, bukti, hasil, dan audit mengikuti D-05/D-07; tidak ada relasi yatim |
 | U-13 | Buka detail publik, ekspor dummy, dan data penelitian | Daftar bidang yang boleh terlihat sesuai D-02, termasuk nama/kontak/bukti/denah/alasan penolakan |
 | U-14 | Ganti akun pada perangkat sama atau penyimpanan penuh/rusak | Kepemilikan draft mengikuti D-10, kegagalan simpan tidak ditampilkan sebagai sukses |
@@ -120,7 +121,7 @@ Skenario berikut menjadi calon acceptance test setelah keputusan terkait disetuj
 
 - Stage 03: uji pengiriman pada data/store; UI validasi ujung-ke-ujung dilengkapi di Stage 05.
 - Stage 07: uji area di laporan cepat; hubungan area ke form penilaian dilengkapi di Stage 08.
-- Stage 08: uji Published → pengisian → kirim → moderasi → hasil → dataset Peneliti yang disepakati.
+- Stage 08: uji Published → pengisian → kirim → moderasi → hasil → dataset Validator yang disepakati.
 - Stage 09: uji integrasi seluruh alur; catat hasil terbaru tanpa mengubah persetujuan stage lama menjadi belum disetujui.
 
 ## Hasil revisi dashboard — 18 September 2026
