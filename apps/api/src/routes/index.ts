@@ -25,6 +25,7 @@ import { removeStoredBlob, tryReadStoredBlob } from "../storage";
 import { buildPesantrenRoutes } from "./pesantren";
 import { buildValidatorRoutes } from "./validator";
 import { buildAdminRoutes } from "./admin";
+import { buildAuthRoutes } from "./auth";
 
 export type RouteDeps = { loadState: () => Promise<IshasState> };
 
@@ -492,6 +493,7 @@ export function buildRoutes(deps: RouteDeps): Route[] {
     ...buildPesantrenRoutes(deps),
     ...buildValidatorRoutes(deps),
     ...buildAdminRoutes(deps),
+    ...buildAuthRoutes(),
   ];
 }
 

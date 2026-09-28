@@ -13,19 +13,21 @@ export class HttpError extends Error {
   }
 }
 
-export function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
+export function jsonResponse(body: unknown, status = 200, headers?: string[]): Response {
+  const response = new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
+  for (const cookie of headers ?? []) response.headers.append("Set-Cookie", cookie);
+  return response;
 }
 
-export function ok<T>(data: T, status = 200): Response {
-  return jsonResponse({ ok: true, data }, status);
+export function ok<T>(data: T, status = 200, headers?: string[]): Response {
+  return jsonResponse({ ok: true, data }, status, headers);
 }
 
-export function fail(error: string, status = 400): Response {
-  return jsonResponse({ ok: false, error }, status);
+export function fail(error: string, status = 400, headers?: string[]): Response {
+  return jsonResponse({ ok: false, error }, status, headers);
 }
 
 // Pemetaan pesan validasi mock → kode HTTP (API §0.b). Urutan diperiksa dari

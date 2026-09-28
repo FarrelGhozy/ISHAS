@@ -25,3 +25,29 @@ export const dbConfig: DbConfig = {
 };
 
 export const apiPort = intEnv("API_PORT", 3004);
+
+// --- Auth Fase 6 (D-30, BACKEND_API_CONTRACT §16) ---
+
+export const SESSION_COOKIE = "ishas_session";
+export const CSRF_COOKIE = "ishas_csrf";
+export const CSRF_HEADER = "x-csrf-token";
+
+// Masa berlaku sesi; default 7 hari.
+export const sessionTtlMs = intEnv("SESSION_TTL_MS", 7 * 24 * 60 * 60 * 1000);
+
+// Cookie `Secure` hanya pada production (butuh HTTPS).
+export const cookieSecure = process.env.NODE_ENV === "production";
+
+// Kartu login dev + endpoint demo hanya di luar production.
+export function demoAuthEnabled(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
+// Sandi awal akun seed / akun baru; hanya prototipe, wajib diganti lewat /auth/password.
+export const seedDefaultPassword = process.env.SEED_DEFAULT_PASSWORD ?? "ishas-demo";
+
+// Batas percobaan login per IP+email dalam `windowMs`.
+export const loginRateLimit = {
+  max: intEnv("LOGIN_RATE_LIMIT", 5),
+  windowMs: intEnv("LOGIN_RATE_WINDOW_MS", 60_000),
+};

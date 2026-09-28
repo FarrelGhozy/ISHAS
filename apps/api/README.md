@@ -8,9 +8,11 @@ Scope: **Fase 0** (koneksi DB, migrasi schema v15, seed demo/kosong, health) +
 publikasi) +
 **Fase 4** (SAM-iSAFE: bank kategori/soal, pengamatan, tindak lanjut, bukti foto) +
 **Fase 5** (Super Admin: pesantren/pengguna/audit/reset, notifikasi, storage lokal
-dengan staging + sweep, migrasi aset IndexedDB).
+dengan staging + sweep, migrasi aset IndexedDB) +
+**Fase 6** (auth server: bcrypt + cookie sesi HttpOnly + RBAC prefix + CSRF
+double-submit + rate limit + `/auth/demo-login` dev).
 Kontrak dan model data: `docs/BACKEND_DATA_MODEL.md`, `docs/BACKEND_API_CONTRACT.md`.
-Keputusan: D-30.b/D-30.c/D-30.d/D-30.e/D-30.f di `docs/DECISIONS.md`.
+Keputusan: D-30.b…D-30.h di `docs/DECISIONS.md`.
 
 ## Prasyarat
 
@@ -35,22 +37,36 @@ bun install
 bun run migrate            # buat database + terapkan migrasi DDL
 bun run migrate --fresh    # DROP + CREATE database lalu migrasi ulang
 bun run seed --mode=demo   # isi data demo (port 1:1 seed frontend)
-bun run seed --mode=empty  # struktur kosong tapi valid (1 admin + bank minimal)
+bun run seed --mode=empty  # akun inti + 1 pesantren aktif + bank minimal; data lain kosong
 bun run dev                # server dev (watch) di http://localhost:3004
-bun run sweep              # job storage: buang staging yatim (>24 jam) + tmp
+bun run sweep              # job storage + sesi kedaluwarsa
 ```
 
 Health check:
 
 ```bash
 curl -s http://localhost:3004/health
-# {"ok":true,"data":{"status":"ok","db":"ok","version":"0.2.0","uptime":1}}
+# {"ok":true,"data":{"status":"ok","db":"ok","version":"0.3.0","uptime":1}}
 ```
 
-## Endpoint Fase 1–3
+## Auth (Fase 6)
 
-Semua di bawah prefix `/api/v1` (kecuali `/health`). Identitas pengembangan:
-header `X-Demo-Account: USR-xxx` (non-production); publik tanpa header.
+Cookie sesi `ishas_session` (HttpOnly) adalah sumber utama; header
+`X-Demo-Account: USR-xxx` hanya fallback pengembangan (mati di production).
+
+| Metode | Path | Akses |
+|---|---|---|
+| POST | `/auth/login` | email + sandi (rate limit 5/menit) |
+| POST | `/auth/demo-login` | kartu dev (hanya non-production) |
+| POST | `/auth/logout` | cookie sesi |
+| GET | `/auth/me` | cookie sesi |
+| POST | `/auth/password` | cookie sesi (sandi lama + baru ≥8) |
+
+Mutasi dengan cookie wajib header `X-CSRF-Token` = cookie `ishas_csrf`.
+
+## Endpoint Fase 1–5
+
+Semua di bawah prefix `/api/v1` (kecuali `/health`).
 
 | Metode | Path | Akses |
 |---|---|---|
@@ -122,6 +138,10 @@ lanjut SAM-iSAFE; butuh MySQL hidup).
 | `DB_PASSWORD` | `ishas` | Sandi database |
 | `API_PORT` | `3004` | Port server backend |
 | `STORAGE_DIR` | `<cwd>/storage` | Direktori blob lokal (bukti/denah/PDF) |
+| `SEED_DEFAULT_PASSWORD` | `ishas-demo` | Sandi awal seed/akun baru (prototipe) |
+| `SESSION_TTL_MS` | `604800000` | Masa berlaku sesi (ms) |
+| `LOGIN_RATE_LIMIT` | `5` | Batas login per IP+email per jendela |
+| `LOGIN_RATE_WINDOW_MS` | `60000` | Jendela rate limit (ms) |
 
 ## Struktur
 
@@ -130,10 +150,12 @@ lanjut SAM-iSAFE; butuh MySQL hidup).
 - `src/db.ts` — pool MySQL + health ping.
 - `src/migrate.ts` — runner migrasi.
 - `src/checksum.ts` — port `hitungChecksumInstrument` (vektor uji dengan frontend).
-- `src/seed/` — seed demo (impor `SEED` mock 1:1) dan empty.
-- `src/app.ts` — handler HTTP (dapat diuji dengan dependensi disuntik).
-- `src/server.ts` — server HTTP Fase 0 (`GET /health`).
-- `tests/` — unit (checksum, helper, handler) + integrasi (skema, seed, invarian).
+- `src/auth/` — password (bcrypt), token sesi, cookie/CSRF, rate limit.
+- `src/repo/sessions.ts` — akses tabel `sessions`.
+- `src/seed/` — seed demo (impor `SEED` mock 1:1) dan empty (akun inti).
+- `src/app.ts` — handler HTTP + RBAC prefix + CSRF (dependensi disuntik).
+- `src/server.ts` — server HTTP (health + auth).
+- `tests/` — unit (checksum, helper, handler, auth) + integrasi (skema, seed, invarian, auth).
 
 ## Catatan prototipe
 
@@ -142,4 +164,6 @@ lanjut SAM-iSAFE; butuh MySQL hidup).
   modul `apps/api` tanpa mengubah data.
 - Aset denah/dokumen demo baris `file_assets` dibuat sebagai metadata seed;
   blob fisik disiapkan pada fase storage (5).
-- Auth belum aktif (fase 6); endpoint lain menyusul per fase di issue GitHub.
+- Auth Fase 6 aktif: login kartu dev lewat `/auth/demo-login` (non-production),
+  produksi memakai `/auth/login`. Frontend tetap menampilkan kartu peran saat
+  pengembangan (D-30.h).

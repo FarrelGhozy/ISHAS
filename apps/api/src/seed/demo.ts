@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { SEED } from "../../../web/mocks/seed/seed";
 import { K3_CATEGORIES } from "../../../web/mocks/kategori-k3";
 import { STORAGE_DIR } from "../storage";
+import { hashPassword } from "../auth/password";
+import { seedDefaultPassword } from "../config";
 import { insertRows, json, text, toDateOnly, toDateTime, truncateAll, type SqlValue } from "./helpers";
 
 const now = (): Date => new Date();
@@ -55,9 +57,12 @@ export async function seedDemo(): Promise<void> {
     ]),
   );
 
+  // Fase 6: setiap akun demo dapat sandi awal prototipe (dokumentasi di
+  // BACKEND_DATA_MODEL §10); wajib diganti lewat /auth/password.
+  const passwordHash = await hashPassword(seedDefaultPassword);
   await insertRows(
     "users",
-    ["id", "name", "email", "role", "institution_code", "status", "last_active_at"],
+    ["id", "name", "email", "role", "institution_code", "status", "last_active_at", "password_hash"],
     SEED.users.map((u) => [
       u.id,
       u.name,
@@ -66,6 +71,7 @@ export async function seedDemo(): Promise<void> {
       u.institutionCodes[0] ?? null,
       u.status,
       toDateTime(u.lastActive),
+      passwordHash,
     ]),
   );
 

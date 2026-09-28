@@ -1,8 +1,12 @@
-// Seed kosong (production): struktur valid tapi tanpa data demo.
-// Lihat BACKEND_DATA_MODEL §10 (mode empty).
+// Seed "inti" (mode `empty`): akun inti untuk inisial awal + satu pesantren
+// terdaftar + bank instrumen minimal valid. Seluruh data display (laporan,
+// temuan, rekomendasi, SAM, denah, dokumen, audit, notifikasi) sengaja KOSONG.
+// Lihat BACKEND_DATA_MODEL §10.
 
 import { K3_CATEGORIES } from "../../../web/mocks/kategori-k3";
 import { hitungChecksumInstrument, type ChecksumDimension } from "../checksum";
+import { hashPassword } from "../auth/password";
+import { seedDefaultPassword } from "../config";
 import { insertRows, json, truncateAll } from "./helpers";
 
 const BANK_ID = "INS-LIVE";
@@ -22,10 +26,40 @@ export async function seedEmpty(): Promise<void> {
     K3_CATEGORIES.flatMap((c) => c.aspects.map((a, index) => [a.id, a.categoryId, a.name, index + 1])),
   );
 
+  // Satu pesantren terdaftar agar akun Pesantren inti punya scope yang sah.
+  await insertRows(
+    "institutions",
+    ["code", "name", "city", "address", "manager", "status"],
+    [
+      [
+        "PSN-0018",
+        "PP Al-Hikmah Malang",
+        "Malang",
+        "Jl. Raya Ketawang, Gondanglegi, Kabupaten Malang",
+        "Ust. K.H. Mustofa Kamal",
+        "Aktif",
+      ],
+    ],
+  );
+
+  // Tiga akun inti (sama dengan kartu login demo) + sandi awal prototipe.
+  const passwordHash = await hashPassword(seedDefaultPassword);
   await insertRows(
     "users",
-    ["id", "name", "email", "role", "institution_code", "status"],
-    [["USR-001", "Super Admin", "admin@ishas.demo", "admin", null, "Aktif"]],
+    ["id", "name", "email", "role", "institution_code", "status", "password_hash"],
+    [
+      ["USR-001", "Nadia Permata", "admin@ishas.demo", "admin", null, "Aktif", passwordHash],
+      ["USR-002", "M. Ridwan", "validator@ishas.demo", "validator", null, "Aktif", passwordHash],
+      [
+        "USR-003",
+        "Ust. K.H. Mustofa Kamal",
+        "pesantren@ishas.demo",
+        "pesantren",
+        "PSN-0018",
+        "Aktif",
+        passwordHash,
+      ],
+    ],
   );
 
   const dimensions: ChecksumDimension[] = [
@@ -103,7 +137,7 @@ export async function seedEmpty(): Promise<void> {
 
   await insertRows("sequences", ["seq_name", "value"], [
     ["report", 1],
-    ["institution", 1],
+    ["institution", 19],
     ["assessment", 1],
     ["follow_up", 1],
   ]);

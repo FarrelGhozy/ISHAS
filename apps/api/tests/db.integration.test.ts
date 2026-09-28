@@ -14,6 +14,8 @@ import { hitungChecksumInstrument } from "../src/checksum";
 import { seedDemo } from "../src/seed/demo";
 import { seedEmpty } from "../src/seed/empty";
 import { ALL_TABLES, countRows } from "../src/seed/helpers";
+import { seedDefaultPassword } from "../src/config";
+import { loginLimiter } from "../src/domain/auth";
 
 const dbName = process.env.DB_NAME ?? "ishas";
 const isTestDb = /test/i.test(dbName);
@@ -202,11 +204,11 @@ describe.skipIf(!dbReady)("seed demo", () => {
   });
 });
 
-describe.skipIf(!dbReady)("seed empty", () => {
-  test("struktur kosong tapi valid", async () => {
+describe.skipIf(!dbReady)("seed empty (inti)", () => {
+  test("3 akun inti + 1 pesantren aktif, data display kosong", async () => {
     await seedEmpty();
-    expect(await countRows("institutions")).toBe(0);
-    expect(await countRows("users")).toBe(1);
+    expect(await countRows("institutions")).toBe(1);
+    expect(await countRows("users")).toBe(3);
     expect(await countRows("reports")).toBe(0);
     expect(await countRows("findings")).toBe(0);
     expect(await countRows("recommendations")).toBe(0);
@@ -216,24 +218,39 @@ describe.skipIf(!dbReady)("seed empty", () => {
     expect(await countRows("k3_categories")).toBe(K3_CATEGORIES.length);
   });
 
-  test("admin awal aktif + bank bercabang checksum ck-", async () => {
-    const [admins] = await pool.query<RowDataPacket[]>(
-      "SELECT COUNT(*) AS c FROM users WHERE role = 'admin' AND status = 'Aktif'",
+  test("tiap peran inti aktif + pesantren terdaftar + bank checksum ck-", async () => {
+    for (const role of ["admin", "validator", "pesantren"]) {
+      const [rows] = await pool.query<RowDataPacket[]>(
+        "SELECT COUNT(*) AS c FROM users WHERE role = ? AND status = 'Aktif'",
+        [role],
+      );
+      expect(Number(rows[0]?.c)).toBe(1);
+    }
+    const [registered] = await pool.query<RowDataPacket[]>(
+      "SELECT COUNT(*) AS c FROM institutions i JOIN users u ON u.institution_code = i.code " +
+        "WHERE i.status = 'Aktif' AND u.role = 'pesantren' AND u.status = 'Aktif'",
     );
-    expect(Number(admins[0]?.c)).toBe(1);
+    expect(Number(registered[0]?.c)).toBe(1);
     const [meta] = await pool.query<RowDataPacket[]>(
       "SELECT checksum FROM instrument_meta WHERE id = 'INS-LIVE'",
     );
     expect(String(meta[0]?.checksum).startsWith("ck-")).toBe(true);
   });
 
-  test("sequences awal = 1", async () => {
+  test("setiap akun inti punya sandi hash (fase 6)", async () => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT COUNT(*) AS c FROM users WHERE password_hash IS NOT NULL",
+    );
+    expect(Number(rows[0]?.c)).toBe(3);
+  });
+
+  test("sequences awal", async () => {
     const [rows] = await pool.query<RowDataPacket[]>(
       "SELECT seq_name AS name, value FROM sequences",
     );
     const map = new Map(rows.map((row) => [String(row.name), Number(row.value)]));
     expect(map.get("report")).toBe(1);
-    expect(map.get("institution")).toBe(1);
+    expect(map.get("institution")).toBe(19);
   });
 });
 
@@ -1972,6 +1989,173 @@ describe.skipIf(!dbReady)("Fase 5 HTTP (admin + notifikasi + storage + migrasi)"
       asAdmin(json({ items: [] }, { method: "POST" })),
     );
     expect(again.status).toBe(409);
+  });
+});
+
+describe.skipIf(!dbReady)("Fase 6 auth (cookie + RBAC + CSRF)", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+
+  function cookieHeader(response: Response): string {
+    const list =
+      typeof response.headers.getSetCookie === "function" ? response.headers.getSetCookie() : [];
+    const raw = list.length ? list : [response.headers.get("set-cookie") ?? ""];
+    return raw
+      .map((cookie) => cookie.split(";")[0])
+      .filter(Boolean)
+      .join("; ");
+  }
+
+  function cookieValue(cookie: string, name: string): string {
+    const part = cookie.split(";").find((item) => item.trim().startsWith(`${name}=`));
+    return part ? part.trim().slice(name.length + 1) : "";
+  }
+
+  async function login(email: string, password = seedDefaultPassword) {
+    const response = await call("/api/v1/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    return { response, cookie: cookieHeader(response) };
+  }
+
+  function asCookie(cookie: string, init: RequestInit = {}): RequestInit {
+    const headers = new Headers(init.headers);
+    headers.set("cookie", cookie);
+    return { ...init, headers };
+  }
+
+  beforeAll(async () => {
+    await seedDemo();
+    loginLimiter.reset();
+  });
+
+  test("login sukses → cookie HttpOnly + auth/me", async () => {
+    const { response, cookie } = await login("admin@ishas.demo");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { data: { account: { roleId: string } } };
+    expect(body.data.account.roleId).toBe("admin");
+    expect(cookie).toContain("ishas_session=");
+    expect(cookie).toContain("ishas_csrf=");
+    const setCookie = response.headers.getSetCookie().join(" ");
+    expect(setCookie).toContain("HttpOnly");
+
+    const me = await call("/api/v1/auth/me", asCookie(cookie));
+    expect(me.status).toBe(200);
+    const anon = await call("/api/v1/auth/me");
+    expect(anon.status).toBe(401);
+  });
+
+  test("login salah → 401, email kosong → 400", async () => {
+    const wrong = await login("admin@ishas.demo", "salah-sekali");
+    expect(wrong.response.status).toBe(401);
+    const empty = await login("");
+    expect(empty.response.status).toBe(400);
+  });
+
+  test("rate limit per IP+email → 429", async () => {
+    loginLimiter.reset();
+    const attempt = () =>
+      call("/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-forwarded-for": "203.0.113.9" },
+        body: JSON.stringify({ email: "rate@ishas.demo", password: "apa saja" }),
+      });
+    for (let i = 0; i < 5; i += 1) expect((await attempt()).status).toBe(401);
+    expect((await attempt()).status).toBe(429);
+    loginLimiter.reset();
+  });
+
+  test("RBAC: /admin/* butuh Super Admin, bukan Validator", async () => {
+    const anon = await call("/api/v1/admin/state");
+    expect(anon.status).toBe(401);
+    const { cookie: validatorCookie } = await login("validator@ishas.demo");
+    expect((await call("/api/v1/admin/state", asCookie(validatorCookie))).status).toBe(403);
+    const { cookie: adminCookie } = await login("admin@ishas.demo");
+    expect((await call("/api/v1/admin/state", asCookie(adminCookie))).status).toBe(200);
+  });
+
+  test("CSRF double-submit pada mutasi cookie", async () => {
+    const { cookie } = await login("admin@ishas.demo");
+    const csrf = cookieValue(cookie, "ishas_csrf");
+    const withoutCsrf = await call(
+      "/api/v1/notifications/read",
+      asCookie(cookie, { method: "POST" }),
+    );
+    expect(withoutCsrf.status).toBe(403);
+    const withCsrf = await call(
+      "/api/v1/notifications/read",
+      asCookie(cookie, { method: "POST", headers: { "x-csrf-token": csrf } }),
+    );
+    expect(withCsrf.status).toBe(200);
+  });
+
+  test("logout mencabut sesi", async () => {
+    const { cookie } = await login("validator@ishas.demo");
+    const csrf = cookieValue(cookie, "ishas_csrf");
+    const out = await call(
+      "/api/v1/auth/logout",
+      asCookie(cookie, { method: "POST", headers: { "x-csrf-token": csrf } }),
+    );
+    expect(out.status).toBe(200);
+    expect((await call("/api/v1/auth/me", asCookie(cookie))).status).toBe(401);
+  });
+
+  test("demo-login aktif di luar production, mati di production", async () => {
+    const demo = await call("/api/v1/auth/demo-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accountId: "USR-003" }),
+    });
+    expect(demo.status).toBe(200);
+
+    const previous = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      const blocked = await call("/api/v1/auth/demo-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: "USR-003" }),
+      });
+      expect(blocked.status).toBe(404);
+      const headerBlocked = await call("/api/v1/admin/state", {
+        headers: { "X-Demo-Account": "USR-001" },
+      });
+      expect(headerBlocked.status).toBe(401);
+    } finally {
+      if (previous === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previous;
+    }
+  });
+
+  test("ubah sandi + cabut sesi lain", async () => {
+    const { cookie } = await login("validator@ishas.demo");
+    const csrf = cookieValue(cookie, "ishas_csrf");
+    const changed = await call(
+      "/api/v1/auth/password",
+      asCookie(cookie, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrf },
+        body: JSON.stringify({ oldPassword: seedDefaultPassword, newPassword: "rahasia-123" }),
+      }),
+    );
+    expect(changed.status).toBe(200);
+    expect((await login("validator@ishas.demo", "rahasia-123")).response.status).toBe(200);
+
+    // Kembalikan ke sandi awal agar tidak mengganggu jalannya file.
+    const back = await login("validator@ishas.demo", "rahasia-123");
+    const backCsrf = cookieValue(back.cookie, "ishas_csrf");
+    const restored = await call(
+      "/api/v1/auth/password",
+      asCookie(back.cookie, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-csrf-token": backCsrf },
+        body: JSON.stringify({ oldPassword: "rahasia-123", newPassword: seedDefaultPassword }),
+      }),
+    );
+    expect(restored.status).toBe(200);
   });
 });
 

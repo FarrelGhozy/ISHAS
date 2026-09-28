@@ -113,6 +113,7 @@ export function buildAdminRoutes(deps: AdminRouteDeps): Route[] {
           email: string;
           roleId: User["roleId"];
           institutionCode?: string;
+          password?: string;
         }>(ctx.request);
         return actionResponse(await addUser(ctx.state, ctx.actor, body));
       }),

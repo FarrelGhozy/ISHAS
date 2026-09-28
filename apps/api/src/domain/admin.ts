@@ -13,6 +13,8 @@ import {
 } from "../repo/admin";
 import { seedDemo } from "../seed/demo";
 import { clearStorageDir } from "../storage";
+import { hashPassword } from "../auth/password";
+import { seedDefaultPassword } from "../config";
 
 export type AdminActionResult = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -117,7 +119,13 @@ export async function setInstitutionStatus(
 export async function addUser(
   state: IshasState,
   actor: Actor | null,
-  input: { name: string; email: string; roleId: User["roleId"]; institutionCode?: string },
+  input: {
+    name: string;
+    email: string;
+    roleId: User["roleId"];
+    institutionCode?: string;
+    password?: string;
+  },
 ): Promise<AdminActionResult> {
   const auth = requireAdmin(state, actor);
   if (auth) return { ok: false, error: auth.error };
@@ -142,6 +150,8 @@ export async function addUser(
     return { ok: false, error: "Email sudah digunakan pada data demo." };
   }
   const id = nextUserId(state);
+  // Fase 6: sandi awal opsional; default prototipe agar akun dapat login.
+  const passwordHash = await hashPassword(input.password?.trim() || seedDefaultPassword);
   await withTransaction(async (conn) => {
     await insertUserRow(conn, {
       id,
@@ -150,6 +160,7 @@ export async function addUser(
       role: roleId,
       institutionCode: roleId === "pesantren" ? (input.institutionCode ?? null) : null,
       status: "Menunggu",
+      passwordHash,
     });
     await writeAudit(conn, actor as Actor, "User", id, "Membuat akun pengguna");
   });
@@ -265,15 +276,17 @@ export async function resetUserPassword(
   if (auth) return { ok: false, error: auth.error };
   const target = state.users.find((item) => item.id === userId);
   if (!target) return { ok: false, error: "Pengguna tidak ditemukan." };
+  // Fase 6: reset ke sandi awal prototipe agar akun tetap dapat masuk.
+  const passwordHash = await hashPassword(seedDefaultPassword);
   await withTransaction(async (conn) => {
-    await updateUserRow(conn, userId, { passwordHash: null });
+    await updateUserRow(conn, userId, { passwordHash });
     await writeAudit(
       conn,
       actor as Actor,
       "User",
       userId,
       "Mereset kata sandi",
-      "Demo: kembali ke kredensial demo; sandi tidak disimpan di browser.",
+      "Kembali ke sandi awal prototipe; wajib diganti lewat Ubah sandi.",
     );
   });
   return { ok: true };
