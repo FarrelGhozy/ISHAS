@@ -216,13 +216,13 @@ test("temuan Dibatalkan tidak menjadi pin peta publik (D-21)", () => {
 });
 
 test("Completed dan arsip tidak tampil pada peta publik", () => {
-  expect(selectPublicCampusMap(getState(), "PSN-0019").items).toHaveLength(5);
+  expect(selectPublicCampusMap(getState(), "PSN-0019").items).toHaveLength(6);
   storeActions.archiveCompletedReport(
     { id: "USR-004", name: "Penguji", role: "Pesantren" },
     "RPT-0005",
     "Arsip akhir periode",
   );
-  expect(selectPublicCampusMap(getState(), "PSN-0019").items).toHaveLength(5);
+  expect(selectPublicCampusMap(getState(), "PSN-0019").items).toHaveLength(6);
 });
 
 test("jawaban sesuai tidak menghasilkan pin temuan generik", () => {

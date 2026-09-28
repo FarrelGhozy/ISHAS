@@ -81,7 +81,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     ]) {
       expect(storeActions.submitSelfAssessment(actor, "SELF-PSN-0018").ok).toBe(false);
     }
-    expect(getState().reports.length).toBe(16);
+    expect(getState().reports.length).toBe(19);
   });
 
   test("publik tanpa login dan pesantren aktif lolos + email akun tersimpan", () => {

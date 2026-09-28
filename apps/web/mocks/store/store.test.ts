@@ -392,7 +392,7 @@ describe("lapor-cepat V2-03", () => {
     const result = storeActions.submitPublicReport({ name: "Santri Blok B" }, VALID);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.id).toBe("RPT-0017");
+    expect(result.id).toBe("RPT-0020"); // seed kini 19 laporan (RPT-0001–0019)
 
     const report = getState().reports.find((r) => r.id === result.id);
     expect(report?.channel).toBe("lapor-cepat");
@@ -584,7 +584,7 @@ describe("regresi review frontend", () => {
     for (const id of ["USR-001", "USR-002", "USR-tidak-ada"]) {
       expect(storeActions.submitPublicReport({ id, name: "uji" }, input).ok).toBe(false);
     }
-    expect(getState().reports.length).toBe(16);
+    expect(getState().reports.length).toBe(19);
   });
 
   test("kegagalan penyimpanan tidak membuat record/audit/notifikasi atau menghabiskan nomor", () => {
@@ -613,6 +613,6 @@ describe("regresi review frontend", () => {
       { name: "uji" },
       { ...input, clientRequestId: "retry-after-quota" },
     );
-    expect(retry).toEqual({ ok: true, id: "RPT-0017" });
+    expect(retry).toEqual({ ok: true, id: "RPT-0020" });
   });
 });

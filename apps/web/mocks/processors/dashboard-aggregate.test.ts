@@ -178,10 +178,10 @@ describe("panel temuan dan tindak lanjut", () => {
 
   test("ringkasan tindak lanjut: rata-rata progres + count + dibatalkan", () => {
     const ringkas = ringkasTindakLanjut(recs);
-    expect(ringkas.pekerjaan).toBe(15);
+    expect(ringkas.pekerjaan).toBe(17);
     expect(ringkas.terverifikasi).toBe(3);
     expect(ringkas.dibatalkan).toBe(1);
-    expect(ringkas.rataProgress).toBe(39); // total progres 590 / 15 laporan Diterima
+    expect(ringkas.rataProgress).toBe(35); // total progres 590 / 17 laporan Diterima
   });
 
   test("distribusi tindak lanjut memuat lima status termasuk Dibatalkan", () => {
@@ -267,12 +267,12 @@ describe("insight dashboard publik", () => {
 
     expect(result.overview.pesantrenTercakup).toBe(2);
     expect(result.overview.penggunaAktif).toBe(5);
-    expect(result.overview.laporanTervalidasi).toBe(11);
+    expect(result.overview.laporanTervalidasi).toBe(13); // 11 + RPT-0018 + RPT-0019 (non-arsip)
     expect(result.distribution.kanal).toEqual([
-      { label: "Lapor cepat", value: 7 },
+      { label: "Lapor cepat", value: 9 },
       { label: "Penilaian mandiri", value: 4 },
     ]);
-    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(11);
+    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(13);
   });
 
   test("filter pesantren mempersempit seluruh angka insight", () => {

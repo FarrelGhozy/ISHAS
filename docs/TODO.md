@@ -1,5 +1,20 @@
 # TODO — Kontrol Kerja Aktif
 
+## Pengayaan seed demo presentasi — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (seed harus menampilkan semua data dan
+kondisi untuk presentasi). Cakupan: seed saja (tanpa perubahan perilaku):
+RPT-0017 arsip D-07, RPT-0018 Pending prioritas Rendah + bukti, RPT-0019
+milik PSN-0023 Nonaktif (demo D-08), USR-006 Menunggu, draft SELF-PSN-0018,
+SAM-0004 Berlangsung, AREA-013/BLD-005 tanpa denah, audit + notifikasi,
+counters report 20/institusi 23. Test komposisi
+`seed-composition.test.ts` mengunci kondisi demo.
+
+- [x] Tambah record + sesuaikan test angka (laporan 19, kanal 9/4, rekap 6/4, peta 6, RPT-0020).
+- [x] Verifikasi teknis: lint + typecheck + 215 test + build lulus (28 Sep 2026).
+- [ ] Cek visual browser (arsip tampil, filter Berlangsung/Menunggu terisi, draft lanjut, PSN-0023 tersembunyi publik).
+- [ ] Review pemilik.
+
 ## Pematangan bank data SAM-iSAFE (D-26.f) — 28 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan`): bank SAM-iSAFE kurang

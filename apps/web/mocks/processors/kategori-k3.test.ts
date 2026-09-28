@@ -66,11 +66,11 @@ describe("hitungRekapKategori", () => {
   test("temuan terpetakan ke seluruh kategori + Belum dipetakan (lapor-cepat)", () => {
     const rows = hitungRekapKategori(input);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    // Keselamatan: RPT-0004 + RPT-0008 + 3 turunan RPT-0010; Kesehatan: RPT-0007 + RPT-0013 + RPT-0015;
+    // Keselamatan: RPT-0004 + RPT-0008 + 3 turunan RPT-0010 + RPT-0019; Kesehatan: RPT-0007 + RPT-0013 + RPT-0015 + RPT-0018;
     // Lingkungan: RPT-0009 + turunan RPT-0010 + RPT-0014; Psikososial: turunan RPT-0014;
     // Belum dipetakan: RPT-0003 tanpa kategori/indikator.
-    expect(byName["Keselamatan"].jumlahTemuan).toBe(5);
-    expect(byName["Kesehatan"].jumlahTemuan).toBe(3);
+    expect(byName["Keselamatan"].jumlahTemuan).toBe(6);
+    expect(byName["Kesehatan"].jumlahTemuan).toBe(4);
     expect(byName["Lingkungan"].jumlahTemuan).toBe(3);
     expect(byName["Psikososial"].jumlahTemuan).toBe(1);
     expect(byName[KATEGORI_BELUM_DIPETAKAN].jumlahTemuan).toBe(1);
