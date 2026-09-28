@@ -39,6 +39,10 @@ export default [
   route("validator", "routes/_workspace.validator.tsx", [
     index("routes/validator.index.tsx"),
     route("dashboard", "routes/validator.dashboard.tsx"),
+    route("sam-isafe", "routes/validator.sam-isafe.tsx"),
+    route("sam-isafe/baru", "routes/validator.sam-isafe.baru.tsx"),
+    route("sam-isafe/bank", "routes/validator.sam-isafe.bank.tsx"),
+    route("sam-isafe/:id", "routes/validator.sam-isafe.$id.tsx"),
     route("instrumen", "routes/validator.instrumen.tsx"),
     route("dokumen-instrumen", "routes/validator.dokumen-instrumen.tsx"),
     route("versioning", "routes/validator.versioning.tsx"),

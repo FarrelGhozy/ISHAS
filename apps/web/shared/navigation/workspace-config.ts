@@ -33,6 +33,7 @@ export const ROLE_NAVIGATION: Record<RoleId, NavItem[]> = {
   ],
   validator: [
     { label: "Dashboard validator", path: "/validator/dashboard", icon: Activity },
+    { label: "SAM-iSAFE", path: "/validator/sam-isafe", icon: ShieldCheck },
     { label: "Instrumen", path: "/validator/instrumen", icon: ListChecks },
     { label: "Dokumen instrumen", path: "/validator/dokumen-instrumen", icon: BookOpen },
     { label: "Scoring", path: "/validator/scoring", icon: Database },
