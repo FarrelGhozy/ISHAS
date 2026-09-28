@@ -655,6 +655,25 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `DESIGN_SYSTEM.md` (tanpa kelas `.status`/warna merek baru).
 - Dokumen terdampak: DATA_MODEL schema v13, TODO, stage `STAGE_SAM_ISAFE_FASE2.md`.
 
+## D-26.f — Pematangan bank data SAM-iSAFE (CRUD lengkap + mobile) — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan` atas keluhan bank kurang matang + tampilan HP):
+  lengkapi `/validator/sam-isafe/bank` menyerupai bank instrumen (D-24),
+  tetap Validator-only (D-26.a–D-26.d tidak berubah).
+- **CRUD lengkap:** kategori bisa tambah/ubah/hapus; pertanyaan bisa
+  tambah/ubah/hapus/pindah kategori/geser urutan. Hapus kategori ditolak bila
+  masih berisi pertanyaan; hapus pertanyaan ditolak bila sudah dipakai
+  pengamatan (sarankan nonaktifkan agar riwayat Selesai utuh).
+- **Detail per soal bisa diubah:** tiap pertanyaan punya `panduan` observasi +
+  `contohBukti` opsional yang diisi/diubah Validator (dosen pembimbing sering
+  mengganti); isi 27 soal seed tidak diubah sepihak. Duplikat KAT-03 vs KAT-05
+  (komite/insiden/briefing) hanya ditandai, tidak ditulis ulang.
+- **Bank terpisah:** `SAM-KAT-*` khusus SAM-iSAFE; kategori sistem utama
+  `KAT-*` (`kategori-k3.ts`) tidak terpengaruh perubahan bank ini.
+- **Mobile portrait dulu:** accordion per kategori, tombol min 44px penuh di HP,
+  input 16px, tanpa overflow horizontal (viewport 390×844 acuan).
+- Dokumen terdampak: DATA_MODEL schema v14, TODO, stage `STAGE_SAM_ISAFE.md`.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

@@ -34,6 +34,12 @@ keputusan D-04–D-11 masih memengaruhi isinya.
   menyimpan `scorePercent` + `pdfGeneratedAt`; draft memakai
   `instrumentChecksum` (berubah = ulang).
 
+- **Amendemen D-26.f (28 September 2026):** schema `v14`
+  (`MOCK_STORAGE_KEY: ishas-mock-v14`): `SamQuestion` bertambah
+  `panduan` + `contohBukti` (opsional, bisa diubah Validator);
+  migrasi v13→v14 mengisi default kosong. Bank `SAM-KAT-*` terpisah
+  dari kategori sistem `KAT-*`.
+
 - Calon `MOCK_STORAGE_KEY`: `ishas-mock-v11`. Aplikasi ISHAS
 - `MOCK_SCHEMA_VERSION`: `11` (v11 bank live D-24: `instrument` +
   `instrumentChecksum` + opsi/bobot per jawaban + snapshot beku + skor % +

@@ -1,5 +1,20 @@
 # TODO — Kontrol Kerja Aktif
 
+## Pematangan bank data SAM-iSAFE (D-26.f) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): bank SAM-iSAFE kurang
+matang + tampilan HP lemah. Cakupan: CRUD lengkap kategori/soal (ubah, hapus
+berkonfirmasi, pindah kategori, urutan), panduan observasi + contoh bukti per
+soal yang bisa diubah, penanda duplikat KAT-03/KAT-05, accordion + tombol
+44px + input 16px untuk portrait 390×844. Bank `SAM-KAT-*` terpisah dari
+kategori sistem `KAT-*`. Schema v13→v14. Stage: `planning/STAGE_SAM_ISAFE.md`.
+
+- [x] Catat D-26.f + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + migrasi v13→v14 + seed + test.
+- [x] Verifikasi teknis: lint + typecheck + 208 test + build lulus (28 Sep 2026; +10 test bank D-26.f).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (bank CRUD, accordion HP): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## SAM-iSAFE fase 2 Validator (D-26.e) — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan fase 2` + UI profesional):
