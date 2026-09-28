@@ -5,7 +5,7 @@ import { selectRegisteredInstitutions } from "../../../web/mocks/store/selectors
 import { snapshotLocation, validateMapLocation } from "../../../web/mocks/processors/campus-map";
 import type { IshasState, LocationSnapshot, Report } from "../../../web/mocks/types";
 import type { Actor } from "../router";
-import { getFileAsset } from "../repo/files";
+import { getFileAsset, setFileAssetOwner } from "../repo/files";
 import {
   findReportIdByClientRequest,
   insertAudit,
@@ -204,6 +204,7 @@ export async function submitLaporCepat(
         updatedAt: stampedAt,
       };
       await insertReport(conn, report, requestKey);
+      if (input.evidenceAssetId) await setFileAssetOwner(conn, input.evidenceAssetId, id);
       await insertAudit(conn, {
         id: "",
         objectType: "Report",

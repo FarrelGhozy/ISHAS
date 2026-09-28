@@ -41,6 +41,7 @@ const FORBIDDEN = [
   "keluar dari akun",
   "tidak berwenang",
   "hanya publik tanpa login",
+  "akun sendiri",
 ];
 const CONFLICT = [
   "hanya laporan menunggu validasi",

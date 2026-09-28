@@ -14,6 +14,7 @@ import type {
 } from "../../../web/mocks/types";
 import type { Actor } from "../router";
 import { deriveWork } from "./derive";
+import { setFileAssetOwner } from "../repo/files";
 import { insertAudit, withTransaction, type Tx } from "../repo/writes";
 import {
   insertAreaRow,
@@ -680,6 +681,7 @@ export async function updateRecommendation(
   const at = nowIso();
   const reportRecommendations = state.recommendations.filter((r) => r.reportId === report.id);
   let reportStatus: HandlingStatus | undefined;
+  let finishEvidenceAssetId: string | undefined;
   const fields: Record<string, string | number | Date | null> = { last_note: note, updated_at: new Date(at) };
 
   if (input.verify) {
@@ -722,6 +724,7 @@ export async function updateRecommendation(
       }
       fields.completion_evidence = input.evidenceName.trim();
       fields.completion_evidence_asset_id = input.evidenceAssetId ?? null;
+      finishEvidenceAssetId = input.evidenceAssetId;
       fields.status = "Menunggu verifikasi";
     }
   }
@@ -733,6 +736,9 @@ export async function updateRecommendation(
   if (allVerified) reportStatus = "Completed";
   await withTransaction(async (conn) => {
     await updateRecommendationFields(conn, recommendationId, fields);
+    if (finishEvidenceAssetId) {
+      await setFileAssetOwner(conn, finishEvidenceAssetId, recommendationId);
+    }
     if (input.verify) {
       for (const finding of state.findings.filter(
         (f) => f.recommendationId === recommendation.id,

@@ -10,6 +10,7 @@
     "seed": "bun run src/seed/index.ts",
     "seed:demo": "bun run src/seed/index.ts --mode=demo",
     "seed:empty": "bun run src/seed/index.ts --mode=empty",
+    "sweep": "bun run src/sweep.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint"

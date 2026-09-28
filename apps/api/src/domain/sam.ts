@@ -12,6 +12,7 @@ import type {
   SamFollowUpStatus,
 } from "../../../web/mocks/types";
 import type { Actor } from "../router";
+import { setFileAssetOwner } from "../repo/files";
 import { insertAudit, nextSequence, withTransaction, type Tx } from "../repo/writes";
 import {
   deleteSamAssessmentRow,
@@ -468,6 +469,9 @@ export async function saveSamAnswer(
       percent: hitung.percent,
       riskLevel: hitung.risk,
     });
+    if (evidenceAssetId) {
+      await setFileAssetOwner(conn, evidenceAssetId, `${input.assessmentId}:${input.questionId}`);
+    }
   });
   return { ok: true };
 }

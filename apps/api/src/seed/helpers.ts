@@ -4,6 +4,7 @@ import type { RowDataPacket } from "mysql2/promise";
 import { pool } from "../db";
 
 export const ALL_TABLES = [
+  "app_settings",
   "index_history",
   "sequences",
   "notifications",

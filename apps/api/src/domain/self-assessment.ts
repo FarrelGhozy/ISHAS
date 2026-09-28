@@ -11,6 +11,7 @@ import type {
   SelfAssessmentDraft,
 } from "../../../web/mocks/types";
 import type { Actor } from "../router";
+import { setFileAssetOwner } from "../repo/files";
 import { resolveSender, type Sender } from "./lapor";
 import {
   deleteDraft,
@@ -221,6 +222,9 @@ export async function submitSelfAssessment(
         scorePercent,
         byDimension,
       });
+      for (const answer of Object.values(builtAnswers)) {
+        if (answer.evidenceAssetId) await setFileAssetOwner(conn, answer.evidenceAssetId, id);
+      }
       await insertAudit(conn, {
         id: "",
         objectType: "Report",

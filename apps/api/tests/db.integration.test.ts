@@ -1322,6 +1322,302 @@ describe.skipIf(!dbReady)("Fase 4 HTTP (SAM-iSAFE)", () => {
   });
 });
 
+describe.skipIf(!dbReady)("Fase 5 HTTP (admin + notifikasi + storage + migrasi)", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init.headers as Record<string, string> | undefined),
+    },
+    body: JSON.stringify(body),
+  });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+  const asAdmin = (init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: {
+      ...(init.headers as Record<string, string> | undefined),
+      "X-Demo-Account": "USR-001",
+    },
+  });
+  const pngBytes = (width: number, height: number): Uint8Array => {
+    const png = new Uint8Array(24);
+    png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    png[18] = (width >> 8) & 0xff;
+    png[19] = width & 0xff;
+    png[22] = (height >> 8) & 0xff;
+    png[23] = height & 0xff;
+    return png;
+  };
+
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("admin: RBAC + tambah pesantren + ubah status", async () => {
+    const denied = await call("/api/v1/admin/institutions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Demo-Account": "USR-003" },
+      body: JSON.stringify({ name: "PP Uji Fase Lima", location: "Kota Uji" }),
+    });
+    expect(denied.status).toBe(403);
+
+    const invalid = await call(
+      "/api/v1/admin/institutions",
+      asAdmin(json({ name: "xy", location: "Kota Uji" }, { method: "POST" })),
+    );
+    expect(invalid.status).toBe(400);
+    expect(((await invalid.json()) as { error: string }).error).toBe(
+      "Nama pesantren minimal 3 karakter.",
+    );
+
+    const created = await call(
+      "/api/v1/admin/institutions",
+      asAdmin(
+        json(
+          {
+            name: "PP Uji Fase Lima",
+            location: "Kota Malang",
+            address: "Jl. Uji Nomor 10, Malang",
+            manager: "Ust. Uji",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(created.status).toBe(201);
+    const code = ((await created.json()) as { data: { id: string } }).data.id;
+
+    const status = await call(
+      `/api/v1/admin/institutions/${code}/status`,
+      asAdmin(json({ status: "Aktif" }, { method: "POST" })),
+    );
+    expect(status.status).toBe(200);
+    const [row] = await pool.query<RowDataPacket[]>(
+      "SELECT status FROM institutions WHERE code = ?",
+      [code],
+    );
+    expect(String(row[0]?.status)).toBe("Aktif");
+  });
+
+  test("admin: pengguna + proteksi akun sendiri & admin terakhir", async () => {
+    const badInstitution = await call(
+      "/api/v1/admin/users",
+      asAdmin(
+        json(
+          { name: "Uji Akun", email: "uji@ishas.demo", roleId: "pesantren", institutionCode: "PSN-0023" },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(badInstitution.status).toBe(400);
+    expect(((await badInstitution.json()) as { error: string }).error).toBe(
+      "Pesantren wajib terhubung ke satu pesantren aktif.",
+    );
+
+    const created = await call(
+      "/api/v1/admin/users",
+      asAdmin(
+        json(
+          { name: "Uji Akun", email: "uji@ishas.demo", roleId: "pesantren", institutionCode: "PSN-0018" },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(created.status).toBe(201);
+    const userId = ((await created.json()) as { data: { id: string } }).data.id;
+
+    const duplicate = await call(
+      "/api/v1/admin/users",
+      asAdmin(json({ name: "Uji Akun 2", email: "uji@ishas.demo", roleId: "validator" }, { method: "POST" })),
+    );
+    expect(duplicate.status).toBe(400);
+    expect(((await duplicate.json()) as { error: string }).error).toBe(
+      "Email sudah digunakan pada data demo.",
+    );
+
+    const updated = await call(
+      `/api/v1/admin/users/${userId}`,
+      asAdmin(json({ name: "Uji Akun Diubah", email: "uji2@ishas.demo", institutionCode: "PSN-0018" }, { method: "PATCH" })),
+    );
+    expect(updated.status).toBe(200);
+
+    const activated = await call(
+      `/api/v1/admin/users/${userId}/status`,
+      asAdmin(json({ status: "Aktif" }, { method: "POST" })),
+    );
+    expect(activated.status).toBe(200);
+
+    const selfStatus = await call(
+      "/api/v1/admin/users/USR-001/status",
+      asAdmin(json({ status: "Nonaktif" }, { method: "POST" })),
+    );
+    expect(selfStatus.status).toBe(403);
+    expect(((await selfStatus.json()) as { error: string }).error).toBe(
+      "Akun sendiri tidak dapat diubah statusnya.",
+    );
+
+    const selfDelete = await call(
+      "/api/v1/admin/users/USR-001/delete",
+      asAdmin({ method: "POST" }),
+    );
+    expect(selfDelete.status).toBe(403);
+
+    const reset = await call(
+      `/api/v1/admin/users/${userId}/reset-password`,
+      asAdmin({ method: "POST" }),
+    );
+    expect(reset.status).toBe(200);
+
+    const removed = await call(
+      `/api/v1/admin/users/${userId}/delete`,
+      asAdmin({ method: "POST" }),
+    );
+    expect(removed.status).toBe(200);
+    expect(await scalar("SELECT COUNT(*) AS c FROM users WHERE id = ?", [userId])).toBe(0);
+  });
+
+  test("notifikasi: daftar penerima + tandai dibaca", async () => {
+    const anon = await call("/api/v1/notifications");
+    expect(anon.status).toBe(401);
+
+    const list = await call("/api/v1/notifications", {
+      headers: { "X-Demo-Account": "USR-003" },
+    });
+    expect(list.status).toBe(200);
+    const body = (await list.json()) as {
+      data: { items: { id: string; recipientAccountId: string; read: boolean }[] };
+    };
+    expect(body.data.items.length).toBeGreaterThan(0);
+    expect(body.data.items.every((n) => n.recipientAccountId === "USR-003")).toBe(true);
+
+    const read = await call(
+      "/api/v1/notifications/read",
+      json({}, { method: "POST", headers: { "X-Demo-Account": "USR-003" } }),
+    );
+    expect(read.status).toBe(200);
+    expect(await scalar("SELECT COUNT(*) AS c FROM notifications WHERE recipient_account_id = 'USR-003' AND is_read = 0")).toBe(0);
+  });
+
+  test("storage: owner_ref saat submit + sweep yatim + tanpa bocor path", async () => {
+    const form = new FormData();
+    form.append("file", new File([pngBytes(320, 240)], "bukti-sah.png", { type: "image/png" }));
+    form.append("institutionCode", "PSN-0018");
+    const uploaded = await call("/api/v1/uploads/report-evidence", { method: "POST", body: form });
+    expect(uploaded.status).toBe(201);
+    const assetId = ((await uploaded.json()) as { data: { id: string } }).data.id;
+
+    const report = await call(
+      "/api/v1/reports/lapor-cepat",
+      json(
+        {
+          institutionCode: "PSN-0018",
+          reporterName: "Penguji Storage",
+          title: "Kabel uji penyimpanan",
+          description: "Menguji owner_ref pada bukti lapor-cepat fase lima.",
+          manualLocation: "Koridor uji",
+          evidenceName: "bukti-sah.png",
+          evidenceAssetId: assetId,
+        },
+        { method: "POST" },
+      ),
+    );
+    expect(report.status).toBe(201);
+    const reportId = ((await report.json()) as { data: { id: string } }).data.id;
+    const [owned] = await pool.query<RowDataPacket[]>(
+      "SELECT owner_ref FROM file_assets WHERE asset_id = ?",
+      [assetId],
+    );
+    expect(String(owned[0]?.owner_ref)).toBe(reportId);
+
+    // Aset yatim: diunggah tetapi tak pernah dipakai, umurnya dibuat tua.
+    const orphanForm = new FormData();
+    orphanForm.append("file", new File([pngBytes(64, 64)], "yatim.png", { type: "image/png" }));
+    orphanForm.append("institutionCode", "PSN-0018");
+    const orphan = await call("/api/v1/uploads/report-evidence", {
+      method: "POST",
+      body: orphanForm,
+    });
+    const orphanId = ((await orphan.json()) as { data: { id: string } }).data.id;
+    await pool.query(
+      "UPDATE file_assets SET created_at = (NOW(3) - INTERVAL 48 HOUR) WHERE asset_id = ?",
+      [orphanId],
+    );
+
+    const sweep = await call("/api/v1/admin/storage/sweep", asAdmin({ method: "POST" }));
+    expect(sweep.status).toBe(200);
+    expect(await scalar("SELECT COUNT(*) AS c FROM file_assets WHERE asset_id = ?", [orphanId])).toBe(0);
+
+    const publicState = await call("/api/v1/public/state");
+    const publicText = await publicState.text();
+    expect(publicText).not.toContain("stored_path");
+    expect(publicText).not.toContain("storage/");
+
+    const adminState = await call("/api/v1/admin/state", asAdmin());
+    const adminText = await adminState.text();
+    expect(adminText).not.toContain("stored_path");
+  });
+
+  test("admin: audit filter pelaku + reset demo", async () => {
+    const audit = await call("/api/v1/admin/audit?object=User", asAdmin());
+    expect(audit.status).toBe(200);
+    const body = (await audit.json()) as {
+      data: { items: { objectType: string }[]; total: number };
+    };
+    expect(body.data.total).toBeGreaterThan(0);
+    expect(body.data.items.every((e) => e.objectType === "User")).toBe(true);
+
+    const reset = await call("/api/v1/admin/reset-demo", asAdmin({ method: "POST" }));
+    expect(reset.status).toBe(200);
+    expect(await countRows("users")).toBe(SEED.users.length);
+    expect(await scalar("SELECT COUNT(*) AS c FROM app_settings")).toBe(0);
+  });
+
+  test("migrasi aset: status + sekali jalan + flag", async () => {
+    const before = await call("/api/v1/admin/migrate/status", asAdmin());
+    expect(((await before.json()) as { data: { migrated: boolean } }).data.migrated).toBe(false);
+
+    const base64 = Buffer.from("%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF").toString("base64");
+    const assetId = `instrument-doc-${crypto.randomUUID()}`;
+    const migrate = await call(
+      "/api/v1/admin/migrate/assets",
+      asAdmin(
+        json(
+          {
+            items: [
+              {
+                kind: "instrument-doc",
+                assetId,
+                indicatorId: "IND-K3L-002",
+                fileName: "migrasi-indikator.pdf",
+                mime: "application/pdf",
+                base64,
+              },
+            ],
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(migrate.status).toBe(201);
+    expect(((await migrate.json()) as { data: { imported: number } }).data.imported).toBe(1);
+    expect(await scalar("SELECT COUNT(*) AS c FROM file_assets WHERE asset_id = ?", [assetId])).toBe(1);
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM instrument_docs WHERE indicator_id = 'IND-K3L-002'"),
+    ).toBe(1);
+
+    const after = await call("/api/v1/admin/migrate/status", asAdmin());
+    expect(((await after.json()) as { data: { migrated: boolean } }).data.migrated).toBe(true);
+
+    const again = await call(
+      "/api/v1/admin/migrate/assets",
+      asAdmin(json({ items: [] }, { method: "POST" })),
+    );
+    expect(again.status).toBe(409);
+  });
+});
+
 afterAll(async () => {
   if (dbReady) await closePool();
 });

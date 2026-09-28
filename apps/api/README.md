@@ -6,9 +6,11 @@ Scope: **Fase 0** (koneksi DB, migrasi schema v15, seed demo/kosong, health) +
 **Fase 2** (validasi/lifecycle Pesantren, lokasi/denah, tindak lanjut) +
 **Fase 3** (bank instrumen live, dokumen indikator PDF, dataset/impor, audit
 publikasi) +
-**Fase 4** (SAM-iSAFE: bank kategori/soal, pengamatan, tindak lanjut, bukti foto).
+**Fase 4** (SAM-iSAFE: bank kategori/soal, pengamatan, tindak lanjut, bukti foto) +
+**Fase 5** (Super Admin: pesantren/pengguna/audit/reset, notifikasi, storage lokal
+dengan staging + sweep, migrasi aset IndexedDB).
 Kontrak dan model data: `docs/BACKEND_DATA_MODEL.md`, `docs/BACKEND_API_CONTRACT.md`.
-Keputusan: D-30.b/D-30.c/D-30.d/D-30.e di `docs/DECISIONS.md`.
+Keputusan: D-30.b/D-30.c/D-30.d/D-30.e/D-30.f di `docs/DECISIONS.md`.
 
 ## Prasyarat
 
@@ -35,6 +37,7 @@ bun run migrate --fresh    # DROP + CREATE database lalu migrasi ulang
 bun run seed --mode=demo   # isi data demo (port 1:1 seed frontend)
 bun run seed --mode=empty  # struktur kosong tapi valid (1 admin + bank minimal)
 bun run dev                # server dev (watch) di http://localhost:3004
+bun run sweep              # job storage: buang staging yatim (>24 jam) + tmp
 ```
 
 Health check:
@@ -80,6 +83,12 @@ header `X-Demo-Account: USR-xxx` (non-production); publik tanpa header.
 | POST/PUT/DELETE | `/validator/sam/assessments[/:id]`, `/validator/sam/assessments/:id/answers|complete|review` | Validator aktif |
 | POST/PATCH | `/validator/sam/follow-ups[/:fid]`, `/validator/sam/follow-ups/:fid/cancel` | Validator aktif |
 | POST | `/uploads/sam-evidence` | Validator aktif |
+| GET | `/admin/state`, `/admin/audit`, `/admin/migrate/status` | Super Admin |
+| POST | `/admin/institutions`, `/admin/institutions/:code/status` | Super Admin |
+| POST/PATCH | `/admin/users`, `/admin/users/:id` | Super Admin |
+| POST | `/admin/users/:id/status|reset-password|delete` | Super Admin |
+| POST | `/admin/reset-demo`, `/admin/storage/sweep`, `/admin/migrate/assets` | Super Admin |
+| GET/POST | `/notifications`, `/notifications/read` | akun sesi |
 
 ## Pemeriksaan teknis
 
@@ -111,7 +120,7 @@ lanjut SAM-iSAFE; butuh MySQL hidup).
 
 ## Struktur
 
-- `migrations/` — DDL bernomor (`0001_schema_v15.sql`, `0002_sam_followup_active.sql`).
+- `migrations/` — DDL bernomor (`0001_schema_v15.sql`, `0002_sam_followup_active.sql`, `0003_app_settings.sql`).
 - `src/config.ts` — konfigurasi environment.
 - `src/db.ts` — pool MySQL + health ping.
 - `src/migrate.ts` — runner migrasi.

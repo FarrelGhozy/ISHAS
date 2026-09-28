@@ -24,6 +24,7 @@ import { deleteFileAsset, getFileAsset } from "../repo/files";
 import { readStoredBlob, removeStoredBlob } from "../storage";
 import { buildPesantrenRoutes } from "./pesantren";
 import { buildValidatorRoutes } from "./validator";
+import { buildAdminRoutes } from "./admin";
 
 export type RouteDeps = { loadState: () => Promise<IshasState> };
 
@@ -444,6 +445,7 @@ export function buildRoutes(deps: RouteDeps): Route[] {
     },
     ...buildPesantrenRoutes(deps),
     ...buildValidatorRoutes(deps),
+    ...buildAdminRoutes(deps),
   ];
 }
 
