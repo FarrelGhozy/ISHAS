@@ -144,6 +144,11 @@ bukan nol; opsi lama (`likert-1-5` dsb) hanya dibaca untuk snapshot lama.
 (≥2 opsi, label unik, bobot 0–100, pengali 0–10). Tiap ubah: `checksum` baru +
 audit. Hapus tidak memblokir riwayat (snapshot beku tetap).
 
+`GET /validator/bank/dimensions` mengembalikan bank penuh (dimensi→indikator→opsi
++ `weight` + `isFinding` + `checksum`); beda dari `/instrument/bank` publik yang
+menyembunyikan bobot/flag. `GET /validator/state` (D-30.d) adalah proyeksi penuh
+`IshasState` khusus adapter frontend — bukan endpoint publik.
+
 ## 10. Dokumen indikator (D-16)
 
 | Method + Path | Validasi | Efek |
@@ -192,8 +197,10 @@ prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_K
 - Dataset (D-25): `GET /validator/dataset?institution=&includeNonRegistered=`
   (filter utama terdaftar + toggle audit + chip status),
   `GET /validator/dataset/export?format=csv|json` (whitelist D-02),
-  `POST /validator/dataset/import` (≤200 baris → validasi → pratinjau →
-  terapkan sebagai `Menunggu validasi`, tidak langsung publik).
+  `POST /validator/dataset/import` body `{text?, rows?, apply?}`: tanpa `apply`
+  mengembalikan pratinjau `{valid,errors}` (D-25: parse CSV/JSON server-side);
+  `apply:true` menyisipkan baris valid sebagai `Menunggu validasi` + snapshot beku
+  + audit + notifikasi pemilik, tidak langsung publik.
 - `GET /notifications?account=` (filter penerima), `POST /notifications/read`.
 
 ## 13. Aturan publikasi audit (D-25.b)
@@ -201,8 +208,11 @@ prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_K
 Layak publik bila 5 poin terpenuhi: snapshot lengkap + `Diterima` +
 `scorePercent` ada + `pdfGeneratedAt` ada + checksum cocok
 (beda = label "bank berubah", snapshot tetap beku).
-Endpoint: `GET /validator/publication-audit` (checklist per laporan + tautan
-PDF/Scoring/Dataset).
+Endpoint: `GET /validator/publication-audit` — `items[]` berisi `reportId`,
+`institutionCode`, `title`, `validationStatus`, `scorePercent`, `pdfGeneratedAt`
++ checklist `{answered, expected, lengkap, diterima, skorAda, pdfAda,
+checksumCocok, warisan, layak}`; UI mengambil `institutionCode` untuk pemilih
+institusi pada filter, bukan nama/kontak pelapor.
 
 ## 14. Health, konfigurasi, dan berkas
 

@@ -48,11 +48,20 @@ Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
 - [x] Adapter ruang Pesantren (issue #10, lanjutan): `usePesantrenState` +
       `refreshPesantrenState`, method Pesantren di resolver; validasi/lokasi/
       denah/tindak lanjut/laporan beralih. Verifikasi: 233 test frontend + build.
-- [ ] Fase 3 (issue #6): bank live + dokumen PDF + dataset/impor.
+- [x] Fase 3 (issue #6): bank live (CRUD + checksum + audit) + dokumen PDF
+      (unggah/upsert/manual/visibilitas) + dataset (ekspor whitelist D-02 +
+      impor pratinjau→`Menunggu validasi`) + audit publikasi 5 kriteria (D-30.d).
+      Verifikasi: lint + typecheck + 61 test (unit + integrasi DB) + build lulus
+      (29 Sep 2026).
+- [x] Adapter ruang Validator non-SAM (issue #10, lanjutan): `useValidatorState`
+      + `refreshValidatorState`, method bank/dokumen/dataset di resolver,
+      `apiBlob`; halaman bank/dokumen/dataset/audit/scoring/dashboard beralih
+      saat `VITE_USE_BACKEND=true`. Verifikasi: 233 test frontend + build lulus.
 - [ ] Fase 4 (issue #7): SAM-iSAFE + bank.
 - [ ] Fase 5 (issue #8): admin + audit + notifikasi + storage lokal.
 - [ ] Fase 6 (issue #9): auth server + RBAC.
-- [ ] Cek visual 3 viewport adapter publik + review pemilik (Fase 1/#10).
+- [ ] Cek visual 3 viewport adapter publik/Pesantren/Validator + review pemilik
+      (Fase 1–3/#10).
 
 ## Perbaikan invarian seed + bug alur data frontend — 28 September 2026 — `IN PROGRESS`
 

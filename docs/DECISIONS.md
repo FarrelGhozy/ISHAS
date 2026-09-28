@@ -736,6 +736,29 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Batas terverifikasi: lint + typecheck + 55 test backend + 233 test frontend +
   build lulus; cek visual 3 viewport belum dijalankan.
 
+## D-30.d — Fase 3 backend + adapter ruang Validator — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan semaksimal mungkin kalau frontend perlu disesuaikan`):
+  kerjakan backend issue #6 dan sesuaikan frontend Validator yang diperlukan.
+- Backend `apps/api`: bank instrumen live (CRUD dimensi/indikator/opsi+bobot/pengali,
+  validasi 1:1 mock, tiap ubah → checksum + audit, hapus tak merusak snapshot beku);
+  dokumen indikator (unggah PDF `%PDF-` ≤10 MB, upsert 1 berkas/indikator, entri
+  manual D-16.g, visibilitas Public/Privat, blob Privat hanya Validator); dataset
+  (filter terdaftar + toggle non-terdaftar, ekspor CSV/JSON whitelist D-02, impor
+  ≤200 baris → pratinjau → `Menunggu validasi`); audit publikasi 5 kriteria (D-25.b).
+  Modul baru `domain/bank.ts`, `domain/docs.ts`, `domain/dataset.ts`,
+  `repo/bank.ts`, `repo/docs.ts`, `routes/validator.ts`.
+- **Ekstensi kontrak:** `GET /api/v1/validator/state` (proyeksi penuh untuk adapter;
+  bukan publik) + `GET /api/v1/validator/bank/dimensions` (bank penuh dengan bobot
+  + flag temuan, yang tidak ikut di `/instrument/bank` publik).
+- Frontend `apps/web`: `shared/api/validator-state.ts` (`useValidatorState` +
+  `refreshValidatorState`), method bank/dokumen/dataset di `http-repository`/
+  `repository`, `apiBlob` di `http-client`. Halaman Validator non-SAM (bank,
+  dokumen, dataset, audit publikasi, scoring, dashboard) beralih saat
+  `VITE_USE_BACKEND=true`; SAM-iSAFE (Fase 4) + modul lain tetap fallback mock.
+- Batas terverifikasi: lint + typecheck + 61 test backend + 233 test frontend +
+  build lulus; cek visual 3 viewport belum dijalankan di lingkungan ini.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator
