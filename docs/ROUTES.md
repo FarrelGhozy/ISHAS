@@ -78,7 +78,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | Route workspace + tanpa sesi | redirect `/login` (setelah login kembali ke URL tujuan semula) |
 | Route workspace + role cocok | `allowed`, scope difilter (`pesantren` hanya `institutionCode` miliknya) |
 | Route workspace + role salah | `/akses-ditolak` dengan pesan "Akun [label] hanya dapat membuka ruang kerjanya" + tombol kembali ke ruang kerja yang benar |
-| `/asesor/*` (sisa lama) | `/akses-ditolak` dengan pesan "Peran Asesor sudah dihapus pada ; gunakan Penilaian Mandiri" + tombol ke `/penilaian-mandiri` |
+| `/asesor/*` (sisa lama) | halaman pesan "Peran Asesor sudah dihapus pada V2; gunakan Penilaian Mandiri" + tombol ke `/penilaian-mandiri` |
 | `/pesantren/[kode tak dikenal]` | `allowed` + empty state "Pesantren tidak ditemukan" (bukan 404 teknis) |
 
 Guard frontend hanya simulasi UX; backend wajib memeriksa ulang role + permission + scope.

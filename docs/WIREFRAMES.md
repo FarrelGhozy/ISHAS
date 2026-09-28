@@ -44,7 +44,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 1. Bar konteks (lihat §0) + banner scope: ikon gedung + `Pesantren aktif: [Semua terdaftar | nama]` + `Periode hasil: [periode]` + chip `Data ilustrasi` (`status-blue`).
 2. Kartu statistik (4, `stats-grid`): Indeks K3L (nilai + "Naik/turun X dari periode lalu" + ikon perisai), Risiko tinggi (`stat-red`, "Perlu tindakan segera"), Tindak lanjut (`stat-amber`, rata-rata progres + "N pekerjaan"), Terverifikasi (`stat-blue`, count + "Oleh akun Pesantren").
-3. Panel grafik: `Perkembangan indeks` (sub: "Perbandingan enam periode terakhir") + tren `+X periode ini` (`trend-up` hijau) + grafik area marun; panel samping `Hasil per dimensi` (bar per dimensi + "Area nilai terendah diprioritaskan").
+3. Panel grafik: `Perkembangan indeks` (sub: "Perbandingan enam periode terakhir") + tren `+X periode ini` (`trend-up` hijau) + grafik area biru (identitas D-18); panel samping `Hasil per dimensi` (bar per dimensi + "Area nilai terendah diprioritaskan").
 4. Panel `Temuan yang perlu ditindaklanjuti` (sub: "Peta risiko awal memakai lokasi/area pesantren, bukan peta geografis") + link `Buka peta bahaya →` + kartu temuan (chip severity + zona + lokasi + isu + tombol `Kelola tindak lanjut →`). Nama validator tampil pada kartu; nama pelapor tidak tampil (D-02).
 5. Panel count antrean **dihapus** (D-02, 8 Sep 2026): jumlah laporan menunggu validasi tidak publik.
 
@@ -97,7 +97,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 ## 6. `/login`, `/admin/*`, `/validator/*`, `/pesantren/*`
 
-- Login: panel kiri sama seperti lama (gradien marun + alur), panel kanan hanya 3 kartu: `Masuk sebagai Super Admin` ("Mengelola pesantren, akun, audit."), `Masuk sebagai Validator` ("Mengelola instrumen dan penilaian."), `Masuk sebagai Pesantren` ("Memvalidasi laporan dan mengelola tindak lanjut."). Tanpa kartu asesor; tanpa link "Kembali ke beranda".
+- Login: panel kiri sama seperti lama (gradien biru identitas D-18 + alur), panel kanan hanya 3 kartu: `Masuk sebagai Super Admin` ("Mengelola pesantren, akun, audit."), `Masuk sebagai Validator` ("Mengelola instrumen dan penilaian."), `Masuk sebagai Pesantren` ("Memvalidasi laporan dan mengelola tindak lanjut."). Tanpa kartu asesor; tanpa link "Kembali ke beranda".
 - Admin: halaman sama lama minus semua opsi Asesor; tambah aksi verifikasi pesantren `Persiapan → Aktif` dan alur buat akun Pesantren via popup (`Buat akun` → modal nama/email/sandi + konfirmasi/peran/pesantren → `Menunggu` → aktivasi) + ubah + reset sandi demo + hapus berkonfirmasi dengan proteksi akun sendiri/admin terakhir.
 - Validator (D-24): `/validator/instrumen` = Bank live (tambah/edit/hapus dimensi +
   indikator, pilih tipe jawaban 4 opsi, tombol `Atur bobot` per indikator +

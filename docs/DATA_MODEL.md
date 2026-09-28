@@ -2,8 +2,9 @@
 
 ## Kontrak pembacaan dashboard — 18 September 2026
 
-Schema v6 mengikuti D-15 yang sudah ditambahkan. Tidak ada migrasi baru pada
-penyempurnaan ini. Katalog indikator hanya Published; klasifikasi jawaban memakai
+Schema `v14` mengikuti D-15, D-24 (bank live `INS-LIVE`), D-26 (SAM-iSAFE),
+dan D-26.f (`panduan` + `contohBukti` per soal). Rincian migrasi di §0.
+Bank instrumen live; klasifikasi jawaban memakai
 instrumentVersionId snapshot asal. Rekap lokasi memakai areaId, bukan nama area.
 Relasi dan batas metrik: [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md).
 Periode URL belum menjadi filter semua metrik; klaim periode mempersempit semua
@@ -21,10 +22,10 @@ Kode/schema belum diubah; jangan membuat titik tengah sebagai fallback lokasi.
 Semua relasi memakai **ID stabil**; label tampilan tidak pernah menjadi kunci.
 Persistensi browser berversi + reset seed. Dilarang menyimpan kata sandi/token.
 
-**Status: sketsa awal, belum kontrak yang siap dibuat menjadi kode.** Audit menemukan jawaban
-terkirim, hasil/periode, akun sesi, audit/notifikasi, dan riwayat denah belum lengkap. Baca
-`DATA_REQUIREMENTS.md` sebelum memakai skema di bawah. D-01–D-03 telah dijawab (8 September 2026);
-keputusan D-04–D-11 masih memengaruhi isinya.
+**Status: kontrak aktif frontend (schema v14).** Temuan audit 8 September
+sudah ditindaklanjuti lewat D-05–D-11 (9 September 2026), D-24, dan D-26.
+Baca `DATA_REQUIREMENTS.md` bersama skema di bawah; rumus/skala ilmiah final
+tetap menunggu penelitian.
 
 ## 0. Versi schema
 

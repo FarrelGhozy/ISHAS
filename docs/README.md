@@ -40,7 +40,8 @@ Bagian status di bawah merupakan catatan audit awal 8 September. Keputusan lanju
 bersamanya; klaim semua stage kode masih BACKLOG tidak menggambarkan kondisi kini.
 Perbedaan status antarfile dicatat di review dashboard, belum ditetapkan ulang sepihak.
 
-**Status saat ini: rencana tervalidasi sebagian — D-01–D-03 dijawab, D-04–D-12 masih terbuka.**
+**Status saat ini: D-01–D-03 dijawab (8 Sep); D-05–D-11 dijawab (9 Sep);
+D-13–D-14, D-17–D-26.f menyusul. Rumus/skala ilmiah final tetap menunggu penelitian.**
 
 ISHAS direncanakan sebagai perubahan besar berdasarkan evaluasi dosen (September 2026).
 Keputusan pemilik 8 September 2026: **ISHAS dibangun sebagai aplikasi**
@@ -56,9 +57,9 @@ penilaian mandiri per indikator masih memakai nama file dummy.
 ## Cara membaca hasil validasi
 
 1. Baca [hasil pemeriksaan](VALIDATION_REVIEW.md) untuk melihat kekurangan dan konflik yang ditemukan.
-2. Keputusan D-01–D-03 telah dijawab pemilik (8 September 2026, lihat `DECISIONS.md`); pertanyaan lanjutan D-04–D-12 masih terbuka dan dibahas sebelum spesifikasi terkait dikatakan siap.
+2. Keputusan D-01–D-03 telah dijawab pemilik (8 September 2026, lihat `DECISIONS.md`); D-05–D-11 telah dijawab (9 September 2026). D-04 (agregat) dan D-12 (tampilan) memakai aturan ilustrasi interim sampai keputusan final.
 3. Tinjau [kebutuhan data tambahan](DATA_REQUIREMENTS.md) sebelum memfinalkan model data dan alur.
-4. Stage aktif adalah [Stage 00 — Validasi rencana](../planning/STAGE_00_PLAN_REVIEW.md). Stage 01–Stage 09 tetap `BACKLOG`.
+4. Tahap kode berjalan: Stage 01–06 `REVIEW`, Stage 07–09 `IN PROGRESS`, revisi D-19–D-26.f tercatat di `TODO.md`. Stage 00 tersisa sebagai arsip validasi rencana.
 
 Keterangan status isi dokumen:
 

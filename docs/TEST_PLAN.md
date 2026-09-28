@@ -45,7 +45,7 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 - State tidak kompatibel yang dibaca dari key : pemulihan mengikuti aturan versi; tombol reset mengembalikan seed.
 
 Catatan key/reset: aplikasi ISHAS terpisah (D-01) sehingga tidak ada data browser lama pada origin aplikasi;
-key (`ishas-mock-v4` + sesi/draft) murni baru. Uji dua akun Pesantren
+key (`ishas-mock-v14` + sesi/draft) murni baru. Uji dua akun Pesantren
 dengan role sama untuk memastikan sesi menunjuk ID akun, bukan role saja.
 
 ## 3. Alur kritis ujung-ke-ujung (skenario wajib)
