@@ -61,7 +61,9 @@ const q = (
   categoryId: string,
   text: string,
   sortOrder: number,
-): SamQuestion => ({ id, categoryId, text, sortOrder, isActive: true });
+  panduan = "",
+  contohBukti = "",
+): SamQuestion => ({ id, categoryId, text, panduan, contohBukti, sortOrder, isActive: true });
 
 export const SAM_QUESTIONS_SEED: SamQuestion[] = [
   q(
@@ -225,6 +227,37 @@ export const SAM_QUESTIONS_SEED: SamQuestion[] = [
 
 export function samActiveQuestions(questions: SamQuestion[]): SamQuestion[] {
   return questions.filter((item) => item.isActive);
+}
+
+// D-26.f: teks yang sama persis (abaikan kapital/tanda baca) antar soal.
+// Dipakai sebagai penanda, bukan penghapusan otomatis.
+export function samDuplicateQuestions(questions: SamQuestion[]): Map<string, string[]> {
+  const normal = (text: string): string =>
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .join(" ");
+  const groups = new Map<string, SamQuestion[]>();
+  for (const item of questions) {
+    const key = normal(item.text);
+    if (!key) continue;
+    const list = groups.get(key) ?? [];
+    list.push(item);
+    groups.set(key, list);
+  }
+  const out = new Map<string, string[]>();
+  for (const list of groups.values()) {
+    if (list.length < 2) continue;
+    for (const item of list) {
+      out.set(
+        item.id,
+        list.filter((other) => other.id !== item.id).map((other) => other.id),
+      );
+    }
+  }
+  return out;
 }
 
 export function samMaxScore(questions: SamQuestion[]): number {

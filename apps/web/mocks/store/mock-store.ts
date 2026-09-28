@@ -2660,14 +2660,28 @@ export const storeActions = {
     }
     const name = input.name.trim();
     if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    if (
+      currentState.samCategories.some((item) => item.name.toLowerCase() === name.toLowerCase())
+    ) {
+      return { ok: false, error: "Nama kategori sudah digunakan." };
+    }
+    const description = input.description?.trim() ?? "";
+    if (description.length > 280) {
+      return { ok: false, error: "Deskripsi maksimal 280 karakter." };
+    }
     let id = "";
     setState((draft) => {
-      const order = Math.max(0, ...draft.samCategories.map((item) => item.sortOrder)) + 1;
-      id = `SAM-KAT-${String(order).padStart(2, "0")}`;
+      const used = new Set(
+        draft.samCategories.map((item) => Number(item.id.replace("SAM-KAT-", "")) || 0),
+      );
+      let order = Math.max(0, ...draft.samCategories.map((item) => item.sortOrder)) + 1;
+      let n = order;
+      while (used.has(n)) n += 1;
+      id = `SAM-KAT-${String(n).padStart(2, "0")}`;
       draft.samCategories.push({
         id,
         name,
-        description: input.description?.trim() || "",
+        description,
         sortOrder: order,
         isActive: true,
       });
@@ -2681,9 +2695,82 @@ export const storeActions = {
     return { ok: true, id };
   },
 
+  // D-26.f: ubah nama/deskripsi kategori bank SAM-iSAFE.
+  updateSamCategory(
+    actor: { id?: string },
+    categoryId: string,
+    patch: { name?: string; description?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah kategori." };
+    }
+    const target = currentState.samCategories.find((item) => item.id === categoryId);
+    if (!target) return { ok: false, error: "Kategori tidak ditemukan." };
+    const name = patch.name?.trim() ?? target.name;
+    if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    if (
+      currentState.samCategories.some(
+        (item) => item.id !== categoryId && item.name.toLowerCase() === name.toLowerCase(),
+      )
+    ) {
+      return { ok: false, error: "Nama kategori sudah digunakan." };
+    }
+    const description = patch.description?.trim() ?? target.description;
+    if (description.length > 280) {
+      return { ok: false, error: "Deskripsi maksimal 280 karakter." };
+    }
+    setState((draft) => {
+      const live = draft.samCategories.find((item) => item.id === categoryId)!;
+      live.name = name;
+      live.description = description;
+      audit(draft, account, {
+        objectType: "SamCategory",
+        objectId: categoryId,
+        action: "Mengubah kategori SAM-iSAFE",
+        note: name,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.f: hapus kategori hanya bila kosong (tanpa pertanyaan).
+  deleteSamCategory(actor: { id?: string }, categoryId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus kategori." };
+    }
+    const target = currentState.samCategories.find((item) => item.id === categoryId);
+    if (!target) return { ok: false, error: "Kategori tidak ditemukan." };
+    if (currentState.samCategories.length <= 1) {
+      return { ok: false, error: "Kategori terakhir tidak dapat dihapus." };
+    }
+    const isi = currentState.samQuestions.filter((item) => item.categoryId === categoryId);
+    if (isi.length > 0) {
+      return {
+        ok: false,
+        error: `Kategori masih berisi ${isi.length} pertanyaan. Pindahkan atau hapus dulu.`,
+      };
+    }
+    setState((draft) => {
+      draft.samCategories = draft.samCategories.filter((item) => item.id !== categoryId);
+      audit(draft, account, {
+        objectType: "SamCategory",
+        objectId: categoryId,
+        action: "Menghapus kategori SAM-iSAFE",
+        note: `${target.name} (pengamatan baru memakai bank sisa)`,
+      });
+    });
+    return { ok: true };
+  },
+
   addSamQuestion(
     actor: { id?: string },
-    input: { categoryId: string; text: string },
+    input: { categoryId: string; text: string; panduan?: string; contohBukti?: string },
   ): ActionResult {
     const account = actor.id
       ? currentState.users.find((user) => user.id === actor.id)
@@ -2695,6 +2782,14 @@ export const storeActions = {
     if (!category) return { ok: false, error: "Kategori tidak ditemukan." };
     const text = input.text.trim();
     if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    const panduan = input.panduan?.trim() ?? "";
+    const contohBukti = input.contohBukti?.trim() ?? "";
+    if (panduan.length > 500) {
+      return { ok: false, error: "Panduan maksimal 500 karakter." };
+    }
+    if (contohBukti.length > 280) {
+      return { ok: false, error: "Contoh bukti maksimal 280 karakter." };
+    }
     let id = "";
     setState((draft) => {
       const order =
@@ -2704,12 +2799,18 @@ export const storeActions = {
             .filter((item) => item.categoryId === input.categoryId)
             .map((item) => item.sortOrder),
         ) + 1;
-      const n = draft.samQuestions.length + 1;
+      const used = new Set(
+        draft.samQuestions.map((item) => Number(item.id.replace("SAM-Q-", "")) || 0),
+      );
+      let n = draft.samQuestions.length + 1;
+      while (used.has(n)) n += 1;
       id = `SAM-Q-${String(n).padStart(3, "0")}`;
       draft.samQuestions.push({
         id,
         categoryId: input.categoryId,
         text,
+        panduan,
+        contohBukti,
         sortOrder: order,
         isActive: true,
       });
@@ -2721,6 +2822,136 @@ export const storeActions = {
       });
     });
     return { ok: true, id };
+  },
+
+  // D-26.f: ubah teks/panduan/contoh bukti + pindah kategori.
+  updateSamQuestion(
+    actor: { id?: string },
+    questionId: string,
+    patch: { text?: string; panduan?: string; contohBukti?: string; categoryId?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const text = patch.text?.trim() ?? target.text;
+    if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    const panduan = patch.panduan?.trim() ?? target.panduan ?? "";
+    const contohBukti = patch.contohBukti?.trim() ?? target.contohBukti ?? "";
+    if (panduan.length > 500) {
+      return { ok: false, error: "Panduan maksimal 500 karakter." };
+    }
+    if (contohBukti.length > 280) {
+      return { ok: false, error: "Contoh bukti maksimal 280 karakter." };
+    }
+    const categoryId = patch.categoryId ?? target.categoryId;
+    const category = currentState.samCategories.find((item) => item.id === categoryId);
+    if (!category) return { ok: false, error: "Kategori tujuan tidak ditemukan." };
+    setState((draft) => {
+      const live = draft.samQuestions.find((item) => item.id === questionId)!;
+      live.text = text;
+      live.panduan = panduan;
+      live.contohBukti = contohBukti;
+      if (categoryId !== live.categoryId) {
+        const order =
+          Math.max(
+            0,
+            ...draft.samQuestions
+              .filter((item) => item.categoryId === categoryId)
+              .map((item) => item.sortOrder),
+          ) + 1;
+        live.categoryId = categoryId;
+        live.sortOrder = order;
+      }
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: "Mengubah pertanyaan SAM-iSAFE",
+        note: `${category.name} (pengamatan baru memakai teks baru)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.f: hapus soal hanya bila belum pernah dipakai pengamatan.
+  deleteSamQuestion(actor: { id?: string }, questionId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const dipakai = currentState.samAssessments.filter(
+      (item) => item.answers[questionId] !== undefined,
+    ).length;
+    if (dipakai > 0) {
+      return {
+        ok: false,
+        error: `Sudah dipakai ${dipakai} pengamatan. Nonaktifkan saja agar riwayat utuh.`,
+      };
+    }
+    setState((draft) => {
+      draft.samQuestions = draft.samQuestions.filter((item) => item.id !== questionId);
+      // Rapatkan urutan dalam kategori yang ditinggalkan.
+      const sisa = draft.samQuestions
+        .filter((item) => item.categoryId === target.categoryId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      sisa.forEach((item, index) => {
+        item.sortOrder = index + 1;
+      });
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: "Menghapus pertanyaan SAM-iSAFE",
+        note: `${target.id} (belum pernah dipakai pengamatan)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.f: geser urutan soal dalam kategorinya.
+  moveSamQuestion(
+    actor: { id?: string },
+    questionId: string,
+    direction: "naik" | "turun",
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengurutkan pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const group = currentState.samQuestions
+      .filter((item) => item.categoryId === target.categoryId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const posisi = group.findIndex((item) => item.id === questionId);
+    const tukar = direction === "naik" ? posisi - 1 : posisi + 1;
+    if (tukar < 0 || tukar >= group.length) {
+      return { ok: false, error: "Sudah di ujung urutan." };
+    }
+    const lawan = group[tukar].id;
+    setState((draft) => {
+      const a = draft.samQuestions.find((item) => item.id === questionId)!;
+      const b = draft.samQuestions.find((item) => item.id === lawan)!;
+      const temp = a.sortOrder;
+      a.sortOrder = b.sortOrder;
+      b.sortOrder = temp;
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: "Mengurutkan pertanyaan SAM-iSAFE",
+        note: `${direction} dalam ${target.categoryId}`,
+      });
+    });
+    return { ok: true };
   },
 
   setSamQuestionActive(

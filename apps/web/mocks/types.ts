@@ -401,6 +401,8 @@ export type SamQuestion = {
   id: string; // 'SAM-Q-001' stabil
   categoryId: string;
   text: string;
+  panduan: string; // D-26.f: cara mengamati, bisa diubah Validator
+  contohBukti: string; // D-26.f: contoh bukti foto, bisa diubah Validator
   sortOrder: number;
   isActive: boolean;
 };

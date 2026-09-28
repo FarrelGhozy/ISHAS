@@ -28,7 +28,7 @@ const T = {
 };
 
 export const SEED: IshasState = {
-  schemaVersion: 13,
+  schemaVersion: 14,
   samCategories: structuredClone(SAM_CATEGORIES_SEED),
   samQuestions: structuredClone(SAM_QUESTIONS_SEED),
   samAssessments: [],
