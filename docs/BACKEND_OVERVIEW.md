@@ -1,14 +1,15 @@
 # Backend ISHAS — Gambaran Umum
 
 Status: **rancangan** (frontend tetap sumber kebenaran perilaku sampai backend hidup).
-Keputusan stack: **D-30** di `DECISIONS.md`. Target baca: pemilik + pelaksana backend.
+Keputusan stack: **D-30** di `DECISIONS.md`; pendetailan dokumentasi: **D-30.a**.
+Target baca: pemilik + pelaksana backend.
 
 ## 1. Stack yang disepakati
 
 | Lapisan | Pilihan | Alasan |
 |---|---|---|
 | Runtime + bahasa | Bun + TypeScript | Serumpun dengan frontend (`bun 1.4`), cepat, satu bahasa |
-| Database | MySQL 8 (`utf8mb4`) | Keputusan pemilik; umum untuk hibah kampus |
+| Database | MySQL **8.0.13+** (`utf8mb4`) | Keputusan pemilik; JSON default butuh ≥8.0.13 |
 | File | Storage **lokal** (disk service) | S3 belum butuh; lihat `BACKEND_STORAGE.md` |
 | Auth | **Ditunda fase akhir** | Login kartu dummy tetap dipakai sampai semua modul matang |
 | PDF | Data dari server, render tetap browser dulu | Generator PDF server opsional tahap lanjut |
@@ -41,9 +42,15 @@ flowchart LR
 3. `Completed` tidak tampil publik; arsip (`archivedAt`) bukan hapus.
 4. `severity/priority` tanpa default; rekomendasi final lapor-cepat wajib (D-29).
 5. Snapshot penilaian beku: tidak dihitung ulang saat bank berubah (D-24).
-6. Blob privat tidak pernah disajikan ke publik (D-02 + D-27 untuk foto PDF).
+6. Blob privat tidak pernah disajikan ke publik (D-02 + D-27 untuk foto PDF);
+   rute kanonik `GET /api/files/:assetId` + cek scope (`BACKEND_STORAGE.md` §4).
 7. Setiap mutasi menulis audit; notifikasi hanya ke pemilik scope.
 8. Rumus/skor agregat tetap **asumsi prototipe** sampai penelitian final (D-04).
+9. Nomor urut (`RPT-`, `SAM-`, `SMF-`, `PSN-`) memakai tabel `sequences` +
+   transaksi (`SELECT ... FOR UPDATE`), bukan counter in-memory.
+10. Checksum bank 1:1 `hitungChecksumInstrument` (`instrument-bank.ts:55`):
+    hash DJB2 dari JSON kanonik dimensi/indikator/opsi → `ck-<hex>`. Satu vektor
+    uji mengunci kesamaan mock ↔ server (`BACKEND_MIGRATION.md` §5).
 
 ## 4. Struktur dokumen backend
 

@@ -679,6 +679,25 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `BACKEND_API_CONTRACT.md`, `BACKEND_STORAGE.md`, `BACKEND_MIGRATION.md`,
   `BACKEND_ISSUES.md`. Scope: rancangan dulu; kode backend setelah review.
 
+## D-30.a — Validasi & pendetailan dokumentasi backend — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan`): validasi penulisan dokumentasi backend +
+  database + issue GitHub yang masih terbuka, dan pendetailan item yang kurang.
+  Scope **dokumentasi dan issue saja**; kode `apps/web/` tidak diubah.
+- Sumber kebenaran diperbaiki lebih dulu: `docs/DATA_MODEL.md` disinkronkan ke
+  schema **v15** (sebelumnya masih menyebut v14/v11) agar acuan
+  `BACKEND_DATA_MODEL.md` tidak bertentangan dengan `store/state.ts`.
+- Kolom/entitas DDL yang hilang dilengkapi (pemetaan tipe frontend → kolom),
+  termasuk field snapshot temuan, FK, `sequences`, `index_history`,
+  `lapor_drafts`, `k3_categories/k3_aspects`, dan `instrument_versions` legacy.
+- Kontrak API/storage diperdalam (contoh JSON, pemetaan error→HTTP, `/health`,
+  endpoint legacy, rute blob kanonik, detail auth fase 6).
+- Skrip `scripts/create-backend-issues.sh` dibuat idempoten (cek judul sebelum
+  `gh issue create`); label fase + milestone + relasi `Depends on #` dicatat.
+- Catatan lingkungan: `GITHUB_TOKEN` environment di mesin ini invalid dan
+  menutupi akun keyring yang sah; perintah `gh` dijalankan dengan
+  `env -u GITHUB_TOKEN gh ...`.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

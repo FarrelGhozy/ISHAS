@@ -1,33 +1,93 @@
 #!/usr/bin/env bash
-# Membuat 8 issue backend ISHAS. Syarat: gh auth login terlebih dahulu.
-# Jalankan dari root repo: bash scripts/create-backend-issues.sh
+# Membuat / memperbarui 8 issue backend ISHAS secara idempoten.
+# Syarat: gh terautentikasi. Bila GITHUB_TOKEN environment invalid, jalankan:
+#   env -u GITHUB_TOKEN bash scripts/create-backend-issues.sh
+# Jalankan dari root repo. Issue dicocokkan lewat judul persis; yang sudah ada
+# di-update (body + label), bukan digandakan.
 set -euo pipefail
 
-gh label create backend --color 0E8A16 --description "Pekerjaan backend" 2>/dev/null || true
+REPO_MILESTONE="Backend MVP"
 
-gh issue create --label backend \
-  --title "[backend] Fase 0 — Fondasi Bun+TS+MySQL + DDL v15 + seed demo/kosong" \
-  --body-file - <<'EOF'
-Siapkan proyek backend Bun+TypeScript + MySQL 8 (utf8mb4) + migrasi schema v15.
+# --- Label fase (idempoten) -------------------------------------------------
+declare -A LABELS=(
+  ["backend"]="Pekerjaan backend|0E8A16"
+  ["fase-0"]="Fase 0 — fondasi backend|1D76DB"
+  ["fase-1"]="Fase 1 — baca publik + lapor|1D76DB"
+  ["fase-2"]="Fase 2 — validasi + lifecycle + lokasi|1D76DB"
+  ["fase-3"]="Fase 3 — bank + dokumen + dataset|1D76DB"
+  ["fase-4"]="Fase 4 — SAM-iSAFE|1D76DB"
+  ["fase-5"]="Fase 5 — admin + audit + storage|1D76DB"
+  ["fase-6"]="Fase 6 — auth server|1D76DB"
+  ["adapter"]="Swap adapter frontend|FBCA04"
+)
+for name in "${!LABELS[@]}"; do
+  IFS='|' read -r desc color <<<"${LABELS[$name]}"
+  gh label create "$name" --description "$desc" --color "$color" 2>/dev/null || true
+done
 
-Lingkup (docs/BACKEND_DATA_MODEL.md §1–§10):
+# --- Milestone (idempoten) --------------------------------------------------
+if ! gh api "repos/{owner}/{repo}/milestones?state=all" --jq '.[].title' 2>/dev/null | grep -Fxq "$REPO_MILESTONE"; then
+  gh api -X POST "repos/{owner}/{repo}/milestones" -f title="$REPO_MILESTONE" \
+    -f description="Seluruh fase backend D-30 (0-6) + swap adapter" >/dev/null 2>&1 || true
+fi
+
+# --- Peta judul → nomor issue yang sudah ada --------------------------------
+declare -A ISSUE_NUM=()
+while IFS=$'\t' read -r num title; do
+  [[ -n "$num" ]] && ISSUE_NUM["$title"]="$num"
+done < <(gh issue list --state all --limit 1000 --json number,title --jq '.[] | "\(.number)\t\(.title)"')
+
+label_flags() {
+  local mode="$1" labels="$2" flag=()
+  IFS=',' read -ra parts <<<"$labels"
+  for p in "${parts[@]}"; do flag+=("$mode" "$p"); done
+  printf '%s\n' "${flag[@]}"
+}
+
+upsert() {
+  local title="$1" labels="$2" body="$3"
+  mapfile -t add_flags < <(label_flags "--add-label" "$labels")
+  mapfile -t new_flags < <(label_flags "--label" "$labels")
+  local num="${ISSUE_NUM[$title]:-}"
+  if [[ -n "$num" ]]; then
+    gh issue edit "$num" --body "$body" "${add_flags[@]}" --milestone "$REPO_MILESTONE" >/dev/null
+    echo "update  #$num  $title"
+  else
+    gh issue create --title "$title" --body "$body" "${new_flags[@]}" --milestone "$REPO_MILESTONE" >/dev/null
+    echo "create        $title"
+  fi
+}
+
+# --- Bodies -----------------------------------------------------------------
+B0="$(cat <<'EOF'
+Siapkan proyek backend Bun+TypeScript + MySQL 8.0.13+ (utf8mb4) + migrasi schema v15.
+
+**Depends on:** — (fondasi)
+
+Lingkup (docs/BACKEND_DATA_MODEL.md §1–§11):
 - DDL semua tabel: institutions, users (+password_hash nullable, sessions fase 6),
-  instrument_meta, bank_dimensions/indicators/options, instrument_versions (baca),
-  reports, self_assessment_snapshots/drafts, findings, recommendations,
-  buildings, areas, campus_plans, instrument_docs, sam_categories/questions/
-  assessments/follow_ups, audit_events, notifications, file_assets.
+  instrument_meta, bank_dimensions/indicators/options, instrument_versions
+  (+_dimensions/_indicators, baca), reports, self_assessment_snapshots/drafts,
+  lapor_drafts, findings, recommendations, buildings, areas, campus_plans,
+  instrument_docs, k3_categories/aspects, sam_categories/questions/assessments/
+  follow_ups, audit_events, notifications, sequences, index_history, file_assets.
+- Konvensi: `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`;
+  FK + ON DELETE sesuai tabel §0.a; checksum 1:1 `hitungChecksumInstrument`.
 - ID stabil dipertahankan (RPT-/REC-/RSK-/SAM-/SMF-/DOC-/CAMPUS-/IND-K3L-/asset-*-<uuid>).
 - scripts/seed.ts --mode=demo (port 1:1 mocks/seed/seed.ts) dan --mode=empty
-  (satu admin, bank minimal valid, counters report:1/institution:1).
-- Health check + koneksi DB + README backend.
+  (satu admin, bank minimal valid, sequences report:1/institution:1).
+- Health check `GET /health` + koneksi DB + README backend.
 
-Hijau: migrate + seed demo/empty lolos + seed demo tampil sama seperti mock.
+Kriteria hijau:
+- [ ] migrate + seed demo/empty lolos, seed demo tampil sama seperti mock.
+- [ ] checksum bank seed sama dengan `hitungChecksumInstrument` (vektor uji).
 EOF
+)"
 
-gh issue create --label backend \
-  --title "[backend] Fase 1 — Baca publik + lapor + penilaian-mandiri (D-27, D-29)" \
-  --body-file - <<'EOF'
+B1="$(cat <<'EOF'
 Endpoint baca publik + kirim tanpa login (docs/BACKEND_API_CONTRACT.md §2–§3, §8).
+
+**Depends on:** #3 (Fase 0)
 
 Lingkup:
 - GET public: dashboard (agregat ilustrasi D-04), results, risk-map (D-14),
@@ -41,14 +101,16 @@ Lingkup:
 - Upload bukti jawaban 1 foto/soal khusus evidenceRequired (D-27); foto tampil
   di pdf-data publik, akses langsung tetap privat.
 
-Hijau: pesan error Indonesia sama persis mock + test sah/tolak + flag frontend
-untuk route publik.
+Kriteria hijau:
+- [ ] pesan error Indonesia sama persis mock + test sah/tolak.
+- [ ] flag frontend untuk route publik beralih (lihat #10).
 EOF
+)"
 
-gh issue create --label backend \
-  --title "[backend] Fase 2 — Validasi + lifecycle + lokasi/denah + tindak lanjut" \
-  --body-file - <<'EOF'
+B2="$(cat <<'EOF'
 Workspace Pesantren scope-sendiri (docs/BACKEND_API_CONTRACT.md §4–§7).
+
+**Depends on:** #3 (Fase 0)
 
 Lingkup:
 - Antrean + detail internal + accept (severity/priority wajib, rekomendasiFinal
@@ -61,13 +123,16 @@ Lingkup:
 - Tindak lanjut: progres snap 25 (D-20), 100 wajib bukti, verify, cancel
   (alasan ≥10, tampil publik + alasan/D-21, blokir Completed).
 
-Hijau: guard scope per lembaga + audit tiap mutasi + workspace Pesantren beralih.
+Kriteria hijau:
+- [ ] guard scope per lembaga + audit tiap mutasi.
+- [ ] workspace Pesantren beralih (lihat #10).
 EOF
+)"
 
-gh issue create --label backend \
-  --title "[backend] Fase 3 — Bank live + dokumen PDF + dataset/impor (D-25)" \
-  --body-file - <<'EOF'
+B3="$(cat <<'EOF'
 Workspace Validator minus SAM (docs/BACKEND_API_CONTRACT.md §9–§10, §12–§13).
+
+**Depends on:** #3 (Fase 0)
 
 Lingkup:
 - CRUD bank INS-LIVE (dimensi/indikator/opsi+bobot/pengali, validasi 1:1 mock);
@@ -80,14 +145,16 @@ Lingkup:
 - Dataset: filter terdaftar + toggle non-terdaftar, ekspor CSV/JSON whitelist
   D-02, impor ≤200 baris → pratinjau → Menunggu validasi.
 
-Hijau: checksum cocok dengan hitungChecksumInstrument (satu vektor uji) +
-ekspor tanpa bocor privat.
+Kriteria hijau:
+- [ ] checksum cocok dengan hitungChecksumInstrument (satu vektor uji).
+- [ ] ekspor tanpa bocor bidang privat (D-02).
 EOF
+)"
 
-gh issue create --label backend \
-  --title "[backend] Fase 4 — SAM-iSAFE + bank + fase 2" \
-  --body-file - <<'EOF'
+B4="$(cat <<'EOF'
 Modul SAM-iSAFE Validator-only (docs/BACKEND_API_CONTRACT.md §11, D-26/D-26.e/D-26.f).
+
+**Depends on:** #6 (Fase 3)
 
 Lingkup:
 - Bank: CRUD kategori/soal + pindah + urutan + aktif; tolak hapus kategori
@@ -99,13 +166,16 @@ Lingkup:
 - Tindak lanjut temuan skor 0/1 (unik aktif/soal, PIC + tenggat, batal ≥10).
 - Skor dinamis maks=aktif×2, persen, ambang prototipe 80/60.
 
-Hijau: riwayat jawaban lama utuh setelah bank berubah + halaman SAM beralih.
+Kriteria hijau:
+- [ ] riwayat jawaban lama utuh setelah bank berubah.
+- [ ] halaman SAM beralih (lihat #10).
 EOF
+)"
 
-gh issue create --label backend \
-  --title "[backend] Fase 5 — Admin + audit + notifikasi + storage lokal" \
-  --body-file - <<'EOF'
+B5="$(cat <<'EOF'
 Admin + file lokal penuh (docs/BACKEND_API_CONTRACT.md §12, BACKEND_STORAGE.md).
+
+**Depends on:** #3 (Fase 0), #5 (Fase 2)
 
 Lingkup:
 - Pesantren (tambah, Persiapan→Aktif), user (tambah Menunggu + aktivasi,
@@ -113,36 +183,41 @@ Lingkup:
   audit global + filter pelaku, reset demo --mode=demo.
 - Notifikasi ke pemilik scope + baca/tandai.
 - file_assets + /srv/ishas-storage (7 subdir + tmp), validasi magic bytes +
-  sharp, serving GET /api/files/:assetId sesuai visibility/scope, transaksi
-  tmp→rename, job yatim malam.
+  sharp, serving kanonik GET /api/files/:assetId sesuai visibility/scope,
+  transaksi tmp→rename, job yatim malam.
 - Migrasi satu kali IndexedDB → server (endpoint terkunci + flag).
 
-Hijau: sisa IndexedDB terhapus + reset demo via endpoint + tak ada path
-storage terekspos langsung.
+Kriteria hijau:
+- [ ] sisa IndexedDB terhapus + reset demo via endpoint.
+- [ ] tidak ada path storage terekspos langsung.
 EOF
+)"
 
-gh issue create --label backend \
-  --title "[backend] Fase 6 — Auth server (terakhir): hash + sesi + RBAC" \
-  --body-file - <<'EOF'
+B6="$(cat <<'EOF'
 Dikerjakan TERAKHIR setelah fase 0–5 matang (D-30). Sampai saat itu login
 kartu dummy tetap dipakai.
 
-Lingkup (docs/BACKEND_DATA_MODEL.md §1, BACKEND_MIGRATION.md §2):
+**Depends on:** #5 (Fase 2), #6 (Fase 3), #8 (Fase 5)
+
+Lingkup (docs/BACKEND_DATA_MODEL.md §1, BACKEND_API_CONTRACT.md §16):
 - password_hash (bcrypt/argon2) + sessions (token acak, cookie HttpOnly
-  Secure SameSite=Lax, expiry) + middleware RBAC peran+scope per endpoint
+  Secure SameSite=Lax, expiry, rotasi) + middleware RBAC peran+scope per endpoint
   (matriks BACKEND_API_CONTRACT.md §1).
+- Endpoint /auth/login, /auth/logout, /auth/me, /auth/password.
 - Login form email+sandi menggantikan kartu; guard frontend tetap + klaim server.
 - X-Demo-Account hanya development; production menolak tanpa cookie.
-- Rate-limit login + audit login.
+- Rate-limit login + audit login + CSRF (X-CSRF-Token).
 
-Hijau: seluruh endpoint menolak peran/scope salah (403) + test auth +
-kartu demo mati di production.
+Kriteria hijau:
+- [ ] seluruh endpoint menolak peran/scope salah (403) + test auth.
+- [ ] kartu demo mati di production.
 EOF
+)"
 
-gh issue create --label backend \
-  --title "[backend] Swap adapter frontend bertahap (flag VITE_USE_BACKEND)" \
-  --body-file - <<'EOF'
-Menukar mock → HTTP tanpa tulis ulang UI (docs/BACKEND_MIGRATION.md §1–§4).
+B7="$(cat <<'EOF'
+Menukar mock → HTTP tanpa tulis ulang UI (docs/BACKEND_MIGRATION.md §1–§5).
+
+**Depends on:** #3 (Fase 0); beralih bertahap mengikuti Fase 1–5.
 
 Lingkup:
 - shared/api/http-client.ts (fetch + cookie + X-Request-Id) +
@@ -151,10 +226,54 @@ Lingkup:
 - Beralih per fase (publik → Pesantren → Validator → SAM → admin);
   fallback mock sampai fase hijau di staging.
 - Draft mandiri pindah ke self_assessment_drafts (lintas perangkat);
-  draft lapor boleh tetap browser.
+  draft lapor boleh tetap browser atau ke lapor_drafts.
 
-Hijau per fase: lint + typecheck + test + build + 3 viewport untuk UI
-tersentuh + seed demo tampil sama.
+Kriteria hijau per fase:
+- [ ] lint + typecheck + test + build + 3 viewport untuk UI tersentuh.
+- [ ] seed demo tampil sama.
 EOF
+)"
 
-echo "8 issue backend dibuat."
+T0="[backend] Fase 0 — Fondasi Bun+TS+MySQL + DDL v15 + seed demo/kosong"
+T1="[backend] Fase 1 — Baca publik + lapor + penilaian-mandiri (D-27, D-29)"
+T2="[backend] Fase 2 — Validasi + lifecycle + lokasi/denah + tindak lanjut"
+T3="[backend] Fase 3 — Bank live + dokumen PDF + dataset/impor (D-25)"
+T4="[backend] Fase 4 — SAM-iSAFE + bank + fase 2"
+T5="[backend] Fase 5 — Admin + audit + notifikasi + storage lokal"
+T6="[backend] Fase 6 — Auth server (terakhir): hash + sesi + RBAC"
+T7="[backend] Swap adapter frontend bertahap (flag VITE_USE_BACKEND)"
+
+upsert "$T0" "backend,fase-0" "$B0"
+upsert "$T1" "backend,fase-1" "$B1"
+upsert "$T2" "backend,fase-2" "$B2"
+upsert "$T3" "backend,fase-3" "$B3"
+upsert "$T4" "backend,fase-4" "$B4"
+upsert "$T5" "backend,fase-5" "$B5"
+upsert "$T6" "backend,fase-6" "$B6"
+upsert "$T7" "backend,adapter" "$B7"
+
+# --- Refresh peta nomor (issue baru ikut terdaftar) -------------------------
+declare -A ISSUE_NUM=()
+while IFS=$'\t' read -r num title; do
+  [[ -n "$num" ]] && ISSUE_NUM["$title"]="$num"
+done < <(gh issue list --state all --limit 1000 --json number,title --jq '.[] | "\(.number)\t\(.title)"')
+
+# --- Relasi native "blocked by" (idempoten: gagal bila sudah ada) ------------
+blocked_by() {
+  local target_title="$1" dep_title="$2"
+  local target="${ISSUE_NUM[$target_title]:-}" dep="${ISSUE_NUM[$dep_title]:-}"
+  [[ -z "$target" || -z "$dep" ]] && return 0
+  gh issue edit "$target" --add-blocked-by "$dep" >/dev/null 2>&1 || true
+}
+blocked_by "$T1" "$T0"
+blocked_by "$T2" "$T0"
+blocked_by "$T3" "$T0"
+blocked_by "$T4" "$T3"
+blocked_by "$T5" "$T0"
+blocked_by "$T5" "$T2"
+blocked_by "$T6" "$T2"
+blocked_by "$T6" "$T3"
+blocked_by "$T6" "$T5"
+blocked_by "$T7" "$T0"
+
+echo "Selesai: 8 issue backend disinkronkan (idempoten)."

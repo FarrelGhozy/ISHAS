@@ -56,3 +56,27 @@ Backend meniru pola ini di frontend:
 | ID berurutan (`RPT-`, `SAM-`) tabrakan saat konkuren | `counters` pindah ke tabel `sequences` + transaksi |
 | Blob yatim saat upload gagal | Pola tmp → rename + job malam (`BACKEND_STORAGE.md` §5) |
 | Auth dummy bocor ke production | Flag `X-Demo-Account` hanya aktif bila `NODE_ENV=development`; production menolak tanpa cookie |
+
+### 5.a Vektor uji checksum (wajib sama mock ↔ server)
+
+`hitungChecksumInstrument` (`apps/web/mocks/instrument-bank.ts:55`) menghitung
+DJB2 dari `JSON.stringify` bentuk kanonik:
+
+```jsonc
+// untuk setiap dimensi: { id, indicators:[ { id, t (answerType), w (weight),
+//   r/e/l (required/evidence/location → 0|1),
+//   o: [ [value, weight, isFinding?1:0], ... ] } ] }
+```
+
+Keluaran `ck-<hex>` (32-bit unsigned, `hash >>> 0`). Backend **wajib** memakai
+urutan kunci & normalisasi identik. Simpan minimal satu fixture (bank 10
+indikator seed) dan bandingkan checksum mock vs server pada test; draft/snapshot
+yang checksum-nya beda berarti "bank berubah".
+
+### 5.b Urutan dependensi fase
+
+Fase 0 memblokir semua fase. Fase 1–2 dapat paralel setelah 0; fase 3 bergantung
+pada `instrument-bank` port; fase 4 pada 3 (bank SAM memakai pola checksum/snapshot);
+fase 5 pada 2 (audit + notifikasi ditulis mulai fase 1 tetapi storage penuh di 5);
+fase 6 terakhir setelah seluruh mutasi menegakkan RBAC. Bila skema berubah setelah
+endpoint hidup, tambahkan migrasi DDL bernomor (bukan menyunting migrasi lama).

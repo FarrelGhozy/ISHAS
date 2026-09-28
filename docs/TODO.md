@@ -3,11 +3,17 @@
 ## Rancangan backend (D-30) — 28 September 2026 — `REVIEW`
 
 Rancangan dulu, kode backend setelah review pemilik. Stack: Bun + TypeScript +
-MySQL, storage lokal (tanpa S3), auth ditunda fase 6, seed satu file dua mode.
+MySQL 8.0.13+, storage lokal (tanpa S3), auth ditunda fase 6, seed satu file dua mode.
 Dokumen: `BACKEND_OVERVIEW/DATA_MODEL/API_CONTRACT/STORAGE/MIGRATION/ISSUES.md`.
-Issues GitHub via `bash scripts/create-backend-issues.sh` (butuh `gh auth login`).
+Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
+`backend`/`fase-0`…`fase-6`/`adapter`, relasi `blocked-by`. Sinkron idempoten via
+`bash scripts/create-backend-issues.sh` (pakai `env -u GITHUB_TOKEN` bila token environment invalid).
 
 - [x] Tulis 6 dokumen backend + D-30 + skrip issues.
+- [x] Validasi & pendetailan dokumentasi + issue (D-30.a): sinkron `DATA_MODEL.md`
+      ke v15; lengkapi DDL (kolom hilang, FK, `sequences`, `index_history`,
+      `lapor_drafts`, `k3_*`, `instrument_versions`); perdetail API/storage;
+      skrip issues idempoten + label fase/milestone/blocked-by.
 - [ ] Review pemilik; lalu eksekusi per fase (0–6) + swap adapter bertahap.
 
 ## Perbaikan invarian seed + bug alur data frontend — 28 September 2026 — `IN PROGRESS`

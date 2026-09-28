@@ -31,6 +31,24 @@ CREATE TABLE file_assets (
 Tabel domain cukup menyimpan `*_asset_id` + nama tampilan (seperti mock kini);
 blob tidak pernah di kolom DB.
 
+### 1.a Endpoint unggah → `kind` → `owner_ref`
+
+Karena prefix ID bukti frontend seragam (`evidence-asset-<uuid>` untuk lapor,
+jawaban mandiri, SAM, dan penyelesaian), **server wajib mengisi `kind` dari
+endpoint-nya**, bukan menebak dari ID.
+
+| Endpoint unggah | `kind` | `owner_ref` | Aktor |
+|---|---|---|---|
+| `POST /uploads/report-evidence` | `report-evidence` | `report_id` (staging: kosong sampai submit) | publik/Pesantren |
+| `POST /uploads/self-evidence` | `self-evidence` | `indicator_id`/kunci jawaban | publik/Pesantren |
+| `POST /uploads/sam-evidence` | `sam-evidence` | `assessment_id` + `question_id` | Validator aktif |
+| `POST /uploads/completion-evidence` | `completion-evidence` | `recommendation_id` | Pesantren scope |
+| `POST /uploads/campus-plan` | `campus-plan` | `institution_code` | Pesantren scope |
+| `POST /uploads/instrument-doc` | `instrument-doc` | `indicator_id` | Validator aktif |
+
+`owner_ref` diisi final saat verifikasi submit (recheck institution + nama);
+sebelum itu baris asset berstatus staging dan disapu job malam bila >24 jam.
+
 ## 2. Direktori (satu volume, bukan web root)
 
 ```
@@ -65,7 +83,9 @@ Recheck saat submit: `institution_code` + `original_name` cocok
 
 ## 4. Penyajian unduh
 
-`GET /api/files/:assetId` → cek sesi + scope:
+Rute **kanonik**: `GET /api/files/:assetId` → cek sesi + scope. Alias
+ramah-tampilan `GET /docs/:indicatorId/blob` (kontrak §10) memetakan
+`indicator_id` → `asset_id` lalu memanggil jalur yang sama.
 
 - `instrument-doc` + `Public`: bebas login.
 - `instrument-doc` + `Privat`: hanya Validator aktif (cermin `openInstrumentDoc`).
@@ -83,6 +103,19 @@ Tulis: file → `tmp-uploads` → `INSERT file_assets` → `rename` ke path fina
 `UPDATE` domain. Domain gagal → hapus file (port pola `deleteCampusAsset`
 saat `publish` gagal). Job malam: hapus baris `file_assets` tanpa referensi
 + file `tmp-uploads` >24 jam (pengganti guard `assetEpoch`/`resettingAssets`).
+
+Aturan yatim lebih rinci:
+
+- Baris `file_assets` **staging** (kind `*-evidence`, `owner_ref` NULL, umur
+  >24 jam) → hapus blob + baris.
+- Baris yang hanya dirujuk dari `answers` JSON (self/SAM) dianggap hidup selama
+  laporan/pengamatan induk belum diarsipkan/dihapus; saat induk hard-delete,
+  hapus blob terkait lewat `owner_ref`.
+- `institution-doc` seed (`seed-instrument-doc-<KODE>`) tidak punya blob di
+  disk sampai migrasi menyintesis PDF; jangan dianggap yatim sebelum seed selesai.
+- Reset demo (`POST /admin/reset-demo`) menjalankan pembersihan blok yang sama
+  untuk seluruh kind (cermin `clearCampusAssets`/`clearEvidenceAssets`/
+  `clearInstrumentDocAssets`).
 
 ## 6. Migrasi satu kali dari IndexedDB
 

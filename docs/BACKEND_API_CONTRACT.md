@@ -15,7 +15,34 @@ Semua validasi di bawah adalah port 1:1; angka mengacu ke baris mock.
 - Pagination daftar: `?page&limit` (default 20, maks 100); sort default
   `submitted_at DESC` kecuali ditentukan.
 - Auth fase 1–5: header `X-Demo-Account: USR-xxx` (cermin kartu login, hanya
-  untuk pengembangan); fase 6 diganti cookie sesi (lihat `BACKEND_MIGRATION.md`).
+  untuk pengembangan); fase 6 diganti cookie sesi (lihat §16).
+
+### 0.a Amplop sukses/gagal + pagination
+
+```json
+// 200 daftar
+{ "ok": true, "data": { "items": [ /* ... */ ], "page": 1, "limit": 20, "total": 57 } }
+// 201 buat
+{ "ok": true, "data": { "id": "RPT-0020" } }
+// 400/403/404/409/413/429
+{ "ok": false, "error": "Nama minimal 2 karakter." }
+```
+
+Field `error` **harus** sama persis dengan pesan mock (`mock-store.ts`) agar test
+frontend tetap hijau; kode HTTP mengikuti tabel 0.b.
+
+### 0.b Pemetaan pesan validasi → kode HTTP
+
+| Kelas validasi (contoh pesan) | HTTP |
+|---|---|
+| Field tidak sah: "Nama minimal 2 karakter.", "Judul minimal 10 karakter.", "Usulan rekomendasi minimal 10 karakter." | 400 |
+| Relasi tidak sah: "Kategori/aspek tidak konsisten.", "Lokasi/area tidak sah untuk pesantren ini.", "Pesantren tidak tersedia untuk pelaporan.", "Lampiran bukti tidak sah. Pilih gambar kembali." | 400 |
+| Tanpa sesi fase 6 / cookie kedaluwarsa | 401 |
+| Peran/scope: "Hanya publik tanpa login dan Pesantren aktif yang dapat mengirim laporan.", "Anda tidak berwenang mengubah laporan pesantren ini.", "Hanya Validator aktif yang dapat mengunggah bukti." | 403 |
+| "Laporan tidak ditemukan." | 404 |
+| "Hanya laporan Menunggu validasi yang dapat diterima.", draft basi (checksum beda), lock denah `expectedActiveId` salah, hapus denah sedang dipakai | 409 |
+| Ukuran/tipe berkas melebihi batas (5 MB/10 MB/20 MP) | 413 |
+| Kirim ganda cepat / spam login | 429 |
 
 ## 1. Matriks otorisasi (server wajib menegakkan)
 
@@ -124,25 +151,32 @@ audit. Hapus tidak memblokir riwayat (snapshot beku tetap).
 | `POST /validator/docs` | + `code` ≥3, `title` ≥5, kategori wajib (entri manual D-16.g) | Entri manual (tidak jadi soal mandiri) |
 | `PATCH /validator/docs/:indicatorId/visibility` | ∈ Public/Privat | Ubah visibilitas + audit |
 | `DELETE /validator/docs/:indicatorId` | Konfirmasi client | Hapus metadata + blob + audit |
-| `GET /docs/:indicatorId/blob` | `Public` bebas; `Privat` hanya Validator aktif | Stream PDF + `Content-Disposition` |
+| `GET /docs/:indicatorId/blob` | Alias ramah-tampilan dari `GET /api/files/:assetId` (rute blob kanonik, lihat `BACKEND_STORAGE.md` §4); `Public` bebas; `Privat` hanya Validator aktif | Stream PDF + `Content-Disposition` |
 
 ## 11. SAM-iSAFE Validator (D-26, D-26.e, D-26.f)
 
-- `GET /validator/sam/bank` (kategori + soal aktif + penanda duplikat),
-  CRUD `POST/PATCH/DELETE /validator/sam/categories|questions`,
-  `POST .../questions/:id/move`, `POST .../questions/:id/active`.
-  Hapus kategori berisi soal ditolak; hapus soal yang dipakai pengamatan
-  ditolak (suruh nonaktifkan). `panduan` ≤500, `contohBukti` ≤280.
-- `POST /validator/sam/assessments` (pesantren Aktif, area/manual wajib,
-  `observerName` ≥2), `PUT .../:id/answers` (skor 0|1|2, soal aktif,
-  bukti opsional berpasangan), `POST .../:id/complete` (semua soal aktif
-  terjawab), `POST .../:id/review` (hanya `Selesai`), `DELETE .../:id`
-  (hanya non-`Selesai`).
-- Tindak lanjut temuan (skor 0/1): `POST /validator/sam/follow-ups`
-  (unik aktif per soal, PIC ≥2, tenggat ≥ observasi),
-  `PATCH .../:fid`, `POST .../:fid/cancel` (alasan ≥10).
-- Skor dinamis: `maks = soal aktif × 2`, persen = total/maks × 100,
-  ambang prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi.
+| Method + Path | Validasi | Efek |
+|---|---|---|
+| `GET /validator/sam/bank` | Validator aktif | Kategori + soal aktif + penanda duplikat + hitungan pemakaian |
+| `POST /validator/sam/categories` | `name` ≥3, unik | Kategori baru |
+| `PATCH /validator/sam/categories/:id` | `name` ≥3, unik | Ubah kategori |
+| `DELETE /validator/sam/categories/:id` | Kategori berisi soal → tolak | Hapus kategori |
+| `POST /validator/sam/questions` | `text` ≥5, `categoryId` dikenal, `panduan` ≤500, `contohBukti` ≤280 | Soal baru |
+| `PATCH /validator/sam/questions/:id` | idem | Ubah soal |
+| `POST /validator/sam/questions/:id/move` | `direction up\|down` | Urutan soal |
+| `POST /validator/sam/questions/:id/active` | boolean | Aktif/nonaktif soal |
+| `DELETE /validator/sam/questions/:id` | Soal dipakai pengamatan → tolak (suruh nonaktifkan) | Hapus soal |
+| `POST /validator/sam/assessments` | Pesantren `Aktif`, area/manual wajib, `observerName` ≥2 | `SAM-xxxx` `Berlangsung` |
+| `PUT /validator/sam/assessments/:id/answers` | Skor 0\|1\|2, soal aktif, bukti opsional berpasangan | Jawaban + skor dinamis |
+| `POST /validator/sam/assessments/:id/complete` | Semua soal aktif terjawab | `Selesai` + `completedAt` |
+| `POST /validator/sam/assessments/:id/review` | Hanya status `Selesai` | `reviewedBy/At` + catatan |
+| `DELETE /validator/sam/assessments/:id` | Hanya non-`Selesai` | Hapus pengamatan |
+| `POST /validator/sam/follow-ups` | Temuan skor 0/1, unik aktif per soal, PIC ≥2, tenggat ≥ tanggal observasi | `SMF-xxxx` |
+| `PATCH /validator/sam/follow-ups/:fid` | PIC ≥2, tenggat ≥ observasi, status sah | Ubah tindak lanjut |
+| `POST /validator/sam/follow-ups/:fid/cancel` | `reason` ≥10 | `Dibatalkan` + alasan |
+
+Skor dinamis: `maks = soal aktif × 2`, persen = total/maks × 100, ambang
+prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_KINDS`.
 
 ## 12. Admin + dataset + audit
 
@@ -167,3 +201,67 @@ Layak publik bila 5 poin terpenuhi: snapshot lengkap + `Diterima` +
 (beda = label "bank berubah", snapshot tetap beku).
 Endpoint: `GET /validator/publication-audit` (checklist per laporan + tautan
 PDF/Scoring/Dataset).
+
+## 14. Health, konfigurasi, dan berkas
+
+| Method + Path | Akses | Efek |
+|---|---|---|
+| `GET /health` | publik | `{ok:true,data:{status:"ok",db:"ok",version,uptime}}`; dipakai issue Fase 0 |
+| `GET /api/files/:assetId` | sesuai `visibility`+scope (`BACKEND_STORAGE.md` §4) | Stream blob, `Content-Disposition: inline`, `nosniff`, `Cache-Control: private, max-age=3600` |
+| `POST /uploads/*` | sesuai matriks §1 | Endpoint staging per jenis (report/self/sam/completion/campus/instrument-doc) |
+
+CORS/lingkungan: dev memakai Vite proxy (same-origin, cookie `SameSite=Lax`
+cukup). Bila frontend dan API beda origin di produksi, wajib
+`Access-Control-Allow-Origin` eksplisit + `Allow-Credentials: true` + daftar
+origin dari env; jangan memakai `*` bersama cookie.
+
+## 15. Endpoint legacy / dilarang diekspos
+
+| Sumber mock | Status kontrak |
+|---|---|
+| `verifyFinding` (`mock-store.ts:662`) | **Tidak diekspos**; verifikasi lewat `POST /pesantren/recommendations/:id/verify` |
+| `savePlanVersion` (`mock-store.ts:877`) | **Tidak diekspos**; diganti `POST /pesantren/campus-plans/publish` |
+| `deleteCompletedReport` (`mock-store.ts:621`) | **Tidak diekspos**; alias usang → `POST /pesantren/reports/:id/archive` |
+| `createInstrumentDraft`/`addInstrumentDimension`/`addInstrumentIndicator`/`publishInstrument` | **Tidak diekspos**; tulis bank hanya lewat §9 |
+| `upsertInstrumentDoc`/`createInstrumentDocEntry`/`setInstrumentDocVisibility`/`deleteInstrumentDoc` (store) | Dipetakan ke §10 (`PUT/POST/PATCH/DELETE /validator/docs`) |
+
+Menghapus laporan langsung tidak ada; arsip (`archivedAt`) adalah pengganti (D-07).
+
+## 16. Auth fase 6 (server, dikerjakan terakhir — D-30)
+
+| Method + Path | Validasi | Efek |
+|---|---|---|
+| `POST /auth/login` | email + sandi; rate-limit per IP+email (mis. 5/menit) | Set cookie `ishas_session` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Max-Age`), rotasi sesi, audit login |
+| `POST /auth/logout` | sesi aktif | Hapus baris `sessions` + clear cookie + audit |
+| `GET /auth/me` | cookie valid | Akun aktif + peran + scope (pengganti kartu dummy) |
+| `POST /auth/password` | sandi lama benar, sandi baru ≥8 | `password_hash` baru + audit |
+
+- Middleware RBAC menegakkan matriks §1 per endpoint (peran + scope lembaga);
+  guard frontend tetap ada sebagai UX saja.
+- CSRF: karena cookie `SameSite=Lax` + mutasi `POST`, tambah header
+  `X-CSRF-Token` (double-submit) untuk fase produksi.
+- `X-Demo-Account` hanya aktif bila `NODE_ENV=development`; production menolak
+  tanpa cookie (401).
+
+## 17. Contoh payload ringkas
+
+```jsonc
+// POST /reports/lapor-cepat  (header: X-Request-Id)
+{ "institutionCode": "PSN-0018", "reporterName": "Ahmad", "title": "Kabel terkelupas di dapur",
+  "description": "Kabel dekat kompor terkelupas dan berisiko tersengat.",
+  "areaId": "AREA-003", "categoryId": "KAT-KESELAMATAN", "aspectId": "ASP-...",
+  "reporterRecommendation": "Bungkus/ganti kabel dan pasang pelindung.",
+  "evidenceAssetId": "evidence-asset-<uuid>", "evidenceName": "kabel.jpg" }
+
+// POST /pesantren/reports/RPT-0020/accept
+{ "severity": "Tinggi", "priority": "Tinggi", "note": "Dicek hari ini.",
+  "rekomendasiFinal": "Ganti kabel dan pasang conduit dalam 3 hari." }
+
+// POST /self-assessments/submit
+{ "draftId": "SELF-0001", "reporterName": "Ahmad", "instrumentChecksum": "ck-1a2b3c4d" }
+
+// GET /public/dashboard?institution=PSN-0018
+{ "ok": true, "data": { "summary": { "index": 58.0, "reports": 9, "findings": 11 },
+  "byInstitution": [ { "code": "PSN-0018", "index": 58.0 }, { "code": "PSN-0019", "index": 70.0 } ],
+  "indexHistory": [ { "period": "Agu 2026", "index": 61.0 } ] } }
+```
