@@ -160,6 +160,28 @@ describe("kategoriOfFinding", () => {
     } as RiskFinding;
     expect(kategoriOfFinding(unmapped, SEED.instrumentVersions)).toBeNull();
   });
+
+  test("meneruskan bank live untuk indikator yang tak ada di versi warisan", () => {
+    const bank = structuredClone(SEED.instrument);
+    bank.dimensions[0].indicators.push({
+      id: "IND-K3L-099",
+      code: "IND-K3L-099",
+      title: "Indikator bank baru",
+      prompt: "Prompt indikator bank baru.",
+      categoryId: "KAT-PSIKOSOSIAL",
+      answerType: "ya-tidak",
+      required: true,
+      evidenceRequired: false,
+      locationRequired: false,
+      weight: 1,
+      options: [{ value: "Ya", label: "Ya", weight: 100, isFinding: false }],
+    });
+    const finding = { reportId: "RPT-0004", indicator: "IND-K3L-099" } as RiskFinding;
+    expect(kategoriOfFinding(finding, SEED.instrumentVersions)).toBeNull();
+    expect(kategoriOfFinding(finding, SEED.instrumentVersions, undefined, bank)).toBe(
+      "KAT-PSIKOSOSIAL",
+    );
+  });
 });
 
 describe("level Ekstrem", () => {

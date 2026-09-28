@@ -1995,9 +1995,16 @@ export const storeActions = {
     const indicatorId = input.indicatorId.trim();
     const fileName = input.fileName.trim();
     if (!indicatorId) return { ok: false, error: "Indikator tidak ditemukan." };
-    const catalog = currentState.instrumentVersions.flatMap((v) =>
-      v.dimensions.flatMap((d) => d.indicators.map((i) => ({ dim: d, ind: i }))),
-    );
+    // D-24/D-16: katalog = bank live dulu (sumber indikator baru), lalu versi
+    // warisan. Tanpa ini, unggah PDF untuk indikator hasil editor bank selalu gagal.
+    const catalog = [
+      ...currentState.instrument.dimensions.flatMap((d) =>
+        d.indicators.map((i) => ({ dim: d, ind: i })),
+      ),
+      ...currentState.instrumentVersions.flatMap((v) =>
+        v.dimensions.flatMap((d) => d.indicators.map((i) => ({ dim: d, ind: i }))),
+      ),
+    ];
     const found = catalog.find((entry) => entry.ind.id === indicatorId);
     const existing = currentState.instrumentDocs.find((item) => item.indicatorId === indicatorId);
     if (!found && !existing) return { ok: false, error: "Indikator tidak ditemukan." };
@@ -2326,10 +2333,13 @@ export const storeActions = {
     if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat pengamatan." };
     }
-    const institution = currentState.institutions.find(
-      (item) => item.code === input.institutionCode,
-    );
-    if (!institution || institution.status !== "Aktif") {
+    // D-26.c: hanya pesantren terdaftar (Aktif + punya akun Pesantren aktif).
+    if (
+      !input.institutionCode ||
+      !selectRegisteredInstitutions(currentState).some(
+        (item) => item.code === input.institutionCode,
+      )
+    ) {
       return { ok: false, error: "Pilih pesantren terdaftar." };
     }
     const areaOk =

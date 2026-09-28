@@ -10,6 +10,31 @@ Issues GitHub via `bash scripts/create-backend-issues.sh` (butuh `gh auth login`
 - [x] Tulis 6 dokumen backend + D-30 + skrip issues.
 - [ ] Review pemilik; lalu eksekusi per fase (0–6) + swap adapter bertahap.
 
+## Perbaikan invarian seed + bug alur data frontend — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`kerjakan semuanya`) dari hasil validasi seed
+dan alur data frontend. Cakupan: seed, dua bug store, robustness processor, dan
+sinkronisasi satu dokumen. Tanpa mengubah perilaku produk, hak akses, copy, atau
+rumus/ambang. Issues: **#11–#15**. Status stage lain tidak berubah sepihak.
+
+- [x] #11 Seed invarian: `RPT-0003` → `Proses` (rec sudah `Berjalan`); `RPT-0007`
+      → `Pending` (rec masih `Belum ditindaklanjuti`) + test invarian; komposisi
+      19 laporan/17 temuan/17 rekomendasi dipertahankan. Catatan: temuan awal
+      RPT-0004 keliru (finding-nya memang `Berjalan`), tidak diubah.
+- [x] #12 `upsertInstrumentDoc` mengenali indikator bank live (`instrument`), bukan
+      hanya `instrumentVersions` + test unggah.
+- [x] #13 `createSamAssessment` memakai `selectRegisteredInstitutions` + test negatif.
+- [x] #14 Draft seed `SELF-PSN-0018` diberi `instrumentChecksum`;
+      `kategoriOfFinding` meneruskan bank live.
+- [x] #15 Sinkronkan `DASHBOARD_DATA_FLOW.md` schema v6 → v15.
+- [x] Verifikasi: lint + typecheck + 224 test + build lulus (28 Sep 2026; +5 test baru).
+- [ ] Review pemilik.
+
+Catatan validasi 28 September 2026: alur inti `lapor → Menunggu validasi →
+Terima/Tolak → selectPublicReports` sudah benar dan tidak membocorkan laporan
+Menunggu/Ditolak/Completed/arsip. Temuan hanya konsistensi data seed (RPT-0003 &
+RPT-0007), dua celah store, robustness processor, dan satu dokumen usang.
+
 ## Penjelasan label Diterima + stage Proses di area Validator — 28 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan, kaya gini dulu aja`):

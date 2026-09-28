@@ -115,18 +115,19 @@ describe("lifecycle tindak lanjut V2-06", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("Pending memerlukan PIC, tenggat, dan rencana sebelum menjadi Proses", () => {
-    expect(storeActions.updateHandlingStatus(manager, "RPT-0003", "Proses").ok).toBe(false);
+    const pengelolaB = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
+    expect(storeActions.updateHandlingStatus(pengelolaB, "RPT-0013", "Proses").ok).toBe(false);
     expect(
-      storeActions.updateHandlingStatus(manager, "RPT-0003", "Proses", {
+      storeActions.updateHandlingStatus(pengelolaB, "RPT-0013", "Proses", {
         owner: "Tim Sarana",
         dueDate: "2099-10-01",
-        note: "Perbaikan tangga dijadwalkan pekan ini.",
+        note: "Perbaikan ventilasi dijadwalkan pekan ini.",
       }).ok,
     ).toBe(true);
-    expect(getState().reports.find((report) => report.id === "RPT-0003")?.handlingStatus).toBe(
+    expect(getState().reports.find((report) => report.id === "RPT-0013")?.handlingStatus).toBe(
       "Proses",
     );
-    expect(getState().recommendations.find((item) => item.reportId === "RPT-0003")?.owner).toBe(
+    expect(getState().recommendations.find((item) => item.reportId === "RPT-0013")?.owner).toBe(
       "Tim Sarana",
     );
   });
@@ -306,9 +307,9 @@ describe("pembatalan tindak lanjut D-21", () => {
           event.objectId === "REC-RPT-0003-1" && event.action === "Membatalkan tindak lanjut",
       ),
     ).toBe(true);
-    // Laporan induk tetap seperti semula (seed RPT-0003 Pending), tidak menjadi Completed.
+    // Laporan induk tetap pada status berjalan (seed RPT-0003 Proses), tidak menjadi Completed.
     expect(getState().reports.find((item) => item.id === "RPT-0003")?.handlingStatus).toBe(
-      "Pending",
+      "Proses",
     );
   });
 

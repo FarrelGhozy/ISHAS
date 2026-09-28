@@ -2,7 +2,8 @@
 
 Acuan: D-02/D-03 (akses), D-04 (skor ilustratif), D-07/D-08 (arsip dan
 pesantren terdaftar), D-14 (peta), D-15 (kategori), D-13 amendemen penyempurnaan.
-Tema dan token warna tetap. Prototipe frontend memakai schema v6; backend belum ada.
+Tema dan token warna tetap. Prototipe frontend memakai schema v15
+(`MOCK_SCHEMA_VERSION` di `apps/web/mocks/store/state.ts`); backend belum ada.
 
 ## Dari pelaporan ke dashboard
 

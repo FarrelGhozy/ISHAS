@@ -477,10 +477,11 @@ export function kategoriOfFinding(
   finding: RiskFinding,
   versions: InstrumentVersion[],
   reportsById?: Map<string, Report>,
+  instrument?: Instrument,
 ): K3CategoryId | null {
   if (finding.categoryId) return finding.categoryId;
   if (finding.indicator && finding.indicator !== "Tidak menggunakan instrumen") {
-    const rel = kategoriOfIndicator(versions, finding.indicator);
+    const rel = kategoriOfIndicator(versions, finding.indicator, instrument);
     if (rel.categoryId) return rel.categoryId;
   }
   const report = reportsById?.get(finding.reportId);
@@ -619,7 +620,7 @@ export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] 
   // Temuan + sebaran risiko (satu hitung per ID temuan).
   for (const finding of input.findings) {
     if (!acceptedIds.has(finding.reportId)) continue;
-    const catId = kategoriOfFinding(finding, input.versions, reportsById);
+    const catId = kategoriOfFinding(finding, input.versions, reportsById, input.instrument);
     const row = rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
     row.jumlahTemuan += 1;
     row.risiko[finding.level] += 1;

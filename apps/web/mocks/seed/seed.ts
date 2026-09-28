@@ -243,7 +243,7 @@ export const SEED: IshasState = {
       validationStatus: "Diterima",
       severity: "Sedang",
       priority: "Tinggi",
-      handlingStatus: "Pending",
+      handlingStatus: "Proses", // D-23: rec sudah Berjalan ⇒ laporan Proses
       validatedBy: "USR-003",
       validatedByName: "Ust. K.H. Mustofa Kamal",
       validatedByRole: "Pesantren",
@@ -329,7 +329,7 @@ export const SEED: IshasState = {
       validationStatus: "Diterima",
       severity: "Sedang",
       priority: "Sedang",
-      handlingStatus: "Proses",
+      handlingStatus: "Pending", // D-23: rec masih Belum ditindaklanjuti ⇒ laporan Pending
       validatedBy: "USR-004",
       validatedByName: "H. Siti Aminah",
       validatedByRole: "Pesantren",
@@ -2686,6 +2686,10 @@ export const SEED: IshasState = {
 SEED.instrument = buildBankLiveDariVersi(
   SEED.instrumentVersions.find((v) => v.id === "INS-v1.1") ?? SEED.instrumentVersions[0],
 );
+
+// D-24: draft demo dibekali checksum bank saat seed agar jalur "soal berubah =
+// draft basi" dapat didemokan (bukan selalu lolos saat bank diedit).
+SEED.selfAssessmentDrafts["SELF-PSN-0018"].instrumentChecksum = SEED.instrument.checksum;
 
 // D-26.e: demo pengamatan SAM-iSAFE — tren naik 55.6 → 72.2 → 87.0 +
 // dua tindak lanjut + satu review, agar dashboard/grafik langsung terisi.

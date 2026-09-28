@@ -59,4 +59,36 @@ describe("komposisi seed demo", () => {
     expect(draft?.reporterName.trim().length ?? 0).toBeGreaterThanOrEqual(2);
     expect(Object.keys(draft?.answers ?? {}).length).toBeGreaterThan(0);
   });
+
+  test("invarian status laporan vs rekomendasi (D-23)", () => {
+    for (const report of SEED.reports) {
+      if (report.handlingStatus !== "Pending" && report.handlingStatus !== "Proses") continue;
+      const recs = SEED.recommendations.filter((item) => item.reportId === report.id);
+      if (report.handlingStatus === "Pending") {
+        // Pending hanya sah bila belum ada perbaikan berjalan.
+        expect(
+          recs.every(
+            (item) =>
+              item.status === "Belum ditindaklanjuti" || item.status === "Dibatalkan",
+          ),
+        ).toBe(true);
+      } else {
+        // Proses harus punya minimal satu rekomendasi yang sudah berjalan.
+        expect(
+          recs.some(
+            (item) =>
+              item.status === "Berjalan" ||
+              item.status === "Menunggu verifikasi" ||
+              item.status === "Terverifikasi",
+          ),
+        ).toBe(true);
+      }
+    }
+  });
+
+  test("draft demo memakai checksum bank saat seed (D-24)", () => {
+    const draft = SEED.selfAssessmentDrafts["SELF-PSN-0018"];
+    expect(SEED.instrument.checksum).toBeTruthy();
+    expect(draft.instrumentChecksum).toBe(SEED.instrument.checksum);
+  });
 });

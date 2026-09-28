@@ -84,6 +84,20 @@ describe("alur pengamatan SAM-iSAFE", () => {
     expect(hasil.ok).toBe(false);
   });
 
+  test("pesantren Aktif tanpa akun Pesantren (tidak terdaftar) ditolak (D-26.c)", () => {
+    const hasil = storeActions.createSamAssessment(
+      { id: VALIDATOR },
+      {
+        institutionCode: "PSN-0020",
+        manualLocation: "Gedung Kelas",
+        observedAt: "2026-09-27",
+        kind: "Pemeriksaan Rutin",
+        observerName: "M. Ridwan",
+      },
+    );
+    expect(hasil.ok).toBe(false);
+  });
+
   test("bukti tanpa ID sah ditolak", () => {
     const id = buatDraft();
     const soal = getState().samQuestions[0].id;
