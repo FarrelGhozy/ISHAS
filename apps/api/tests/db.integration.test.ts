@@ -1,10 +1,13 @@
 // Uji integrasi DB (dilewati otomatis bila MySQL tidak tersedia):
 // skema, komposisi seed demo/empty, dan invarian relasi antar tabel.
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { RowDataPacket } from "mysql2/promise";
 import { SEED } from "../../web/mocks/seed/seed";
 import { K3_CATEGORIES } from "../../web/mocks/kategori-k3";
+import { loadActor } from "../src/actor";
+import { createApp } from "../src/app";
 import { closePool, pingDb, pool } from "../src/db";
+import { loadIshasState } from "../src/repo/state";
 import { seedDemo } from "../src/seed/demo";
 import { seedEmpty } from "../src/seed/empty";
 import { ALL_TABLES, countRows } from "../src/seed/helpers";
@@ -169,6 +172,167 @@ describe.skipIf(!dbReady)("seed empty", () => {
     const map = new Map(rows.map((row) => [String(row.name), Number(row.value)]));
     expect(map.get("report")).toBe(1);
     expect(map.get("institution")).toBe(1);
+  });
+});
+
+describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+  const owner = SEED.users.find(
+    (u) => u.roleId === "pesantren" && u.institutionCodes.includes("PSN-0018"),
+  )!;
+
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("GET /public/state: hanya Diterima + tanpa identitas pelapor", async () => {
+    const response = await call("/api/v1/public/state");
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      ok: boolean;
+      data: { reports: { validationStatus: string; reporterName: string }[] };
+    };
+    expect(body.ok).toBe(true);
+    expect(body.data.reports.length).toBeGreaterThan(0);
+    expect(body.data.reports.every((r) => r.validationStatus === "Diterima")).toBe(true);
+    expect(body.data.reports.every((r) => r.reporterName === "")).toBe(true);
+  });
+
+  test("POST /reports/lapor-cepat: validasi 1:1 + idempotensi", async () => {
+    const invalid = await call(
+      "/api/v1/reports/lapor-cepat",
+      json(
+        { institutionCode: "PSN-0018", reporterName: "A", title: "x", description: "y" },
+        { method: "POST" },
+      ),
+    );
+    expect(invalid.status).toBe(400);
+    expect(((await invalid.json()) as { error: string }).error).toBe("Nama minimal 2 karakter.");
+
+    const area = SEED.areas.find((a) => a.institutionCode === "PSN-0018")!;
+    const payload = {
+      institutionCode: "PSN-0018",
+      reporterName: "Ahmad",
+      title: "Kabel terkelupas di dapur",
+      description: "Kabel dekat kompor terkelupas dan berisiko tersengat.",
+      areaId: area.id,
+      clientRequestId: "it-request-1",
+    };
+    const created = await call("/api/v1/reports/lapor-cepat", json(payload, { method: "POST" }));
+    expect(created.status).toBe(201);
+    const first = (await created.json()) as { data: { id: string } };
+    const repeated = await call("/api/v1/reports/lapor-cepat", json(payload, { method: "POST" }));
+    const second = (await repeated.json()) as { data: { id: string } };
+    expect(second.data.id).toBe(first.data.id);
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT validation_status, handling_status FROM reports WHERE id = ?",
+      [first.data.id],
+    );
+    expect(rows[0]?.validation_status).toBe("Menunggu validasi");
+    expect(rows[0]?.handling_status).toBe("Menunggu validasi");
+    const audits = await scalar(
+      "SELECT COUNT(*) AS c FROM audit_events WHERE object_id = ? AND action = 'Mengirim laporan publik'",
+      [first.data.id],
+    );
+    expect(audits).toBe(1);
+    const notifs = await scalar(
+      "SELECT COUNT(*) AS c FROM notifications WHERE source_object_id = ?",
+      [first.data.id],
+    );
+    expect(notifs).toBeGreaterThan(0);
+  });
+
+  test("penilaian-mandiri: draft → submit → snapshot beku", async () => {
+    const state = await loadIshasState();
+    const bank = state.instrument;
+    const answers: Record<string, Record<string, unknown>> = {};
+    for (const dim of bank.dimensions) {
+      for (const ind of dim.indicators) {
+        answers[ind.id] = {
+          value: ind.options[0].value,
+          note: "",
+          evidenceName: ind.evidenceRequired ? "bukti.jpg" : "",
+          areaId: ind.locationRequired ? SEED.areas.find((a) => a.institutionCode === "PSN-0018")!.id : "",
+          manualLocation: "",
+          planPoint: null,
+        };
+      }
+    }
+    const draft = {
+      id: "SELF-IT-1",
+      institutionCode: "PSN-0018",
+      reporterName: "Ahmad",
+      instrumentVersionId: "INS-LIVE",
+      instrumentChecksum: bank.checksum,
+      answers,
+      activeIndex: 0,
+      updatedAt: new Date().toISOString(),
+    };
+    const saved = await call("/api/v1/self-assessments/drafts", json(draft, { method: "POST" }));
+    expect(saved.status).toBe(200);
+
+    const submitted = await call(
+      "/api/v1/self-assessments/submit",
+      json({ draftId: "SELF-IT-1", reporterName: "Ahmad" }, { method: "POST" }),
+    );
+    expect(submitted.status).toBe(201);
+    const body = (await submitted.json()) as { data: { id: string } };
+    const [reports] = await pool.query<RowDataPacket[]>(
+      "SELECT channel, validation_status, score_percent FROM reports WHERE id = ?",
+      [body.data.id],
+    );
+    expect(reports[0]?.channel).toBe("penilaian-mandiri");
+    expect(reports[0]?.validation_status).toBe("Menunggu validasi");
+    const snapshots = await scalar(
+      "SELECT COUNT(*) AS c FROM self_assessment_snapshots WHERE report_id = ?",
+      [body.data.id],
+    );
+    expect(snapshots).toBe(1);
+    const remainingDrafts = await scalar(
+      "SELECT COUNT(*) AS c FROM self_assessment_drafts WHERE id = 'SELF-IT-1'",
+    );
+    expect(remainingDrafts).toBe(0);
+  });
+
+  test("unggah bukti → file_assets + serve scope + hapus", async () => {
+    const png = new Uint8Array(24);
+    png.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    png[18] = 0x03;
+    png[19] = 0x20;
+    png[22] = 0x02;
+    png[23] = 0x1c;
+    const form = new FormData();
+    form.append("file", new File([png], "bukti.png", { type: "image/png" }));
+    form.append("institutionCode", "PSN-0018");
+    const uploaded = await call("/api/v1/uploads/report-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": owner.id },
+      body: form,
+    });
+    expect(uploaded.status).toBe(201);
+    const asset = (await uploaded.json()) as { data: { id: string } };
+    const fileResponse = await call(`/api/v1/files/${asset.data.id}`, {
+      headers: { "X-Demo-Account": owner.id },
+    });
+    expect(fileResponse.status).toBe(200);
+    const anonymous = await call(`/api/v1/files/${asset.data.id}`);
+    expect(anonymous.status).toBe(403);
+    const deleted = await call(`/api/v1/uploads/report-evidence/${asset.data.id}`, {
+      method: "DELETE",
+      headers: { "X-Demo-Account": owner.id },
+    });
+    expect(deleted.status).toBe(200);
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM file_assets WHERE asset_id = ?", [asset.data.id]),
+    ).toBe(0);
   });
 });
 
