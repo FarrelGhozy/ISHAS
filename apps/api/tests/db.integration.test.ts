@@ -8,6 +8,7 @@ import { loadActor } from "../src/actor";
 import { createApp } from "../src/app";
 import { closePool, pingDb, pool } from "../src/db";
 import { loadIshasState } from "../src/repo/state";
+import { hitungChecksumInstrument } from "../src/checksum";
 import { seedDemo } from "../src/seed/demo";
 import { seedEmpty } from "../src/seed/empty";
 import { ALL_TABLES, countRows } from "../src/seed/helpers";
@@ -666,6 +667,254 @@ describe.skipIf(!dbReady)("Fase 2 HTTP (validasi + lifecycle + lokasi + tindak l
       "SELECT active_campus_plan_id FROM institutions WHERE code = 'PSN-0018'",
     );
     expect(String(row[0]?.active_campus_plan_id)).toContain("CAMPUS-PSN-0018-v");
+  });
+});
+
+describe.skipIf(!dbReady)("Fase 3 HTTP (bank + dokumen + dataset)", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+  const asValidator = (init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: {
+      ...(init.headers as Record<string, string> | undefined),
+      "X-Demo-Account": "USR-002",
+    },
+  });
+  const pdfBytes = (): Uint8Array => new TextEncoder().encode("%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF");
+
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("bank: RBAC 403 untuk non-Validator", async () => {
+    const denied = await call(
+      "/api/v1/validator/bank/dimensions",
+      json({ name: "Dimensi uji" }, { method: "POST", headers: { "X-Demo-Account": "USR-003" } }),
+    );
+    expect(denied.status).toBe(403);
+  });
+
+  test("bank: CRUD + validasi 1:1 + checksum cocok DB", async () => {
+    const shortName = await call(
+      "/api/v1/validator/bank/dimensions",
+      asValidator(json({ name: "xy" }, { method: "POST" })),
+    );
+    expect(shortName.status).toBe(400);
+    expect(((await shortName.json()) as { error: string }).error).toBe(
+      "Nama dimensi minimal 3 karakter.",
+    );
+
+    const dim = await call(
+      "/api/v1/validator/bank/dimensions",
+      asValidator(json({ name: "Dimensi Uji Fase 3", categoryId: "KAT-KESELAMATAN" }, { method: "POST" })),
+    );
+    expect(dim.status).toBe(201);
+    const dimensionId = ((await dim.json()) as { data: { id: string } }).data.id;
+
+    const indicator = await call(
+      "/api/v1/validator/bank/indicators",
+      asValidator(
+        json(
+          {
+            dimensionId,
+            code: "IND-TEST-F3",
+            title: "Indikator uji fase tiga",
+            prompt: "Apakah instalasi aman dan terlindungi?",
+            answerType: "ya-tidak",
+            required: true,
+            evidenceRequired: false,
+            locationRequired: false,
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(indicator.status).toBe(201);
+    const indicatorId = ((await indicator.json()) as { data: { id: string } }).data.id;
+
+    const tooFew = await call(
+      `/api/v1/validator/bank/indicators/${indicatorId}/options`,
+      asValidator(
+        json({ options: [{ value: "Ya", label: "Ya", weight: 100, isFinding: false }] }, { method: "PUT" }),
+      ),
+    );
+    expect(tooFew.status).toBe(400);
+    expect(((await tooFew.json()) as { error: string }).error).toBe("Minimal 2 opsi jawaban.");
+
+    const options = await call(
+      `/api/v1/validator/bank/indicators/${indicatorId}/options`,
+      asValidator(
+        json(
+          {
+            options: [
+              { value: "Ya", label: "Ya", weight: 100, isFinding: false },
+              { value: "Tidak", label: "Tidak", weight: 10, isFinding: true },
+            ],
+            weight: 2,
+          },
+          { method: "PUT" },
+        ),
+      ),
+    );
+    expect(options.status).toBe(200);
+
+    const state = await loadIshasState();
+    expect(state.instrument.checksum).toBe(hitungChecksumInstrument(state.instrument.dimensions));
+    const [meta] = await pool.query<RowDataPacket[]>(
+      "SELECT checksum FROM instrument_meta WHERE id = 'INS-LIVE'",
+    );
+    expect(String(meta[0]?.checksum)).toBe(state.instrument.checksum);
+    expect(state.instrument.checksum).not.toBe(SEED.instrument.checksum);
+
+    const removed = await call(
+      `/api/v1/validator/bank/indicators/${indicatorId}`,
+      asValidator({ method: "DELETE" }),
+    );
+    expect(removed.status).toBe(200);
+    const removedDim = await call(
+      `/api/v1/validator/bank/dimensions/${dimensionId}`,
+      asValidator({ method: "DELETE" }),
+    );
+    expect(removedDim.status).toBe(200);
+
+    const after = await loadIshasState();
+    expect(after.instrument.checksum).toBe(SEED.instrument.checksum);
+  });
+
+  test("dokumen: upload PDF + upsert + visibilitas + blob + hapus", async () => {
+    const form = new FormData();
+    form.append("file", new File([pdfBytes()], "uji-indikator.pdf", { type: "application/pdf" }));
+    const uploaded = await call("/api/v1/uploads/instrument-doc", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-002" },
+      body: form,
+    });
+    expect(uploaded.status).toBe(201);
+    const assetId = ((await uploaded.json()) as { data: { id: string } }).data.id;
+
+    const upsert = await call(
+      "/api/v1/validator/docs/IND-K3L-002",
+      asValidator(
+        json(
+          {
+            fileName: "uji-indikator.pdf",
+            fileSize: pdfBytes().length,
+            assetId,
+            visibility: "Privat",
+          },
+          { method: "PUT" },
+        ),
+      ),
+    );
+    expect(upsert.status).toBe(201);
+
+    const privateBlob = await call("/api/v1/docs/IND-K3L-002/blob");
+    expect(privateBlob.status).toBe(403);
+
+    const visible = await call(
+      "/api/v1/validator/docs/IND-K3L-002/visibility",
+      asValidator(json({ visibility: "Public" }, { method: "PATCH" })),
+    );
+    expect(visible.status).toBe(200);
+
+    const publicBlob = await call("/api/v1/docs/IND-K3L-002/blob");
+    expect(publicBlob.status).toBe(200);
+    expect(publicBlob.headers.get("content-type")).toBe("application/pdf");
+
+    const fileBlob = await call(`/api/v1/files/${assetId}`);
+    expect(fileBlob.status).toBe(200);
+
+    const removed = await call(
+      "/api/v1/validator/docs/IND-K3L-002",
+      asValidator({ method: "DELETE" }),
+    );
+    expect(removed.status).toBe(200);
+    expect((await call("/api/v1/docs/IND-K3L-002/blob")).status).toBe(404);
+  });
+
+  test("dataset: ekspor whitelist D-02 tanpa bocor bidang privat", async () => {
+    const csv = await call("/api/v1/validator/dataset/export?format=csv", asValidator());
+    expect(csv.status).toBe(200);
+    const csvBody = await csv.text();
+    expect(csvBody).toContain("reportId,institutionCode");
+    expect(csvBody).not.toContain("reporterName");
+    expect(csvBody).not.toContain("contact");
+    expect(csvBody).not.toContain("answers");
+
+    const exported = await call("/api/v1/validator/dataset/export?format=json", asValidator());
+    expect(exported.status).toBe(200);
+    const exportedBody = await exported.text();
+    expect(exportedBody).not.toContain("reporterName");
+
+    const denied = await call("/api/v1/validator/dataset/export?format=csv");
+    expect(denied.status).toBe(403);
+  });
+
+  test("dataset: impor ≤200 baris → pratinjau → Menunggu validasi + notifikasi", async () => {
+    const text = "institutionCode,reporterName,scorePercent,title\nPSN-0018,Tim impor uji,65,Uji impor dataset\n";
+    const preview = await call(
+      "/api/v1/validator/dataset/import",
+      asValidator(json({ text }, { method: "POST" })),
+    );
+    expect(preview.status).toBe(200);
+    const parsed = (await preview.json()) as { data: { valid: unknown[]; errors: unknown[] } };
+    expect(parsed.data.valid.length).toBe(1);
+
+    const applied = await call(
+      "/api/v1/validator/dataset/import",
+      asValidator(
+        json(
+          {
+            rows: [
+              {
+                institutionCode: "PSN-0018",
+                reporterName: "Tim impor uji",
+                scorePercent: 65,
+                title: "Uji impor dataset",
+              },
+            ],
+            apply: true,
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(applied.status).toBe(201);
+    const appliedBody = (await applied.json()) as { data: { applied: number; id: string } };
+    expect(appliedBody.data.applied).toBe(1);
+
+    const [row] = await pool.query<RowDataPacket[]>(
+      "SELECT validation_status, handling_status, score_percent FROM reports WHERE id = ?",
+      [appliedBody.data.id],
+    );
+    expect(row[0]?.validation_status).toBe("Menunggu validasi");
+    expect(row[0]?.handling_status).toBe("Menunggu validasi");
+    expect(Number(row[0]?.score_percent)).toBe(65);
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM self_assessment_snapshots WHERE report_id = ?", [
+        appliedBody.data.id,
+      ]),
+    ).toBe(1);
+  });
+
+  test("audit publikasi: checklist 5 kriteria", async () => {
+    const response = await call("/api/v1/validator/publication-audit", asValidator());
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      data: { items: { reportId: string; layak: boolean; lengkap: boolean; checksumCocok: boolean }[] };
+    };
+    expect(body.data.items.length).toBeGreaterThan(0);
+    for (const item of body.data.items) {
+      expect(typeof item.layak).toBe("boolean");
+      expect(typeof item.lengkap).toBe("boolean");
+      expect(typeof item.checksumCocok).toBe("boolean");
+    }
   });
 });
 

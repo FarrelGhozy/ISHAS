@@ -2,9 +2,12 @@
 
 Backend prototipe ISHAS — Bun + TypeScript + MySQL 8.0.13+ (D-30).
 Scope: **Fase 0** (koneksi DB, migrasi schema v15, seed demo/kosong, health) +
-**Fase 1** (baca publik, lapor-cepat, penilaian-mandiri, unggah bukti, berkas).
+**Fase 1** (baca publik, lapor-cepat, penilaian-mandiri, unggah bukti, berkas) +
+**Fase 2** (validasi/lifecycle Pesantren, lokasi/denah, tindak lanjut) +
+**Fase 3** (bank instrumen live, dokumen indikator PDF, dataset/impor, audit
+publikasi).
 Kontrak dan model data: `docs/BACKEND_DATA_MODEL.md`, `docs/BACKEND_API_CONTRACT.md`.
-Keputusan: D-30.b di `docs/DECISIONS.md`.
+Keputusan: D-30.b/D-30.c/D-30.d di `docs/DECISIONS.md`.
 
 ## Prasyarat
 
@@ -40,7 +43,7 @@ curl -s http://localhost:3004/health
 # {"ok":true,"data":{"status":"ok","db":"ok","version":"0.1.0","uptime":1}}
 ```
 
-## Endpoint Fase 1
+## Endpoint Fase 1–3
 
 Semua di bawah prefix `/api/v1` (kecuali `/health`). Identitas pengembangan:
 header `X-Demo-Account: USR-xxx` (non-production); publik tanpa header.
@@ -64,6 +67,12 @@ header `X-Demo-Account: USR-xxx` (non-production); publik tanpa header.
 | POST | `/pesantren/buildings`, `/buildings/:id/floors`, `/areas` | Pesantren scope |
 | POST | `/uploads/campus-plan`, `/pesantren/campus-plans/publish` | Pesantren scope |
 | POST | `/uploads/completion-evidence`, `/pesantren/recommendations/:id/progress|verify|cancel` | Pesantren scope |
+| GET | `/validator/state`, `/validator/bank/dimensions` | Validator aktif |
+| POST/PATCH/DELETE | `/validator/bank/dimensions[/:id]`, `/validator/bank/indicators[/:id]`, `/validator/bank/indicators/:id/options` | Validator aktif |
+| POST | `/uploads/instrument-doc`, `/validator/docs` | Validator aktif |
+| PUT/PATCH/DELETE | `/validator/docs/:indicatorId[/visibility]` | Validator aktif |
+| GET | `/validator/dataset`, `/validator/dataset/export`, `/validator/publication-audit` | Validator aktif |
+| POST | `/validator/dataset/import` | Validator aktif |
 
 ## Pemeriksaan teknis
 
@@ -77,7 +86,8 @@ Cakupan test: `tests/checksum.test.ts` (vektor checksum mock↔backend),
 `tests/helpers.test.ts` (normalisasi nilai), `tests/domain.test.ts` (validasi
 lapor + proyeksi publik + deteksi gambar), `tests/app.test.ts` (handler `/health`
 dengan dependensi disuntik), `tests/db.integration.test.ts` (skema, komposisi seed
-demo/empty, invarian relasi, dan alur HTTP Fase 1; butuh MySQL hidup).
+demo/empty, invarian relasi, dan alur HTTP Fase 1–3 termasuk checksum bank,
+dokumen indikator, dataset, dan audit publikasi; butuh MySQL hidup).
 
 ## Konfigurasi (environment)
 

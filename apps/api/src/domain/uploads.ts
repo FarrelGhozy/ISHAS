@@ -10,8 +10,63 @@ import { newAssetId, saveStoredBlob, sha256Hex } from "../storage";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = ["image/png", "image/jpeg", "image/webp"];
+const PDF_MIME = "application/pdf";
+const PDF_MAX_BYTES = 10 * 1024 * 1024;
 
 export type UploadResult = { ok: true; id: string } | { ok: false; error: string };
+
+function hasPdfHeader(bytes: Uint8Array): boolean {
+  return (
+    bytes.length >= 5 &&
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2d
+  );
+}
+
+// Fase 3: berkas PDF detail indikator (D-16) — staging; metadata via domain/docs.
+export async function uploadInstrumentDoc(
+  state: IshasState,
+  actor: Actor | null,
+  file: File,
+): Promise<UploadResult> {
+  const account = actor ? state.users.find((u) => u.id === actor.id) : undefined;
+  if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+    return { ok: false, error: "Hanya akun Validator aktif yang dapat mengunggah berkas." };
+  }
+  const name = file.name.trim();
+  if (file.type !== PDF_MIME || !name.toLowerCase().endsWith(".pdf")) {
+    return { ok: false, error: "Hanya berkas PDF yang didukung." };
+  }
+  if (file.size <= 0 || file.size > PDF_MAX_BYTES) {
+    return { ok: false, error: "Ukuran PDF harus lebih dari 0 dan maksimal 10 MB." };
+  }
+  if (!name || name.length > 200) {
+    return { ok: false, error: "Nama file harus terisi dan maksimal 200 karakter." };
+  }
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!hasPdfHeader(bytes)) return { ok: false, error: "Berkas bukan PDF yang valid." };
+  const id = newAssetId("instrument-doc");
+  const { storedPath } = await saveStoredBlob("instrument-doc", PDF_MIME, bytes);
+  await insertFileAsset({
+    assetId: id,
+    kind: "instrument-doc",
+    institutionCode: null,
+    ownerRef: null,
+    originalName: name,
+    storedPath,
+    mime: PDF_MIME,
+    sizeBytes: bytes.length,
+    width: null,
+    height: null,
+    sha256: sha256Hex(bytes),
+    visibility: "Privat",
+    uploadedBy: account.id,
+  });
+  return { ok: true, id };
+}
 
 export async function uploadCampusPlan(
   state: IshasState,
