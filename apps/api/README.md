@@ -43,8 +43,13 @@ curl -s http://localhost:3004/health
 ```bash
 bun run lint
 bun run typecheck
-bun test          # uji checksum selalu; uji integrasi seed butuh MySQL hidup
+bun test          # unit (checksum, helper, handler) selalu; integrasi DB auto-skip tanpa MySQL
 ```
+
+Cakupan test: `tests/checksum.test.ts` (vektor checksum mock↔backend),
+`tests/helpers.test.ts` (normalisasi nilai), `tests/app.test.ts` (handler `/health`
+dengan dependensi disuntik), `tests/db.integration.test.ts` (skema, komposisi seed
+demo/empty, invarian relasi; butuh MySQL hidup).
 
 ## Konfigurasi (environment)
 
@@ -65,8 +70,9 @@ bun test          # uji checksum selalu; uji integrasi seed butuh MySQL hidup
 - `src/migrate.ts` — runner migrasi.
 - `src/checksum.ts` — port `hitungChecksumInstrument` (vektor uji dengan frontend).
 - `src/seed/` — seed demo (impor `SEED` mock 1:1) dan empty.
+- `src/app.ts` — handler HTTP (dapat diuji dengan dependensi disuntik).
 - `src/server.ts` — server HTTP Fase 0 (`GET /health`).
-- `tests/` — checksum + komposisi seed.
+- `tests/` — unit (checksum, helper, handler) + integrasi (skema, seed, invarian).
 
 ## Catatan prototipe
 

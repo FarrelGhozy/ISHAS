@@ -63,6 +63,26 @@ Jika sumber ilmiah belum menetapkan rumus, ambang, atau klasifikasi, tandai seba
 - Pecah komponen berdasarkan role dan fitur tanpa mengubah desain, copy, atau behavior di luar ruang lingkup stage aktif.
 - Gunakan komponen yang sudah tersedia di `apps/web/shared/components/` sebelum membuat primitive interaktif baru.
 
+## Pengujian (Unit & Integrasi)
+
+Setiap perubahan kode harus menjaga suite test tetap hijau; test adalah jaring pengaman agar perubahan tidak diam-diam merusak bagian lain.
+
+- **Wajib ada test.** Fitur/kode baru wajib disertai test; perbaikan bug wajib menambah test regresi yang gagal sebelum perbaikan dan lulus sesudahnya.
+- **Backend (`apps/api`) adalah prioritas pengujian.**
+  - Logika murni (checksum, helper mapping, parser, handler tanpa I/O) diuji sebagai unit test tanpa DB; suntikkan dependensi bila handler menyentuh DB (contoh: `createApp({ ping })`).
+  - Perubahan DDL/migrasi/seed wajib diperbarui testnya: daftar tabel, kolasi, invarian relasi (tanpa baris yatim), komposisi seed, dan urutan/`sequences`.
+  - Test integrasi DB harus **melewati dirinya sendiri secara aman** (auto-skip) bila MySQL tidak tersedia, dan tidak boleh mengubah data di luar database uji.
+  - Perubahan algoritma checksum bank wajib meng-update vektor uji lintas mock↔backend (`apps/api/tests/checksum.test.ts`).
+- **Frontend (`apps/web`).** Test diletakkan bersama modul di `apps/web/mocks/` (store, processor, adapter). Perubahan aturan validasi, selector, atau processor wajib menyesuaikan/menambah test.
+- **Determinisme.** Test tidak boleh bergantung pada urutan file, waktu nyata, atau state jaringan; gunakan data seed/vektor tetap.
+- **Jangan melemahkan test untuk meloloskan perubahan.** Dilarang menghapus, men-skip, atau melonggarkan ekspektasi hanya agar hijau; perbaiki kode atau ubah ekspektasi dengan alasan yang dicatat.
+- **Jalankan verifikasi sekaligus sebelum commit** dan jangan commit bila merah:
+  ```bash
+  cd apps/web   && bun run lint && bun run typecheck && bun test
+  cd apps/api   && bun run lint && bun run typecheck && bun test
+  ```
+  Untuk backend dengan MySQL hidup, test integrasi ikut berjalan; tanpa MySQL, test tersebut di-skip dan itu harus dilaporkan.
+
 ## Format dan Keterbacaan Kode
 
 Aturan ini berlaku untuk semua kode di `apps/web/` agar pemilik mudah membaca dan memeriksa:
@@ -75,7 +95,7 @@ Aturan ini berlaku untuk semua kode di `apps/web/` agar pemilik mudah membaca da
 
 ## Cara Kerja Asisten
 
-- Hemat perintah: jangan menjalankan command (shell, test, build, git) di tengah pengerjaan kode bila tidak perlu. Kumpulkan kebutuhan verifikasi lalu jalankan sekaligus di akhir (mis. lint + typecheck + test + build dalam satu putaran).
+- Hemat perintah: jangan menjalankan command (shell, test, build, git) di tengah pengerjaan kode bila tidak perlu. Kumpulkan kebutuhan verifikasi lalu jalankan sekaligus di akhir (mis. lint + typecheck + test + build dalam satu putaran). Wajib menjalankan suite test sebelum commit dan tidak commit bila merah (lihat bagian Pengujian).
 - Utamakan perkakas baca/tulis file untuk inspeksi dan perubahan kode; command hanya untuk hal yang memang butuh eksekusi (verifikasi, git, package manager).
 - Dokumentasi dulu: sebelum menyentuh kode, pastikan dokumen acuan (`docs/`, `planning/`, `docs/DECISIONS.md`) sudah benar dan saling konsisten untuk ruang lingkup yang dikerjakan.
 - Bedakan catatan historis, amendemen yang jelas, kesalahan dokumentasi, dan konflik keputusan yang belum terselesaikan. Sinkronkan catatan usang bila arahan pemilik atau amendemen sudah menentukan jawabannya; laporkan perbaikannya tanpa meminta persetujuan ulang.
