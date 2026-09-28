@@ -698,6 +698,27 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   menutupi akun keyring yang sah; perintah `gh` dijalankan dengan
   `env -u GITHUB_TOKEN gh ...`.
 
+## D-30.b — Fase 1 backend + adapter publik — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan`): kerjakan **Fase 1 backend** (issue #4) dan
+  **swap adapter publik** (issue #10 parsial untuk route publik).
+- Backend `apps/api`: endpoint baca publik, lapor-cepat, penilaian-mandiri
+  (draft/submit), unggah bukti, dan penyajian berkas; penomoran `sequences`
+  transaksional; audit + notifikasi ditulis sejak Fase 1. Processor/selector
+  murni **diimpor** dari `apps/web/mocks` agar paritas 1:1 (seperti seed Fase 0);
+  validasi ditulis ulang di `apps/api/src/domain` dengan pesan Indonesia identik.
+- **Ekstensi kontrak:** `GET /api/v1/public/state` — proyeksi publik `IshasState`
+  (D-02: tanpa identitas pelapor, jawaban mentah, alasan tolak, audit mentah)
+  agar halaman publik dapat beralih tanpa menulis ulang seluruh UI. Endpoint
+  granular §2 tetap ada.
+- Frontend `apps/web`: `shared/api/http-client.ts`, `http-repository.ts`,
+  `repository.ts` (flag `VITE_USE_BACKEND`, default `false`), dan
+  `public-state.ts` (`usePublicState`). Proxy Vite `/api` → `API_PORT`.
+  Modul di luar scope Fase 1 tetap fallback mock.
+- Auth tetap `X-Demo-Account`/kartu dummy (fase 6); production menolak header.
+- Batas terverifikasi: lint + typecheck + 48 test backend (unit + integrasi DB)
+  + 229 test frontend + build lulus; cek visual 3 viewport belum dijalankan.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

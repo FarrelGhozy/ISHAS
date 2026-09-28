@@ -1,5 +1,22 @@
 # TODO — Kontrol Kerja Aktif
 
+## Implementasi backend Fase 1 + adapter publik (D-30.b) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan fase 1`): endpoint Fase 1
+(issue #4) + swap adapter frontend publik (issue #10 parsial). Cakupan:
+`apps/api` (router, middleware aktor, repo/state, domain, storage, test) dan
+`apps/web` (http-client/repository/resolver/public-state). Status stage lain
+tidak berubah sepihak.
+
+- [x] Backend: baca publik + `/public/state`, lapor-cepat (+idempotensi),
+      penilaian-mandiri (draft/submit), unggah bukti, berkas, audit/notifikasi.
+- [x] Adapter: flag `VITE_USE_BACKEND`, proxy Vite, `usePublicState`; tulis
+      lapor/mandiri/bukti + baca publik beralih; sisanya fallback mock.
+- [x] Verifikasi: lint + typecheck + 48 test backend + 234 test frontend +
+      migrate/seed + build + smoke endpoint.
+- [ ] Cek visual 3 viewport + alur klik browser (publik adapter) — belum dijalankan.
+- [ ] Review pemilik; issue #4/#10 ditutup setelah disetujui/terverifikasi.
+
 ## Rancangan backend (D-30) — 28 September 2026 — `REVIEW`
 
 Rancangan dulu, kode backend setelah review pemilik. Stack: Bun + TypeScript +
@@ -17,13 +34,20 @@ Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
 - [x] Fase 0 (issue #3): `apps/api` (Bun+TS+MySQL) — migrasi schema v15, seed
       `--mode=demo|empty`, `GET /health`. Verifikasi: migrate + seed demo/empty +
       3 test + health lulus; lint + typecheck bersih (28 Sep 2026).
-- [ ] Fase 1 (issue #4): baca publik + lapor + penilaian-mandiri.
+- [x] Fase 1 (issue #4): baca publik + lapor + penilaian-mandiri + unggah bukti +
+      berkas + `/public/state` (D-30.b). Verifikasi: lint + typecheck + 48 test
+      (unit + integrasi DB) + migrate/seed + smoke endpoint lulus (29 Sep 2026).
+- [x] Adapter frontend publik (issue #10, parsial): `shared/api/http-client`,
+      `http-repository`, resolver `VITE_USE_BACKEND`, `usePublicState`, proxy
+      Vite; tulis `lapor`/`mandiri`/bukti + baca publik beralih. Verifikasi:
+      lint + typecheck + 229 test + build lulus (29 Sep 2026); modul lain
+      (Pesantren/Validator/SAM/admin) menyusul per fase, fallback mock.
 - [ ] Fase 2 (issue #5): validasi + lifecycle + lokasi/denah + tindak lanjut.
 - [ ] Fase 3 (issue #6): bank live + dokumen PDF + dataset/impor.
 - [ ] Fase 4 (issue #7): SAM-iSAFE + bank.
 - [ ] Fase 5 (issue #8): admin + audit + notifikasi + storage lokal.
 - [ ] Fase 6 (issue #9): auth server + RBAC.
-- [ ] Adapter frontend bertahap (issue #10) + review pemilik.
+- [ ] Cek visual 3 viewport adapter publik + review pemilik (Fase 1/#10).
 
 ## Perbaikan invarian seed + bug alur data frontend — 28 September 2026 — `IN PROGRESS`
 

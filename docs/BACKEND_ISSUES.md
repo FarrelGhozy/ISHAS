@@ -1,6 +1,8 @@
 # Backend ISHAS — Daftar Issue GitHub
 
-Status: **sudah dibuat & disinkronkan** (8 issue, `#3`–`#10`), milestone
+Status: **Fase 0 (#3) & Fase 1 (#4) selesai; adapter publik (#10) parsial** —
+lihat D-30.b. Issue lain (`#5`–`#9`) masih terbuka.
+Status awal: **sudah dibuat & disinkronkan** (8 issue, `#3`–`#10`), milestone
 **Backend MVP**, label `backend` + `fase-0`…`fase-6`/`adapter`, relasi native
 `blocked-by`. Skrip bersifat **idempoten**: issue dicocokkan lewat judul persis,
 yang sudah ada di-update (body + label), bukan digandakan.

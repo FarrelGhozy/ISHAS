@@ -75,6 +75,7 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 | `GET /public/docs?q=&category=&visibility=` | Blob privat di-strip (`assetId=""`) | Baris katalog + filter; `Privat` hanya nama + gembok |
 | `GET /public/institutions` | — | Hanya terdaftar (pemilih publik) |
 | `GET /public/institutions/:code` | Tak dikenal → empty, bukan 404 teknis | Profil ringkas (kota saja, tanpa alamat lengkap — D-02) |
+| `GET /public/state` | Proyeksi publik `IshasState` (D-30.b) | Adapter frontend issue #10; menerapkan invarian D-02 yang sama (tanpa identitas pelapor, jawaban mentah, alasan tolak, audit mentah) |
 
 ## 3. Lapor-cepat
 
