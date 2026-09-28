@@ -74,12 +74,13 @@ export function Page() {
       <div className="scope-banner">
         Data internal audit. Nama penilai hanya untuk audit Validator dan tidak
         pernah tampil publik. Ekspor memakai ringkasan whitelist D-02.
+        Terima/Tolak milik akun Pesantren; Validator hanya audit.
       </div>
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="Cari data"
-          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft px-3"
-          placeholder="Cari ID, lembaga, atau validator…"
+          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft bg-white px-3"
+          placeholder="Cari ID, lembaga, atau akun Pesantren…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -158,7 +159,9 @@ export function Page() {
                   <span className="status status-amber ml-2">Non-terdaftar · audit</span>
                 ) : null}
                 <p className="text-xs text-secondary-text">
-                  Validator Pesantren: {x.validatorPesantren} · {x.validatedAt}
+                  Diterima oleh (akun Pesantren): {x.validatorPesantren}
+                  {" · "}
+                  {x.validatedAt}
                 </p>
                 <p className="text-xs text-faint">
                   {x.submittedAt} · {x.answerCount}/{x.expectedCount} jawaban ·{" "}

@@ -77,7 +77,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Kode
         <input
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.code}
           onChange={(e) => patch({ code: e.target.value })}
           placeholder="IND-K3L-011"
@@ -86,7 +86,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Judul
         <input
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.title}
           onChange={(e) => patch({ title: e.target.value })}
         />
@@ -94,7 +94,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Tipe jawaban
         <select
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.answerType}
           onChange={(e) => patch({ answerType: e.target.value as InstrumentAnswerType })}
         >
@@ -111,7 +111,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Kategori
         <select
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.categoryId}
           onChange={(e) => patch({ categoryId: e.target.value, aspectId: "" })}
         >
@@ -126,7 +126,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Aspek
         <select
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.aspectId}
           onChange={(e) => patch({ aspectId: e.target.value })}
         >
@@ -167,7 +167,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold md:col-span-3">
         Prompt
         <textarea
-          className="mt-1 min-h-16 w-full rounded border border-line-soft p-2 font-normal"
+          className="mt-1 min-h-16 w-full rounded border border-line-soft bg-white p-2 font-normal"
           value={form.prompt}
           onChange={(e) => patch({ prompt: e.target.value })}
           placeholder="Tulis pertanyaan observasi min 10 karakter"

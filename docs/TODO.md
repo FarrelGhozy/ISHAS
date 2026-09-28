@@ -1,5 +1,24 @@
 # TODO — Kontrol Kerja Aktif
 
+## Penjelasan label Diterima + stage Proses di area Validator — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan, kaya gini dulu aja`):
+label `Validator Pesantren` rancu dengan peran Validator, dan stage `Proses`
+membingungkan untuk penilaian mandiri. Cakupan baca-saja (tanpa ubah perilaku):
+`StatusChip` dapat tooltip arti tiap stage; label dataset menjadi
+`Diterima oleh (akun Pesantren)`; placeholder cari menyebut akun Pesantren;
+checklist audit memakai `Diterima akun Pesantren`. Tambahan 28 Sep 2026:
+daftar Audit publikasi menjadi tabel (kolom Laporan + Checklist kesiapan +
+Validasi + Aksi) dengan tombol PDF/Scoring/Dataset di akhir; kartu menumpuk
+tetap dipakai di layar kecil. Scope Stage 08 + sentuhan baca Validator;
+status stage lain tidak berubah sepihak.
+
+- [x] Kode + test render (+ tooltip chip, label, placeholder).
+- [x] Verifikasi: lint + typecheck + 219 test + build lulus (28 Sep 2026).
+- [x] Tabel audit + tombol aksi (kode + test; lint + typecheck + 219 test + build lulus, 28 Sep 2026).
+- [ ] Cek visual browser (tooltip hover chip + label dataset/audit): belum dijalankan di lingkungan ini (Chrome tidak tersedia).
+- [ ] Review pemilik.
+
 ## Usulan rekomendasi pelapor + final Pesantren (D-29) — 28 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan`): rekomendasi tindakan

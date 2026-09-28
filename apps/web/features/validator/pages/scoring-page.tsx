@@ -103,7 +103,7 @@ export function Page() {
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="Cari skor"
-          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft px-3"
+          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft bg-white px-3"
           placeholder="Cari ID atau judul laporan…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

@@ -43,8 +43,10 @@ test("Audit publikasi D-25 ter-render dengan checklist 5 kriteria", () => {
   );
   expect(html).toContain("Audit publikasi");
   expect(html).toContain("Checksum bank");
-  expect(html).toContain("Diterima Pesantren");
+  expect(html).toContain("Diterima akun Pesantren");
   expect(html).toContain("Validator mengaudit");
+  expect(html).toContain("Checklist kesiapan");
+  expect(html).toContain("Aksi");
 });
 
 test("Data penelitian D-25 ter-render dengan ekspor + impor", () => {
@@ -57,7 +59,7 @@ test("Data penelitian D-25 ter-render dengan ekspor + impor", () => {
   expect(html).toContain("Unduh CSV");
   expect(html).toContain("Unduh JSON");
   expect(html).toContain("Impor dataset");
-  expect(html).toContain("Validator Pesantren");
+  expect(html).toContain("akun Pesantren");
 });
 
 test("Dashboard validator menautkan 3 halaman D-25", () => {

@@ -62,11 +62,24 @@ export function statusChip(value: string): Chip {
   return MAP[value] ?? { className: NEUTRAL, icon: Minus, label: value };
 }
 
+// Penjelasan singkat tiap stage (tooltip); tanpa mengubah label/desain.
+const DESKRIPSI: Record<string, string> = {
+  "Menunggu validasi": "Belum dimoderasi akun Pesantren; belum tampil publik.",
+  Pending: "Sudah diterima akun Pesantren; belum ada rencana tindak lanjut.",
+  Proses: "Sudah diterima akun Pesantren; sedang ditindaklanjuti.",
+  Completed: "Seluruh tindak lanjut selesai dan terverifikasi.",
+  Ditolak: "Ditolak akun Pesantren; tidak tampil publik.",
+  Diterima: "Diterima akun Pesantren pemilik lembaga, bukan peran Validator.",
+};
+
 export function StatusChip({ value }: { value: string }) {
   const chip = statusChip(value);
   const Icon = chip.icon;
   return (
-    <span className={`status ${chip.className}`}>
+    <span
+      className={`status ${chip.className}`}
+      title={DESKRIPSI[value] ?? chip.label}
+    >
       <Icon size={11} aria-hidden />
       {chip.label}
     </span>

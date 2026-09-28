@@ -149,8 +149,8 @@ export function Page() {
             </li>
           </ul>
           <p className="mt-3 text-xs text-faint">
-            Layak = lengkap + Diterima Pesantren + skor + PDF + checksum cocok.
-            Bank berubah tidak mengubah snapshot beku.
+            Layak = lengkap + Diterima akun Pesantren + skor + PDF + checksum
+            cocok. Bank berubah tidak mengubah snapshot beku.
           </p>
         </div>
         <div className="surface overflow-hidden">

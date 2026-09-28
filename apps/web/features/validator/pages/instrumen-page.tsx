@@ -120,7 +120,7 @@ export function Page() {
         <label className="min-w-60 flex-1 text-xs font-bold">
           Dimensi baru
           <input
-            className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+            className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-3 font-normal"
             value={dimName}
             onChange={(e) => setDimName(e.target.value)}
             placeholder="Contoh: Keselamatan listrik"
@@ -129,7 +129,7 @@ export function Page() {
         <label className="min-w-48 text-xs font-bold">
           Kategori
           <select
-            className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+            className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-3 font-normal"
             value={dimKategori}
             onChange={(e) => setDimKategori(e.target.value)}
           >
@@ -155,7 +155,7 @@ export function Page() {
                   <label className="min-w-48 flex-1 text-xs font-bold">
                     Nama dimensi
                     <input
-                      className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+                      className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
                       value={editDimName}
                       onChange={(e) => setEditDimName(e.target.value)}
                     />
