@@ -93,6 +93,7 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 | `GET /pesantren/reports/:id` | Scope sendiri | Detail penuh internal (identitas, kontak, usulan, bukti, jejak) |
 | `POST /pesantren/reports/:id/accept` | `severity/priority` wajib ≠ `Belum ditentukan`; status harus `Menunggu validasi`; lapor-cepat wajib `rekomendasiFinal` 10–500 (D-29) | `Diterima/Pending` + `validatedBy/At` + temuan/rekomendasi turunan (idempoten) + audit |
 | `POST /pesantren/reports/:id/reject` | `reason` ≥10; status harus `Menunggu validasi` | `Ditolak` terminal + audit; tidak tampil publik |
+| `GET /pesantren/state` | Scope = `institutionCode` akun (D-30.c) | Proyeksi internal untuk adapter frontend (laporan Menunggu/Ditolak + snapshot + audit scope); **bukan** endpoint publik |
 
 ## 5. Lifecycle + temuan
 

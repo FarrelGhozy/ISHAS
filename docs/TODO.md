@@ -42,7 +42,12 @@ Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
       Vite; tulis `lapor`/`mandiri`/bukti + baca publik beralih. Verifikasi:
       lint + typecheck + 229 test + build lulus (29 Sep 2026); modul lain
       (Pesantren/Validator/SAM/admin) menyusul per fase, fallback mock.
-- [ ] Fase 2 (issue #5): validasi + lifecycle + lokasi/denah + tindak lanjut.
+- [x] Fase 2 (issue #5): validasi + lifecycle + lokasi/denah + tindak lanjut +
+      `GET /pesantren/state` (D-30.c). Verifikasi: lint + typecheck + 55 test
+      (unit + integrasi DB) + smoke endpoint lulus (29 Sep 2026).
+- [x] Adapter ruang Pesantren (issue #10, lanjutan): `usePesantrenState` +
+      `refreshPesantrenState`, method Pesantren di resolver; validasi/lokasi/
+      denah/tindak lanjut/laporan beralih. Verifikasi: 233 test frontend + build.
 - [ ] Fase 3 (issue #6): bank live + dokumen PDF + dataset/impor.
 - [ ] Fase 4 (issue #7): SAM-iSAFE + bank.
 - [ ] Fase 5 (issue #8): admin + audit + notifikasi + storage lokal.

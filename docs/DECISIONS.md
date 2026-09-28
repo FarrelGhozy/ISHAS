@@ -719,6 +719,23 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Batas terverifikasi: lint + typecheck + 48 test backend (unit + integrasi DB)
   + 229 test frontend + build lulus; cek visual 3 viewport belum dijalankan.
 
+## D-30.c — Fase 2 backend + adapter ruang Pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 2`): lanjutkan backend issue #5 dan adapter
+  ruang Pesantren (issue #10 lanjutan).
+- Backend `apps/api`: antrean + detail internal, Terima/Tolak, lifecycle
+  `Pending/Proses/Completed` + arsip, `setFindingLevel` (termasuk Ekstrem),
+  lokasi (gedung/lantai/area), denah (unggah + publish `optimistic lock`),
+  tindak lanjut (progres snap 25, verifikasi, pembatalan). Turunan
+  temuan/rekomendasi di `domain/derive.ts` port 1:1 `ensureDerivedWork`.
+- **Ekstensi kontrak:** `GET /api/v1/pesantren/state` — proyeksi internal
+  scope satu lembaga untuk adapter; bukan endpoint publik.
+- Frontend: `usePesantrenState` + `refreshPesantrenState`, method Pesantren di
+  `repository`/`http-repository`. Halaman validasi/lokasi/denah/tindak lanjut/
+  laporan beralih saat `VITE_USE_BACKEND=true`; fallback mock tetap.
+- Batas terverifikasi: lint + typecheck + 55 test backend + 233 test frontend +
+  build lulus; cek visual 3 viewport belum dijalankan.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator
