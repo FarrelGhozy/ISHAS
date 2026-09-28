@@ -1,5 +1,31 @@
 # TODO — Kontrol Kerja Aktif
 
+## Backend Fase 6 — auth server + RBAC + seed dua mode (D-30.h, issue #9) — 29 September 2026 — `REVIEW`
+
+Arahan pemilik (`ok kerjakan` Fase 6 backend + commit + tutup issue): auth server
+(bcrypt + cookie sesi HttpOnly + RBAC + CSRF + rate limit), **login dev tetap
+satu klik kartu peran**, dan seed dua mode (demo kaya vs inti/awal). Cakupan:
+`apps/api` (auth, sessions repo, actor, app RBAC, routes auth, seed) dan
+`apps/web` (repository/http-client/auth-session/useCurrentUser/login/logout).
+Status stage lain tidak berubah.
+
+- [x] Backend: `auth/password` (bcrypt), `auth/session`, `auth/cookie`,
+      `auth/rate-limit`, `repo/sessions`, `domain/auth`, `routes/auth`,
+      `POST/GET /auth/login|demo-login|logout|me|password`.
+- [x] RBAC terpusat prefix di `app.ts` + CSRF double-submit; `X-Demo-Account`
+      hanya fallback non-production; `loadActor` cookie-first.
+- [x] Admin: `POST /admin/users` terima `password` opsional; reset sandi ke
+      sandi awal prototipe.
+- [x] Seed: demo beri `password_hash` semua user; `empty` jadi 3 akun inti +
+      `PSN-0018` aktif + bank minimal (data display kosong).
+- [x] Frontend: `httpRepository` auth, `auth-session` (`/auth/me`), `useCurrentUser`
+      klaim server, `X-CSRF-Token` otomatis, login kartu via `/auth/demo-login`,
+      Keluar via `/auth/logout`.
+- [x] Verifikasi: lint + typecheck + **101 test backend** (DB uji) + **249 test
+      frontend** + build lulus; smoke `demo-login → /auth/me → RBAC 403` OK.
+- [ ] Cek visual 3 viewport mode backend belum dijalankan (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
 ## Audit + perbaikan backend Fase 0–5 sebelum issue #6 (D-30.g) — 29 September 2026 — `REVIEW`
 
 Arahan pemilik (`validasi issues backend yang sudah ditutup fase 0–5 … sebelum
@@ -98,7 +124,8 @@ Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
       via endpoint, tombol tandai-dibaca, kartu migrasi aset; 242 test frontend
       + build lulus. Catatan: `sharp` belum dipakai (decode menggantung di
       lingkungan ini); validasi magic-bytes + dimensi tetap.
-- [ ] Fase 6 (issue #9): auth server + RBAC.
+- [x] Fase 6 (issue #9): auth server + RBAC + seed dua mode (D-30.h; rincian di
+      bagian paling atas).
 - [ ] Cek visual 3 viewport adapter publik/Pesantren/Validator termasuk SAM +
       review pemilik (Fase 1–4/#10).
 

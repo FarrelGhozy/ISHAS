@@ -845,6 +845,41 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   + build lulus; migrate `--fresh` 5 migrasi + seed demo/empty OK. Cek visual 3
   viewport adapter tetap pending (tercatat di TODO).
 
+## D-30.h — Fase 6 backend: auth server + RBAC + seed dua mode — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan`): selesaikan Fase 6 backend (issue #9), lalu
+  commit + tutup issue (tanpa push). Selama pengembangan **login tetap satu klik
+  kartu peran** di `/login` (tanpa ketik email/sandi); frontend disambungkan
+  sepenuhnya ke klaim server. Seed harus punya mode data display kaya (demo)
+  dan mode akun inti (awal, isi lain kosong).
+- **Auth server:** `password_hash` bcrypt via `Bun.password` (CHAR(60)),
+  `sessions` (token acak, `token_hash` SHA-256, expiry, cabut sesi lain saat
+  ganti sandi), cookie `ishas_session` (`HttpOnly`, `Secure` di production,
+  `SameSite=Lax`, `Max-Age`) + `ishas_csrf`. Endpoint `/auth/login`,
+  `/auth/demo-login` (dev-only, `404` di production), `/auth/logout`,
+  `/auth/me`, `/auth/password`; rate limit 5/menit per IP+email → `429`; audit
+  masuk/keluar/ubah sandi.
+- **RBAC:** middleware terpusat di `app.ts` per prefix (`/admin/*`,
+  `/validator/*`, `/pesantren/*`, `/notifications*`) → anonim `401`, peran salah
+  `403`; scope lembaga + visibilitas berkas tetap di handler. `X-Demo-Account`
+  hanya fallback non-production.
+- **CSRF:** double-submit `X-CSRF-Token` = cookie `ishas_csrf` untuk mutasi
+  ber-cookie; `/auth/*` dikecualikan.
+- **Frontend (login kartu dipertahankan):** `httpRepository` method auth,
+  `auth-session` cache akun `/auth/me`, `useCurrentUser` memakai akun server di
+  mode backend, `X-CSRF-Token` otomatis dari cookie, Keluar memanggil
+  `/auth/logout`. Mode mock (`VITE_USE_BACKEND=false`) tetap seperti sebelumnya.
+- **Seed:** mode `demo` (kaya, semua user diberi sandi awal) dan mode `empty`
+  berubah menjadi **inti**: 1 pesantren `PSN-0018` `Aktif` + 3 akun inti
+  (`USR-001/002/003`) aktif bersandi, bank minimal; laporan/temuan/SAM/audit/
+  denah/dokumen kosong. Sandi default `SEED_DEFAULT_PASSWORD` (prototipe).
+- **Catatan:** akun baru `POST /admin/users` menerima `password` opsional
+  (default `SEED_DEFAULT_PASSWORD`); reset sandi mengembalikan ke sandi awal.
+  Cookie `Secure` mengandalkan HTTPS di production.
+- Verifikasi: lint + typecheck + 101 test backend (DB uji) + 249 test frontend +
+  build lulus; smoke `demo-login → /auth/me → RBAC 403` OK. Cek visual 3 viewport
+  belum dijalankan (Chromium tidak tersedia).
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

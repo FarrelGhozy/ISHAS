@@ -1,8 +1,9 @@
 # Backend ISHAS — Daftar Issue GitHub
 
-Status: **Fase 0–5 (#3–#8) selesai; adapter #10 mencakup publik + Pesantren +
+Status: **Fase 0–6 (#3–#9) selesai; adapter #10 mencakup publik + Pesantren +
 Validator (bank/dokumen/dataset + SAM-iSAFE) + Super Admin (admin/notifikasi/
-storage/migrasi)** — lihat D-30.b–D-30.f. Issue tersisa: `#9` (auth server).
+storage/migrasi) + auth sesi** — lihat D-30.b–D-30.h. Tidak ada issue backend
+tersisa (auth fase 6 ditutup via commit terverifikasi).
 Status awal: **sudah dibuat & disinkronkan** (8 issue, `#3`–`#10`), milestone
 **Backend MVP**, label `backend` + `fase-0`…`fase-6`/`adapter`, relasi native
 `blocked-by`. Skrip bersifat **idempoten**: issue dicocokkan lewat judul persis,

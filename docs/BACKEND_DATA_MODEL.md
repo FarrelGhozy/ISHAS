@@ -77,7 +77,7 @@ CREATE TABLE users (
   role VARCHAR(16) NOT NULL,             -- admin|validator|pesantren
   institution_code VARCHAR(16) NULL,     -- tepat 1 bila pesantren, NULL bila admin/validator
   status VARCHAR(16) NOT NULL DEFAULT 'Menunggu', -- Aktif|Menunggu|Nonaktif
-  password_hash CHAR(60) NULL,           -- BARU fase 6 (bcrypt); frontend kini tanpa sandi
+  password_hash CHAR(60) NULL,           -- fase 6 (bcrypt via Bun.password); NULL = belum punya sandi
   last_active_at DATETIME(3) NULL,       -- User.lastActive
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
@@ -676,12 +676,17 @@ bun scripts/seed.ts --mode=empty  # production: struktur kosong tapi valid
   3 Menunggu, 2 Ditolak, 14 Diterima), **17 temuan + 17 rekomendasi**, **5
   kategori + 27 soal SAM + 4 pengamatan SAM + 2 follow-up**, **18 audit + 4
   notifikasi**, denah ilustrasi, bank live 10 indikator (dari `INS-v1.1`).
-  Counter awal `report=20`, `institution=23`.
-- Mode `empty` (minimal valid): `institutions[]`, `users=[1 admin]`,
-  `reports/findings/...=[]`, `drafts={}`, `index_history={}`, bank instrumen
-  valid (≥1 dimensi ≥1 indikator ≥1 opsi), `sequences={report:1, institution:1}`
-  (penomoran berikutnya; `>0` syarat validator lama),
-  `sam_categories/questions` boleh kosong (maks dinamis = 0, UI terkunci).
+  Counter awal `report=20`, `institution=23`. Setiap akun diberi `password_hash`
+  dari `SEED_DEFAULT_PASSWORD` (prototipe) agar `/auth/login` dapat diuji.
+- Mode `empty` (inti, minimal valid): **1 pesantren `PSN-0018` status `Aktif`** +
+  **3 akun inti** (`USR-001` Super Admin, `USR-002` Validator, `USR-003` Pesantren
+  scope `PSN-0018`) — semua `Aktif` dan punya `password_hash` (`SEED_DEFAULT_PASSWORD`,
+  default `ishas-demo`). `reports/findings/recommendations/sam_*/campus_plans/
+  instrument_docs/audit_events/notifications=[]`, `drafts={}`, `index_history={}`,
+  bank instrumen valid (≥1 dimensi ≥1 indikator ≥1 opsi),
+  `sequences={report:1, institution:19, ...}`, `sam_categories/questions` kosong
+  (maks dinamis = 0, UI terkunci). Cocok untuk onboarding dari nol maupun login
+  kartu dev di mode backend.
 - File biner seed (denah ilustrasi, PDF contoh) disertakan di `scripts/seed-assets/`
   dan diunggah lewat jalur `file_assets` yang sama seperti upload normal. Pola aset
   seed yang sudah dipakai frontend: `seed-instrument-doc-<KODE>`.

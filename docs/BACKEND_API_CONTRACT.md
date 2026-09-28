@@ -14,8 +14,8 @@ Semua validasi di bawah adalah port 1:1; angka mengacu ke baris mock.
   `seenReportRequests` cap 500). Kirim ulang ID sama → kembalikan ID lama.
 - Pagination daftar: `?page&limit` (default 20, maks 100); sort default
   `submitted_at DESC` kecuali ditentukan.
-- Auth fase 1–5: header `X-Demo-Account: USR-xxx` (cermin kartu login, hanya
-  untuk pengembangan); fase 6 diganti cookie sesi (lihat §16).
+- Auth: cookie sesi `ishas_session` (fase 6, §16); header `X-Demo-Account: USR-xxx`
+  tetap tersedia sebagai fallback pengembangan saja (cermin kartu login).
 
 ### 0.a Amplop sukses/gagal + pagination
 
@@ -265,19 +265,28 @@ Menghapus laporan langsung tidak ada; arsip (`archivedAt`) adalah pengganti (D-0
 
 ## 16. Auth fase 6 (server, dikerjakan terakhir — D-30)
 
+Status: **terimplementasi** (D-30.h). Sandi memakai bcrypt (`Bun.password`).
+Rate-limit login in-memory 5/menit per IP+email → `429`.
+
 | Method + Path | Validasi | Efek |
 |---|---|---|
-| `POST /auth/login` | email + sandi; rate-limit per IP+email (mis. 5/menit) | Set cookie `ishas_session` (`HttpOnly`, `Secure`, `SameSite=Lax`, `Max-Age`), rotasi sesi, audit login |
-| `POST /auth/logout` | sesi aktif | Hapus baris `sessions` + clear cookie + audit |
+| `POST /auth/login` | email + sandi; rate-limit per IP+email | Set cookie `ishas_session` (`HttpOnly`, `Secure` bila production, `SameSite=Lax`, `Max-Age`) + `ishas_csrf` (terbaca JS), simpan `token_hash` SHA-256, audit login |
+| `POST /auth/demo-login` | `{accountId}`; **hanya** `NODE_ENV!=production`, kalau production `404` | Set cookie sesi untuk kartu login dev (satu klik, tanpa sandi) |
+| `POST /auth/logout` | cookie sesi | Hapus baris `sessions` + clear cookie + audit |
 | `GET /auth/me` | cookie valid | Akun aktif + peran + scope (pengganti kartu dummy) |
-| `POST /auth/password` | sandi lama benar, sandi baru ≥8 | `password_hash` baru + audit |
+| `POST /auth/password` | sandi lama benar, sandi baru ≥8 | `password_hash` baru + cabut sesi lain + audit |
 
-- Middleware RBAC menegakkan matriks §1 per endpoint (peran + scope lembaga);
-  guard frontend tetap ada sebagai UX saja.
-- CSRF: karena cookie `SameSite=Lax` + mutasi `POST`, tambah header
-  `X-CSRF-Token` (double-submit) untuk fase produksi.
-- `X-Demo-Account` hanya aktif bila `NODE_ENV=development`; production menolak
-  tanpa cookie (401).
+- RBAC terpusat di `app.ts` berdasarkan prefix rute (`/admin/*` → Super Admin,
+  `/validator/*` → Validator, `/pesantren/*` → Pesantren, `/notifications*` →
+  sesi aktif); scope lembaga + visibilitas berkas tetap di handler. Anonim `401`,
+  peran salah `403`. Guard frontend tetap ada sebagai UX saja.
+- CSRF: cookie `SameSite=Lax` + mutasi → header `X-CSRF-Token` wajib sama dengan
+  cookie `ishas_csrf` (double-submit) saat aktor berasal dari cookie; endpoint
+  `/auth/*` dikecualikan.
+- `X-Demo-Account` hanya aktif bila `NODE_ENV!=production` (fallback pengembangan);
+  production menolak tanpa cookie (401).
+- Akun baru (`POST /admin/users`) menerima `password` opsional; default
+  `SEED_DEFAULT_PASSWORD`. Reset sandi mengembalikan ke sandi awal prototipe.
 
 ## 17. Contoh payload ringkas
 

@@ -23,7 +23,7 @@ Backend meniru pola ini di frontend:
 | 3 | Bank + snapshot + dokumen + dataset/impor | Workspace Validator (minus SAM) beralih |
 | 4 | SAM-iSAFE penuh | Halaman SAM beralih |
 | 5 | Admin + audit + notifikasi + storage §3–§5 | Hapus sisa IndexedDB; reset demo → endpoint |
-| 6 | Auth: `password_hash` + `sessions` + cookie HttpOnly + RBAC middleware | Login kartu → form email+sandi; guard tetap + klaim server |
+| 6 | Auth: `password_hash` (bcrypt) + `sessions` + cookie HttpOnly + RBAC middleware + `/auth/demo-login` (dev) | Login tetap kartu (dev) → `/auth/demo-login`; `/auth/me` jadi klaim server; guard tetap |
 
 ## 3. Aturan porting per fase
 
