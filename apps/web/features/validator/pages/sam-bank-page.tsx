@@ -1,49 +1,94 @@
-// Bank data SAM-iSAFE: tambah kategori + pertanyaan + aktif/nonaktif (D-26).
-// Perubahan langsung memengaruhi pengamatan baru; riwayat selesai tidak berubah.
+// Bank data SAM-iSAFE: CRUD lengkap kategori + pertanyaan (D-26, D-26.f).
+// Perubahan langsung memengaruhi pengamatan baru; riwayat Selesai tidak berubah.
+// Bank SAM-KAT-* terpisah dari kategori K3 (KAT-*) sistem laporan.
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { storeActions, useMockState } from "~/mocks/store/mock-store";
-import { samActiveQuestions } from "~/mocks/sam-isafe";
+import { samActiveQuestions, samDuplicateQuestions } from "~/mocks/sam-isafe";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
+import { EmptyState } from "~/shared/components/empty-state";
+import { SamBankCategoryCard } from "../components/sam-bank-category-card";
 
 export function Page() {
   const state = useMockState();
   const user = useCurrentUser();
   const [pesan, setPesan] = useState("");
-  const [kategori, setKategori] = useState("");
-  const [teks, setTeks] = useState("");
-  const [target, setTarget] = useState(state.samCategories[0]?.id ?? "");
+  const [nama, setNama] = useState("");
+  const [deskripsi, setDeskripsi] = useState("");
+  const [cari, setCari] = useState("");
+  const [filter, setFilter] = useState("Semua");
+  const [tutup, setTutup] = useState<string[]>([]);
+
   const aktif = samActiveQuestions(state.samQuestions);
+  const duplikat = useMemo(
+    () => samDuplicateQuestions(state.samQuestions),
+    [state.samQuestions],
+  );
+  const usage = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const assessment of state.samAssessments) {
+      for (const id of Object.keys(assessment.answers)) {
+        map.set(id, (map.get(id) ?? 0) + 1);
+      }
+    }
+    return map;
+  }, [state.samAssessments]);
+
+  const urut = useMemo(
+    () => [...state.samCategories].sort((a, b) => a.sortOrder - b.sortOrder),
+    [state.samCategories],
+  );
+  const keyword = cari.trim().toLowerCase();
+  const mencari = keyword.length > 0;
+  const tampil = useMemo(
+    () =>
+      urut
+        .map((category) => ({
+          category,
+          questions: state.samQuestions
+            .filter((item) => item.categoryId === category.id)
+            .filter((item) => (filter === "Semua" ? true : filter === "Aktif" ? item.isActive : !item.isActive))
+            .filter((item) =>
+              keyword
+                ? `${item.id} ${item.text} ${item.panduan ?? ""}`.toLowerCase().includes(keyword)
+                : true,
+            )
+            .sort((a, b) => a.sortOrder - b.sortOrder),
+        }))
+        .filter((row) =>
+          mencari
+            ? row.questions.length > 0 || row.category.name.toLowerCase().includes(keyword)
+            : true,
+        ),
+    [urut, state.samQuestions, filter, keyword, mencari],
+  );
+
+  const riwayat = useMemo(
+    () =>
+      state.auditEvents
+        .filter((event) => event.objectType === "SamCategory" || event.objectType === "SamQuestion")
+        .sort((a, b) => b.at.localeCompare(a.at))
+        .slice(0, 10),
+    [state.auditEvents],
+  );
 
   const tambahKategori = () => {
-    const hasil = storeActions.addSamCategory({ id: user?.id }, { name: kategori });
-    setPesan(hasil.ok ? "Kategori ditambahkan." : hasil.error);
-    if (hasil.ok) setKategori("");
-  };
-
-  const tambahSoal = () => {
-    if (!target) {
-      setPesan("Pilih kategori dulu.");
-      return;
-    }
-    const hasil = storeActions.addSamQuestion(
+    const hasil = storeActions.addSamCategory(
       { id: user?.id },
-      { categoryId: target, text: teks },
+      { name: nama, description: deskripsi },
     );
-    setPesan(hasil.ok ? "Pertanyaan ditambahkan." : hasil.error);
-    if (hasil.ok) setTeks("");
-  };
-
-  const toggle = (id: string, nilai: boolean) => {
-    const hasil = storeActions.setSamQuestionActive({ id: user?.id }, id, nilai);
-    setPesan(hasil.ok ? "" : hasil.error);
+    setPesan(hasil.ok ? "Kategori ditambahkan." : hasil.error);
+    if (hasil.ok) {
+      setNama("");
+      setDeskripsi("");
+    }
   };
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="mx-auto flex w-full max-w-4xl flex-col gap-4">
       <header className="flex flex-wrap items-end gap-3">
-        <div className="mr-auto">
+        <div className="mr-auto min-w-0">
           <p className="kicker">
             Bank data
           </p>
@@ -61,9 +106,26 @@ export function Page() {
           ← Kembali ke riwayat
         </Link>
       </header>
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+        <button
+          type="button"
+          className="secondary-button w-full sm:w-auto"
+          onClick={() => setTutup([])}
+        >
+          Buka semua
+        </button>
+        <button
+          type="button"
+          className="secondary-button w-full sm:w-auto"
+          onClick={() => setTutup(urut.map((item) => item.id))}
+        >
+          Tutup semua
+        </button>
+      </div>
       <div className="scope-banner text-sm">
         {state.samCategories.length} kategori · {aktif.length} pertanyaan aktif · maks{" "}
-        {aktif.length * 2}. Menonaktifkan soal mengubah maks pengamatan baru.
+        {aktif.length * 2}. Bank SAM-KAT-* khusus Validator; terpisah dari kategori K3 (KAT-*)
+        sistem laporan.
       </div>
       {pesan ? (
         <p
@@ -73,96 +135,123 @@ export function Page() {
           {pesan}
         </p>
       ) : null}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="surface flex flex-col gap-3 p-4">
-          <h2 className="font-bold text-heading">
-            Tambah kategori
-          </h2>
+      <div className="surface flex flex-col gap-3 p-4">
+        <h2 className="font-bold text-heading">
+          Tambah kategori
+        </h2>
+        <label className="flex flex-col gap-1 text-xs font-bold text-secondary-text">
+          Nama kategori*
           <input
-            className="secondary-button"
-            value={kategori}
-            onChange={(event) => setKategori(event.target.value)}
+            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+            value={nama}
+            onChange={(event) => setNama(event.target.value)}
             placeholder="Contoh: Keselamatan Laboratorium"
           />
-          <button
-            className="primary-button"
-            onClick={tambahKategori}
-            type="button"
-          >
-            Tambah kategori
-          </button>
-        </div>
-        <div className="surface flex flex-col gap-3 p-4">
-          <h2 className="font-bold text-heading">
-            Tambah pertanyaan
-          </h2>
-          <select
-            className="secondary-button"
-            value={target}
-            onChange={(event) => setTarget(event.target.value)}
-          >
-            {state.samCategories.map((item) => (
-              <option
-                key={item.id}
-                value={item.id}
-              >
-                {item.name}
-              </option>
-            ))}
-          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-bold text-secondary-text">
+          Deskripsi (opsional)
           <input
-            className="secondary-button"
-            value={teks}
-            onChange={(event) => setTeks(event.target.value)}
-            placeholder="Tulis teks pertanyaan minimal 10 karakter"
+            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+            value={deskripsi}
+            onChange={(event) => setDeskripsi(event.target.value)}
+            placeholder="Contoh: bahan kimia, APD, ventilasi lab"
           />
-          <button
-            className="primary-button"
-            onClick={tambahSoal}
-            type="button"
-          >
-            Tambah pertanyaan
-          </button>
-        </div>
+        </label>
+        <button
+          className="primary-button w-full sm:w-auto"
+          onClick={tambahKategori}
+          type="button"
+        >
+          Tambah kategori
+        </button>
       </div>
-      {[...state.samCategories]
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((category) => (
-          <section
-            className="surface p-4"
-            key={category.id}
+      <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
+        <label className="flex flex-1 flex-col gap-1 text-xs font-bold text-secondary-text">
+          Cari soal
+          <input
+            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+            value={cari}
+            onChange={(event) => setCari(event.target.value)}
+            placeholder="Kata kunci atau kode SAM-Q-xxx"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-xs font-bold text-secondary-text sm:w-44">
+          Status
+          <select
+            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
           >
-            <h2 className="font-bold text-heading">
-              {category.name}
-            </h2>
-            <p className="text-xs text-faint">
-              {category.id} · {category.description || "Tanpa deskripsi"}
-            </p>
-            {state.samQuestions
-              .filter((item) => item.categoryId === category.id)
-              .sort((a, b) => a.sortOrder - b.sortOrder)
-              .map((item, index) => (
-                <div
-                  className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3 text-sm"
-                  key={item.id}
-                >
-                  <p className="mr-auto">
-                    {index + 1}. {item.text}
-                  </p>
-                  <span className={`status ${item.isActive ? "status-green" : "status-neutral"}`}>
-                    {item.isActive ? "Aktif" : "Nonaktif"}
+            <option value="Semua">
+              Semua
+            </option>
+            <option value="Aktif">
+              Aktif
+            </option>
+            <option value="Nonaktif">
+              Nonaktif
+            </option>
+          </select>
+        </label>
+      </div>
+      {tampil.length === 0 ? (
+        <EmptyState
+          title="Tidak ada yang cocok"
+          description="Ubah kata kunci atau filter status."
+        />
+      ) : (
+        tampil.map((row) => (
+          <SamBankCategoryCard
+            key={row.category.id}
+            category={row.category}
+            categories={urut}
+            questions={row.questions}
+            expanded={mencari ? true : !tutup.includes(row.category.id)}
+            onToggle={() =>
+              setTutup((sebelum) =>
+                sebelum.includes(row.category.id)
+                  ? sebelum.filter((id) => id !== row.category.id)
+                  : [...sebelum, row.category.id],
+              )
+            }
+            duplikat={duplikat}
+            usage={usage}
+            accountId={user?.id}
+            onPesan={setPesan}
+          />
+        ))
+      )}
+      <section className="surface p-4">
+        <h2 className="font-bold text-heading">
+          Riwayat perubahan bank
+        </h2>
+        {riwayat.length === 0 ? (
+          <p className="mt-1 text-sm text-secondary-text">
+            Belum ada perubahan bank pada sesi demo ini.
+          </p>
+        ) : (
+          <ol className="mt-2 flex flex-col gap-2">
+            {riwayat.map((event) => (
+              <li
+                key={event.id}
+                className="flex flex-wrap items-baseline gap-2 border-b border-line pb-2 text-sm last:border-0"
+              >
+                <strong className="text-heading">
+                  {event.action}
+                </strong>
+                <span className="text-xs text-secondary-text">
+                  {event.actorName} · {event.at.slice(0, 10)}
+                </span>
+                {event.note ? (
+                  <span className="w-full text-xs text-faint">
+                    {event.note}
                   </span>
-                  <button
-                    className="secondary-button"
-                    onClick={() => toggle(item.id, !item.isActive)}
-                    type="button"
-                  >
-                    {item.isActive ? "Nonaktifkan" : "Aktifkan"}
-                  </button>
-                </div>
-              ))}
-          </section>
-        ))}
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
     </section>
   );
 }
