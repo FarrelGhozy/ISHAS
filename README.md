@@ -8,7 +8,6 @@ Integrated Safety and Health Assessment System adalah prototipe sistem penilaian
 - `docs/source` — proposal asli sebagai sumber penelitian.
 - `docs` — sumber kebenaran: visi, peran, route, alur, model data, dan spesifikasi produk yang berlaku.
 - `planning` — local issue management stage (Stage 00...09).
-- `flow.md` — alur operasional aplikasi.
 - `docs/TODO.md` — kontrol pekerjaan yang sedang aktif.
 - `AGENTS.md` — aturan tetap untuk pekerjaan di repository.
 
