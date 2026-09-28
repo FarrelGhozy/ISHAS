@@ -7,6 +7,7 @@ import { Outlet, useLocation } from "react-router";
 import { Link, useNavigate } from "react-router";
 import { Menu, ShieldCheck, X } from "lucide-react";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
+import { refreshServerSession } from "~/shared/auth/auth-session";
 import { workspaceHome } from "~/shared/auth/access-policy";
 import { IshasMark } from "~/shared/components/ishas-mark";
 import { StatusChip } from "~/shared/components/status-chip";
@@ -18,6 +19,10 @@ export default function PublicLayout() {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  useEffect(() => {
+    // Tab baru: selaraskan cache akun dengan cookie sesi bila mode backend.
+    void refreshServerSession();
+  }, []);
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname, location.search]);

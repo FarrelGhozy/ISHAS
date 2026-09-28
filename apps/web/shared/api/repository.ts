@@ -20,6 +20,8 @@ import type {
   Severity,
   User,
 } from "~/mocks/types";
+import { sessionStore } from "~/shared/auth/session";
+import { setServerAccount } from "~/shared/auth/auth-session";
 import { refreshAdminState } from "./admin-state";
 import { USE_BACKEND } from "./http-client";
 import { refreshPublicState } from "./public-state";
@@ -39,6 +41,39 @@ export const repository = {
   // `findingsFor`, `recommendationsFor`) hanya valid di mode mock; alihkan baca
   // ke state hook (`usePublicState`/`usePesantrenState`/…) agar tidak terjebak.
   ...mockRepository,
+
+  // --- Auth Fase 6 (kartu dev tetap; cookie sesi di mode backend) ---
+  async demoLogin(accountId: string): Promise<ActionResult> {
+    if (!USE_BACKEND) {
+      sessionStore.login(accountId);
+      return { ok: true };
+    }
+    const result = await httpRepository.demoLogin(accountId);
+    if (!result.ok) return result;
+    setServerAccount(result.data.account);
+    refreshAllWorkspaceStates();
+    refreshPublicState();
+    return { ok: true };
+  },
+  async login(email: string, password: string): Promise<ActionResult> {
+    if (!USE_BACKEND) return { ok: false, error: "Login sandi hanya tersedia pada mode backend." };
+    const result = await httpRepository.login(email, password);
+    if (!result.ok) return result;
+    setServerAccount(result.data.account);
+    refreshAllWorkspaceStates();
+    refreshPublicState();
+    return { ok: true };
+  },
+  async logout(): Promise<void> {
+    if (USE_BACKEND) await httpRepository.logout();
+    setServerAccount(null);
+    sessionStore.logout();
+  },
+  async changePassword(oldPassword: string, newPassword: string): Promise<ActionResult> {
+    if (!USE_BACKEND) return { ok: false, error: "Ubah sandi hanya tersedia pada mode backend." };
+    const result = await httpRepository.changePassword(oldPassword, newPassword);
+    return result.ok ? { ok: true } : result;
+  },
   async submitLaporCepat(actor: ReportActor, input: LaporInput): Promise<ActionResult> {
     if (!USE_BACKEND) return mockRepository.submitLaporCepat(actor, input);
     const result = await httpRepository.submitLaporCepat(actor, input);

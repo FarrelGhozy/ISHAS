@@ -28,7 +28,10 @@ export type MigrateAssetItem = {
   height?: number;
   visibility?: "Public" | "Privat";
 };
-import { apiBlob, apiRequest } from "./http-client";
+import { apiBlob, apiRequest, type ApiResult } from "./http-client";
+import type { ServerAccount } from "~/shared/auth/auth-session";
+
+export type AuthPayload = { account: ServerAccount; csrfToken: string | null };
 
 export type BankIndicatorInput = {
   code: string;
@@ -91,6 +94,29 @@ function toAction(result: { ok: true; data: { id?: string } } | { ok: false; err
 }
 
 export const httpRepository = {
+  // --- Auth Fase 6 ---
+  async demoLogin(accountId: string): Promise<ApiResult<AuthPayload>> {
+    return apiRequest<AuthPayload>("/auth/demo-login", { method: "POST", json: { accountId } });
+  },
+  async login(email: string, password: string): Promise<ApiResult<AuthPayload>> {
+    return apiRequest<AuthPayload>("/auth/login", { method: "POST", json: { email, password } });
+  },
+  async logout(): Promise<ApiResult<{ loggedOut: boolean }>> {
+    return apiRequest<{ loggedOut: boolean }>("/auth/logout", { method: "POST" });
+  },
+  async getSession(): Promise<ApiResult<AuthPayload>> {
+    return apiRequest<AuthPayload>("/auth/me");
+  },
+  async changePassword(
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<ApiResult<{ changed: boolean }>> {
+    return apiRequest<{ changed: boolean }>("/auth/password", {
+      method: "POST",
+      json: { oldPassword, newPassword },
+    });
+  },
+
   async submitLaporCepat(_actor: ReportActor, input: LaporInput): Promise<ActionResult> {
     const result = await apiRequest<{ id?: string }>("/reports/lapor-cepat", {
       method: "POST",

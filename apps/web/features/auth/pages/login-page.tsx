@@ -5,24 +5,34 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { DEMO_ACCOUNTS } from "~/shared/auth/demo-accounts";
-import { sessionStore } from "~/shared/auth/session";
+import { repository } from "~/shared/api/repository";
 import { IshasMark } from "~/shared/components/ishas-mark";
 import { resolveLoginRedirect } from "~/shared/auth/access-policy";
 
 export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo");
 
-  function login(accountId: string, roleId: (typeof DEMO_ACCOUNTS)[number]["roleId"]) {
+  // Tetap satu klik kartu (masa pengembangan). Mode backend memakai
+  // `/auth/demo-login` agar cookie sesi Fase 6 ikut teruji; mode mock langsung.
+  async function login(accountId: string, roleId: (typeof DEMO_ACCOUNTS)[number]["roleId"]) {
+    setPending(true);
+    setError(null);
     try {
-      sessionStore.login(accountId);
+      const result = await repository.demoLogin(accountId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      navigate(resolveLoginRedirect(redirectTo, roleId), { replace: true });
     } catch {
       setError("Sesi tidak dapat disimpan. Izinkan penyimpanan browser lalu coba lagi.");
-      return;
+    } finally {
+      setPending(false);
     }
-    navigate(resolveLoginRedirect(redirectTo, roleId), { replace: true });
   }
 
   return (
@@ -68,8 +78,9 @@ export function LoginPage() {
           <button
             key={acc.id}
             type="button"
-            className="surface flex items-center gap-3 px-4 py-3 text-left transition hover:border-brand-border hover:bg-brand-bg"
-            onClick={() => login(acc.id, acc.roleId)}
+            disabled={pending}
+            className="surface flex items-center gap-3 px-4 py-3 text-left transition hover:border-brand-border hover:bg-brand-bg disabled:opacity-60"
+            onClick={() => void login(acc.id, acc.roleId)}
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-white">
               {acc.initials}

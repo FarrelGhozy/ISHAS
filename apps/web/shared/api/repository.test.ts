@@ -295,6 +295,53 @@ describe("httpRepository Super Admin (Fase 5)", () => {
   });
 });
 
+describe("auth (fase 6)", () => {
+  test("demoLogin → POST /auth/demo-login", async () => {
+    stubFetch({ ok: true, data: { account: { id: "USR-003" }, csrfToken: "c1" } });
+    const result = await httpRepository.demoLogin("USR-003");
+    expect(result.ok).toBe(true);
+    expect(calls[0].url).toContain("/api/v1/auth/demo-login");
+    expect(calls[0].init.method).toBe("POST");
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ accountId: "USR-003" });
+  });
+
+  test("login/logout/me/changePassword memetakan endpoint", async () => {
+    stubFetch({ ok: true, data: { account: { id: "USR-001" }, csrfToken: null } });
+    await httpRepository.login("admin@ishas.demo", "rahasia");
+    expect(calls[0].url).toContain("/api/v1/auth/login");
+
+    stubFetch({ ok: true, data: { loggedOut: true } });
+    await httpRepository.logout();
+    expect(calls[0].url).toContain("/api/v1/auth/logout");
+
+    stubFetch({ ok: true, data: { account: { id: "USR-001" }, csrfToken: null } });
+    await httpRepository.getSession();
+    expect(calls[0].url).toContain("/api/v1/auth/me");
+    expect(calls[0].init.method ?? "GET").toBe("GET");
+
+    stubFetch({ ok: true, data: { changed: true } });
+    await httpRepository.changePassword("lama", "baru12345");
+    expect(calls[0].url).toContain("/api/v1/auth/password");
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({
+      oldPassword: "lama",
+      newPassword: "baru12345",
+    });
+  });
+
+  test("mutasi mengirim X-CSRF-Token dari cookie ishas_csrf", async () => {
+    const originalDocument = (globalThis as { document?: unknown }).document;
+    (globalThis as { document?: unknown }).document = { cookie: "ishas_csrf=token-uji" };
+    try {
+      stubFetch({ ok: true, data: { loggedOut: true } });
+      await apiRequest("/auth/logout", { method: "POST" });
+      const headers = calls[0].init.headers as Record<string, string>;
+      expect(headers["X-CSRF-Token"]).toBe("token-uji");
+    } finally {
+      (globalThis as { document?: unknown }).document = originalDocument;
+    }
+  });
+});
+
 describe("apiRequest", () => {
   test("kegagalan jaringan → pesan ramah", async () => {
     globalThis.fetch = (async () => {

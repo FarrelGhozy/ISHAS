@@ -2,24 +2,44 @@ import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { Bell, BriefcaseBusiness, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
-import { sessionStore, useSession } from "~/shared/auth/session";
+import { useSession } from "~/shared/auth/session";
+import {
+  getServerAccount,
+  refreshServerSession,
+  useServerAccount,
+} from "~/shared/auth/auth-session";
 import { resolveWorkspaceAccess, workspaceRoleFor } from "~/shared/auth/access-policy";
 import { IshasMark } from "~/shared/components/ishas-mark";
 import { Modal } from "~/shared/components/modal";
 import { ROLE_NAVIGATION } from "~/shared/navigation/workspace-config";
-import { repository } from "~/shared/api/repository";
+import { repository, USE_BACKEND } from "~/shared/api/repository";
 import { useWorkspaceState } from "~/shared/api/workspace-state";
 
 export default function WorkspaceLayout() {
   const location = useLocation();
   const session = useSession();
+  const account = useServerAccount();
   const user = useCurrentUser();
   const state = useWorkspaceState();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Tab baru: cookie ada tapi cache sesi kosong → pulihkan sebelum guard menilai.
+  const [restoring, setRestoring] = useState(
+    () => USE_BACKEND && !getServerAccount() && !session,
+  );
   const profileRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!restoring) return;
+    let active = true;
+    refreshServerSession().finally(() => {
+      if (active) setRestoring(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [restoring]);
   useEffect(() => {
     setMobileOpen(false);
     setNotifOpen(false);
@@ -48,8 +68,17 @@ export default function WorkspaceLayout() {
     return () => media.removeEventListener("change", close);
   }, []);
 
+  if (restoring)
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <p className="text-xs font-semibold text-secondary-text">Memeriksa sesi…</p>
+      </div>
+    );
+
   const expectedRole = workspaceRoleFor(location.pathname);
-  const access = resolveWorkspaceAccess(location.pathname, session, user?.roleId ?? null);
+  // Mode backend memakai cookie (tanpa sessionStore); samakan bentuk sesi untuk guard.
+  const effectiveSession = session ?? (account ? { accountId: account.id, loginAt: "" } : null);
+  const access = resolveWorkspaceAccess(location.pathname, effectiveSession, user?.roleId ?? null);
   if (access === "login")
     return (
       <Navigate
@@ -179,9 +208,9 @@ export default function WorkspaceLayout() {
                     type="button"
                     role="menuitem"
                     className="flex min-h-14 w-full items-center gap-2 px-4 text-left text-xs font-bold text-[#b91c1c] hover:bg-[#fef2f2]"
-                    onClick={() => {
+                    onClick={async () => {
                       try {
-                        sessionStore.logout();
+                        await repository.logout();
                         window.location.assign("/");
                       } catch {
                         setError(
