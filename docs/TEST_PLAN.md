@@ -27,7 +27,7 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 | 2 | `/` | login tiap peran | isi SAMA seperti tanpa login + tombol ruang kerja |
 | 3 | `/lapor` | tanpa login | form aktif bila ada pesantren terdaftar |
 | 4 | `/penilaian-mandiri` | tanpa login | form aktif bila ada Published |
-| 5 | `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`, `/dokumen` | tanpa login | hanya data `Diterima` (dokumen: Public penuh, Privat hanya nama) |
+| 5 | `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan/:id`, `/dokumen` | tanpa login | hanya data `Diterima` (dokumen: Public penuh, Privat hanya nama); `/laporan` publik 404 (D-28) |
 | 6 | `/pesantren/PSN-0018` | tanpa login | filter terkunci ke lembaga itu |
 | 7 | `/pesantren/XXX-tak-dikenal` | tanpa login | empty state, bukan crash |
 | 8 | `/login` | — | tepat 3 kartu akun, tanpa asesor |

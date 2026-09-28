@@ -17,7 +17,6 @@ export default [
     route("peta-risiko", "routes/peta-risiko.tsx"),
     route("rekomendasi", "routes/rekomendasi.tsx"),
     route("tindak-lanjut", "routes/tindak-lanjut.tsx"),
-    route("laporan", "routes/laporan.tsx"),
     route("laporan/:id", "routes/laporan.$id.tsx"),
     route("dokumen", "routes/dokumen.tsx"),
     route("pesantren/:kode", "routes/pesantren.$kode.tsx"),

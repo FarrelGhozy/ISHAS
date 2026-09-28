@@ -162,6 +162,7 @@ type SelfAssessmentDraft = { // belum dikirim; per perangkat (localStorage)
   instrumentVersionId: string; // warisan ('INS-LIVE' untuk kiriman baru)
   instrumentChecksum?: string; // D-24: checksum bank (beda = ulang dari awal)
   answers: Record<string, { value: string; note: string; evidenceName: string;
+  evidenceAssetId?: string; // D-27: blob foto upload (IndexedDB perangkat pengunggah)
   areaId: string; planPoint: { x: number; y: number } | null }>;
   activeIndex: number; updatedAt: string;
 };
@@ -216,11 +217,12 @@ type Area = { id: string; institutionCode: string; buildingId: string;
 
 ## 3. Aturan tampil — bidang publik mengikuti D-02 (dijawab 8 September 2026)
 
-D-02: publik melihat **ringkasan saja** + **nama validator/PIC**. Nama/kontak pelapor, bukti,
-denah rinci + titik, jawaban mentah, alasan penolakan, dan audit tidak publik. Arsip pesantren
-nonaktif menunggu D-08.
+D-02: publik melihat **ringkasan saja** + **nama validator/PIC** + **foto bukti
+penilaian mandiri di PDF** (amendemen D-27). Nama/kontak pelapor, bukti
+lapor-cepat/penyelesaian, denah rinci + titik, jawaban mentah, alasan
+penolakan, dan audit tidak publik. Arsip pesantren nonaktif menunggu D-08.
 
-- Dashboard/hasil/peta/rekomendasi/laporan pimpinan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (+ temuan/rekomendasi turunannya), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
+- Dashboard/hasil/peta/rekomendasi/PDF laporan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (+ temuan/rekomendasi turunannya), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
 - `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor + antrean `/pesantren/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02).
 - `Ditolak` hanya terlihat di arsip antrean Pesantren pemilik scope.
 - Agregat `/` dihitung dari himpunan `Diterima` lintas pesantren terdaftar; filter pesantren mempersempit ke satu `institutionCode`.

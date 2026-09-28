@@ -120,7 +120,7 @@ di [RISK_MAP_DESIGN.md](RISK_MAP_DESIGN.md) §5–8. Tidak ada koordinat palsu.
 ## 6. Matriks bidang publik (D-02 dijawab 8 September 2026)
 
 D-02: **ringkasan saja** + **nama validator/PIC**. Matriks berikut berlaku untuk semua halaman
-publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`,
+publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan/:id`,
 `/pesantren/[kode]`), pratinjau, dan ekspor dummy — bukan sekadar menyembunyikan kolom di satu halaman.
 
 | Bidang | Publik | Internal (Pesantren scope) |
@@ -131,7 +131,7 @@ publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/lapor
 | Denah gambaran besar + titik temuan tervalidasi | ✅ setelah satu pesantren dipilih (D-14, 18 September 2026) | ✅ |
 | Denah rinci ruangan/per lantai | ❌ (tidak termasuk rancangan Risk Map baru) | Historis sesuai scope |
 | Nama pelapor / kontak / identitas akun | ❌ | ✅ |
-| Bukti/foto (nama file) | ❌ | ✅ |
+| Bukti/foto (nama file) | ❌, kecuali foto bukti penilaian mandiri di PDF `/laporan/:id` ✅ (D-27) | ✅ |
 | Bukti penyelesaian tindak lanjut (gambar upload) | ❌ | ✅ (pratinjau privat) |
 | Alasan pembatalan tindak lanjut (D-21) | ✅ (status `Dibatalkan` + alasan) | ✅ |
 | Jawaban mentah per indikator | ❌ (hanya skor/kategori ringkasan) | ✅ |

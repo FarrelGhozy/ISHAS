@@ -1,12 +1,120 @@
-// Halaman cetak PDF satu laporan penilaian mandiri (D-24).
-// Hanya laporan Diterima yang dapat dibuka publik (D-02). Cetak via browser.
+// Halaman cetak PDF satu laporan penilaian mandiri (D-24, D-28).
+// Rekapan publik: skor + dimensi + temuan + tindak lanjut + foto + metadata.
+// Tanpa jawaban mentah per soal (D-02). Cetak via browser.
 
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Printer } from "lucide-react";
 import { useMockState } from "~/mocks/store/mock-store";
 import { selectPublicReports } from "~/mocks/store/selectors";
+import { getEvidenceAsset } from "~/mocks/adapters/report-evidence";
+import type { SelfAssessmentSnapshot } from "~/mocks/types";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
+
+// D-27: foto bukti per jawaban tampil publik di PDF.
+// Blob hanya ada di perangkat pengunggah; perangkat lain menampilkan
+// nama file + catatan.
+function FotoBukti({
+  assetId,
+  institutionCode,
+  name,
+}: {
+  assetId?: string;
+  institutionCode: string;
+  name: string;
+}) {
+  const [url, setUrl] = useState("");
+  const [hilang, setHilang] = useState(false);
+  useEffect(() => {
+    if (!assetId) return;
+    let batal = false;
+    let objectUrl = "";
+    getEvidenceAsset(assetId)
+      .then((asset) => {
+        if (batal) return;
+        if (!asset || asset.institutionCode !== institutionCode) {
+          setHilang(true);
+          return;
+        }
+        objectUrl = URL.createObjectURL(asset.blob);
+        setUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!batal) setHilang(true);
+      });
+    return () => {
+      batal = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [assetId, institutionCode]);
+  if (!assetId)
+    return (
+      <p className="mt-2 text-sm text-secondary-text">
+        {name} (hanya nama file, gambar tidak diunggah pada perangkat ini).
+      </p>
+    );
+  if (hilang)
+    return (
+      <p className="mt-2 text-sm text-secondary-text">
+        {name} (gambar hanya tersedia di perangkat pengunggah).
+      </p>
+    );
+  if (!url)
+    return (
+      <p role="status" className="mt-2 text-sm text-secondary-text">
+        Memuat gambar {name}…
+      </p>
+    );
+  return (
+    <figure className="mt-2 break-inside-avoid">
+      <img
+        src={url}
+        alt={`Bukti foto: ${name}`}
+        className="max-h-80 w-full rounded object-contain"
+      />
+      <figcaption className="mt-1 break-words text-xs text-secondary-text">
+        {name}
+      </figcaption>
+    </figure>
+  );
+}
+
+function BuktiFoto({
+  snapshot,
+  institutionCode,
+}: {
+  snapshot?: SelfAssessmentSnapshot;
+  institutionCode: string;
+}) {
+  const entri = Object.entries(snapshot?.answers ?? {}).filter(
+    ([, jawaban]) => jawaban.evidenceAssetId || jawaban.evidenceName?.trim(),
+  );
+  if (!entri.length) return null;
+  const beku = new Map((snapshot?.frozenIndicators ?? []).map((item) => [item.id, item]));
+  return (
+    <div className="mt-5">
+      <h2 className="font-extrabold text-heading">Bukti foto</h2>
+      <ul className="mt-2 space-y-3">
+        {entri.map(([id, jawaban]) => {
+          const info = beku.get(id);
+          return (
+            <li key={id} className="rounded-lg border border-line p-3 break-inside-avoid">
+              <p className="text-sm font-bold text-heading">
+                {info ? `${info.code} · ${info.title}` : id}
+              </p>
+              <FotoBukti
+                assetId={jawaban.evidenceAssetId}
+                institutionCode={institutionCode}
+                name={jawaban.evidenceName}
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 export function LaporanPdfPage() {
   const state = useMockState();
@@ -26,12 +134,17 @@ export function LaporanPdfPage() {
   const institution = state.institutions.find((i) => i.code === report.institutionCode);
   const snapshot = state.selfAssessmentSnapshots.find((s) => s.reportId === report.id);
   const temuan = state.findings.filter((f) => f.reportId === report.id);
+  const rekomendasi = new Map(state.recommendations.filter((r) => r.reportId === report.id).map((r) => [r.id, r]));
+  const checksumPendek = snapshot?.instrumentChecksum
+    ? snapshot.instrumentChecksum.slice(0, 8)
+    : "";
+  const tanggalKirim = report.submittedAt ?? report.createdAt;
 
   return (
     <section className="mx-auto flex max-w-3xl flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2 print:hidden">
-        <Link className="text-button" to="/laporan">
-          ← Kembali ke laporan
+        <Link className="text-button" to="/hasil">
+          ← Kembali ke hasil
         </Link>
         <button
           type="button"
@@ -47,12 +160,22 @@ export function LaporanPdfPage() {
         <h1 className="mt-1 text-2xl font-extrabold text-heading">{report.title}</h1>
         <p className="mt-1 text-sm text-secondary-text">
           {institution?.name} · {institution?.location} ·{" "}
-          {new Date(report.createdAt).toLocaleDateString("id-ID")}
+          {new Date(tanggalKirim).toLocaleDateString("id-ID")}
+        </p>
+        <p className="mt-1 text-xs text-secondary-text">
+          {state.instrument.label}
+          {checksumPendek ? ` · checksum ${checksumPendek}` : ""}
+          {report.pdfGeneratedAt
+            ? ` · PDF dibuat ${new Date(report.pdfGeneratedAt).toLocaleDateString("id-ID")}`
+            : ""}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <StatusChip value="Diterima" />
           {report.severity !== "Belum ditentukan" ? (
             <StatusChip value={report.severity} />
+          ) : null}
+          {report.priority !== "Belum ditentukan" ? (
+            <StatusChip value={report.priority} />
           ) : null}
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -106,13 +229,30 @@ export function LaporanPdfPage() {
           <h2 className="font-extrabold text-heading">Temuan tervalidasi</h2>
           {temuan.length ? (
             <ul className="mt-2 divide-y divide-line">
-              {temuan.map((item) => (
-                <li key={item.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
-                  <strong className="mr-auto text-heading">{item.issue}</strong>
-                  <span className="text-secondary-text">{item.location}</span>
-                  <StatusChip value={item.level} />
-                </li>
-              ))}
+              {temuan.map((item) => {
+                const tindak = rekomendasi.get(item.recommendationId);
+                const detailLokasi = [item.building, item.zone, item.floor]
+                  .filter((bagian) => bagian && bagian !== "—")
+                  .join(" · ");
+                return (
+                  <li key={item.id} className="py-3 text-sm break-inside-avoid">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="mr-auto text-heading">{item.issue}</strong>
+                      <StatusChip value={item.level} />
+                    </div>
+                    <p className="mt-1 text-secondary-text">
+                      {item.location}
+                      {detailLokasi ? ` · ${detailLokasi}` : ""}
+                    </p>
+                    {tindak ? (
+                      <p className="mt-1 text-xs text-secondary-text">
+                        Tindak lanjut: {tindak.status} · progres {tindak.progress}%
+                        {tindak.owner ? ` · PIC ${tindak.owner}` : ""}
+                      </p>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="mt-2 text-sm text-secondary-text">
@@ -120,6 +260,7 @@ export function LaporanPdfPage() {
             </p>
           )}
         </div>
+        <BuktiFoto snapshot={snapshot} institutionCode={report.institutionCode} />
         {report.validatedByName ? (
           <p className="mt-5 text-sm text-secondary-text">
             Divalidasi oleh {report.validatedByName}
@@ -129,8 +270,8 @@ export function LaporanPdfPage() {
           </p>
         ) : null}
         <p className="mt-2 text-xs text-faint">
-          Data ilustrasi prototipe · nama pelapor, kontak, bukti, dan jawaban mentah tidak
-          ditampilkan publik (D-02).
+          Data ilustrasi prototipe · nama pelapor, kontak, dan jawaban mentah tidak
+          ditampilkan publik (D-02); foto bukti tampil publik (D-27).
         </p>
       </article>
     </section>

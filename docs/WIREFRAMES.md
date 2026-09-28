@@ -66,6 +66,8 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
   Satu penilai = satu laporan PDF.
 - Tiap soal menampilkan hint kurangnya ("Kurang: jawaban/bukti/area-lokasi/catatan N/A")
   + status tersimpan ("Draft tersimpan otomatis · HH:MM"); autosave tanpa menunggu nama.
+  Bukti berupa tombol upload + pratinjau hanya pada indikator `evidenceRequired` (D-27);
+  foto tampil di PDF publik.
 - Tiga kolom (desktop; menumpuk vertikal di ponsel): kiri navigasi dimensi (tombol per dimensi: nomor + nama + "x/y terisi" + centang bila penuh + kunci versi di bawah), tengah panel pertanyaan (kode + "Indikator n dari N" + chip `Wajib`/`Bukti wajib` + judul + prompt + lokasi observasi + opsi radio + catatan + bukti + sumber instrumen + tombol Sebelumnya/Berikutnya), kanan panel kelengkapan (4 statistik: jawaban/bukti/catatan N/A/lokasi + tombol `Lihat ringkasan` + catatan "Draft tersimpan di perangkat ini").
 - Dialog Tinjau: daftar semua indikator (ikon lengkap/belum + kode + judul + jawaban) + klik melompat ke indikator + tombol **Kirim untuk validasi** (disabled bila ada yang kurang) + dialog konfirmasi final ("Setelah dikirim tidak dapat diubah…") → layar sukses seperti lapor.
 
@@ -77,15 +79,18 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 - Detail: seluruh isi laporan (hanya-baca: identitas, kontak internal, kategori/aspek, usulan pelapor, lokasi + teks denah, bukti gambar, waktu, jejak keputusan) + untuk penilaian mandiri: jawaban per indikator (hanya-baca) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` placeholder `Pilih…` + pre-fill dari usulan sah + catatan opsional + tombol konfirmasi; ganti Terima/Tolak membersihkan error) dan **Tolak** (textarea alasan wajib min 10 + counter + konfirmasi). Arsip tidak tampil di antrean.
 - Setelah terima: tidak ada kontrol status manual di halaman ini; status bergerak lewat `/pesantren/tindak-lanjut` (D-23.a). Arsip `Completed` via `/pesantren/laporan` (konfirmasi + alasan min 5).
 
-## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`, `/laporan/:id`
+## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan/:id`
 
-- Amendemen D-24 (PDF per laporan): `/hasil` seksi `Laporan PDF penilaian`
-  (kartu per laporan: pesantren, periode, skor %, validator + tautan
-  `Lihat PDF laporan`); `/laporan` memuat daftar PDF penilaian mandiri (satu
-  penilai = satu PDF) + ringkasan pimpinan; `/laporan/:id` = halaman cetak
-  satu PDF (skor % beku, dimensi, temuan tervalidasi, validator + tombol
-  `Cetak / simpan PDF`); hanya `Diterima`; tanpa nama pelapor/kontak/bukti/
-  jawaban mentah (D-02).
+- Amendemen D-28 (gabung hasil): `/hasil` adalah satu-satunya halaman hasil
+  publik — baris metrik (Indeks K3L · Temuan aktif · Terverifikasi) + dimensi
+  hasil + daftar PDF penilaian (satu penilai = satu PDF; kartu per laporan:
+  pesantren, periode, skor %, validator + tautan `Lihat PDF laporan`).
+  Halaman `/laporan` publik dihapus (404); `/laporan/:id` = halaman cetak
+  rekapan satu PDF (kop + skor % beku + dimensi + temuan diperkaya: lokasi
+  lengkap, severity/priority, status/progres/PIC tindak lanjut + foto bukti
+  per jawaban + metadata bank/checksum/validator/waktu + tombol
+  `Cetak / simpan PDF`); hanya `Diterima`; tanpa nama pelapor/kontak/jawaban
+  mentah (D-02, amendemen D-27 untuk foto bukti).
 
 - Struktur dan copy mengikuti lama (hasil per dimensi/periode; Daftar Area default + Daftar Temuan; rekomendasi + PIC + tenggat; tindak lanjut + status; laporan pimpinan + metadata versi), dengan perubahan wajib : (a) tambah **filter pesantren** di tiap halaman, (b) sumber temuan menunjuk `reportId` + nama validator (nama validator publik sesuai D-02; nama pelapor dan bukti internal), (c) area tanpa temuan aktif tampil netral (bukan marker hijau), (d) tampilan Denah Bangunan dan bukti penyelesaian hanya di workspace Pesantren, tidak di halaman publik (D-02).
 - Tombol kelola (buat rencana, ubah status, unggah bukti) hanya render bila login sebagai Pesantren pemilik scope; publik melihat mode baca + ajakan "Masuk sebagai Pesantren untuk mengelola." Input progres pada kartu kelola memakai slider titik `0/25/50/75/100` + label tahap (D-20).

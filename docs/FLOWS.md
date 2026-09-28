@@ -81,9 +81,11 @@ aturan nama sama seperti §2, tanpa opsi anonim — D-02.
 menyimpan `instrumentChecksum`; checksum beda = kirim dikunci + wajib mulai
 baru. Pelapor TIDAK dapat memilih versi (tidak ada versi).
 3. Isi per indikator (navigasi dimensi di kiri, pertanyaan di tengah, kelengkapan di kanan — mengikuti alur penilaian mandiri tanpa panel penugasan):
- - Jawaban (wajib semua indikator `required`).
- - Catatan observasi (bebas; **wajib** bila jawaban `N/A` — min 10 karakter alasan).
- - Bukti (wajib bila indikator `evidenceRequired`; simpan nama file dummy).
+  - Jawaban (wajib semua indikator `required`).
+  - Catatan observasi (bebas; **wajib** bila jawaban `N/A` — min 10 karakter alasan).
+  - Bukti (wajib bila indikator `evidenceRequired`; tombol upload PNG/JPEG/WebP
+  maks 5 MB/20 MP + pratinjau + lepas/ganti, pola sama `/lapor` — D-27; foto
+  tampil di PDF publik, tanpa foto = PDF tanpa gambar pada jawaban itu).
  - Lokasi observasi (wajib bila indikator `locationRequired`; pilih area + tandai titik denah `x/y` 0–100 bila denah tersedia; bila tanpa denah, area saja cukup).
 4. **Simpan draft** otomatis per perubahan tanpa menunggu nama (nama + pesantren
 wajib baru saat kirim); pesantren terakhir diingat per perangkat sehingga reload
@@ -161,7 +163,7 @@ tidak boleh disamakan tanpa aturan penghubung tersebut.
  2. Perbarui progres (slider titik `0/25/50/75/100` + label tahap; nilai lama dibulatkan ke titik terdekat — D-20) + catatan + bukti penyelesaian upload gambar (PNG/JPEG/WebP 5 MB/20 MP, pratinjau + lepas/ganti, pola sama `/lapor` — D-21) → ajukan selesai → akun Pesantren memverifikasi → `Completed`/`Terverifikasi`.
  2a. **Batalkan perbaikan** (D-21, D-23.d): dari `Belum ditindaklanjuti/Berjalan/Menunggu verifikasi` → `Dibatalkan` (terminal per rekomendasi, baris tidak dihapus) → wajib alasan min 10 karakter + `canceledBy/canceledAt` + audit `Membatalkan tindak lanjut`; temuan tertaut ikut `Dibatalkan`; laporan induk tetap pada status berjalan (`Pending/Proses` apa adanya); `Dibatalkan` menghalangi `Completed` otomatis + UI memberi hint (buat rencana pengganti via laporan baru atau lanjutkan rekomendasi tersisa). Status + alasan tampil publik; bukti/tenggat/catatan internal tetap privat.
  2b. **Tingkat risiko temuan** (D-23.b): `severity/priority` laporan tetap `Tinggi/Sedang/Rendah`; level tiap temuan (`Rendah/Sedang/Tinggi/Ekstrem`) diubah eksplisit per baris oleh Pesantren + teraudit `Mengubah tingkat risiko temuan`. Tanpa rumus turunan otomatis.
-3. `/pesantren/laporan`: pratinjau ringkasan pimpinan dalam scope Pesantren (tanpa arsip) + dimensi katalog aktif (ilustrasi) + status tindak lanjut + progres rata-rata non-`Dibatalkan` + metadata (periode berjalan, versi instrumen per laporan pada riwayat, waktu data terbaru, pembuat) + tautan silang ke Validasi/Tindak lanjut + simulasi unduh PDF/Excel berlabel dummy. `/laporan` adalah versi baca publik dengan bidang sesuai D-02 (ringkasan + nama validator/PIC; tanpa nama pelapor, bukti, jawaban mentah) dan tidak otomatis sama dengan versi internal.
+3. `/pesantren/laporan`: pratinjau ringkasan pimpinan dalam scope Pesantren (tanpa arsip) + dimensi katalog aktif (ilustrasi) + status tindak lanjut + progres rata-rata non-`Dibatalkan` + metadata (periode berjalan, versi instrumen per laporan pada riwayat, waktu data terbaru, pembuat) + tautan silang ke Validasi/Tindak lanjut + simulasi unduh PDF/Excel berlabel dummy. Halaman publik `/laporan` dihapus (D-28); publik membaca hasil di `/hasil` (metrik + dimensi + daftar PDF) dan detail rekapan di `/laporan/:id` dengan bidang sesuai D-02 (ringkasan + nama validator/PIC + foto bukti penilaian — D-27; tanpa nama pelapor, jawaban mentah).
 
 ## 7. Siklus instrumen (Aktor: Validator — tujuan peran dipertahankan, D-17; amendemen D-24)
 

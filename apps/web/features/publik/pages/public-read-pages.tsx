@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from "react-router";
 import { PublicCampusMap } from "../components/public-campus-map";
-import { Download, ExternalLink, FileText } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useMockState } from "~/mocks/store/mock-store";
 import {
   selectFindingsByReports,
@@ -19,14 +19,13 @@ import { StatusChip } from "~/shared/components/status-chip";
 import { PublicFilter } from "../components/public-filter";
 import { LaporanPdfList } from "../components/laporan-pdf-card";
 
-export type PublicReadKind = "hasil" | "peta" | "rekomendasi" | "tindak-lanjut" | "laporan";
+export type PublicReadKind = "hasil" | "peta" | "rekomendasi" | "tindak-lanjut";
 
 const TITLES: Record<PublicReadKind, string> = {
-  hasil: "Hasil assessment",
+  hasil: "Hasil penilaian",
   peta: "Peta bahaya dan risiko",
   rekomendasi: "Rekomendasi",
   "tindak-lanjut": "Tindak lanjut",
-  laporan: "Laporan pimpinan",
 };
 
 function PublicHeader({ kind }: { kind: PublicReadKind }) {
@@ -35,8 +34,8 @@ function PublicHeader({ kind }: { kind: PublicReadKind }) {
       <p className="kicker">Data publik · ilustrasi</p>
       <h1 className="text-2xl font-extrabold text-heading">{TITLES[kind]}</h1>
       <p className="mt-1 text-sm text-secondary-text">
-        Ringkasan data tervalidasi; nama pelapor, kontak, bukti, denah rinci, dan jawaban mentah
-        tidak ditampilkan.
+        Ringkasan data tervalidasi; nama pelapor, kontak, denah rinci, dan jawaban mentah
+        tidak ditampilkan. Foto bukti hanya tampil pada PDF laporan.
       </p>
     </header>
   );
@@ -90,18 +89,13 @@ export function PublicReadPage({ kind }: { kind: PublicReadKind }) {
           state={state}
           codes={selected ? [selected] : institutions.map((item) => item.code)}
           reports={reports}
-        />
-      ) : kind === "rekomendasi" ? (
-        <Recommendations recommendations={recommendations} />
-      ) : kind === "tindak-lanjut" ? (
-        <FollowUps recommendations={recommendations} />
-      ) : (
-        <LeadershipReport
-          state={state}
-          codes={selected ? [selected] : institutions.map((item) => item.code)}
           findings={findings}
           recommendations={recommendations}
         />
+      ) : kind === "rekomendasi" ? (
+        <Recommendations recommendations={recommendations} />
+      ) : (
+        <FollowUps recommendations={recommendations} />
       )}
     </section>
   );
@@ -111,10 +105,14 @@ function Results({
   state,
   codes,
   reports,
+  findings,
+  recommendations,
 }: {
   state: ReturnType<typeof useMockState>;
   codes: string[];
   reports: ReturnType<typeof selectPublicReports>;
+  findings: ReturnType<typeof selectFindingsByReports>;
+  recommendations: ReturnType<typeof selectRecommendationsByReports>;
 }) {
   const summary = hitungIndexSummary(
     {
@@ -126,16 +124,30 @@ function Results({
     },
     codes,
   );
+  const temuanAktif = findings.filter(
+    (item) => item.status !== "Terverifikasi" && item.status !== "Dibatalkan",
+  ).length;
+  const terverifikasi = recommendations.filter((item) => item.status === "Terverifikasi").length;
   return (
     <div className="grid gap-4 lg:grid-cols-3">
-      <article className="stat-card lg:col-span-1">
+      <article className="stat-card">
         <p className="text-sm font-bold text-secondary-text">Indeks K3L</p>
         <p className="mt-2 text-4xl font-extrabold text-heading">
           {summary.currentIndex === null ? "—" : Math.round(summary.currentIndex)}
         </p>
         <p className="mt-2 text-sm text-secondary-text">Kategori ilustratif · {summary.periode}</p>
       </article>
-      <article className="surface p-4 lg:col-span-2">
+      <article className="stat-card">
+        <p className="text-sm font-bold text-secondary-text">Temuan aktif</p>
+        <p className="mt-2 text-4xl font-extrabold text-heading">{temuanAktif}</p>
+        <p className="mt-2 text-sm text-secondary-text">Perlu tindak lanjut</p>
+      </article>
+      <article className="stat-card">
+        <p className="text-sm font-bold text-secondary-text">Terverifikasi</p>
+        <p className="mt-2 text-4xl font-extrabold text-heading">{terverifikasi}</p>
+        <p className="mt-2 text-sm text-secondary-text">Tindak lanjut selesai</p>
+      </article>
+      <article className="surface p-4 lg:col-span-3">
         <h2 className="font-extrabold text-heading">Dimensi hasil</h2>
         <p className="mt-1 text-sm text-secondary-text">
           Bank instrumen dan kategori adalah data ilustrasi.
@@ -160,7 +172,8 @@ function Results({
       <article className="surface p-4 lg:col-span-3">
         <h2 className="font-extrabold text-heading">Laporan PDF penilaian</h2>
         <p className="mt-1 text-sm text-secondary-text">
-          Satu penilai menghasilkan satu PDF berisi skor, dimensi, dan temuan tervalidasi.
+          Satu penilai menghasilkan satu PDF berisi skor, dimensi, temuan, dan bukti foto.
+          Buka lalu cetak/simpan sebagai PDF lewat browser.
         </p>
         <div className="mt-3">
           <LaporanPdfList reports={reports} />
@@ -246,83 +259,6 @@ function FollowUps({
   );
 }
 
-function LeadershipReport({
-  state,
-  codes,
-  findings,
-  recommendations,
-}: {
-  state: ReturnType<typeof useMockState>;
-  codes: string[];
-  findings: ReturnType<typeof selectFindingsByReports>;
-  recommendations: ReturnType<typeof selectRecommendationsByReports>;
-}) {
-  const reports = selectPublicReports(state, codes.length === 1 ? codes[0] : null);
-  const summary = hitungIndexSummary(
-    {
-      reports,
-      selfAssessmentSnapshots: state.selfAssessmentSnapshots,
-      instrumentVersions: state.instrumentVersions,
-      indexHistory: state.indexHistory,
-      instrument: state.instrument,
-    },
-    codes,
-  );
-  return (
-    <article className="surface p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-extrabold text-heading">Ringkasan pimpinan</h2>
-          <p className="mt-1 text-sm text-secondary-text">
-            Periode {summary.periode} · data ilustrasi · {state.instrument.label}
-          </p>
-        </div>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={() => alert("Unduhan simulasi: file nyata tersedia setelah backend disiapkan.")}
-        >
-          <Download size={16} />
-          Unduh simulasi
-        </button>
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <Metric
-          label="Indeks K3L"
-          value={summary.currentIndex === null ? "—" : String(Math.round(summary.currentIndex))}
-        />
-        <Metric
-          label="Temuan aktif"
-          value={String(
-            findings.filter(
-              (item) => item.status !== "Terverifikasi" && item.status !== "Dibatalkan",
-            ).length,
-          )}
-        />
-        <Metric
-          label="Terverifikasi"
-          value={String(recommendations.filter((item) => item.status === "Terverifikasi").length)}
-        />
-      </div>
-      <div className="mt-5 rounded-lg border border-line p-4 text-sm text-secondary-text">
-        <FileText size={18} className="mb-2 text-primary" />
-        Laporan ini hanya berisi ringkasan, dimensi, status tindak lanjut, periode, bank instrumen,
-        dan label data dummy.
-      </div>
-      <div className="mt-5">
-        <h3 className="font-extrabold text-heading">Laporan PDF penilaian mandiri</h3>
-        <p className="mt-1 text-sm text-secondary-text">
-          {reports.filter((r) => r.channel === "penilaian-mandiri").length} PDF pada konteks ini.
-          Buka lalu cetak/simpan sebagai PDF lewat browser.
-        </p>
-        <div className="mt-3">
-          <LaporanPdfList reports={reports} />
-        </div>
-      </div>
-    </article>
-  );
-}
-
 function Progress({ value }: { value: number }) {
   return (
     <div className="mt-3">
@@ -333,14 +269,6 @@ function Progress({ value }: { value: number }) {
       <div className="mt-1 h-2 overflow-hidden rounded-full bg-strip">
         <div className="h-full bg-accent" style={{ width: `${value}%` }} />
       </div>
-    </div>
-  );
-}
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="stat-card">
-      <p className="text-sm text-secondary-text">{label}</p>
-      <p className="mt-1 text-3xl font-extrabold text-heading">{value}</p>
     </div>
   );
 }

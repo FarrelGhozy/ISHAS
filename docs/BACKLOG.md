@@ -33,8 +33,8 @@
  Selesai bila: filter pesantren mengubah seluruh angka/grafik/temuan; nol pesantren → empty state + CTA nonaktif.
 - B2. `/lapor` + validasi field + layar sukses bernomor + audit + notifikasi Pesantren.
  Selesai bila: kirim tanpa login berhasil; laporan tidak tampil di dashboard; muncul di antrean Pesantren pemilik scope.
-- B3. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut` (baca), `/laporan` dengan filter pesantren.
- Selesai bila: tiap halaman hanya menampilkan data `Diterima` dan konsisten lintas halaman untuk filter yang sama.
+- B3. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut` (baca), `/laporan/:id` dengan filter pesantren (`/laporan` publik dihapus — D-28).
+  Selesai bila: tiap halaman hanya menampilkan data `Diterima` dan konsisten lintas halaman untuk filter yang sama.
 
 ## Tahap C (Stage 05–Stage 07) — Moderasi (dependensi: B)
 

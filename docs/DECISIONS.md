@@ -42,6 +42,11 @@ Audit ini tidak menganggap setiap rincian turunannya telah disetujui kembali.
 ini diganti terbatas oleh D-14: denah gambaran besar dan titik temuan tervalidasi
 boleh publik setelah memilih satu pesantren. Larangan bidang privat lainnya tetap.
 
+**Amendemen 28 September 2026 (D-27):** foto bukti penilaian mandiri
+dikecualikan dari larangan bukti publik — tampil di PDF `/laporan/:id`
+agar pihak luar dapat melihat buktinya. Larangan bukti publik lainnya
+(bukti lapor-cepat, bukti penyelesaian tindak lanjut) tetap.
+
 - **Keputusan:** **"Ringkasan saja"** + **nama validator/PIC publik**.
  - Publik melihat ringkasan hasil/progres: angka, kategori ilustratif, tren, temuan
  (judul, lokasi/area, severity, status penanganan), rekomendasi, progres tindak lanjut,
@@ -687,3 +692,47 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   DATA_REQUIREMENTS §9, TEST_PLAN §3/§7, TODO, STAGE_08. Scope Stage 08 +
   sentuhan baca laporan/dashboard validator; status stage lain tidak berubah
   sepihak.
+
+## D-27 — Bukti foto penilaian mandiri diunggah beneran + tampil di PDF publik — DISETUJUI 28 September 2026
+
+- Arahan pemilik: bagian bukti pendukung penilaian mandiri selama ini hanya
+  kolom ketik nama file sehingga tidak bisa mengunggah gambar; pemilik meminta
+  upload beneran agar foto masuk rekapan PDF, dan bukti pada PDF laporan
+  menjadi publik supaya orang luar dapat melihatnya.
+- **Keputusan:**
+  - Kolom ketik nama diganti tombol upload file (PNG/JPEG/WebP, maks 5 MB dan
+    20 megapiksel, pola sama `/lapor` — D-21) hanya pada indikator yang
+    `evidenceRequired` menurut bank instrumen Validator; indikator lain tanpa
+    bagian bukti. Satu pertanyaan = satu foto; pratinjau + lepas/ganti.
+  - Foto tersimpan sebagai blob privat di IndexedDB perangkat pengunggah
+    (bukan localStorage); draft menyimpan `evidenceAssetId` + `evidenceName`;
+    snapshot beku membawa keduanya.
+  - Foto bukti penilaian mandiri tampil publik di PDF `/laporan/:id`
+    (amendemen D-02 terbatas). Tanpa foto = PDF tanpa gambar pada jawaban itu.
+    Bukti lapor-cepat dan bukti penyelesaian tindak lanjut tetap privat.
+  - Keterbatasan prototipe: foto hanya tersedia di perangkat pengunggah;
+    di perangkat lain PDF menampilkan nama file + catatan gambar tidak
+    tersedia di perangkat ini.
+- Dokumen terdampak: FLOWS §3/§6, ROUTES §1, DATA_MODEL §2–§3,
+  DATA_REQUIREMENTS §6, WIREFRAMES §3/§5, STAGE_08. Scope Stage 08;
+  status stage lain tidak berubah sepihak.
+
+## D-28 — Halaman hasil publik digabung; Laporan pimpinan publik dihapus — DISETUJUI 28 September 2026
+
+- Arahan pemilik: `Hasil penilaian` dan `Laporan` di dashboard publik terlalu
+  boros (metrik dan daftar PDF dobel); dashboard publik tidak perlu laporan
+  pimpinan. Semua isi laporan dikumpulkan di hasil penilaian; detail pra-cetak
+  dimatangkan sebagai rekapan.
+- **Keputusan:**
+  - Halaman publik `/laporan` dihapus (jadi 404); menu `Laporan` dihapus dari
+    navigasi publik. Satu-satunya halaman hasil publik adalah `/hasil`:
+    baris metrik (Indeks K3L · Temuan aktif · Terverifikasi) + dimensi hasil +
+    daftar PDF penilaian. Tombol `Unduh simulasi` (alert dummy) dibuang.
+  - Detail `/laporan/:id` tetap sebagai halaman cetak rekapan (opsi a):
+    kop + skor + dimensi + temuan diperkaya (lokasi lengkap, severity/priority
+    final, status/progres/PIC tindak lanjut) + foto bukti (D-27) + metadata
+    (bank, checksum, validator, waktu). Tanpa jawaban mentah per soal (D-02).
+  - `/pesantren/laporan` (workspace internal) tidak berubah.
+- Dokumen terdampak: ROUTES §1, WIREFRAMES §5, FLOWS §6, ROLES §akses publik,
+  DATA_MODEL §3, DATA_REQUIREMENTS §6, TEST_PLAN §3. Scope Stage 08;
+  status stage lain tidak berubah sepihak.

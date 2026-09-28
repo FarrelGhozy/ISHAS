@@ -11,7 +11,7 @@
 
 **BOLEH (tanpa login):**
 
-- Membuka `/`, `/lapor`, `/penilaian-mandiri`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut` (mode baca), `/laporan`, `/pesantren/[kode]`.
+- Membuka `/`, `/lapor`, `/penilaian-mandiri`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut` (mode baca), `/laporan/:id`, `/pesantren/[kode]`.
 - Menggunakan pemilih pesantren (hanya berisi pesantren terdaftar) dan filter periode/tingkat/status pada tampilan publik.
 - Mengirim laporan cepat: wajib isi **nama pelapor** (teks bebas, maks 100 karakter), pesantren (pilih dari daftar), lokasi/area, deskripsi. Foto dan kontak opsional.
 - Mengisi penilaian mandiri: registrasi nama penilai + pesantren, lalu seluruh indikator wajib bank live (D-24).
