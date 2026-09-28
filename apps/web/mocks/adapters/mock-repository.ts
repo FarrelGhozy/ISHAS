@@ -431,6 +431,26 @@ export const mockRepository = {
     }
   },
 
+  // Pratinjau bukti gambar dari IndexedDB (mock) — pola sama `EvidencePreview`.
+  async openEvidenceAsset(
+    assetId: string,
+    institutionCode: string,
+  ): Promise<{ ok: true; blob: Blob; name: string } | { ok: false; error: string }> {
+    try {
+      const asset = await getEvidenceAsset(assetId);
+      if (!asset || asset.institutionCode !== institutionCode) {
+        return {
+          ok: false,
+          error:
+            "Gambar bukti tidak tersedia pada perangkat ini. Pilih ulang atau lepas lampiran sebelum mengirim.",
+        };
+      }
+      return { ok: true, blob: asset.blob, name: asset.name };
+    } catch {
+      return { ok: false, error: "Gambar bukti gagal dimuat. Periksa penyimpanan browser atau coba lagi." };
+    }
+  },
+
   async removeInstrumentDoc(actor: ReportActor, indicatorId: string): Promise<ActionResult> {
     const state = getState();
     const doc = state.instrumentDocs.find((item) => item.indicatorId === indicatorId);

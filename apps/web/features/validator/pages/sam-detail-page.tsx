@@ -4,8 +4,8 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Printer } from "lucide-react";
-import { useMockState } from "~/mocks/store/mock-store";
 import { samCategoryScores } from "~/mocks/sam-isafe";
+import { useValidatorState } from "~/shared/api/validator-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
@@ -23,7 +23,7 @@ function chipSkor(skor: 0 | 1 | 2): string {
 
 export function Page() {
   const params = useParams();
-  const state = useMockState();
+  const state = useValidatorState();
   const user = useCurrentUser();
   const [pesan, setPesan] = useState("");
   const item = state.samAssessments.find((entry) => entry.id === params.id);

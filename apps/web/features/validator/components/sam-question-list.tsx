@@ -1,7 +1,8 @@
 // Daftar pertanyaan SAM-iSAFE per kategori (nilai 0/1/2 + catatan + foto).
 // Komponen kecil agar halaman baru tetap mudah dibaca.
 
-import { storeActions } from "~/mocks/store/mock-store";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 import { SamEvidencePicker } from "./sam-evidence-picker";
 import type { SamAssessment, SamCategory, SamQuestion } from "~/mocks/types";
 
@@ -26,13 +27,13 @@ export function SamQuestionList(props: Props) {
   const terjawab = aktif.filter((item) => assessment.answers[item.id]).length;
   const urut = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
 
-  const simpan = (
+  const simpan = async (
     questionId: string,
     patch: { score?: 0 | 1 | 2; note?: string; evidenceAssetId?: string; evidenceName?: string },
   ) => {
     const lama = assessment.answers[questionId];
-    const hasil = storeActions.saveSamAnswer(
-      { id: accountId },
+    const hasil = await repository.saveSamAnswer(
+      { id: accountId, name: "Validator" },
       {
         assessmentId: assessment.id,
         questionId,
@@ -42,6 +43,7 @@ export function SamQuestionList(props: Props) {
         evidenceName: patch.evidenceName ?? lama?.evidenceName ?? "",
       },
     );
+    if (hasil.ok) refreshValidatorState();
     setPesan(hasil.ok ? "" : hasil.error);
   };
 
@@ -124,7 +126,7 @@ export function SamQuestionList(props: Props) {
                             name={`sam-nilai-${assessment.id}-${item.id}`}
                             value={nilai}
                             checked={jawaban?.score === nilai}
-                            onChange={() => simpan(item.id, { score: nilai as 0 | 1 | 2 })}
+                            onChange={() => void simpan(item.id, { score: nilai as 0 | 1 | 2 })}
                           />
                           <span>
                             {LABEL[nilai]}
@@ -146,7 +148,7 @@ export function SamQuestionList(props: Props) {
                       key={`${item.id}-${jawaban?.score ?? "x"}`}
                       onBlur={(event) => {
                         if ((event.target.value ?? "") !== (jawaban?.note ?? "")) {
-                          simpan(item.id, { note: event.target.value });
+                          void simpan(item.id, { note: event.target.value });
                         }
                       }}
                       placeholder="Temuan lapangan (opsional)"
@@ -160,7 +162,7 @@ export function SamQuestionList(props: Props) {
                       name={jawaban.evidenceName}
                       disabled={false}
                       onChange={(assetId, name) =>
-                        simpan(item.id, {
+                        void simpan(item.id, {
                           score: jawaban.score,
                           evidenceAssetId: assetId ?? "",
                           evidenceName: name ?? "",

@@ -9,6 +9,7 @@ import type {
   LocationSnapshot,
   Priority,
   RiskLevel,
+  SamFollowUpStatus,
   SelfAssessmentDraft,
   Severity,
 } from "~/mocks/types";
@@ -31,6 +32,24 @@ export type ValidImportRowInput = {
   reporterName: string;
   scorePercent: number | null;
   title: string;
+};
+
+export type SamQuestionInput = {
+  categoryId: string;
+  text: string;
+  panduan?: string;
+  contohBukti?: string;
+};
+
+export type SamAssessmentInput = {
+  institutionCode: string;
+  areaId?: string;
+  manualLocation?: string;
+  observedAt: string;
+  observedTime?: string;
+  kind: string;
+  observerName: string;
+  note?: string;
 };
 
 export type LaporInput = {
@@ -450,5 +469,209 @@ export const httpRepository = {
     return toAction(
       await apiRequest("/validator/dataset/import", { method: "POST", json: { rows, apply: true } }),
     );
+  },
+
+  // --- SAM-iSAFE Validator (Fase 4) ---
+  async addSamCategory(
+    _actor: ReportActor,
+    input: { name: string; description?: string },
+  ): Promise<ActionResult> {
+    return toAction(await apiRequest("/validator/sam/categories", { method: "POST", json: input }));
+  },
+
+  async updateSamCategory(
+    _actor: ReportActor,
+    categoryId: string,
+    patch: { name?: string; description?: string },
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/categories/${encodeURIComponent(categoryId)}`, {
+        method: "PATCH",
+        json: patch,
+      }),
+    );
+  },
+
+  async deleteSamCategory(_actor: ReportActor, categoryId: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/categories/${encodeURIComponent(categoryId)}`, {
+        method: "DELETE",
+      }),
+    );
+  },
+
+  async addSamQuestion(_actor: ReportActor, input: SamQuestionInput): Promise<ActionResult> {
+    return toAction(await apiRequest("/validator/sam/questions", { method: "POST", json: input }));
+  },
+
+  async updateSamQuestion(
+    _actor: ReportActor,
+    questionId: string,
+    patch: Partial<SamQuestionInput>,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/questions/${encodeURIComponent(questionId)}`, {
+        method: "PATCH",
+        json: patch,
+      }),
+    );
+  },
+
+  async deleteSamQuestion(_actor: ReportActor, questionId: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/questions/${encodeURIComponent(questionId)}`, {
+        method: "DELETE",
+      }),
+    );
+  },
+
+  async moveSamQuestion(
+    _actor: ReportActor,
+    questionId: string,
+    direction: "naik" | "turun",
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/questions/${encodeURIComponent(questionId)}/move`, {
+        method: "POST",
+        json: { direction },
+      }),
+    );
+  },
+
+  async setSamQuestionActive(
+    _actor: ReportActor,
+    questionId: string,
+    isActive: boolean,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/questions/${encodeURIComponent(questionId)}/active`, {
+        method: "POST",
+        json: { active: isActive },
+      }),
+    );
+  },
+
+  async createSamAssessment(
+    _actor: ReportActor,
+    input: SamAssessmentInput,
+  ): Promise<ActionResult> {
+    return toAction(await apiRequest("/validator/sam/assessments", { method: "POST", json: input }));
+  },
+
+  async saveSamAnswer(
+    _actor: ReportActor,
+    input: {
+      assessmentId: string;
+      questionId: string;
+      score: number;
+      note?: string;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+    },
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(
+        `/validator/sam/assessments/${encodeURIComponent(input.assessmentId)}/answers`,
+        {
+          method: "PUT",
+          json: {
+            questionId: input.questionId,
+            score: input.score,
+            note: input.note,
+            evidenceName: input.evidenceName,
+            evidenceAssetId: input.evidenceAssetId,
+          },
+        },
+      ),
+    );
+  },
+
+  async deleteSamDraft(_actor: ReportActor, assessmentId: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/assessments/${encodeURIComponent(assessmentId)}`, {
+        method: "DELETE",
+      }),
+    );
+  },
+
+  async completeSamAssessment(_actor: ReportActor, assessmentId: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/assessments/${encodeURIComponent(assessmentId)}/complete`, {
+        method: "POST",
+      }),
+    );
+  },
+
+  async reviewSamAssessment(
+    _actor: ReportActor,
+    assessmentId: string,
+    note?: string,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/assessments/${encodeURIComponent(assessmentId)}/review`, {
+        method: "POST",
+        json: { note },
+      }),
+    );
+  },
+
+  async createSamFollowUp(
+    _actor: ReportActor,
+    input: { assessmentId: string; questionId: string; pic: string; dueDate: string; note?: string },
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest("/validator/sam/follow-ups", { method: "POST", json: input }),
+    );
+  },
+
+  async updateSamFollowUp(
+    _actor: ReportActor,
+    followUpId: string,
+    input: { status?: SamFollowUpStatus; pic?: string; dueDate?: string; note?: string },
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/follow-ups/${encodeURIComponent(followUpId)}`, {
+        method: "PATCH",
+        json: input,
+      }),
+    );
+  },
+
+  async cancelSamFollowUp(
+    _actor: ReportActor,
+    followUpId: string,
+    reason: string,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/validator/sam/follow-ups/${encodeURIComponent(followUpId)}/cancel`, {
+        method: "POST",
+        json: { reason },
+      }),
+    );
+  },
+
+  async uploadSamEvidence(
+    _actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("institutionCode", institutionCode);
+    const result = await apiRequest<{ id: string }>("/uploads/sam-evidence", {
+      method: "POST",
+      form,
+    });
+    return result.ok ? { ok: true, id: result.data.id } : { ok: false, error: result.error };
+  },
+
+  // Bukti gambar (IndexedDB di mock, server saat backend) untuk pratinjau.
+  async openEvidenceAsset(
+    assetId: string,
+  ): Promise<{ ok: true; blob: Blob; name: string } | { ok: false; error: string }> {
+    const result = await apiBlob(`/files/${encodeURIComponent(assetId)}`);
+    return result.ok
+      ? { ok: true, blob: result.blob, name: result.fileName }
+      : { ok: false, error: result.error };
   },
 };

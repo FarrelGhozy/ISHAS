@@ -2,7 +2,8 @@
 // Pengamatan Selesai dapat ditandai Ditinjau oleh akun Validator.
 
 import { useState } from "react";
-import { storeActions } from "~/mocks/store/mock-store";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 import { StatusChip } from "~/shared/components/status-chip";
 import type { SamAssessment } from "~/mocks/types";
 
@@ -46,9 +47,9 @@ export function SamReviewBox({
     );
   }
 
-  const tinjau = () => {
-    const hasil = storeActions.reviewSamAssessment(
-      { id: accountId },
+  const tinjau = async () => {
+    const hasil = await repository.reviewSamAssessment(
+      { id: accountId, name: "Validator" },
       assessment.id,
       catatan,
     );
@@ -56,6 +57,7 @@ export function SamReviewBox({
       onPesan(hasil.error);
       return;
     }
+    refreshValidatorState();
     onPesan("Pengamatan ditandai Ditinjau.");
     setCatatan("");
   };
@@ -75,7 +77,7 @@ export function SamReviewBox({
         <button
           type="button"
           className="primary-button"
-          onClick={tinjau}
+          onClick={() => void tinjau()}
         >
           Tandai Ditinjau
         </button>

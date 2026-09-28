@@ -9,6 +9,7 @@ import type {
   InstrumentOption,
   Priority,
   RiskLevel,
+  SamFollowUpStatus,
   SelfAssessmentDraft,
   Severity,
 } from "~/mocks/types";
@@ -17,6 +18,8 @@ import {
   httpRepository,
   type BankIndicatorInput,
   type LaporInput,
+  type SamAssessmentInput,
+  type SamQuestionInput,
   type ValidImportRowInput,
 } from "./http-repository";
 
@@ -277,6 +280,149 @@ export const repository = {
     return USE_BACKEND
       ? httpRepository.importResearchDataset(actor, rows)
       : storeActions.importResearchDataset(actor, rows);
+  },
+
+  // --- SAM-iSAFE Validator (Fase 4) ---
+  async addSamCategory(
+    actor: ReportActor,
+    input: { name: string; description?: string },
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.addSamCategory(actor, input)
+      : storeActions.addSamCategory({ id: actor.id }, input);
+  },
+  async updateSamCategory(
+    actor: ReportActor,
+    categoryId: string,
+    patch: { name?: string; description?: string },
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.updateSamCategory(actor, categoryId, patch)
+      : storeActions.updateSamCategory({ id: actor.id }, categoryId, patch);
+  },
+  async deleteSamCategory(actor: ReportActor, categoryId: string): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.deleteSamCategory(actor, categoryId)
+      : storeActions.deleteSamCategory({ id: actor.id }, categoryId);
+  },
+  async addSamQuestion(actor: ReportActor, input: SamQuestionInput): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.addSamQuestion(actor, input)
+      : storeActions.addSamQuestion({ id: actor.id }, input);
+  },
+  async updateSamQuestion(
+    actor: ReportActor,
+    questionId: string,
+    patch: Partial<SamQuestionInput>,
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.updateSamQuestion(actor, questionId, patch)
+      : storeActions.updateSamQuestion({ id: actor.id }, questionId, patch);
+  },
+  async deleteSamQuestion(actor: ReportActor, questionId: string): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.deleteSamQuestion(actor, questionId)
+      : storeActions.deleteSamQuestion({ id: actor.id }, questionId);
+  },
+  async moveSamQuestion(
+    actor: ReportActor,
+    questionId: string,
+    direction: "naik" | "turun",
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.moveSamQuestion(actor, questionId, direction)
+      : storeActions.moveSamQuestion({ id: actor.id }, questionId, direction);
+  },
+  async setSamQuestionActive(
+    actor: ReportActor,
+    questionId: string,
+    isActive: boolean,
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.setSamQuestionActive(actor, questionId, isActive)
+      : storeActions.setSamQuestionActive({ id: actor.id }, questionId, isActive);
+  },
+  async createSamAssessment(actor: ReportActor, input: SamAssessmentInput): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.createSamAssessment(actor, input)
+      : storeActions.createSamAssessment({ id: actor.id }, input);
+  },
+  async saveSamAnswer(
+    actor: ReportActor,
+    input: {
+      assessmentId: string;
+      questionId: string;
+      score: number;
+      note?: string;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+    },
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.saveSamAnswer(actor, input)
+      : storeActions.saveSamAnswer({ id: actor.id }, input);
+  },
+  async deleteSamDraft(actor: ReportActor, assessmentId: string): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.deleteSamDraft(actor, assessmentId)
+      : storeActions.deleteSamDraft({ id: actor.id }, assessmentId);
+  },
+  async completeSamAssessment(actor: ReportActor, assessmentId: string): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.completeSamAssessment(actor, assessmentId)
+      : storeActions.completeSamAssessment({ id: actor.id }, assessmentId);
+  },
+  async reviewSamAssessment(
+    actor: ReportActor,
+    assessmentId: string,
+    note?: string,
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.reviewSamAssessment(actor, assessmentId, note)
+      : storeActions.reviewSamAssessment({ id: actor.id }, assessmentId, note);
+  },
+  async createSamFollowUp(
+    actor: ReportActor,
+    input: { assessmentId: string; questionId: string; pic: string; dueDate: string; note?: string },
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.createSamFollowUp(actor, input)
+      : storeActions.createSamFollowUp({ id: actor.id }, input);
+  },
+  async updateSamFollowUp(
+    actor: ReportActor,
+    followUpId: string,
+    input: { status?: SamFollowUpStatus; pic?: string; dueDate?: string; note?: string },
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.updateSamFollowUp(actor, followUpId, input)
+      : storeActions.updateSamFollowUp({ id: actor.id }, followUpId, input);
+  },
+  async cancelSamFollowUp(
+    actor: ReportActor,
+    followUpId: string,
+    reason: string,
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.cancelSamFollowUp(actor, followUpId, reason)
+      : storeActions.cancelSamFollowUp({ id: actor.id }, followUpId, reason);
+  },
+  async uploadSamEvidence(
+    actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    return USE_BACKEND
+      ? httpRepository.uploadSamEvidence(actor, institutionCode, file)
+      : mockRepository.uploadSamEvidence(actor, institutionCode, file);
+  },
+  async openEvidenceAsset(
+    assetId: string,
+    institutionCode: string,
+  ): Promise<{ ok: true; blob: Blob; name: string } | { ok: false; error: string }> {
+    return USE_BACKEND
+      ? httpRepository.openEvidenceAsset(assetId)
+      : mockRepository.openEvidenceAsset(assetId, institutionCode);
   },
 };
 

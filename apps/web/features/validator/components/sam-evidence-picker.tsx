@@ -4,7 +4,7 @@
 
 import { useRef, useState } from "react";
 import { Camera } from "lucide-react";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { repository } from "~/shared/api/repository";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
 
 export function SamEvidencePicker({
@@ -52,7 +52,7 @@ export function SamEvidencePicker({
           setSibuk(true);
           setGalat("");
           try {
-            const hasil = await mockRepository.uploadSamEvidence(
+            const hasil = await repository.uploadSamEvidence(
               { id: actorId, name: "Validator" },
               institutionCode,
               file,

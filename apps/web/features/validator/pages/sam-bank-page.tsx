@@ -4,14 +4,15 @@
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
 import { samActiveQuestions, samDuplicateQuestions } from "~/mocks/sam-isafe";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState, useValidatorState } from "~/shared/api/validator-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { SamBankCategoryCard } from "../components/sam-bank-category-card";
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const user = useCurrentUser();
   const [pesan, setPesan] = useState("");
   const [nama, setNama] = useState("");
@@ -73,13 +74,14 @@ export function Page() {
     [state.auditEvents],
   );
 
-  const tambahKategori = () => {
-    const hasil = storeActions.addSamCategory(
-      { id: user?.id },
+  const tambahKategori = async () => {
+    const hasil = await repository.addSamCategory(
+      { id: user?.id, name: user?.name ?? "Validator" },
       { name: nama, description: deskripsi },
     );
     setPesan(hasil.ok ? "Kategori ditambahkan." : hasil.error);
     if (hasil.ok) {
+      refreshValidatorState();
       setNama("");
       setDeskripsi("");
     }
@@ -159,7 +161,7 @@ export function Page() {
         </label>
         <button
           className="primary-button w-full sm:w-auto"
-          onClick={tambahKategori}
+          onClick={() => void tambahKategori()}
           type="button"
         >
           Tambah kategori

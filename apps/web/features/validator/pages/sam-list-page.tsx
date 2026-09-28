@@ -3,8 +3,8 @@
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import { useValidatorState } from "~/shared/api/validator-state";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 import { SamDashboard } from "../components/sam-dashboard";
@@ -16,7 +16,7 @@ function chipRisiko(risk: string): string {
 }
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const [risiko, setRisiko] = useState("Semua");
   const [status, setStatus] = useState("Semua");
   const [cari, setCari] = useState("");

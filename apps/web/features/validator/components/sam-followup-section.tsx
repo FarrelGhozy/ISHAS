@@ -3,8 +3,9 @@
 // (PIC + tenggat wajib; status Belum → Berjalan → Selesai; Batal beralasan).
 
 import { useState } from "react";
-import { storeActions } from "~/mocks/store/mock-store";
 import { samFindings } from "~/mocks/sam-isafe";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
 import { StatusChip } from "~/shared/components/status-chip";
 import type {
@@ -84,15 +85,16 @@ export function SamFollowUpSection(props: Props) {
     );
   }
 
-  const buat = (questionId: string) => {
-    const hasil = storeActions.createSamFollowUp(
-      { id: accountId },
+  const buat = async (questionId: string) => {
+    const hasil = await repository.createSamFollowUp(
+      { id: accountId, name: "Validator" },
       { assessmentId: assessment.id, questionId, pic, dueDate: tenggat, note: catatan },
     );
     if (!hasil.ok) {
       onPesan(hasil.error);
       return;
     }
+    refreshValidatorState();
     onPesan("Tindak lanjut dibuat.");
     setBukaForm("");
     setPic("");
@@ -100,17 +102,21 @@ export function SamFollowUpSection(props: Props) {
     setCatatan("");
   };
 
-  const ubahStatus = (id: string, status: SamFollowUp["status"]) => {
-    const hasil = storeActions.updateSamFollowUp({ id: accountId }, id, { status });
+  const ubahStatus = async (id: string, status: SamFollowUp["status"]) => {
+    const hasil = await repository.updateSamFollowUp({ id: accountId, name: "Validator" }, id, {
+      status,
+    });
+    if (hasil.ok) refreshValidatorState();
     onPesan(hasil.ok ? "Status tindak lanjut diperbarui." : hasil.error);
   };
 
-  const batalkan = (id: string) => {
-    const hasil = storeActions.cancelSamFollowUp({ id: accountId }, id, alasan);
+  const batalkan = async (id: string) => {
+    const hasil = await repository.cancelSamFollowUp({ id: accountId, name: "Validator" }, id, alasan);
     if (!hasil.ok) {
       onPesan(hasil.error);
       return;
     }
+    refreshValidatorState();
     onPesan("Tindak lanjut dibatalkan.");
     setBatalId("");
     setAlasan("");
@@ -161,7 +167,7 @@ export function SamFollowUpSection(props: Props) {
                       <button
                         type="button"
                         className="secondary-button"
-                        onClick={() => ubahStatus(tindak.id, "Berjalan")}
+                        onClick={() => void ubahStatus(tindak.id, "Berjalan")}
                       >
                         Mulai kerjakan
                       </button>
@@ -170,7 +176,7 @@ export function SamFollowUpSection(props: Props) {
                       <button
                         type="button"
                         className="secondary-button"
-                        onClick={() => ubahStatus(tindak.id, "Selesai")}
+                        onClick={() => void ubahStatus(tindak.id, "Selesai")}
                       >
                         Tandai selesai
                       </button>
@@ -188,7 +194,7 @@ export function SamFollowUpSection(props: Props) {
                             <button
                               type="button"
                               className="secondary-button"
-                              onClick={() => batalkan(tindak.id)}
+                              onClick={() => void batalkan(tindak.id)}
                             >
                               Konfirmasi batal
                             </button>
@@ -257,7 +263,7 @@ export function SamFollowUpSection(props: Props) {
                         <button
                           type="button"
                           className="primary-button"
-                          onClick={() => buat(question.id)}
+                          onClick={() => void buat(question.id)}
                         >
                           Simpan tindak lanjut
                         </button>

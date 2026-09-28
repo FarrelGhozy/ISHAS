@@ -3,14 +3,15 @@
 
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { SAM_KINDS, samActiveQuestions } from "~/mocks/sam-isafe";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState, useValidatorState } from "~/shared/api/validator-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { SamQuestionList } from "../components/sam-question-list";
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const user = useCurrentUser();
   const navigate = useNavigate();
   const registered = selectRegisteredInstitutions(state);
@@ -35,9 +36,9 @@ export function Page() {
     ? aktif.filter((item) => assessment.answers[item.id]).length
     : 0;
 
-  const mulai = () => {
-    const hasil = storeActions.createSamAssessment(
-      { id: user?.id },
+  const mulai = async () => {
+    const hasil = await repository.createSamAssessment(
+      { id: user?.id, name: user?.name ?? "Validator" },
       {
         institutionCode: pesantren,
         areaId: area || undefined,
@@ -54,27 +55,36 @@ export function Page() {
       return;
     }
     setPesan("");
+    refreshValidatorState();
     setIdBaru(hasil.id);
   };
 
-  const selesaikan = () => {
+  const selesaikan = async () => {
     if (!assessment) return;
-    const hasil = storeActions.completeSamAssessment({ id: user?.id }, assessment.id);
+    const hasil = await repository.completeSamAssessment(
+      { id: user?.id, name: user?.name ?? "Validator" },
+      assessment.id,
+    );
     if (!hasil.ok) {
       setPesan(hasil.error);
       return;
     }
+    refreshValidatorState();
     navigate(`/validator/sam-isafe/${assessment.id}`);
   };
 
-  const hapusDraft = () => {
+  const hapusDraft = async () => {
     if (!assessment) return;
     if (!window.confirm(`Hapus draft ${assessment.id}? Jawaban yang terisi ikut terhapus.`)) return;
-    const hasil = storeActions.deleteSamDraft({ id: user?.id }, assessment.id);
+    const hasil = await repository.deleteSamDraft(
+      { id: user?.id, name: user?.name ?? "Validator" },
+      assessment.id,
+    );
     if (!hasil.ok) {
       setPesan(hasil.error);
       return;
     }
+    refreshValidatorState();
     navigate("/validator/sam-isafe");
   };
 
@@ -226,7 +236,7 @@ export function Page() {
             <div>
               <button
                 className="primary-button"
-                onClick={mulai}
+                onClick={() => void mulai()}
                 type="button"
               >
                 Mulai pengamatan
@@ -256,7 +266,7 @@ export function Page() {
               <button
                 type="button"
                 className="text-button"
-                onClick={hapusDraft}
+                onClick={() => void hapusDraft()}
               >
                 Hapus draft
               </button>
@@ -268,7 +278,7 @@ export function Page() {
               </Link>
               <button
                 className="primary-button"
-                onClick={selesaikan}
+                onClick={() => void selesaikan()}
                 type="button"
               >
                 Selesaikan pengamatan

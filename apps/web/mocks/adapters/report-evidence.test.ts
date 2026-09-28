@@ -309,3 +309,20 @@ test("updateTindakLanjut menolak asset palsu/nama tak cocok/lintas scope (D-21)"
       ?.completionEvidenceAssetId,
   ).toBe(uploaded.id);
 });
+
+test("openEvidenceAsset: memuat blob sesuai lembaga, menolak lembaga lain/asing", async () => {
+  const uploaded = await mockRepository.uploadReportEvidence(manager, input.institutionCode, file());
+  if (!uploaded.ok || !uploaded.id) throw Error("Upload gagal");
+  const good = await mockRepository.openEvidenceAsset(uploaded.id, input.institutionCode);
+  expect(good.ok).toBe(true);
+  if (good.ok) expect(good.blob.size).toBe(file().size);
+  expect((await mockRepository.openEvidenceAsset(uploaded.id, "PSN-0019")).ok).toBe(false);
+  expect(
+    (
+      await mockRepository.openEvidenceAsset(
+        "evidence-asset-00000000-0000-0000-0000-000000000000",
+        input.institutionCode,
+      )
+    ).ok,
+  ).toBe(false);
+});

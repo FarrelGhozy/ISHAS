@@ -145,6 +145,57 @@ describe("httpRepository Pesantren (Fase 2)", () => {
   });
 });
 
+describe("httpRepository SAM-iSAFE (Fase 4)", () => {
+  test("saveSamAnswer memakai endpoint answers + metode PUT", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.saveSamAnswer(
+      { id: "USR-002", name: "M. Ridwan", role: "Validator" },
+      { assessmentId: "SAM-0001", questionId: "SAM-Q-001", score: 2, note: "Aman." },
+    );
+    expect(calls[0].url).toContain("/api/v1/validator/sam/assessments/SAM-0001/answers");
+    expect(calls[0].init.method).toBe("PUT");
+    const body = JSON.parse(String(calls[0].init.body)) as Record<string, unknown>;
+    expect(body.questionId).toBe("SAM-Q-001");
+    expect(body.score).toBe(2);
+  });
+
+  test("moveSamQuestion mengirim arah naik/turun", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.moveSamQuestion(
+      { id: "USR-002", name: "M. Ridwan", role: "Validator" },
+      "SAM-Q-001",
+      "turun",
+    );
+    expect(calls[0].url).toContain("/api/v1/validator/sam/questions/SAM-Q-001/move");
+    const body = JSON.parse(String(calls[0].init.body)) as Record<string, unknown>;
+    expect(body.direction).toBe("turun");
+  });
+
+  test("cancelSamFollowUp memakai endpoint cancel + alasan", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.cancelSamFollowUp(
+      { id: "USR-002", name: "M. Ridwan", role: "Validator" },
+      "SMF-0001",
+      "Tidak relevan setelah verifikasi ulang.",
+    );
+    expect(calls[0].url).toContain("/api/v1/validator/sam/follow-ups/SMF-0001/cancel");
+    const body = JSON.parse(String(calls[0].init.body)) as Record<string, unknown>;
+    expect(body.reason).toContain("Tidak relevan");
+  });
+
+  test("uploadSamEvidence mengirim FormData ke endpoint sam-evidence", async () => {
+    stubFetch({ ok: true, data: { id: "evidence-asset-sam" } }, 201);
+    const result = await httpRepository.uploadSamEvidence(
+      { id: "USR-002", name: "M. Ridwan", role: "Validator" },
+      "PSN-0018",
+      new File([new Uint8Array([1, 2, 3])], "temuan.png", { type: "image/png" }),
+    );
+    expect(result).toEqual({ ok: true, id: "evidence-asset-sam" });
+    expect(calls[0].url).toContain("/api/v1/uploads/sam-evidence");
+    expect(calls[0].init.body instanceof FormData).toBe(true);
+  });
+});
+
 describe("apiRequest", () => {
   test("kegagalan jaringan → pesan ramah", async () => {
     globalThis.fetch = (async () => {

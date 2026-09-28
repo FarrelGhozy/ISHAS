@@ -2,7 +2,8 @@
 // Teks + panduan observasi + contoh bukti + pindah kategori.
 
 import { useState } from "react";
-import { storeActions } from "~/mocks/store/mock-store";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 import type { SamCategory, SamQuestion } from "~/mocks/types";
 
 type Props = {
@@ -24,21 +25,26 @@ export function SamBankQuestionForm(props: Props) {
   const [kategori, setKategori] = useState(awal?.categoryId ?? defaultCategoryId);
   const [galat, setGalat] = useState("");
 
-  const simpan = () => {
+  const simpan = async () => {
+    const actor = { id: accountId, name: "Validator" };
     const hasil = awal
-      ? storeActions.updateSamQuestion(
-        { id: accountId },
-        awal.id,
-        { text: teks, panduan, contohBukti, categoryId: kategori },
-      )
-      : storeActions.addSamQuestion(
-        { id: accountId },
-        { categoryId: kategori, text: teks, panduan, contohBukti },
-      );
+      ? await repository.updateSamQuestion(actor, awal.id, {
+          text: teks,
+          panduan,
+          contohBukti,
+          categoryId: kategori,
+        })
+      : await repository.addSamQuestion(actor, {
+          categoryId: kategori,
+          text: teks,
+          panduan,
+          contohBukti,
+        });
     if (!hasil.ok) {
       setGalat(hasil.error);
       return;
     }
+    refreshValidatorState();
     onDone(awal ? "Pertanyaan diubah." : "Pertanyaan ditambahkan.");
   };
 
@@ -102,7 +108,7 @@ export function SamBankQuestionForm(props: Props) {
         <button
           type="button"
           className="primary-button w-full sm:w-auto"
-          onClick={simpan}
+          onClick={() => void simpan()}
         >
           {awal ? "Simpan perubahan" : "Tambah pertanyaan"}
         </button>

@@ -4,7 +4,8 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { storeActions } from "~/mocks/store/mock-store";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 import { StatusChip } from "~/shared/components/status-chip";
 import type { SamCategory, SamQuestion } from "~/mocks/types";
 import { SamBankQuestionForm } from "./sam-bank-question-form";
@@ -33,40 +34,46 @@ export function SamBankCategoryCard(props: Props) {
 
   const aktif = questions.filter((item) => item.isActive).length;
 
-  const simpanKategori = () => {
-    const hasil = storeActions.updateSamCategory(
-      { id: accountId },
-      category.id,
-      { name: nama, description: deskripsi },
-    );
+  const actor = { id: accountId, name: "Validator" };
+
+  const simpanKategori = async () => {
+    const hasil = await repository.updateSamCategory(actor, category.id, {
+      name: nama,
+      description: deskripsi,
+    });
     if (!hasil.ok) {
       setGalatCat(hasil.error);
       return;
     }
+    refreshValidatorState();
     setEditCat(false);
     setGalatCat("");
     onPesan("Kategori diubah.");
   };
 
-  const hapusKategori = () => {
+  const hapusKategori = async () => {
     if (!window.confirm(`Hapus kategori ${category.name}? Bank sisa tetap aktif.`)) return;
-    const hasil = storeActions.deleteSamCategory({ id: accountId }, category.id);
+    const hasil = await repository.deleteSamCategory(actor, category.id);
+    if (hasil.ok) refreshValidatorState();
     onPesan(hasil.ok ? "Kategori dihapus." : hasil.error);
   };
 
-  const toggleSoal = (id: string, nilai: boolean) => {
-    const hasil = storeActions.setSamQuestionActive({ id: accountId }, id, nilai);
+  const toggleSoal = async (id: string, nilai: boolean) => {
+    const hasil = await repository.setSamQuestionActive(actor, id, nilai);
+    if (hasil.ok) refreshValidatorState();
     onPesan(hasil.ok ? "" : hasil.error);
   };
 
-  const hapusSoal = (item: SamQuestion) => {
+  const hapusSoal = async (item: SamQuestion) => {
     if (!window.confirm(`Hapus soal ${item.id}? Riwayat Selesai tidak boleh berubah.`)) return;
-    const hasil = storeActions.deleteSamQuestion({ id: accountId }, item.id);
+    const hasil = await repository.deleteSamQuestion(actor, item.id);
+    if (hasil.ok) refreshValidatorState();
     onPesan(hasil.ok ? "Pertanyaan dihapus." : hasil.error);
   };
 
-  const geser = (id: string, arah: "naik" | "turun") => {
-    const hasil = storeActions.moveSamQuestion({ id: accountId }, id, arah);
+  const geser = async (id: string, arah: "naik" | "turun") => {
+    const hasil = await repository.moveSamQuestion(actor, id, arah);
+    if (hasil.ok) refreshValidatorState();
     onPesan(hasil.ok ? "" : hasil.error);
   };
 
@@ -125,7 +132,7 @@ export function SamBankCategoryCard(props: Props) {
                 <button
                   type="button"
                   className="primary-button w-full sm:w-auto"
-                  onClick={simpanKategori}
+                  onClick={() => void simpanKategori()}
                 >
                   Simpan kategori
                 </button>
@@ -159,7 +166,7 @@ export function SamBankCategoryCard(props: Props) {
                 <button
                   type="button"
                   className="secondary-button"
-                  onClick={hapusKategori}
+                  onClick={() => void hapusKategori()}
                 >
                   Hapus
                 </button>
@@ -223,7 +230,7 @@ export function SamBankCategoryCard(props: Props) {
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={() => toggleSoal(item.id, !item.isActive)}
+                      onClick={() => void toggleSoal(item.id, !item.isActive)}
                     >
                       {item.isActive ? "Nonaktifkan" : "Aktifkan"}
                     </button>
@@ -237,21 +244,21 @@ export function SamBankCategoryCard(props: Props) {
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={() => geser(item.id, "naik")}
+                      onClick={() => void geser(item.id, "naik")}
                     >
                       Naik
                     </button>
                     <button
                       type="button"
                       className="secondary-button"
-                      onClick={() => geser(item.id, "turun")}
+                      onClick={() => void geser(item.id, "turun")}
                     >
                       Turun
                     </button>
                     <button
                       type="button"
                       className="secondary-button col-span-2 sm:col-span-1"
-                      onClick={() => hapusSoal(item)}
+                      onClick={() => void hapusSoal(item)}
                     >
                       Hapus
                     </button>
