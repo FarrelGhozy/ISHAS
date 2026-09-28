@@ -2,7 +2,14 @@
 // untuk scope Fase 1 (lapor-cepat + penilaian-mandiri + unggah bukti).
 
 import type { ActionResult, ReportActor } from "~/mocks/store/mock-store";
-import type { LocationSnapshot, SelfAssessmentDraft } from "~/mocks/types";
+import type {
+  HandlingStatus,
+  LocationSnapshot,
+  Priority,
+  RiskLevel,
+  SelfAssessmentDraft,
+  Severity,
+} from "~/mocks/types";
 import { apiRequest } from "./http-client";
 
 export type LaporInput = {
@@ -75,5 +82,195 @@ export const httpRepository = {
       { method: "DELETE" },
     );
     return toAction(result);
+  },
+
+  // --- Ruang kerja Pesantren (Fase 2) ---
+  async acceptReport(
+    _actor: ReportActor,
+    reportId: string,
+    severity: Severity,
+    priority: Priority,
+    note?: string,
+    rekomendasiFinal?: string,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/pesantren/reports/${encodeURIComponent(reportId)}/accept`, {
+        method: "POST",
+        json: { severity, priority, note, rekomendasiFinal },
+      }),
+    );
+  },
+
+  async rejectReport(_actor: ReportActor, reportId: string, reason: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/pesantren/reports/${encodeURIComponent(reportId)}/reject`, {
+        method: "POST",
+        json: { reason },
+      }),
+    );
+  },
+
+  async updateHandlingStatus(
+    _actor: ReportActor,
+    reportId: string,
+    next: HandlingStatus,
+    details?: {
+      owner?: string;
+      dueDate?: string;
+      progress?: number;
+      evidenceName?: string;
+      note?: string;
+    },
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/pesantren/reports/${encodeURIComponent(reportId)}/status`, {
+        method: "POST",
+        json: { next, ...details },
+      }),
+    );
+  },
+
+  async archiveCompletedReport(
+    _actor: ReportActor,
+    reportId: string,
+    reason: string,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/pesantren/reports/${encodeURIComponent(reportId)}/archive`, {
+        method: "POST",
+        json: { reason },
+      }),
+    );
+  },
+
+  async setFindingLevel(
+    _actor: ReportActor,
+    findingId: string,
+    level: RiskLevel,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/pesantren/findings/${encodeURIComponent(findingId)}/level`, {
+        method: "PATCH",
+        json: { level },
+      }),
+    );
+  },
+
+  async addBuilding(
+    _actor: ReportActor,
+    input: { code: string; name: string },
+  ): Promise<ActionResult> {
+    return toAction(await apiRequest("/pesantren/buildings", { method: "POST", json: input }));
+  },
+
+  async addFloor(_actor: ReportActor, buildingId: string, name: string): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/pesantren/buildings/${encodeURIComponent(buildingId)}/floors`, {
+        method: "POST",
+        json: { name },
+      }),
+    );
+  },
+
+  async addArea(
+    _actor: ReportActor,
+    input: { buildingId: string; floor: string; name: string; zone: string },
+  ): Promise<ActionResult> {
+    return toAction(await apiRequest("/pesantren/areas", { method: "POST", json: input }));
+  },
+
+  async uploadCampusPlan(
+    _actor: ReportActor,
+    input: {
+      institutionCode: string;
+      file: File;
+      width: number;
+      height: number;
+      expectedActiveId?: string;
+      acknowledged: boolean;
+    },
+  ): Promise<ActionResult> {
+    const form = new FormData();
+    form.append("file", input.file);
+    form.append("institutionCode", input.institutionCode);
+    const uploaded = await apiRequest<{ id: string }>("/uploads/campus-plan", {
+      method: "POST",
+      form,
+    });
+    if (!uploaded.ok) return { ok: false, error: uploaded.error };
+    return toAction(
+      await apiRequest("/pesantren/campus-plans/publish", {
+        method: "POST",
+        json: {
+          institutionCode: input.institutionCode,
+          assetId: uploaded.data.id,
+          width: input.width,
+          height: input.height,
+          expectedActiveId: input.expectedActiveId,
+          acknowledged: input.acknowledged,
+        },
+      }),
+    );
+  },
+
+  async uploadCompletionEvidence(
+    _actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("institutionCode", institutionCode);
+    return toAction(await apiRequest("/uploads/completion-evidence", { method: "POST", form }));
+  },
+
+  async updateTindakLanjut(
+    _actor: ReportActor,
+    recommendationId: string,
+    input: {
+      owner?: string;
+      dueDate?: string;
+      note: string;
+      progress?: number;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+      verify?: boolean;
+    },
+  ): Promise<ActionResult> {
+    const id = encodeURIComponent(recommendationId);
+    if (input.verify) {
+      return toAction(
+        await apiRequest(`/pesantren/recommendations/${id}/verify`, {
+          method: "POST",
+          json: { verify: true, note: input.note },
+        }),
+      );
+    }
+    return toAction(
+      await apiRequest(`/pesantren/recommendations/${id}/progress`, {
+        method: "POST",
+        json: {
+          owner: input.owner,
+          dueDate: input.dueDate,
+          note: input.note,
+          progress: input.progress,
+          evidenceName: input.evidenceName,
+          evidenceAssetId: input.evidenceAssetId,
+        },
+      }),
+    );
+  },
+
+  async cancelRecommendation(
+    _actor: ReportActor,
+    recommendationId: string,
+    reason: string,
+  ): Promise<ActionResult> {
+    return toAction(
+      await apiRequest(`/pesantren/recommendations/${encodeURIComponent(recommendationId)}/cancel`, {
+        method: "POST",
+        json: { reason },
+      }),
+    );
   },
 };

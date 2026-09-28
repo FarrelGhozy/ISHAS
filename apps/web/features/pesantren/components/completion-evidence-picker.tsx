@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { repository } from "~/shared/api/repository";
 import type { ReportActor } from "~/mocks/store/mock-store";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
 
@@ -63,7 +63,7 @@ export function CompletionEvidencePicker({
           onBusy(true);
           setError("");
           try {
-            const result = await mockRepository.uploadCompletionEvidence(
+            const result = await repository.uploadCompletionEvidence(
               actor,
               institutionCode,
               file,

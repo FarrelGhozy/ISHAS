@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
+import { refreshPesantrenState, usePesantrenState } from "~/shared/api/workspace-state";
+import { repository } from "~/shared/api/repository";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
-  const state = useMockState();
+  const state = usePesantrenState();
   const user = useCurrentUser();
   const [notice, setNotice] = useState("");
   const [archiveReason, setArchiveReason] = useState<Record<string, string>>({});
@@ -53,9 +54,10 @@ export function Page() {
   const download = (kind: string) =>
     setNotice(`Simulasi unduh ${kind}: dokumen dummy tidak dibuat pada prototipe ini.`);
   const archived = state.reports.filter((x) => x.institutionCode === scope && x.archivedAt);
-  const archive = (id: string) => {
+  const archive = async (id: string) => {
     if (!user) return;
-    const r = storeActions.archiveCompletedReport(user, id, archiveReason[id] ?? "");
+    const r = await repository.archiveCompletedReport(user, id, archiveReason[id] ?? "");
+    if (r.ok) refreshPesantrenState();
     setNotice(r.ok ? `${id} diarsipkan dan tidak tampil publik.` : r.error);
     if (r.ok) setArchiveReason((old) => ({ ...old, [id]: "" }));
   };
@@ -167,7 +169,11 @@ export function Page() {
                     }
                     placeholder="Alasan arsip (min 5 karakter)"
                   />
-                  <button type="button" className="secondary-button" onClick={() => archive(x.id)}>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => void archive(x.id)}
+                  >
                     Arsipkan
                   </button>
                 </span>

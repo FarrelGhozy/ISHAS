@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Upload } from "lucide-react";
 import type { User } from "~/mocks/types";
-import { useMockState } from "~/mocks/store/mock-store";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { refreshPesantrenState, usePesantrenState } from "~/shared/api/workspace-state";
+import { repository } from "~/shared/api/repository";
 import { CampusPlan } from "~/shared/components/campus-plan";
 import { TombolDenahBesar } from "~/shared/components/denah-preview";
 import { Modal } from "~/shared/components/modal";
 
 export function CampusPlanManager({ user }: { user: User }) {
-  const state = useMockState();
+  const state = usePesantrenState();
   const code = user.institutionCodes[0];
   const institution = state.institutions.find((item) => item.code === code);
   const plans = state.campusPlans
@@ -53,7 +53,7 @@ export function CampusPlanManager({ user }: { user: User }) {
     busy.current = true;
     setSaving(true);
     setMessage("");
-    const result = await mockRepository.uploadCampusPlan(user, {
+    const result = await repository.uploadCampusPlan(user, {
       institutionCode: code,
       file: candidate.file,
       width: candidate.width,
@@ -62,6 +62,7 @@ export function CampusPlanManager({ user }: { user: User }) {
       acknowledged,
     });
     if (result.ok) {
+      refreshPesantrenState();
       setCandidate(null);
       setAcknowledged(false);
       setMessage(

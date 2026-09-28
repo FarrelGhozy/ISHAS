@@ -3,7 +3,8 @@
 // filter, keputusan Terima/Tolak, dan pre-fill usulan pelapor.
 
 import { useMemo, useState } from "react";
-import { useMockState, storeActions } from "~/mocks/store/mock-store";
+import { usePesantrenState, refreshPesantrenState } from "~/shared/api/workspace-state";
+import { repository } from "~/shared/api/repository";
 import { selectAreasByInstitution } from "~/mocks/store/lapor-selectors";
 import { selectInstitutionByCode, selectReportsForManager } from "~/mocks/store/selectors";
 import { StatusChip } from "~/shared/components/status-chip";
@@ -28,7 +29,7 @@ function usulanPrioritas(value?: string): string {
 }
 
 export function ValidasiLaporanPage() {
-  const state = useMockState();
+  const state = usePesantrenState();
   const user = useCurrentUser();
   const [filter, setFilter] = useState("Menunggu validasi");
   const [kanal, setKanal] = useState("Semua");
@@ -171,7 +172,7 @@ function Review({
 }: {
   report: Report | null;
   user: NonNullable<ReturnType<typeof useCurrentUser>>;
-  state: ReturnType<typeof useMockState>;
+  state: ReturnType<typeof usePesantrenState>;
   close: () => void;
 }) {
   const [accept, setAccept] = useState(true);
@@ -201,9 +202,9 @@ function Review({
   const plans = state.campusPlans.filter(
     (plan) => plan.institutionCode === report.institutionCode,
   );
-  const submit = () => {
+  const submit = async () => {
     const result = accept
-      ? storeActions.acceptReport(
+      ? await repository.acceptReport(
           user,
           report.id,
           severity as Severity,
@@ -211,9 +212,11 @@ function Review({
           note || undefined,
           isLaporCepat ? rekomendasi || undefined : undefined,
         )
-      : storeActions.rejectReport(user, report.id, note);
-    if (result.ok) close();
-    else setError(result.error);
+      : await repository.rejectReport(user, report.id, note);
+    if (result.ok) {
+      refreshPesantrenState();
+      close();
+    } else setError(result.error);
   };
   return (
     <Modal open={true} onClose={close} label={`Periksa ${report.id}`}>

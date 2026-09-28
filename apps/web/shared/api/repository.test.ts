@@ -77,6 +77,74 @@ describe("httpRepository", () => {
   });
 });
 
+describe("httpRepository Pesantren (Fase 2)", () => {
+  test("acceptReport mengirim severity/priority/rekomendasiFinal", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.acceptReport(
+      { name: "Mustofa", role: "Pesantren" },
+      "RPT-0001",
+      "Tinggi",
+      "Sedang",
+      "Catatan",
+      "Ganti kabel dalam 3 hari.",
+    );
+    expect(calls[0].url).toContain("/api/v1/pesantren/reports/RPT-0001/accept");
+    const body = JSON.parse(String(calls[0].init.body)) as Record<string, unknown>;
+    expect(body.severity).toBe("Tinggi");
+    expect(body.rekomendasiFinal).toBe("Ganti kabel dalam 3 hari.");
+  });
+
+  test("updateTindakLanjut verify memakai endpoint /verify", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.updateTindakLanjut(
+      { name: "Mustofa", role: "Pesantren" },
+      "REC-RPT-0001-1",
+      { note: "Bukti sesuai.", verify: true },
+    );
+    expect(calls[0].url).toContain("/recommendations/REC-RPT-0001-1/verify");
+  });
+
+  test("updateTindakLanjut progres memakai endpoint /progress", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.updateTindakLanjut(
+      { name: "Mustofa", role: "Pesantren" },
+      "REC-RPT-0001-1",
+      { note: "Setengah jalan.", progress: 50 },
+    );
+    expect(calls[0].url).toContain("/recommendations/REC-RPT-0001-1/progress");
+  });
+
+  test("uploadCampusPlan dua langkah (upload lalu publish)", async () => {
+    calls = [];
+    let step = 0;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(input), init: init ?? {} });
+      step += 1;
+      const data = step === 1 ? { id: "campus-asset-x" } : { id: "CAMPUS-PSN-0018-v2" };
+      return new Response(JSON.stringify({ ok: true, data }), {
+        status: step === 1 ? 201 : 201,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+    const result = await httpRepository.uploadCampusPlan(
+      { name: "Mustofa", role: "Pesantren" },
+      {
+        institutionCode: "PSN-0018",
+        file: new File([new Uint8Array([1])], "denah.png", { type: "image/png" }),
+        width: 1000,
+        height: 900,
+        expectedActiveId: "CAMPUS-PSN-0018-v1",
+        acknowledged: true,
+      },
+    );
+    expect(result).toEqual({ ok: true, id: "CAMPUS-PSN-0018-v2" });
+    expect(calls[0].url).toContain("/api/v1/uploads/campus-plan");
+    expect(calls[1].url).toContain("/api/v1/pesantren/campus-plans/publish");
+    const body = JSON.parse(String(calls[1].init.body)) as Record<string, unknown>;
+    expect(body.assetId).toBe("campus-asset-x");
+  });
+});
+
 describe("apiRequest", () => {
   test("kegagalan jaringan → pesan ramah", async () => {
     globalThis.fetch = (async () => {
