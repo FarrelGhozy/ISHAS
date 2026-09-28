@@ -23,11 +23,12 @@ tidak tampil publik/Pesantren. Status stage lain tidak berubah sepihak.
 - [ ] Cek visual 3 viewport + keyboard + alur klik browser: belum dijalankan di lingkungan ini.
 - [ ] Review pemilik; DONE hanya setelah disetujui.
 
-## Revisi D-26.f — pematangan bank data — `IN PROGRESS` (28 September 2026)
+## Revisi D-26.f — pematangan bank data — `REVIEW` (28 September 2026)
 
 Arahan langsung pemilik (`ok kerjakan`); status stage di atas tidak berubah sepihak.
 
 - [x] Catat D-26.f + revisi IN PROGRESS sebelum mengubah kode.
-- [ ] Kode (CRUD lengkap + panduan per soal + accordion mobile) + migrasi v13→v14 + seed + test.
-- [ ] Verifikasi teknis + cek visual 3 viewport + keyboard + alur klik browser bank.
-- [ ] Review pemilik.
+- [x] Kode (CRUD lengkap + panduan per soal + accordion mobile) + migrasi v13→v14 + seed + test.
+- [x] Verifikasi teknis: lint + typecheck + 208 test + build lulus (28 Sep 2026; +10 test bank D-26.f).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser bank: belum dijalankan di lingkungan ini.
+- [ ] Review pemilik; DONE hanya setelah disetujui.
