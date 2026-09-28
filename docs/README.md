@@ -109,6 +109,12 @@ Perubahan arah produk tidak mengesahkan rumus, skala, atau kategori ilmiah.
 | `BACKLOG.md` | Urutan pembangunan + dependensi + yang ditunda ke backend |
 | `TODO.md` | Kontrol validasi rencana dan antrean pembangunan yang belum diaktifkan |
 | `TEST_PLAN.md` | Matriks route/guard/E2E/visual/teknis + template hasil |
+| `BACKEND_OVERVIEW.md` | Stack, arsitektur, prinsip, fase backend (D-30) |
+| `BACKEND_DATA_MODEL.md` | Tabel MySQL + DDL + indeks + seed demo/kosong |
+| `BACKEND_API_CONTRACT.md` | Endpoint REST + matriks otorisasi + validasi |
+| `BACKEND_STORAGE.md` | File lokal: tabel, direktori, validasi, serving |
+| `BACKEND_MIGRATION.md` | Tahapan mock → server + swap adapter + kriteria hijau |
+| `BACKEND_ISSUES.md` | Daftar issue GitHub backend + perintah `gh` |
 | `planning/` | Stage 00 untuk diskusi rencana, diikuti 9 calon stage pembangunan Stage 01…Stage 09 |
 
 ## Aturan prototipe (tidak boleh dilanggar)

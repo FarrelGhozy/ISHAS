@@ -663,6 +663,22 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   input 16px, tanpa overflow horizontal (viewport 390×844 acuan).
 - Dokumen terdampak: DATA_MODEL schema v14, TODO, stage `STAGE_SAM_ISAFE.md`.
 
+## D-30 — Stack dan tahapan backend — DISETUJUI 28 September 2026
+
+- Arahan pemilik: backend memakai **TypeScript + runtime Bun + MySQL** (serumpun
+  frontend, tetap kencang). Storage file memakai **disk lokal dulu**; S3/object
+  storage belum butuh dan tidak masuk MVP.
+- **Login/auth server ditunda ke fase akhir** (fase 6): login kartu dummy +
+  sessionStorage tetap dipakai sampai semua modul backend matang.
+- **Seed satu file dua mode** (`scripts/seed.ts --mode=demo|empty`): demo penuh
+  untuk presentasi dosen, kosong tapi valid untuk production. Seed tidak dipecah.
+- Aturan AGENTS ±300 baris dibaca sebagai panduan keterbacaan komponen/logika,
+  bukan kewajiban memecah file data (`seed.ts`) atau sistem yang sedang jalan
+  (`mock-store.ts` dipecah hanya bila dibutuhkan saat migrasi).
+- Rancangan detail: `BACKEND_OVERVIEW.md`, `BACKEND_DATA_MODEL.md`,
+  `BACKEND_API_CONTRACT.md`, `BACKEND_STORAGE.md`, `BACKEND_MIGRATION.md`,
+  `BACKEND_ISSUES.md`. Scope: rancangan dulu; kode backend setelah review.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

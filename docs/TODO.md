@@ -1,5 +1,15 @@
 # TODO — Kontrol Kerja Aktif
 
+## Rancangan backend (D-30) — 28 September 2026 — `REVIEW`
+
+Rancangan dulu, kode backend setelah review pemilik. Stack: Bun + TypeScript +
+MySQL, storage lokal (tanpa S3), auth ditunda fase 6, seed satu file dua mode.
+Dokumen: `BACKEND_OVERVIEW/DATA_MODEL/API_CONTRACT/STORAGE/MIGRATION/ISSUES.md`.
+Issues GitHub via `bash scripts/create-backend-issues.sh` (butuh `gh auth login`).
+
+- [x] Tulis 6 dokumen backend + D-30 + skrip issues.
+- [ ] Review pemilik; lalu eksekusi per fase (0–6) + swap adapter bertahap.
+
 ## Penjelasan label Diterima + stage Proses di area Validator — 28 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan, kaya gini dulu aja`):
