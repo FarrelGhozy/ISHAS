@@ -85,22 +85,6 @@ Contoh “jawaban 1/2/Tidak menghasilkan temuan” harus berlabel asumsi seed, b
 
 **Terkait:** dashboard, hasil, laporan pimpinan, DATA_MODEL, Peneliti. Rumus ilmiah tetap menunggu tim penelitian.
 
-### D-04 — Makna hasil dan agregat penilaian
-
-**Pertanyaan:** jika beberapa orang mengisi instrumen untuk pesantren dan periode yang sama,
-apakah semua kiriman menjadi data responden, atau pengelola memilih satu hasil yang mewakili pesantren?
-Siapa menetapkan periode observasi, dan apakah penilaian individu memang mewakili seluruh lembaga?
-
-**Mengapa perlu:** rata-rata semua kiriman akan memberi bobot lebih besar pada pesantren yang
-memiliki lebih banyak pelapor. Memilih kiriman terakhir juga merupakan keputusan produk, bukan default teknis.
-
-**Rincian yang dibutuhkan:** unit hitung kartu statistik, sumber periode, pemilihan hasil per pesantren,
-kesetaraan versi, penanganan N/A, data kosong, arah tren, dan data yang masuk dataset Peneliti.
-Jumlah laporan cepat tidak mempunyai jawaban instrumen sehingga belum menjadi sumber skor indeks.
-Contoh “jawaban 1/2/Tidak menghasilkan temuan” harus berlabel asumsi seed, bukan aturan semua indikator.
-
-**Terkait:** dashboard, hasil, laporan pimpinan, DATA_MODEL, Peneliti. Rumus ilmiah tetap menunggu tim penelitian.
-
 **Usulan untuk pembangunan Stage 02 — DISETUJUI SEBAGAI ATURAN ILUSTRASI (bukan rumus final),
 8 September 2026:** pemilik memilih "bangun dengan aturan ilustrasi" dan meminta dashboard
 "penuh dengan data" untuk Stage 02. Aturan yang dipakai sementara (semua angka berlabel
