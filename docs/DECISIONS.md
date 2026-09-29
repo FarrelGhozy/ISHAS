@@ -1050,6 +1050,37 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Dokumen terdampak: FLOWS §2/§3/§6, BACKEND_STORAGE, apps/web/README.
   Tidak mengubah schema maupun hak akses; status stage lain tidak berubah
   sepihak.
+## D-35 — Dashboard publik kosong pada mode backend — DISETUJUI 29 September 2026
+
+- Laporan pemilik (mode `VITE_USE_BACKEND=true`, MySQL sudah di-seed demo):
+  dashboard `/` menampilkan `—/100`, `Jawaban diharapkan 38 / terisi 0 /
+  terbit 5`, dan tren `Belum ada hasil tervalidasi untuk digambarkan`.
+- **Root cause (bukan seed hilang):** `buildPublicState` (D-02) mengosongkan
+  `answers` snapshot (`{}`), sedangkan 5 snapshot demo warisan
+  (`INS-v1.0/v1.1`, jawaban saja tanpa `frozenIndicators`/`scorePercent`).
+  Jalur beku mati (tanpa beku) dan jalur warisan mati (tanpa jawaban) sehingga
+  indeks null, dimensi kosong, dan riwayat tren kosong. Mode mock tidak
+  terdampak (jawaban penuh + lookup versi warisan).
+- **D-35.a — Backfill seed backend:** seed demo menghitung `frozenIndicators`
+  (dari dimensi versi asal, `options: []` + fallback aturan `answerType` pada
+  `isJawabanTemuan`), `scorePercent`, dan `byDimension` memakai jalur warisan
+  `skorSnapshot` yang sama dengan mode mock (angka identik, bukan rumus baru).
+  Tanpa migrasi (kolom sudah ada); DB demo lama wajib seed ulang. Snapshot demo
+  tetap `warisan` tanpa checksum (jujur `checksum beda` pada audit, bukan
+  layak publik).
+- **D-35.b — `jawabanTerisi`:** cacah jawaban terisi (bukan isi jawaban,
+  D-02 aman) dibawa pada `SelfAssessmentSnapshot.jawabanTerisi` (opsional):
+  dihitung saat submit (mock + backend baca dari JSON jawaban), dipertahankan
+  proyeksi publik, dibaca `ScoreSummary` (fallback hitung dari `answers` bila
+  field tak ada sehingga mode mock/seed lama tidak berubah).
+- **Batas:** redaksi D-02 tidak berubah (nilai jawaban mentah tetap tidak
+  publik; test `jawaban mentah snapshot dikosongkan` tetap hijau). Kolom
+  rekap `sesuai/tidak sesuai` memakai jawaban mentah sehingga tetap 0 pada
+  mode backend — keterbatasan D-02 yang dicatat, bukan regresi; perpanjangan
+  kontrak agregat rekap menjadi keputusan lanjutan bila diminta.
+- Dokumen terdampak: TODO, `DATA_MODEL.md` (field snapshot), kode + test
+  (di bawah). Status stage lain tidak berubah sepihak.
+
 ## D-34 — Dashboard Pesantren + nama pesantren — DISETUJUI 29 September 2026
 
 - Arahan pemilik: ruang Pesantren tidak punya dashboard dan tidak menampilkan

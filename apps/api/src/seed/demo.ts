@@ -10,6 +10,7 @@ import { STORAGE_DIR } from "../storage";
 import { hashPassword } from "../auth/password";
 import { seedDefaultPassword } from "../config";
 import { insertRows, json, text, toDateOnly, toDateTime, truncateAll, type SqlValue } from "./helpers";
+import { bekukanSnapshotWarisan } from "./backfill";
 
 const now = (): Date => new Date();
 const campusAssetId = (planId: string): string => `campus-asset-${planId.toLowerCase()}`;
@@ -428,16 +429,28 @@ export async function seedDemo(): Promise<void> {
       "by_dimension",
       "submitted_at",
     ],
-    SEED.selfAssessmentSnapshots.map((s) => [
-      s.reportId,
-      s.instrumentVersionId,
-      s.instrumentChecksum ?? "",
-      json(s.answers),
-      json(s.frozenIndicators ?? []),
-      s.scorePercent ?? null,
-      json(s.byDimension),
-      toDateTime(s.submittedAt) ?? now(),
-    ]),
+    SEED.selfAssessmentSnapshots.map((s) => {
+      // D-35: snapshot warisan (jawaban saja) dibekukan saat seed agar jalur
+      // beku agregat publik hidup pada mode backend (angka = jalur warisan mock).
+      const beku =
+        s.frozenIndicators && s.scorePercent !== undefined
+          ? {
+              frozenIndicators: s.frozenIndicators,
+              scorePercent: s.scorePercent,
+              byDimension: s.byDimension ?? {},
+            }
+          : bekukanSnapshotWarisan(SEED.instrumentVersions, s);
+      return [
+        s.reportId,
+        s.instrumentVersionId,
+        s.instrumentChecksum ?? "",
+        json(s.answers),
+        json(beku.frozenIndicators),
+        beku.scorePercent,
+        json(beku.byDimension),
+        toDateTime(s.submittedAt) ?? now(),
+      ];
+    }),
   );
 
   await insertRows(

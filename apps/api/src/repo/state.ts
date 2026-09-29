@@ -4,6 +4,7 @@
 import type { RowDataPacket } from "mysql2/promise";
 import { pool } from "../db";
 import { toDateOnly } from "../seed/helpers";
+import { hitungJawabanTerisi } from "../../../web/mocks/processors/dashboard-aggregate";
 import type {
   Area,
   AuditEvent,
@@ -356,15 +357,20 @@ export async function loadIshasState(): Promise<IshasState> {
 
   const selfAssessmentSnapshots: SelfAssessmentSnapshot[] = snapshotRows.map((row) => {
     const frozen = parseJson<FrozenIndicator[]>(row.frozen_indicators, []);
+    const answers = parseJson<Record<string, IndicatorAnswer>>(row.answers, {});
+    // D-35: cacah terisi dihitung dari jawaban penuh DB (kolom tidak perlu
+    // migrasi); proyeksi publik membawa cacah ini, bukan nilai mentah.
+    const jawabanTerisi = hitungJawabanTerisi({ jawabanTerisi: undefined, answers });
     return {
       reportId: String(row.report_id),
       instrumentVersionId: String(row.instrument_version_id),
       instrumentChecksum: row.instrument_checksum ? String(row.instrument_checksum) : undefined,
       submittedAt: toIso(row.submitted_at) ?? new Date(0).toISOString(),
-      answers: parseJson<Record<string, IndicatorAnswer>>(row.answers, {}),
+      answers,
       frozenIndicators: frozen.length ? frozen : undefined,
       scorePercent: row.score_percent === null ? null : Number(row.score_percent),
       byDimension: parseJson<Record<string, number | null>>(row.by_dimension, {}),
+      jawabanTerisi,
     };
   });
 

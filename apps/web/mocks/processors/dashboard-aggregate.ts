@@ -123,6 +123,16 @@ export function skorSnapshot(
   };
 }
 
+// D-35: cacah jawaban terisi satu snapshot. Memakai field `jawabanTerisi` bila
+// ada (proyeksi publik D-02 mengosongkan `answers` tetapi membawa cacah ini,
+// bukan nilai mentah); fallback menghitung nilai terisi untuk data lama/mock.
+export function hitungJawabanTerisi(
+  snapshot: Pick<SelfAssessmentSnapshot, "jawabanTerisi" | "answers">,
+): number {
+  if (typeof snapshot.jawabanTerisi === "number") return snapshot.jawabanTerisi;
+  return Object.values(snapshot.answers).filter((answer) => answer.value.trim()).length;
+}
+
 // Satu snapshot `Diterima`/`Terbit` terbaru per pesantren (aturan ilustrasi D-04:
 // kiriman lain tidak menggandakan bobot lembaga; D-32: penilaian mandiri `Terbit`).
 export function pilihSnapshotTerbaruDiterima(

@@ -1,5 +1,23 @@
 # TODO — Kontrol Kerja Aktif
 
+## Dashboard publik kosong pada mode backend (D-35) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas laporan pemilik (dashboard `/` mode backend menampilkan `—/100`,
+`Jawaban terisi 0`, dan tren `Belum ada hasil tervalidasi` padahal seed demo
+sudah masuk). Cakupan: docs (D-35) + seed backend (backfill frozen/skor snapshot
+warisan) + `jawabanTerisi` end-to-end (tipe, mock submit, mapping backend,
+ScoreSummary) + test. Tanpa migrasi schema/kolom; tanpa mengubah redaksi D-02
+(jawaban mentah tetap tidak publik). Status stage lain tidak berubah sepihak.
+
+- [x] Catat D-35 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test (backfill frozen/skor seed + jawabanTerisi end-to-end;
+  paritas public-state stripped vs mock).
+- [x] Verifikasi: lint + typecheck + 279 test + build FE + lint + typecheck +
+  111 test BE lulus (29 Sep 2026, DB uji `ishas_test`). Cek visual 3 viewport
+  belum dijalankan di lingkungan ini.
+- [ ] Review pemilik + **seed ulang DB demo** (`cd apps/api && bun run seed:demo`)
+  agar frozen/skor snapshot masuk DB; tanpa seed ulang dashboard tetap kosong.
+
 ## Dashboard Pesantren + nama pesantren (D-34) — 29 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (ruang Pesantren tanpa dashboard dan tanpa

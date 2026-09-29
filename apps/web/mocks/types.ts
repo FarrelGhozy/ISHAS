@@ -203,6 +203,7 @@ export type SelfAssessmentSnapshot = {
   frozenIndicators?: FrozenIndicator[]; // D-24: copy beku soal + opsi + bobot
   scorePercent?: number | null; // D-24: skor % beku (sumber agregat + PDF)
   byDimension?: Record<string, number | null>; // D-24: skor % per dimensi
+  jawabanTerisi?: number; // D-35: cacah jawaban terisi (bukan isi; D-02 aman, dibawa publik)
 };
 
 export type SelfAssessmentDraft = {

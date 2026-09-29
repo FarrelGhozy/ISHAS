@@ -5,7 +5,7 @@ import type {
   IndexSummary,
   RekapKategori,
 } from "~/mocks/processors/dashboard-aggregate";
-import { hitungRekapKategori } from "~/mocks/processors/dashboard-aggregate";
+import { hitungJawabanTerisi, hitungRekapKategori } from "~/mocks/processors/dashboard-aggregate";
 import { K3_CATEGORIES } from "~/mocks/kategori-k3";
 import type {
   Area,
@@ -38,11 +38,9 @@ export function ScoreSummary({
       version.dimensions.flatMap((dimension) => dimension.indicators).length,
     ]),
   );
-  const answers = snapshots.reduce(
-    (total, snapshot) =>
-      total + Object.values(snapshot.answers).filter((answer) => answer.value.trim()).length,
-    0,
-  );
+  // D-35: memakai cacah bawaan snapshot bila ada (mode backend: answers
+  // dikosongkan D-02 tetapi cacah tetap dibawa).
+  const answers = snapshots.reduce((total, snapshot) => total + hitungJawabanTerisi(snapshot), 0);
   const indicators = snapshots.reduce(
     (total, snapshot) =>
       total +

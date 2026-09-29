@@ -4,6 +4,7 @@ import { describe, expect, test } from "bun:test";
 import {
   buatDashboardInsight,
   hitungIndexSummary,
+  hitungJawabanTerisi,
   hitungRisikoTinggi,
   normalisasiJawaban,
   pilihSnapshotTerbaruDiterima,
@@ -205,6 +206,73 @@ describe("skorSnapshot", () => {
     const snapshot = { ...SEED.selfAssessmentSnapshots[0], instrumentVersionId: "INS-v9.9" };
     const skor = skorSnapshot(SEED.instrumentVersions, snapshot);
     expect(skor.index).toBeNull();
+  });
+});
+
+describe("paritas proyeksi publik tanpa jawaban mentah (D-35)", () => {
+  // Simulasi `GET /public/state`: answers dikosongkan (D-02), tetapi frozen +
+  // skor + jawabanTerisi dibawa (backfill seed backend).
+  function stripUntukPublik() {
+    return SEED.selfAssessmentSnapshots.map((snapshot) => {
+      const version = SEED.instrumentVersions.find((v) => v.id === snapshot.instrumentVersionId);
+      const frozenIndicators = (version?.dimensions ?? []).flatMap((dim) =>
+        dim.indicators.map((ind) => ({
+          id: ind.id,
+          code: ind.code,
+          title: ind.title,
+          prompt: ind.prompt,
+          dimensionId: dim.id,
+          dimensionName: dim.name,
+          categoryId: ind.categoryId ?? dim.categoryId,
+          aspectId: ind.aspectId,
+          answerType: ind.answerType,
+          weight: 1,
+          options: [],
+        })),
+      );
+      const skor = skorSnapshot(SEED.instrumentVersions, snapshot);
+      return {
+        ...snapshot,
+        answers: {},
+        frozenIndicators,
+        scorePercent: skor.index,
+        byDimension: skor.byDimension,
+        jawabanTerisi: hitungJawabanTerisi(snapshot),
+      };
+    });
+  }
+
+  test("jalur beku tanpa jawaban menghasilkan indeks sama dengan jalur warisan", () => {
+    const mock = hitungIndexSummary(
+      {
+        reports: SEED.reports,
+        selfAssessmentSnapshots: SEED.selfAssessmentSnapshots,
+        instrumentVersions: SEED.instrumentVersions,
+        indexHistory: SEED.indexHistory,
+      },
+      ["PSN-0018", "PSN-0019"],
+    );
+    const publik = hitungIndexSummary(
+      {
+        reports: SEED.reports,
+        selfAssessmentSnapshots: stripUntukPublik(),
+        instrumentVersions: SEED.instrumentVersions,
+        indexHistory: SEED.indexHistory,
+      },
+      ["PSN-0018", "PSN-0019"],
+    );
+    expect(mock.currentIndex).not.toBeNull();
+    expect(publik.currentIndex).toBeCloseTo(mock.currentIndex as number, 6);
+    expect(publik.series.length).toBeGreaterThan(0);
+    expect(publik.dimensions.length).toBe(mock.dimensions.length);
+  });
+
+  test("hitungJawabanTerisi memakai field bawaan bila ada", () => {
+    const snapshot = SEED.selfAssessmentSnapshots[0];
+    const terisi = hitungJawabanTerisi(snapshot);
+    expect(terisi).toBeGreaterThan(0);
+    expect(hitungJawabanTerisi({ ...snapshot, answers: {}, jawabanTerisi: terisi })).toBe(terisi);
+    expect(hitungJawabanTerisi({ ...snapshot, answers: {}, jawabanTerisi: undefined })).toBe(0);
   });
 });
 

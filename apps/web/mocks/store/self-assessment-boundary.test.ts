@@ -102,6 +102,16 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
       "pesantren@ishas.demo",
     );
   });
+
+  test("snapshot kiriman membawa cacah jawabanTerisi (D-35)", () => {
+    simpan("SELF-PSN-0018");
+    const kirim = storeActions.submitSelfAssessment({ name: "Warga", role: "Publik" }, "SELF-PSN-0018");
+    expect(kirim.ok).toBe(true);
+    if (!kirim.ok || !kirim.id) return;
+    const snapshot = getState().selfAssessmentSnapshots.find((s) => s.reportId === kirim.id);
+    // Draft uji mengisi 10 jawaban → cacah bawaan 10 untuk proyeksi publik D-02.
+    expect(snapshot?.jawabanTerisi).toBe(10);
+  });
 });
 
 describe("lokasi manual + scope/checksum draft (D-24/D-11)", () => {

@@ -195,6 +195,7 @@ type SelfAssessmentSnapshot = { // D-24: beku saat kirim
   submittedAt: string; answers: Record<string, {...}>;
   frozenIndicators?: { id, code, title, answerType, options[{value,label,weight,isFinding}], weight }[];
   scorePercent?: number | null; byDimension?: Record<string, number | null>;
+  jawabanTerisi?: number; // D-35: cacah jawaban terisi (D-02 aman), dibawa proyeksi publik
 };
 // Saat kirim perlu snapshot permanen seluruh jawaban yang terkait Report.
 // Sketsa ini belum memuat entitas snapshot/status kirim; lihat DATA_REQUIREMENTS §2.

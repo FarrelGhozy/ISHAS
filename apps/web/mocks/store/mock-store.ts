@@ -1305,6 +1305,8 @@ export const storeActions = {
         frozenIndicators: frozen,
         scorePercent,
         byDimension,
+        // D-35: cacah terisi dibawa proyeksi publik (answers dikosongkan D-02).
+        jawabanTerisi: Object.values(builtAnswers).filter((a) => a.value.trim()).length,
       });
       delete draft.selfAssessmentDrafts[draftId];
       audit(draft, sender, {
