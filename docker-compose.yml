@@ -70,9 +70,11 @@ services:
       # (Seed tetap membaca `apps/web/mocks/` dari image, bukan dari bind ini.)
       - ./apps/api:/app/apps/api
       - api-modules:/app/apps/api/node_modules
-      # Blob unggahan (bukti/denah/PDF) disimpan di volume agar tidak menulis
-      # file milik root ke bind mount host.
-      - ./apps/api/storage:/app/apps/api/storage
+      # Blob unggahan (bukti/denah/PDF) disimpan di named volume, bukan bind
+      # mount. Container `api` berjalan sebagai root, sehingga bind mount akan
+      # membuat file milik root di host dan membuat `bun test`/dev lokal EACCES.
+      # Named volume menjaga `apps/api/storage` host tetap milik pengguna.
+      - api-storage:/app/apps/api/storage
     profiles:
       - dev
       - api
@@ -136,6 +138,7 @@ services:
 volumes:
   db-data:
   api-modules:
+  api-storage:
   web-dev-modules:
   web-dev-router:
   web-dev-build:
