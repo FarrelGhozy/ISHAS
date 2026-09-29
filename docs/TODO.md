@@ -1,5 +1,17 @@
 # TODO — Kontrol Kerja Aktif
 
+## Poles UI hasil mandiri Pesantren (D-37) — 29 September 2026 — `IN PROGRESS`
+
+Revisi visual atas arahan langsung pemilik. Cakupan hanya halaman
+`/pesantren/hasil-penilaian-mandiri` dan komponen detailnya: ringkasan metrik,
+kartu daftar, panel detail, metadata, serta responsive polish. Tidak mengubah
+scope, schema, hak akses, atau data publik.
+
+- [x] Catat D-37 sebelum mengubah kode.
+- [ ] Kode + test render.
+- [ ] Verifikasi lint + typecheck + test + build + cek visual 3 viewport.
+- [ ] Review pemilik.
+
 ## Hasil penilaian mandiri detail Pesantren (D-36) — 29 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (hasil mandiri dashboard umum butuh versi

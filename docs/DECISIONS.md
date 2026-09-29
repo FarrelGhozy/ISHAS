@@ -1170,3 +1170,14 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   Validasi/PDF.
 - Dokumen terdampak: ROUTES §2, ROLES §2, WIREFRAMES §6, FLOWS §6,
   TODO, STAGE_07.
+
+## D-37 — Poles visual hasil mandiri Pesantren — IN PROGRESS 29 September 2026
+
+- Arahan pemilik: halaman hasil penilaian mandiri di ruang Pesantren dibuat lebih
+  baik, rapi, dan profesional.
+- Cakupan: penyempurnaan UI halaman D-36 tanpa mengubah data, hak akses, status,
+  atau aturan privasi. Tampilan memakai ringkasan metrik, kartu hasil yang lebih
+  informatif, panel detail dengan skor dan metadata yang mudah dipindai, serta
+  responsivitas desktop dan ponsel.
+- Batas: tetap read-only, tetap hanya scope Pesantren aktif, dan tidak mengubah
+  tampilan publik `/hasil` atau PDF publik.

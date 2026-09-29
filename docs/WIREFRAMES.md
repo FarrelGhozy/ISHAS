@@ -151,6 +151,19 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
   Milik pesantren lain tidak pernah dibaca; tampil `EmptyState` blokir.
 - Guard: hanya role Pesantren + satu `institutionCode`; selain itu `EmptyState`.
 
+### Poles visual D-37
+
+- Header memakai banner konteks biru lembut berisi nama lembaga, scope, status,
+  dan keterangan `Read-only · data internal pesantren`.
+- Di bawahnya tampil metrik `Total hasil`, `Skor rata-rata`, `Skor tertinggi`,
+  dan `Jawaban terisi` agar halaman tidak terasa seperti tabel arsip.
+- Daftar memakai kartu dengan nomor, status, skor besar, penilai, tanggal, dan
+  indikator jumlah jawaban; kartu aktif memiliki penanda visual yang tetap
+  terbaca tanpa mengandalkan warna saja.
+- Panel detail memiliki header laporan, skor utama, skor per dimensi, metadata
+  teknis, dan kelompok jawaban yang dapat dipindai. Pada ponsel panel detail
+  turun di bawah daftar.
+
 ## 7. Responsif (wajib diperiksa)
 
 - Desktop 1440×900, tablet 834×1112, ponsel 390×844: tidak ada overflow horizontal halaman; header publik memindahkan CTA ke baris kedua di ponsel; tiga kolom penilaian mandiri menumpuk (navigasi dimensi menjadi dropdown/accordion); tabel antrean menjadi kartu; grafik punya tinggi minimum 225px dan hanya render setelah panel terlihat.
