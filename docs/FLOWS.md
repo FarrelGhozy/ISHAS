@@ -56,7 +56,7 @@ tetap tersimpan internal sesuai scope; jangan menghapusnya otomatis.
  | Lokasi/area | Wajib, dropdown area milik pesantren terpilih (format "Gedung · Lantai · Area"). Jika area belum ada → pesan "Belum ada area terdaftar; hubungi akun Pesantren." |
  | Judul temuan | Wajib, 10–140 karakter. Contoh: "Kabel terbuka di koridor lantai 2". |
  | Deskripsi | Wajib, min 20 karakter: apa, di mana tepatnya, sejak kapan, siapa terdampak. |
- | Foto/bukti | Opsional, satu PNG/JPEG/WebP maksimum 5 MB/20 megapiksel. Periksa dekode → simpan blob lokal → pratinjau → ID lampiran pada draft/laporan. Bukti privat, hanya akun Pesantren pemilik scope. Backend belum tersedia. |
+ | Foto/bukti | Opsional, satu PNG/JPEG/WebP maksimum 5 MB/20 megapiksel. Dikompres di perangkat (sisi terpanjang maks 1600 px, JPEG kualitas 0,8 — D-33) → periksa dekode → simpan blob lokal → pratinjau → ID lampiran pada draft/laporan. Bukti privat, hanya akun Pesantren pemilik scope. Backend belum tersedia. |
  | Kontak | Opsional, maks 100 karakter (untuk klarifikasi). |
 3. Tekan **Kirim laporan** → validasi inline per field → sukses: tampilkan layar konfirmasi berisi **nomor laporan** (`RPT-XXXX`), status `Menunggu validasi`, dan penjelasan "Laporan Anda belum tampil di dashboard; menunggu validasi akun Pesantren." + tombol kembali.
  → Sistem: `validationStatus: Menunggu validasi`, `handlingStatus: Menunggu validasi`, `severity/priority: Belum ditentukan`; audit `Mengirim laporan publik`; notifikasi ke akun Pesantren terkait (`/pesantren/validasi-laporan`).
@@ -92,8 +92,9 @@ baru. Pelapor TIDAK dapat memilih versi (tidak ada versi).
   - Jawaban (wajib semua indikator `required`).
   - Catatan observasi (bebas; **wajib** bila jawaban `N/A` — min 10 karakter alasan).
   - Bukti (wajib bila indikator `evidenceRequired`; tombol upload PNG/JPEG/WebP
-  maks 5 MB/20 MP + pratinjau + lepas/ganti, pola sama `/lapor` — D-27; foto
-  tampil di PDF publik, tanpa foto = PDF tanpa gambar pada jawaban itu).
+  maks 5 MB/20 MP, dikompres di perangkat (D-33) + pratinjau + lepas/ganti, pola
+  sama `/lapor` — D-27; foto tampil di PDF publik, tanpa foto = PDF tanpa gambar
+  pada jawaban itu).
  - Lokasi observasi (wajib bila indikator `locationRequired`; pilih area + tandai titik denah `x/y` 0–100 bila denah tersedia; bila tanpa denah, area saja cukup).
 4. **Simpan draft** otomatis per perubahan tanpa menunggu nama (nama + pesantren
 wajib baru saat kirim); pesantren terakhir diingat per perangkat sehingga reload
@@ -168,7 +169,7 @@ tidak boleh disamakan tanpa aturan penghubung tersebut.
 ## 6. Tindak lanjut dan laporan pimpinan (Aktor: Pesantren)
 
  1. Dari rekomendasi `Belum ditindaklanjuti` → **Buat rencana tindakan** (PIC + tenggat + catatan) → status rekomendasi `Berjalan`, laporan induk `Proses`.
- 2. Perbarui progres (slider titik `0/25/50/75/100` + label tahap; nilai lama dibulatkan ke titik terdekat — D-20) + catatan + bukti penyelesaian upload gambar (PNG/JPEG/WebP 5 MB/20 MP, pratinjau + lepas/ganti, pola sama `/lapor` — D-21) → ajukan selesai → akun Pesantren memverifikasi → `Completed`/`Terverifikasi`.
+ 2. Perbarui progres (slider titik `0/25/50/75/100` + label tahap; nilai lama dibulatkan ke titik terdekat — D-20) + catatan + bukti penyelesaian upload gambar (PNG/JPEG/WebP 5 MB/20 MP, dikompres di perangkat — D-33, pratinjau + lepas/ganti, pola sama `/lapor` — D-21) → ajukan selesai → akun Pesantren memverifikasi → `Completed`/`Terverifikasi`.
  2a. **Batalkan perbaikan** (D-21, D-23.d): dari `Belum ditindaklanjuti/Berjalan/Menunggu verifikasi` → `Dibatalkan` (terminal per rekomendasi, baris tidak dihapus) → wajib alasan min 10 karakter + `canceledBy/canceledAt` + audit `Membatalkan tindak lanjut`; temuan tertaut ikut `Dibatalkan`; laporan induk tetap pada status berjalan (`Pending/Proses` apa adanya); `Dibatalkan` menghalangi `Completed` otomatis + UI memberi hint (buat rencana pengganti via laporan baru atau lanjutkan rekomendasi tersisa). Status + alasan tampil publik; bukti/tenggat/catatan internal tetap privat.
  2b. **Tingkat risiko temuan** (D-23.b): `severity/priority` laporan tetap `Tinggi/Sedang/Rendah`; level tiap temuan (`Rendah/Sedang/Tinggi/Ekstrem`) diubah eksplisit per baris oleh Pesantren + teraudit `Mengubah tingkat risiko temuan`. Tanpa rumus turunan otomatis.
 3. `/pesantren/laporan`: pratinjau ringkasan pimpinan dalam scope Pesantren (tanpa arsip) + dimensi katalog aktif (ilustrasi) + status tindak lanjut + progres rata-rata non-`Dibatalkan` + metadata (periode berjalan, versi instrumen per laporan pada riwayat, waktu data terbaru, pembuat) + tautan silang ke Validasi/Tindak lanjut + simulasi unduh PDF/Excel berlabel dummy. Halaman publik `/laporan` dihapus (D-28); publik membaca hasil di `/hasil` (metrik + dimensi + daftar PDF) dan detail rekapan di `/laporan/:id` dengan bidang sesuai D-02 (ringkasan + nama validator/PIC + foto bukti penilaian — D-27; tanpa nama pelapor, jawaban mentah).

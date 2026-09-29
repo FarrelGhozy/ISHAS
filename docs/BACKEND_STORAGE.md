@@ -70,7 +70,7 @@ sebelum itu baris asset berstatus staging dan disapu job malam bila >24 jam.
 
 | Jenis | Batas | Cek |
 |---|---|---|
-| Bukti gambar (4 alur: lapor, jawaban mandiri, SAM, penyelesaian) | PNG/JPEG/WebP, 0–5 MB, nama 1–200, ≤20 MP | `Content-Length` dulu → magic bytes (`89 50 4E 47` / `FF D8 FF` / `RIFF....WEBP`) → dimensi header (`image.ts`, pengganti `createImageBitmap`) → resolusi → sha256 |
+| Bukti gambar (4 alur: lapor, jawaban mandiri, SAM, penyelesaian) | PNG/JPEG/WebP, 0–5 MB, nama 1–200, ≤20 MP | Kompresi klien lebih dulu (sisi terpanjang maks 1600 px, JPEG q0,8 — D-33) → `Content-Length` → magic bytes (`89 50 4E 47` / `FF D8 FF` / `RIFF....WEBP`) → dimensi header (`image.ts`, pengganti `createImageBitmap`) → resolusi → sha256 |
 | Denah | PNG/JPEG/WebP ≤5 MB, sisi pendek ≥800 px | Sama, tanpa batas 20 MP |
 | PDF indikator | `application/pdf` + `.pdf` + header `%PDF-`, 0–10 MB, nama ≤200 | 5 byte pertama wajib `25 50 44 46 2D` |
 | Impor dataset | CSV/JSON teks, ≤200 baris | Bukan biner; validasi per baris di API |

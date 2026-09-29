@@ -1031,3 +1031,22 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   STAGE_08, BACKEND_API_CONTRACT, BACKEND_DATA_MODEL, apps/web/FLOW.md.
   Scope Stage 08 + sentuhan baca Validasi; status stage lain tidak berubah
   sepihak.
+
+## D-33 — Kompresi gambar bukti saat unggah — DISETUJUI 29 September 2026
+
+- Arahan pemilik: foto dari ponsel terlalu besar sehingga membebani penyimpanan;
+  gambar perlu dikompres saat diunggah agar lebih ringan.
+- **Keputusan:** seluruh unggah **foto bukti** (lapor-cepat, jawaban penilaian
+  mandiri, SAM-iSAFE, bukti penyelesaian tindak lanjut) dikompres di sisi klien
+  sebelum dikirim/disimpan: sisi terpanjang maksimal **1600 px**, JPEG
+  **kualitas 0,8**, orientasi EXIF dihormati (`imageOrientation: from-image`).
+  Kompresi hanya dijalankan bila gambar melebihi ambang (dimensi > 1600 px atau
+  ukuran > 400 KB) dan hasilnya lebih kecil; bila tidak, berkas asli dipakai.
+- **Batas:** format masuk tetap PNG/JPEG/WebP maks 5 MB/20 MP; berkas yang
+  dikompres dikirim sebagai JPEG. Bila `canvas`/`createImageBitmap` tidak
+  tersedia (SSR/uji), kompresi dilewati dengan aman dan berkas asli dipakai.
+- **Bukan lingkup:** denah kampus (butuh ketajaman peta, tetap apa adanya) dan
+  berkas PDF dokumen indikator.
+- Dokumen terdampak: FLOWS §2/§3/§6, BACKEND_STORAGE, apps/web/README.
+  Tidak mengubah schema maupun hak akses; status stage lain tidak berubah
+  sepihak.
