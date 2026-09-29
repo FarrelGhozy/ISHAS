@@ -43,8 +43,8 @@ export function SelfAssessmentEvidencePicker({
         Bukti pendukung <span className="text-primary">*</span>
       </span>
       <p className="mb-2 text-xs font-normal text-secondary-text">
-        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel.
-        Foto akan tampil di PDF laporan publik.
+        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Gambar besar
+        dikompres otomatis saat diunggah. Foto akan tampil di PDF laporan publik.
       </p>
       <input
         type="file"

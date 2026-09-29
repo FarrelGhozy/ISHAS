@@ -22,6 +22,7 @@ import type {
 } from "~/mocks/types";
 import { sessionStore } from "~/shared/auth/session";
 import { setServerAccount } from "~/shared/auth/auth-session";
+import { compressImageFile } from "~/shared/lib/image-compress";
 import { refreshAdminState } from "./admin-state";
 import { USE_BACKEND } from "./http-client";
 import { refreshPublicState } from "./public-state";
@@ -84,18 +85,20 @@ export const repository = {
     institutionCode: string,
     file: File,
   ): Promise<ActionResult> {
+    const prepared = await compressImageFile(file);
     return USE_BACKEND
-      ? httpRepository.uploadReportEvidence(actor, institutionCode, file)
-      : mockRepository.uploadReportEvidence(actor, institutionCode, file);
+      ? httpRepository.uploadReportEvidence(actor, institutionCode, prepared)
+      : mockRepository.uploadReportEvidence(actor, institutionCode, prepared);
   },
   async uploadSelfEvidence(
     actor: ReportActor,
     institutionCode: string,
     file: File,
   ): Promise<ActionResult> {
+    const prepared = await compressImageFile(file);
     return USE_BACKEND
-      ? httpRepository.uploadSelfEvidence(actor, institutionCode, file)
-      : mockRepository.uploadReportEvidence(actor, institutionCode, file);
+      ? httpRepository.uploadSelfEvidence(actor, institutionCode, prepared)
+      : mockRepository.uploadReportEvidence(actor, institutionCode, prepared);
   },
   async saveSelfAssessmentDraft(input: SelfAssessmentDraft): Promise<ActionResult> {
     if (!USE_BACKEND) return mockRepository.saveSelfAssessmentDraft(input);
@@ -213,9 +216,10 @@ export const repository = {
     institutionCode: string,
     file: File,
   ): Promise<ActionResult> {
+    const prepared = await compressImageFile(file);
     return USE_BACKEND
-      ? httpRepository.uploadCompletionEvidence(actor, institutionCode, file)
-      : mockRepository.uploadCompletionEvidence(actor, institutionCode, file);
+      ? httpRepository.uploadCompletionEvidence(actor, institutionCode, prepared)
+      : mockRepository.uploadCompletionEvidence(actor, institutionCode, prepared);
   },
   async updateTindakLanjut(
     actor: ReportActor,
@@ -479,9 +483,10 @@ export const repository = {
     institutionCode: string,
     file: File,
   ): Promise<ActionResult> {
+    const prepared = await compressImageFile(file);
     return USE_BACKEND
-      ? httpRepository.uploadSamEvidence(actor, institutionCode, file)
-      : mockRepository.uploadSamEvidence(actor, institutionCode, file);
+      ? httpRepository.uploadSamEvidence(actor, institutionCode, prepared)
+      : mockRepository.uploadSamEvidence(actor, institutionCode, prepared);
   },
   async openEvidenceAsset(
     assetId: string,

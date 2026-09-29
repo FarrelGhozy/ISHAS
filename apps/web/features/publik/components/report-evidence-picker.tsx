@@ -43,8 +43,8 @@ export function ReportEvidencePicker({
         Gambar bukti (opsional)
       </label>
       <p id="lapor-foto-hint" className="mb-2 text-sm text-secondary-text">
-        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Bukti hanya untuk akun Pesantren,
-        tidak tampil publik.
+        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Gambar besar dikompres
+        otomatis saat diunggah. Bukti hanya untuk akun Pesantren, tidak tampil publik.
       </p>
       <input
         id="lapor-foto"

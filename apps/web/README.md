@@ -8,7 +8,7 @@ ISHAS adalah aplikasi React untuk pelaporan dan pemantauan K3L pesantren. Halama
 - Validator: `validator@ishas.demo`
 - Pesantren: `pesantren@ishas.demo`
 
-Tidak ada peran atau jalur asesor. Alur utama: publik/pesantren mengirim laporan cepat (divalidasi Pesantren) atau penilaian mandiri (langsung terbit, tanpa validasi), lalu tindak lanjut lapor-cepat dikelola sampai selesai.
+Tidak ada peran atau jalur asesor. Alur utama: publik/pesantren mengirim laporan cepat (divalidasi Pesantren) atau penilaian mandiri (langsung terbit, tanpa validasi), lalu tindak lanjut lapor-cepat dikelola sampai selesai. Foto bukti dikompres otomatis di perangkat saat diunggah (sisi terpanjang maks 1600 px, JPEG kualitas 0,8 — D-33).
 
 ## Menjalankan
 

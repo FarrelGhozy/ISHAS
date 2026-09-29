@@ -45,8 +45,8 @@ export function CompletionEvidencePicker({
         Bukti penyelesaian (wajib bila 100%)
       </label>
       <p className="mb-2 text-sm text-secondary-text">
-        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Bukti privat,
-        hanya untuk Pesantren.
+        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Gambar besar
+        dikompres otomatis saat diunggah. Bukti privat, hanya untuk Pesantren.
       </p>
       <input
         id={`bukti-selesai-${institutionCode}`}
