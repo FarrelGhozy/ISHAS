@@ -3,12 +3,7 @@
 // terpusat di satu titik.
 
 import { storeActions, getState, type ActionResult, type ReportActor } from "../store/mock-store";
-import {
-  selectFindingsByReports,
-  selectRecommendationsByReports,
-  selectRegisteredInstitutions,
-  selectPublicReports,
-} from "../store/selectors";
+import { selectRegisteredInstitutions } from "../store/selectors";
 import type { CampusPlanVersion, LocationSnapshot } from "../types";
 import { putCampusAsset, deleteCampusAsset, clearCampusAssets } from "./campus-assets";
 import {
@@ -32,21 +27,6 @@ let resettingAssets = false;
 let assetEpoch = 0;
 
 export const mockRepository = {
-  registeredInstitutions() {
-    return selectRegisteredInstitutions(getState());
-  },
-  validatedReports(institutionCode: string | null) {
-    return selectPublicReports(getState(), institutionCode);
-  },
-  findingsFor(institutionCode: string | null) {
-    return selectFindingsByReports(getState(), selectPublicReports(getState(), institutionCode));
-  },
-  recommendationsFor(institutionCode: string | null) {
-    return selectRecommendationsByReports(
-      getState(),
-      selectPublicReports(getState(), institutionCode),
-    );
-  },
   async reset() {
     if (resettingAssets) throw new Error("Reset demo sedang berlangsung.");
     resettingAssets = true;

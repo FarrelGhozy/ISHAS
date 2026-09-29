@@ -1,5 +1,24 @@
 # TODO — Kontrol Kerja Aktif
 
+## Pengerasan adapter backend (D-31) — 29 September 2026 — `IN PROGRESS`
+
+Arahan pemilik (`kerjakan`): backend + MySQL sudah menyala (`VITE_USE_BACKEND=true`).
+Tutup celah mode backend agar tidak menyajikan data dummy diam-diam.
+
+- [x] P0 — factory `backend-state` tanpa fallback mock + banner/coba lagi + `useCurrentUser`
+      (4 hook memakai `createBackendState`, `emptyIshasState`; `BackendNotice` di kedua shell).
+- [x] P1 — resolver tidak lagi memakai selector mock (spread `...mockRepository` dihapus;
+      test memastikan metode tidak ada).
+- [x] P2a — `buildPublicState` bertipe `IshasState` eksplisit + test draft tidak ikut publik.
+- [x] P2b — `GET /self-assessments/drafts/:id` + `getSelfAssessmentDraft` + restore draft
+      di `/penilaian-mandiri` (guard `draftLoading` agar autosave tidak menimpa draft server).
+- [ ] P2c — utang modul domain bersama: **ditunda** (refactor besar, docs sudah mencatat
+      pemindahan seed/modul saat backend mandiri); dikerjakan sebagai stage tersendiri.
+- [x] Verifikasi: lint + typecheck + test + build FE (257 test) & BE (104 test, DB uji)
+      + smoke endpoint (proxy `/api`, GET draft 200/404). Cek klik browser 3 viewport
+      belum dijalankan (channel Chrome Playwright tidak tersedia di lingkungan ini).
+- [ ] Review pemilik.
+
 ## Backend Fase 6 — auth server + RBAC + seed dua mode (D-30.h, issue #9) — 29 September 2026 — `REVIEW`
 
 Arahan pemilik (`ok kerjakan` Fase 6 backend + commit + tutup issue): auth server

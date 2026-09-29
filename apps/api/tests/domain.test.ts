@@ -2,6 +2,7 @@
 import { describe, expect, test } from "bun:test";
 import { SEED } from "../../web/mocks/seed/seed";
 import { buildPublicState } from "../src/domain/public-state";
+import { getDraft } from "../src/domain/self-assessment";
 import { validateLapor } from "../src/domain/lapor";
 import { httpStatusForError, paginate } from "../src/http";
 import { imageInfo } from "../src/image";
@@ -95,6 +96,26 @@ describe("buildPublicState (invarian D-02)", () => {
     expect(publicState.auditEvents).toHaveLength(0);
     expect(publicState.notifications).toHaveLength(0);
     expect(publicState.samAssessments).toHaveLength(0);
+  });
+
+  test("draft penilaian tidak ikut publik (D-31)", () => {
+    expect(Object.keys(publicState.selfAssessmentDrafts)).toHaveLength(0);
+  });
+});
+
+describe("getDraft (D-31)", () => {
+  const draftId = Object.keys(SEED.selfAssessmentDrafts)[0]!;
+
+  test("draft ada → dikembalikan", () => {
+    const result = getDraft(SEED, draftId);
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.draft.id).toBe(draftId);
+  });
+
+  test("draft tidak ada → error", () => {
+    const result = getDraft(SEED, "SELF-TIDAK-ADA");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe("Draft tidak ditemukan.");
   });
 });
 

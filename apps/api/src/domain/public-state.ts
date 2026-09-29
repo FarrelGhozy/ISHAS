@@ -46,7 +46,7 @@ export function projectPublicRecommendation(rec: Recommendation): Recommendation
   };
 }
 
-export function buildPublicState(state: IshasState) {
+export function buildPublicState(state: IshasState): IshasState {
   const registered = selectRegisteredInstitutions(state);
   const registeredCodes = new Set(registered.map((i) => i.code));
   const reports = selectPublicReports(state, null);
@@ -108,5 +108,5 @@ export function buildPublicState(state: IshasState) {
     notifications: [],
     indexHistory: state.indexHistory,
     counters: { report: 0, institution: 0 },
-  } satisfies Record<string, unknown>;
+  };
 }

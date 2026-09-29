@@ -17,7 +17,7 @@ function initialsOf(name: string): string {
     .toUpperCase();
 }
 
-function accountToUser(account: ServerAccount, institution: string): User {
+function accountToUser(account: ServerAccount): User {
   return {
     id: account.id,
     name: account.name,
@@ -25,7 +25,8 @@ function accountToUser(account: ServerAccount, institution: string): User {
     initials: initialsOf(account.name),
     role: account.role as User["role"],
     roleId: account.roleId,
-    institution,
+    // Nama tampilan lingkup: kode pesantren untuk akun Pesantren (D-31).
+    institution: account.institutionCodes[0] ?? "Seluruh sistem",
     institutionCodes: account.institutionCodes,
     status: account.status,
     lastActive: new Date().toISOString(),
@@ -37,11 +38,7 @@ export function useCurrentUser(): User | null {
   const account = useServerAccount();
   const session = useSession();
 
-  if (USE_BACKEND && account) {
-    const code = account.institutionCodes[0];
-    const own = code ? state.institutions.find((item) => item.code === code) : undefined;
-    return accountToUser(account, own?.name ?? (code ? code : "Seluruh sistem"));
-  }
+  if (USE_BACKEND) return account ? accountToUser(account) : null;
   if (!session) return null;
   return state.users.find((u) => u.id === session.accountId) ?? null;
 }

@@ -13,7 +13,8 @@ import { IshasMark } from "~/shared/components/ishas-mark";
 import { Modal } from "~/shared/components/modal";
 import { ROLE_NAVIGATION } from "~/shared/navigation/workspace-config";
 import { repository, USE_BACKEND } from "~/shared/api/repository";
-import { useWorkspaceState } from "~/shared/api/workspace-state";
+import { useWorkspaceState, useWorkspaceStatus } from "~/shared/api/workspace-state";
+import { BackendNotice } from "~/shared/components/backend-notice";
 
 export default function WorkspaceLayout() {
   const location = useLocation();
@@ -21,6 +22,7 @@ export default function WorkspaceLayout() {
   const account = useServerAccount();
   const user = useCurrentUser();
   const state = useWorkspaceState();
+  const { error: stateNotice, refresh: refreshState } = useWorkspaceStatus();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -233,6 +235,7 @@ export default function WorkspaceLayout() {
           </p>
         ) : null}
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-4 py-6 lg:px-6">
+          <BackendNotice error={stateNotice} onRetry={refreshState} />
           <Outlet />
         </main>
       </div>

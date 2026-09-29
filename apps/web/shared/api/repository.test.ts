@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { apiRequest } from "./http-client";
 import { httpRepository } from "./http-repository";
+import { repository } from "./repository";
 
 type Call = { url: string; init: RequestInit };
 
@@ -101,6 +102,23 @@ describe("httpRepository", () => {
     await httpRepository.deleteSelfAssessmentDraft("SELF-1");
     expect(calls[0].init.method).toBe("DELETE");
     expect(calls[0].url).toContain("/api/v1/self-assessments/drafts/SELF-1");
+  });
+
+  test("getSelfAssessmentDraft → GET /self-assessments/drafts/:id (D-31)", async () => {
+    const draft = {
+      id: "SELF-PSN-0018",
+      institutionCode: "PSN-0018",
+      reporterName: "Ahmad",
+      instrumentVersionId: "INS-LIVE",
+      answers: {},
+      activeIndex: 0,
+      updatedAt: "2026-09-29T00:00:00.000Z",
+    };
+    stubFetch({ ok: true, data: { draft } });
+    const result = await httpRepository.getSelfAssessmentDraft("SELF-PSN-0018");
+    expect(result).toEqual({ ok: true, draft });
+    expect(calls[0].init.method ?? "GET").toBe("GET");
+    expect(calls[0].url).toContain("/api/v1/self-assessments/drafts/SELF-PSN-0018");
   });
 });
 
@@ -350,5 +368,18 @@ describe("apiRequest", () => {
     const result = await apiRequest("/public/state");
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toContain("Tidak dapat menghubungi server");
+  });
+});
+
+describe("resolver repository (D-31)", () => {
+  test("tidak mengekspos selector baca mock", () => {
+    for (const name of [
+      "registeredInstitutions",
+      "validatedReports",
+      "findingsFor",
+      "recommendationsFor",
+    ]) {
+      expect(name in repository).toBe(false);
+    }
   });
 });

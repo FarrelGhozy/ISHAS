@@ -181,6 +181,14 @@ export const httpRepository = {
     return toAction(result);
   },
 
+  // GET draft penilai (D-31): kembalikan objek draft atau null bila tidak ada.
+  async getSelfAssessmentDraft(draftId: string): Promise<{ ok: true; draft: SelfAssessmentDraft } | { ok: false; error: string }> {
+    const result = await apiRequest<{ draft: SelfAssessmentDraft }>(
+      `/self-assessments/drafts/${encodeURIComponent(draftId)}`,
+    );
+    return result.ok ? { ok: true, draft: result.data.draft } : { ok: false, error: result.error };
+  },
+
   // --- Ruang kerja Pesantren (Fase 2) ---
   async acceptReport(
     _actor: ReportActor,

@@ -1,58 +1,38 @@
 // Sumber baca publik: mock (default) atau server (`GET /public/state`) saat
-// flag `VITE_USE_BACKEND` aktif. Halaman publik cukup menukar `useMockState`.
+// flag `VITE_USE_BACKEND` aktif. Mode backend tidak jatuh ke seed mock (D-31).
 
-import { useSyncExternalStore } from "react";
 import { useMockState } from "~/mocks/store/mock-store";
 import type { IshasState } from "~/mocks/types";
-import { apiRequest, USE_BACKEND } from "./http-client";
+import { createBackendState, EMPTY_ISHAS_STATE, type BackendStatus } from "./backend-state";
+import { USE_BACKEND } from "./http-client";
 
-type PublicCache = { state: IshasState | null; error: string | null };
-
-let cache: PublicCache = { state: null, error: null };
-const listeners = new Set<() => void>();
-let started = false;
-
-function emit(): void {
-  for (const listener of listeners) listener();
-}
-
-function load(force = false): void {
-  if (!USE_BACKEND) return;
-  if (started && !force) return;
-  started = true;
-  void apiRequest<IshasState>("/public/state").then((result) => {
-    cache = result.ok ? { state: result.data, error: null } : { state: null, error: result.error };
-    emit();
-  });
-}
+const store = createBackendState("/public/state");
 
 // Muat ulang cache publik setelah mutasi (lapor/mandiri/reset) agar bacaan
 // dashboard publik tidak basi sampai reload penuh.
 export function refreshPublicState(): void {
-  load(true);
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  load();
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-function getSnapshot(): PublicCache {
-  return cache;
+  if (!USE_BACKEND) return;
+  store.refresh();
 }
 
 export function usePublicState(): IshasState {
   const mockState = useMockState();
-  const backend = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return USE_BACKEND && backend.state ? backend.state : mockState;
+  const snapshot = store.useSnapshot();
+  if (!USE_BACKEND) return mockState;
+  return snapshot.state ?? EMPTY_ISHAS_STATE;
 }
 
-// Sumber state + status muat server (untuk fallback/notice bila diperlukan).
-export function usePublicStateWithStatus(): { state: IshasState; error: string | null } {
+// Sumber state + status muat server (untuk banner/bila diperlukan).
+export function usePublicStateWithStatus(): {
+  state: IshasState;
+  status: BackendStatus;
+  error: string | null;
+} {
   const state = usePublicState();
-  const backend = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return { state, error: USE_BACKEND ? backend.error : null };
+  const snapshot = store.useSnapshot();
+  return {
+    state,
+    status: USE_BACKEND ? snapshot.status : "ready",
+    error: USE_BACKEND ? snapshot.error : null,
+  };
 }

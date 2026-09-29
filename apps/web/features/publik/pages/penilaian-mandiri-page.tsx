@@ -14,11 +14,12 @@ import {
 } from "lucide-react";
 import { usePublicState } from "~/shared/api/public-state";
 import { repository } from "~/shared/api/repository";
+import { USE_BACKEND } from "~/shared/api/http-client";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { EmptyState } from "~/shared/components/empty-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { canSubmitReport } from "~/shared/auth/session";
-import type { IndicatorAnswer, InstrumentIndicator } from "~/mocks/types";
+import type { IndicatorAnswer, InstrumentIndicator, SelfAssessmentDraft } from "~/mocks/types";
 import { LocationPicker } from "~/shared/components/campus-plan";
 import { validateMapLocation } from "~/mocks/processors/campus-map";
 import { SelfAssessmentEvidencePicker } from "../components/self-assessment-evidence-picker";
@@ -91,7 +92,32 @@ export function PenilaianMandiriPage() {
     .map((entry) => validateMapLocation(state, institutionCode, entry.locationSnapshot))
     .find(Boolean);
   const draftId = `SELF-${institutionCode || "baru"}`;
-  const storedDraft = state.selfAssessmentDrafts[draftId];
+  // D-31: mode backend memuat draft dari server (bukan `/public/state` yang
+  // sengaja dikosongkan). `draftLoading` menahan autosave agar draft server
+  // tidak tertimpa payload kosong sebelum selesai dimuat.
+  const [serverDraft, setServerDraft] = useState<SelfAssessmentDraft | null>(null);
+  const [draftLoading, setDraftLoading] = useState(USE_BACKEND);
+  useEffect(() => {
+    if (!USE_BACKEND) return;
+    let alive = true;
+    setDraftLoading(true);
+    void repository.loadSelfAssessmentDraft(draftId).then((draft) => {
+      if (!alive) return;
+      setServerDraft(draft);
+      if (draft) {
+        setReporterName(draft.reporterName ?? "");
+        setContact(draft.contact ?? "");
+        setAnswers(draft.answers ?? {});
+        setDraftChecksum(draft.instrumentChecksum ?? "");
+        setActive(draft.activeIndex ?? 0);
+      }
+      setDraftLoading(false);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [draftId]);
+  const storedDraft = USE_BACKEND ? (serverDraft ?? undefined) : state.selfAssessmentDrafts[draftId];
   const effectiveChecksum =
     draftChecksum || storedDraft?.instrumentChecksum || instrument?.checksum || "";
   // D-24: soal berubah di tengah jalan = draft basi, wajib ulang dari awal.
@@ -128,6 +154,7 @@ export function PenilaianMandiriPage() {
   useEffect(() => {
     if (!institutionCode || !instrument || submittedId || draftStale) return;
     if (blocked) return;
+    if (draftLoading) return;
     // Ingat pesantren setiap autosave agar reload tanpa ?pesantren=
     // tetap memuat draft yang benar (FLOWS §3).
     ingatPesantren(institutionCode);
@@ -174,6 +201,7 @@ export function PenilaianMandiriPage() {
     effectiveChecksum,
     checksumBank,
     blocked,
+    draftLoading,
   ]);
 
   if (blocked)
@@ -232,6 +260,7 @@ export function PenilaianMandiriPage() {
   };
   const discardStaleDraft = () => {
     if (storedDraft) void repository.deleteSelfAssessmentDraft(draftId);
+    setServerDraft(null);
     setAnswers({});
     setActive(0);
     setDraftChecksum(instrument?.checksum ?? "");

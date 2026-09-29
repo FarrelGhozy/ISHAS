@@ -1,56 +1,30 @@
 // Sumber state ruang kerja Validator: mock (default) atau server
 // (`GET /validator/state`) saat flag `VITE_USE_BACKEND` aktif (Fase 3).
+// Mode backend tidak jatuh ke seed mock (D-31).
 
-import { useSyncExternalStore } from "react";
 import { useMockState } from "~/mocks/store/mock-store";
 import type { IshasState } from "~/mocks/types";
-import { apiRequest, USE_BACKEND } from "./http-client";
+import { createBackendState, EMPTY_ISHAS_STATE, type BackendStatus } from "./backend-state";
+import { USE_BACKEND } from "./http-client";
 
-type ValidatorCache = { state: IshasState | null; error: string | null };
-
-let cache: ValidatorCache = { state: null, error: null };
-const listeners = new Set<() => void>();
-let started = false;
-
-function emit(): void {
-  for (const listener of listeners) listener();
-}
-
-function fetchState(): void {
-  if (!USE_BACKEND) return;
-  void apiRequest<IshasState>("/validator/state").then((result) => {
-    cache = result.ok ? { state: result.data, error: null } : { state: null, error: result.error };
-    emit();
-  });
-}
-
-function load(): void {
-  if (started || !USE_BACKEND) return;
-  started = true;
-  fetchState();
-}
+const store = createBackendState("/validator/state");
 
 // Dipanggil setelah mutasi agar UI backend memuat ulang state.
 export function refreshValidatorState(): void {
   if (!USE_BACKEND) return;
-  started = true;
-  fetchState();
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  load();
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-function getSnapshot(): ValidatorCache {
-  return cache;
+  store.refresh();
 }
 
 export function useValidatorState(): IshasState {
   const mockState = useMockState();
-  const backend = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return USE_BACKEND && backend.state ? backend.state : mockState;
+  const snapshot = store.useSnapshot();
+  if (!USE_BACKEND) return mockState;
+  return snapshot.state ?? EMPTY_ISHAS_STATE;
+}
+
+export function useValidatorStatus(): { status: BackendStatus; error: string | null } {
+  const snapshot = store.useSnapshot();
+  return USE_BACKEND
+    ? { status: snapshot.status, error: snapshot.error }
+    : { status: "ready", error: null };
 }

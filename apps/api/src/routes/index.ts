@@ -18,7 +18,7 @@ import { actionResponse, fail, httpStatusForError, ok } from "../http";
 import { requireRole } from "../actor";
 import { buildPublicState, projectPublicRecommendation, projectPublicReport } from "../domain/public-state";
 import { resolveSender, submitLaporCepat, validateEvidence, validateLapor } from "../domain/lapor";
-import { deleteDraftById, saveDraft, submitSelfAssessment, type DraftInput } from "../domain/self-assessment";
+import { deleteDraftById, getDraft, saveDraft, submitSelfAssessment, type DraftInput } from "../domain/self-assessment";
 import { uploadEvidence } from "../domain/uploads";
 import { deleteFileAsset, getFileAsset } from "../repo/files";
 import { removeStoredBlob, tryReadStoredBlob } from "../storage";
@@ -360,6 +360,15 @@ export function buildRoutes(deps: RouteDeps): Route[] {
         const result = await deleteDraftById(state, params.id);
         if (!result.ok) return fail(result.error, httpStatusForError(result.error));
         return ok({ id: params.id });
+      }),
+    },
+    {
+      method: "GET",
+      pattern: "/api/v1/self-assessments/drafts/:id",
+      handler: withState(async ({ state, params }) => {
+        const result = getDraft(state, params.id);
+        if (!result.ok) return fail(result.error, 404);
+        return ok({ draft: result.draft });
       }),
     },
     {

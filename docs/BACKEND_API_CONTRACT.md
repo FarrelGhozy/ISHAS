@@ -128,6 +128,7 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 |---|---|---|
 | `GET /instrument/bank` | Publik boleh (soal untuk diisi; bobot/flag temuan **tidak** ikut ke publik — hanya teks/opsi/label) | Bank live + checksum |
 | `POST /self-assessments/drafts` | Pesantren terdaftar; bank berdimensi | Draft + `instrumentChecksum`; checksum beda = basi: kirim dikunci, wajib ulang |
+| `GET /self-assessments/drafts/:id` | Perangkat penilai (D-31; model draft prototipe sama dengan POST/DELETE) | Objek draft (`answers`, `activeIndex`, `instrumentChecksum`) atau 404 |
 | `DELETE /self-assessments/drafts/:id` | Pemilik draft | Buang draft basi |
 | `POST /self-assessments/submit` | Aktor publik/Pesantren; checksum cocok; nama 2–100; per indikator: nilai sah (wajib bila `required`), bukti bila `evidenceRequired` (D-27: upload beneran, 1 foto/soal), lokasi bila `locationRequired`, catatan ≥10 bila N/A | 1 `Report` + 1 snapshot beku (soal+opsi+bobot+jawaban+skor) + `scorePercent` + `pdfGeneratedAt` + audit + notifikasi; draft dihapus |
 | `POST /uploads/self-evidence` | Pola bukti (≤5 MB/20 MP) | Asset bukti jawaban |

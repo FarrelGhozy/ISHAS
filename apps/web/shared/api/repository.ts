@@ -37,10 +37,9 @@ import {
 import { refreshAllWorkspaceStates } from "./workspace-state";
 
 export const repository = {
-  // Catatan: selector baca (`registeredInstitutions`, `validatedReports`,
-  // `findingsFor`, `recommendationsFor`) hanya valid di mode mock; alihkan baca
-  // ke state hook (`usePublicState`/`usePesantrenState`/…) agar tidak terjebak.
-  ...mockRepository,
+  // Catatan: pembacaan state memakai hook `useXState` (bukan selector mock) agar
+  // mode backend tidak terjebak data dummy (D-31). Mutasi di bawah diarahkan ke
+  // `mockRepository`/`storeActions` saat mock dan `httpRepository` saat backend.
 
   // --- Auth Fase 6 (kartu dev tetap; cookie sesi di mode backend) ---
   async demoLogin(accountId: string): Promise<ActionResult> {
@@ -115,6 +114,12 @@ export const repository = {
     const result = await httpRepository.deleteSelfAssessmentDraft(draftId);
     if (result.ok) refreshPublicState();
     return result;
+  },
+  // Muat draft penilai (D-31): mock membaca store, backend memanggil endpoint.
+  async loadSelfAssessmentDraft(draftId: string): Promise<SelfAssessmentDraft | null> {
+    if (!USE_BACKEND) return getState().selfAssessmentDrafts[draftId] ?? null;
+    const result = await httpRepository.getSelfAssessmentDraft(draftId);
+    return result.ok ? result.draft : null;
   },
 
   // --- Ruang kerja Pesantren (Fase 2) ---

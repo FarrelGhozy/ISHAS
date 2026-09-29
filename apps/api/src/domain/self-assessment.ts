@@ -77,6 +77,17 @@ export async function deleteDraftById(
   return { ok: true };
 }
 
+// GET draft milik perangkat penilai (D-31). Draft publik tidak punya akun, jadi
+// pembacaan per-ID mengikuti model draft prototype yang sama dengan POST/DELETE.
+export function getDraft(
+  state: IshasState,
+  draftId: string,
+): { ok: true; draft: SelfAssessmentDraft } | { ok: false; error: string } {
+  const draft = state.selfAssessmentDrafts[draftId];
+  if (!draft) return { ok: false, error: "Draft tidak ditemukan." };
+  return { ok: true, draft };
+}
+
 export type SubmitResult = { ok: true; id: string } | { ok: false; error: string };
 
 export async function submitSelfAssessment(

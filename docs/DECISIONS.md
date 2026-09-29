@@ -880,6 +880,29 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   build lulus; smoke `demo-login → /auth/me → RBAC 403` OK. Cek visual 3 viewport
   belum dijalankan (Chromium tidak tersedia).
 
+## D-31 — Pengerasan adapter backend (P0–P2) — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`kerjakan`): backend + MySQL sudah menyala dan `VITE_USE_BACKEND=true`,
+  jadi tuntaskan celah agar mode backend tidak menyajikan data dummy diam-diam.
+- **P0 — Tanpa fallback mock:** keempat sumber state ruang (`public`/`workspace`/
+  `validator`/`admin`) memakai satu factory `shared/api/backend-state.ts`. Saat mode
+  backend dan state server loading/gagal, hook mengembalikan state kosong (bukan seed
+  mock) + status error untuk banner; `refresh()` mereset penanda agar tombol coba lagi
+  bekerja. `useCurrentUser` tidak lagi membaca `useMockState()` untuk nama lembaga.
+- **P1 — Resolver bersih:** `shared/api/repository.ts` tidak lagi spread `...mockRepository`;
+  selector baca mock (`registeredInstitutions`, `validatedReports`, `findingsFor`,
+  `recommendationsFor`) tidak dapat terpanggil di mode backend.
+- **P2a — Tipe proyeksi publik:** proyeksi `/public/state` diberi tipe eksplisit agar
+  field yang sengaja tidak dikirim tidak diam-diam bertipe ada.
+- **P2b — Restore draft penilaian mandiri:** draft `SELF-*` tidak lagi dibaca dari
+  `/public/state` (sengaja dikosongkan, D-02). Ditambah `GET /self-assessments/drafts/:id`
+  (scope pemilik draft) dan halaman penilaian memuat draft dari server saat mode backend.
+- **P2c — Modul domain bersama (utang):** backend masih mengimpor `apps/web/mocks/*`
+  (types/selector/processor). Pemindahan ke modul bersama dicatat sebagai pekerjaan
+  lanjutan tersendiri, bukan bagian perilaku produk.
+- **Batasan:** struktur data, aturan akses (D-02/D-03), copy, dan rumus tidak berubah.
+- Verifikasi: lint + typecheck + test + build FE/BE; smoke browser per peran + 3 viewport.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator

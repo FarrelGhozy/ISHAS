@@ -13,10 +13,13 @@ import { IshasMark } from "~/shared/components/ishas-mark";
 import { StatusChip } from "~/shared/components/status-chip";
 import { PublicNavigation } from "~/shared/navigation/public-navigation";
 import { Modal } from "~/shared/components/modal";
+import { BackendNotice } from "~/shared/components/backend-notice";
+import { refreshPublicState, usePublicStateWithStatus } from "~/shared/api/public-state";
 
 export default function PublicLayout() {
   const user = useCurrentUser();
   const navigate = useNavigate();
+  const { error } = usePublicStateWithStatus();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   useEffect(() => {
@@ -115,6 +118,7 @@ export default function PublicLayout() {
           tabIndex={-1}
           className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-6"
         >
+          <BackendNotice error={error} onRetry={refreshPublicState} />
           <Outlet />
         </main>
         <footer className="border-t border-line py-4 text-center text-xs font-semibold text-secondary-text">
