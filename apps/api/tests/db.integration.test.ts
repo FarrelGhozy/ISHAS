@@ -1696,6 +1696,188 @@ describe.skipIf(!dbReady)("Fase 4 HTTP (SAM-iSAFE)", () => {
     const anon = await call(`/api/v1/files/${assetId}`);
     expect(anon.status).toBe(401);
   });
+
+  test("pengerasan D-26.h: tanggal/kind/bukti/tenggat", async () => {
+    const badKind = await call(
+      "/api/v1/validator/sam/assessments",
+      asValidator(
+        json(
+          {
+            institutionCode: "PSN-0018",
+            manualLocation: "Uji D-26.h",
+            observedAt: "2026-09-28",
+            kind: "Jenis Ngawur",
+            observerName: "M. Ridwan",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(badKind.status).toBe(400);
+    expect(((await badKind.json()) as { error: string }).error).toBe(
+      "Jenis pengamatan tidak dikenal.",
+    );
+
+    const badDate = await call(
+      "/api/v1/validator/sam/assessments",
+      asValidator(
+        json(
+          {
+            institutionCode: "PSN-0018",
+            manualLocation: "Uji D-26.h",
+            observedAt: "ngawur",
+            kind: "Pemeriksaan Rutin",
+            observerName: "M. Ridwan",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(badDate.status).toBe(400);
+    expect(((await badDate.json()) as { error: string }).error).toBe(
+      "Tanggal pengamatan tidak valid.",
+    );
+
+    const badCalendar = await call(
+      "/api/v1/validator/sam/assessments",
+      asValidator(
+        json(
+          {
+            institutionCode: "PSN-0018",
+            manualLocation: "Uji D-26.h",
+            observedAt: "2026-02-30",
+            kind: "Pemeriksaan Rutin",
+            observerName: "M. Ridwan",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(badCalendar.status).toBe(400);
+    expect(((await badCalendar.json()) as { error: string }).error).toBe(
+      "Tanggal pengamatan tidak valid.",
+    );
+
+    const created = await call(
+      "/api/v1/validator/sam/assessments",
+      asValidator(
+        json(
+          {
+            institutionCode: "PSN-0018",
+            manualLocation: "Uji D-26.h",
+            observedAt: "2026-09-28",
+            kind: "Pemeriksaan Rutin",
+            observerName: "M. Ridwan",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(created.status).toBe(201);
+    const assessmentId = ((await created.json()) as { data: { id: string } }).data.id;
+
+    const fakeEvidence = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}/answers`,
+      asValidator(
+        json(
+          {
+            questionId: "SAM-Q-002",
+            score: 0,
+            evidenceName: "palsu.png",
+            evidenceAssetId: "evidence-asset-12345678-1234-1234-1234-123456789012",
+          },
+          { method: "PUT" },
+        ),
+      ),
+    );
+    expect(fakeEvidence.status).toBe(400);
+    expect(((await fakeEvidence.json()) as { error: string }).error).toBe(
+      "Gambar bukti tidak tersedia atau tidak sesuai. Pilih ulang atau lepas lampiran.",
+    );
+
+    const form = new FormData();
+    form.append("file", new File([pngBytes(400, 300)], "d26h-bukti.png", { type: "image/png" }));
+    form.append("institutionCode", "PSN-0018");
+    const uploaded = await call("/api/v1/uploads/sam-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-002" },
+      body: form,
+    });
+    expect(uploaded.status).toBe(201);
+    const assetId = ((await uploaded.json()) as { data: { id: string } }).data.id;
+
+    const realEvidence = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}/answers`,
+      asValidator(
+        json(
+          {
+            questionId: "SAM-Q-002",
+            score: 0,
+            evidenceName: "d26h-bukti.png",
+            evidenceAssetId: assetId,
+          },
+          { method: "PUT" },
+        ),
+      ),
+    );
+    expect(realEvidence.status).toBe(200);
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM file_assets WHERE asset_id = ? AND owner_ref = ?", [
+        assetId,
+        `${assessmentId}:SAM-Q-002`,
+      ]),
+    ).toBe(1);
+
+    const badDue = await call(
+      "/api/v1/validator/sam/follow-ups",
+      asValidator(
+        json(
+          { assessmentId, questionId: "SAM-Q-002", pic: "Bagian Sarpras", dueDate: "ngawur" },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(badDue.status).toBe(400);
+    expect(((await badDue.json()) as { error: string }).error).toBe("Tenggat tidak valid.");
+
+    const followUp = await call(
+      "/api/v1/validator/sam/follow-ups",
+      asValidator(
+        json(
+          { assessmentId, questionId: "SAM-Q-002", pic: "Bagian Sarpras", dueDate: "2026-10-05" },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(followUp.status).toBe(201);
+    const followUpId = ((await followUp.json()) as { data: { id: string } }).data.id;
+
+    const backDate = await call(
+      `/api/v1/validator/sam/follow-ups/${followUpId}`,
+      asValidator(json({ dueDate: "2020-01-01" }, { method: "PATCH" })),
+    );
+    expect(backDate.status).toBe(400);
+    expect(((await backDate.json()) as { error: string }).error).toBe(
+      "Tenggat tidak boleh sebelum tanggal pengamatan.",
+    );
+
+    const forwardDate = await call(
+      `/api/v1/validator/sam/follow-ups/${followUpId}`,
+      asValidator(json({ dueDate: "2026-10-10" }, { method: "PATCH" })),
+    );
+    expect(forwardDate.status).toBe(200);
+
+    const removed = await call(
+      `/api/v1/validator/sam/assessments/${assessmentId}`,
+      asValidator({ method: "DELETE" }),
+    );
+    expect(removed.status).toBe(200);
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM sam_follow_ups WHERE assessment_id = ?", [
+        assessmentId,
+      ]),
+    ).toBe(0);
+  });
 });
 
 describe.skipIf(!dbReady)("Fase 5 HTTP (admin + notifikasi + storage + migrasi)", () => {

@@ -498,7 +498,7 @@ CREATE TABLE sam_categories (
   name VARCHAR(120) NOT NULL UNIQUE,
   description VARCHAR(280) NULL,
   sort_order INT NOT NULL DEFAULT 0,
-  is_active BOOL NOT NULL DEFAULT TRUE,
+  is_active BOOL NOT NULL DEFAULT TRUE,  -- D-26.h.f: reserved, selalu TRUE (tanpa toggle)
   created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -526,9 +526,9 @@ CREATE TABLE sam_assessments (
   observer_name VARCHAR(100) NOT NULL,
   observed_at DATE NOT NULL,
   observed_time VARCHAR(5) NULL,         -- 'HH:MM'
-  kind VARCHAR(40) NOT NULL DEFAULT 'Rutin',
+  kind VARCHAR(40) NOT NULL DEFAULT 'Rutin', -- D-26.h.b: wajib salah satu SAM_KINDS
   note TEXT NULL,
-  status VARCHAR(24) NOT NULL DEFAULT 'Berlangsung', -- Draft|Berlangsung|Selesai
+  status VARCHAR(24) NOT NULL DEFAULT 'Berlangsung', -- D-26.h.f: Berlangsung|Selesai saja
   answers JSON NOT NULL DEFAULT (JSON_OBJECT()), -- {questionId:{score 0|1|2,note?,evidence...}}
   total_score INT NOT NULL DEFAULT 0,
   max_score INT NOT NULL DEFAULT 0,      -- dinamis: aktif × 2

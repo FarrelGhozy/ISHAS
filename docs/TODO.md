@@ -32,6 +32,22 @@ status stage lain tidak berubah sepihak.
   Cek visual 3 viewport + alur klik browser belum dijalankan di lingkungan ini.
 - [ ] Review pemilik.
 
+## Pengerasan validasi SAM-iSAFE (D-26.h) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan perbaikanya`) dari temuan
+audit API + database SAM-iSAFE. Cakupan: validasi tanggal/kind/tenggat/bukti
+(mock + backend 1:1) + pelurusan docs (audit, status, transisi). Tanpa migrasi
+schema; status stage SAM (`REVIEW`) tidak berubah sepihak.
+
+- [x] Catat D-26.h + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-26.h, BACKEND_API_CONTRACT §11, BACKEND_DATA_MODEL §7).
+- [x] Kode + test (tanggal kalender, kind whitelist, PATCH dueDate, bukti server;
+  tipe `Draft` SAM dihapus; tanpa migrasi).
+- [x] Verifikasi: lint + typecheck + 272 test FE + 105 test BE (DB uji
+  `ishas_test`) + build lulus (29 Sep 2026). Cek visual 3 viewport belum
+  dijalankan (Chromium tidak tersedia di lingkungan ini).
+- [ ] Review pemilik.
+
 ## Pengerasan adapter backend (D-31) — 29 September 2026 — `IN PROGRESS`
 
 Arahan pemilik (`kerjakan`): backend + MySQL sudah menyala (`VITE_USE_BACKEND=true`).

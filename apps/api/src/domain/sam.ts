@@ -2,7 +2,12 @@
 // (bank kategori/soal, pengamatan, tindak lanjut) + fungsi murni `sam-isafe.ts`.
 // Pesan bahasa Indonesia identik mock. Skor dinamis: maks = soal aktif × 2.
 
-import { samActiveQuestions, samCompute } from "../../../web/mocks/sam-isafe";
+import {
+  SAM_KINDS,
+  isValidSamDate,
+  samActiveQuestions,
+  samCompute,
+} from "../../../web/mocks/sam-isafe";
 import { selectRegisteredInstitutions } from "../../../web/mocks/store/selectors";
 import type {
   IshasState,
@@ -12,7 +17,7 @@ import type {
   SamFollowUpStatus,
 } from "../../../web/mocks/types";
 import type { Actor } from "../router";
-import { setFileAssetOwner } from "../repo/files";
+import { getFileAsset, setFileAssetOwner } from "../repo/files";
 import { insertAudit, nextSequence, withTransaction, type Tx } from "../repo/writes";
 import {
   deleteSamAssessmentRow,
@@ -383,6 +388,12 @@ export async function createSamAssessment(
     return { ok: false, error: "Lokasi wajib diisi (area atau deskripsi manual)." };
   }
   if (!input.observedAt) return { ok: false, error: "Tanggal pengamatan wajib diisi." };
+  if (!isValidSamDate(input.observedAt)) {
+    return { ok: false, error: "Tanggal pengamatan tidak valid." };
+  }
+  if (!SAM_KINDS.includes(input.kind)) {
+    return { ok: false, error: "Jenis pengamatan tidak dikenal." };
+  }
   if (input.observerName.trim().length < 2) {
     return { ok: false, error: "Nama pengamat minimal 2 karakter." };
   }
@@ -450,6 +461,19 @@ export async function saveSamAnswer(
       return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
     }
     if (!evidenceName) return { ok: false, error: "Nama bukti wajib mengikuti berkas yang diunggah." };
+    // D-26.h.d: server memverifikasi blob + kind + institusi + nama (cermin lapor-cepat).
+    const asset = await getFileAsset(evidenceAssetId);
+    if (
+      !asset ||
+      String(asset.kind) !== "sam-evidence" ||
+      String(asset.institution_code) !== target.institutionCode ||
+      String(asset.original_name) !== evidenceName
+    ) {
+      return {
+        ok: false,
+        error: "Gambar bukti tidak tersedia atau tidak sesuai. Pilih ulang atau lepas lampiran.",
+      };
+    }
   }
   const answers: Record<string, SamAnswer> = {
     ...target.answers,
@@ -597,6 +621,9 @@ export async function createSamFollowUp(
   const pic = input.pic.trim();
   if (pic.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
   if (!input.dueDate) return { ok: false, error: "Tenggat wajib diisi." };
+  if (!isValidSamDate(input.dueDate)) {
+    return { ok: false, error: "Tenggat tidak valid." };
+  }
   if (input.dueDate < assessment.observedAt) {
     return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
   }
@@ -648,6 +675,15 @@ export async function updateSamFollowUp(
   }
   if (input.pic !== undefined && input.pic.trim().length < 2) {
     return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+  }
+  if (input.dueDate) {
+    if (!isValidSamDate(input.dueDate)) {
+      return { ok: false, error: "Tenggat tidak valid." };
+    }
+    const assessment = state.samAssessments.find((item) => item.id === target.assessmentId);
+    if (assessment && input.dueDate < assessment.observedAt) {
+      return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
+    }
   }
   const at = nowIso();
   await withTransaction(async (conn) => {

@@ -397,7 +397,8 @@ export type IshasState = {
 
 // D-26: SAM-iSAFE khusus Validator — bank dinamis + pengamatan.
 // Skor per soal 0/1/2; maksimum dinamis = COUNT(aktif) x 2.
-export type SamAssessmentStatus = "Draft" | "Berlangsung" | "Selesai";
+// D-26.h.f: hanya Berlangsung|Selesai (Draft tidak pernah dipakai kode/seed).
+export type SamAssessmentStatus = "Berlangsung" | "Selesai";
 export type SamRiskLevel = "Risiko Rendah" | "Risiko Sedang" | "Risiko Tinggi";
 export type SamCategory = {
   id: string; // 'SAM-KAT-01' stabil

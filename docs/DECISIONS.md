@@ -1050,6 +1050,45 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Dokumen terdampak: FLOWS §2/§3/§6, BACKEND_STORAGE, apps/web/README.
   Tidak mengubah schema maupun hak akses; status stage lain tidak berubah
   sepihak.
+
+## D-26.h — Pengerasan validasi SAM-iSAFE — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan perbaikanya`) atas temuan audit API + database
+  SAM-iSAFE: flow data bank → pengamatan → jawaban → selesai → review →
+  tindak lanjut sudah benar dan paritas mock↔backend terjaga; 4 bug validasi
+  diperbaiki, 3 ambiguitas diluruskan di dokumen tanpa mengubah perilaku.
+- **D-26.h.a — Tanggal kalender:** `observedAt` (buat pengamatan) dan `dueDate`
+  (buat/ubah tindak lanjut) wajib tanggal kalender valid `YYYY-MM-DD`.
+  Format tak valid → `400` (`Tanggal pengamatan tidak valid.` /
+  `Tenggat tidak valid.`), bukan `500` DB. Berlaku mock + backend 1:1.
+- **D-26.h.b — Jenis pengamatan:** `kind` wajib salah satu `SAM_KINDS`
+  (`Pemeriksaan Rutin/Khusus/Pasca Insiden/Evaluasi`); selain itu → `400`
+  (`Jenis pengamatan tidak dikenal.`). Berlaku mock + backend 1:1.
+- **D-26.h.c — PATCH ikut cek tenggat:** `PATCH /follow-ups/:fid` memvalidasi
+  `dueDate ≥ observedAt` seperti create (sebelumnya lolos mundur);
+  pesan sama (`Tenggat tidak boleh sebelum tanggal pengamatan.`).
+- **D-26.h.d — Bukti jawaban diverifikasi server:** `saveSamAnswer` backend
+  memeriksa pola + blob ada di `file_assets` + `kind = sam-evidence` +
+  institusi sama dengan pengamatan + nama cocok; tak cocok → `400`
+  (`Gambar bukti tidak tersedia atau tidak sesuai. Pilih ulang atau lepas
+  lampiran.`, sama seperti lapor-cepat). Mock prototipe tetap cek pola saja
+  (tanpa DB, sinkron); frontend menampilkan error server apa adanya.
+- **D-26.h.e — Audit jawaban (disengaja):** simpan jawaban per soal TIDAK
+  diaudit per baris (antisipasi spam 27 baris per pengamatan). Jejak audit
+  detail = lifecycle (buat/selesai/review/hapus) + bank + tindak lanjut
+  (buat/ubah/batal). Bukan bug.
+- **D-26.h.f — Status dan flag mati:** status pengamatan hanya
+  `Berlangsung|Selesai` (nilai `Draft` pada tipe dihapus; tidak pernah dipakai
+  kode/seed). `sam_categories.is_active` selalu `true` (reserved, tanpa toggle;
+  filter UI tetap membaca).
+- **D-26.h.g — Transisi follow-up (disengaja sampai keputusan sebaliknya):**
+  `Selesai` boleh diubah statusnya (termasuk mundur, teraudit) dan tindak lanjut
+  boleh dibuat setelah pengamatan `Selesai`/review. `Dibatalkan` tetap terminal;
+  batal atas `Selesai`/`Dibatalkan` ditolak. Perubahan perilaku butuh keputusan baru.
+- Dokumen terdampak: `BACKEND_API_CONTRACT.md` §11, `BACKEND_DATA_MODEL.md` §7,
+  `apps/web/mocks/types.ts` + `sam-isafe.ts`, TODO, catatan stage SAM
+  (status `REVIEW` tidak berubah sepihak). Tanpa migrasi schema.
+
 ## D-35 — Dashboard publik kosong pada mode backend — DISETUJUI 29 September 2026
 
 - Laporan pemilik (mode `VITE_USE_BACKEND=true`, MySQL sudah di-seed demo):

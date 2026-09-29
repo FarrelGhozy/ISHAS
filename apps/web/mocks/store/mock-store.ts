@@ -40,7 +40,7 @@ import {
   isJawabanTemuan,
   skorLaporanBeku,
 } from "../instrument-bank";
-import { samActiveQuestions, samCompute } from "../sam-isafe";
+import { SAM_KINDS, isValidSamDate, samActiveQuestions, samCompute } from "../sam-isafe";
 import { isEvidenceAssetId } from "../adapters/report-evidence";
 import type { SamFollowUpStatus } from "../types";
 
@@ -2373,6 +2373,12 @@ export const storeActions = {
       return { ok: false, error: "Lokasi wajib diisi (area atau deskripsi manual)." };
     }
     if (!input.observedAt) return { ok: false, error: "Tanggal pengamatan wajib diisi." };
+    if (!isValidSamDate(input.observedAt)) {
+      return { ok: false, error: "Tanggal pengamatan tidak valid." };
+    }
+    if (!SAM_KINDS.includes(input.kind)) {
+      return { ok: false, error: "Jenis pengamatan tidak dikenal." };
+    }
     if (input.observerName.trim().length < 2) {
       return { ok: false, error: "Nama pengamat minimal 2 karakter." };
     }
@@ -2535,6 +2541,9 @@ export const storeActions = {
     const pic = input.pic.trim();
     if (pic.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
     if (!input.dueDate) return { ok: false, error: "Tenggat wajib diisi." };
+    if (!isValidSamDate(input.dueDate)) {
+      return { ok: false, error: "Tenggat tidak valid." };
+    }
     if (input.dueDate < assessment.observedAt) {
       return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
     }
@@ -2589,6 +2598,17 @@ export const storeActions = {
     }
     if (input.pic !== undefined && input.pic.trim().length < 2) {
       return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    }
+    if (input.dueDate) {
+      if (!isValidSamDate(input.dueDate)) {
+        return { ok: false, error: "Tenggat tidak valid." };
+      }
+      const assessment = currentState.samAssessments.find(
+        (item) => item.id === target.assessmentId,
+      );
+      if (assessment && input.dueDate < assessment.observedAt) {
+        return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
+      }
     }
     setState((draft) => {
       const item = draft.samFollowUps.find((entry) => entry.id === followUpId)!;

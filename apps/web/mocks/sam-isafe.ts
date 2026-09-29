@@ -18,6 +18,21 @@ export const SAM_KINDS = [
   "Pemeriksaan Evaluasi",
 ];
 
+// D-26.h.a: tanggal kalender valid `YYYY-MM-DD` (bukan sekadar string terisi).
+// Dipakai mock + backend 1:1 agar format ngawur ditolak 400, bukan 500 DB.
+export function isValidSamDate(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [tahun, bulan, tanggal] = value.split("-").map(Number);
+  if (bulan < 1 || bulan > 12 || tanggal < 1 || tanggal > 31) return false;
+  const kalender = new Date(Date.UTC(tahun, bulan - 1, tanggal));
+  return (
+    kalender.getUTCFullYear() === tahun &&
+    kalender.getUTCMonth() === bulan - 1 &&
+    kalender.getUTCDate() === tanggal
+  );
+}
+
 export const SAM_CATEGORIES_SEED: SamCategory[] = [
   {
     id: "SAM-KAT-01",

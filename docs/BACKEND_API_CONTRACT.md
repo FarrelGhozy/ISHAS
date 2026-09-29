@@ -176,14 +176,14 @@ menyembunyikan bobot/flag. `GET /validator/state` (D-30.d) adalah proyeksi penuh
 | `POST /validator/sam/questions/:id/move` | `direction up\|down` (juga menerima `naik\|turun` dari UI) | Urutan soal |
 | `POST /validator/sam/questions/:id/active` | boolean | Aktif/nonaktif soal |
 | `DELETE /validator/sam/questions/:id` | Soal dipakai pengamatan → tolak (suruh nonaktifkan) | Hapus soal |
-| `POST /validator/sam/assessments` | Pesantren `Aktif`, area/manual wajib, `observerName` ≥2 | `SAM-xxxx` `Berlangsung` |
-| `PUT /validator/sam/assessments/:id/answers` | Skor 0\|1\|2, soal aktif, bukti opsional berpasangan | Jawaban + skor dinamis |
+| `POST /validator/sam/assessments` | Pesantren `Aktif`, area/manual wajib, `observerName` ≥2, `observedAt` tanggal kalender `YYYY-MM-DD` (D-26.h.a), `kind` wajib salah satu `SAM_KINDS` (D-26.h.b) | `SAM-xxxx` `Berlangsung` |
+| `PUT /validator/sam/assessments/:id/answers` | Skor 0\|1\|2, soal aktif, bukti opsional berpasangan; server memverifikasi pola + blob `sam-evidence` ada + institusi sama + nama cocok (D-26.h.d; mock hanya cek pola) | Jawaban + skor dinamis (tanpa audit per baris, D-26.h.e) |
 | `POST /validator/sam/assessments/:id/complete` | Semua soal aktif terjawab | `Selesai` + `completedAt` |
 | `POST /validator/sam/assessments/:id/review` | Hanya status `Selesai` | `reviewedBy/At` + catatan |
-| `DELETE /validator/sam/assessments/:id` | Hanya non-`Selesai` | Hapus pengamatan |
-| `POST /validator/sam/follow-ups` | Temuan skor 0/1, unik aktif per soal, PIC ≥2, tenggat ≥ tanggal observasi | `SMF-xxxx` |
-| `PATCH /validator/sam/follow-ups/:fid` | PIC ≥2, tenggat ≥ observasi, status sah | Ubah tindak lanjut |
-| `POST /validator/sam/follow-ups/:fid/cancel` | `reason` ≥10 | `Dibatalkan` + alasan |
+| `DELETE /validator/sam/assessments/:id` | Hanya non-`Selesai` (cascade tindak lanjut via FK) | Hapus pengamatan |
+| `POST /validator/sam/follow-ups` | Temuan skor 0/1, unik aktif per soal, PIC ≥2, `dueDate` kalender valid + ≥ tanggal observasi | `SMF-xxxx` |
+| `PATCH /validator/sam/follow-ups/:fid` | PIC ≥2, `dueDate` kalender valid + ≥ observasi bila diisi (D-26.h.c), status sah; `Selesai` boleh diubah, `Dibatalkan` terminal (D-26.h.g) | Ubah tindak lanjut |
+| `POST /validator/sam/follow-ups/:fid/cancel` | `reason` ≥10; tidak dari `Selesai`/`Dibatalkan` | `Dibatalkan` + alasan |
 
 Skor dinamis: `maks = soal aktif × 2`, persen = total/maks × 100, ambang
 prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_KINDS`.
