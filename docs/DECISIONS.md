@@ -1063,7 +1063,8 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   menyatakan "menunggu validasi Pesantren" gugur untuk kanal ini.
 - **D-32.e — Visibilitas:** hasil penilaian mandiri langsung tampil di
   `/`/`/hasil`/`/laporan/:id`. Akun Pesantren dapat membacanya (skor/PDF)
-  di `/pesantren/laporan`, tetapi kanal ini tidak muncul di antrean
+  di `/pesantren/hasil-penilaian-mandiri` (dipindah dari `/pesantren/laporan`
+  oleh D-41), tetapi kanal ini tidak muncul di antrean
   `/pesantren/validasi-laporan` maupun tindak lanjut. Nama pelapor tetap tidak
   publik (D-02); label "Divalidasi oleh" tidak dipakai kanal ini.
 - **D-32.f — Migrasi:** schema tidak berubah (kolom `validation_status`
@@ -1224,3 +1225,24 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   responsivitas desktop dan ponsel.
 - Batas: tetap read-only, tetap hanya scope Pesantren aktif, dan tidak mengubah
   tampilan publik `/hasil` atau PDF publik.
+
+## D-41 — Hasil penilaian mandiri dipisah dari Laporan Pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik: `/pesantren/laporan` masih menampilkan penilaian mandiri
+  padahal sudah ada halaman khusus `/pesantren/hasil-penilaian-mandiri`; kanal
+  tersebut harus dipisah dan tidak lagi tampil di Laporan.
+- **D-41.a — Laporan hanya lapor-cepat:** daftar, metrik, dan riwayat pada
+  `/pesantren/laporan` dibatasi kanal `lapor-cepat` berstatus `Diterima` + belum
+  diarsip. Hasil `penilaian-mandiri` (`Terbit`) hanya dibaca di
+  `/pesantren/hasil-penilaian-mandiri` (D-36); tautan silang disediakan dari
+  halaman Laporan.
+- **D-41.b — Amendemen D-32.e:** pernyataan bahwa penilaian mandiri dibaca di
+  `/pesantren/laporan` digantikan oleh D-41.a.
+- **D-41.c — Notifikasi:** notifikasi "Penilaian mandiri `<id>` telah terbit"
+  (mock + backend submit & impor dataset) mengarah ke
+  `/pesantren/hasil-penilaian-mandiri`, bukan `/pesantren/laporan`. Notifikasi
+  arsip `Completed` tetap mengarah ke `/pesantren/laporan`.
+- **D-41.d — Batas:** tanpa perubahan schema, hak akses, alur validasi, atau data;
+  murni pemisahan tampilan + tujuan notifikasi. Scope Stage 07 + sentuhan baca
+  Validasi/PDF; status stage lain tidak berubah sepihak.
+- Dokumen terdampak: ROLES, ROUTES, WIREFRAMES, FLOWS, TODO, STAGE_07.

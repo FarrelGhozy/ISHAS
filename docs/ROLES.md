@@ -53,7 +53,7 @@
 - Membuka antrean **Validasi Laporan** (hanya laporan `lapor-cepat` dengan `institutionCode` miliknya; penilaian mandiri terbit langsung — D-32).
 - **Menerima** laporan cepat: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
 - **Menolak** laporan cepat: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
-- Membaca hasil penilaian mandiri (skor/PDF, status `Terbit`) secara hanya-baca; kanal ini tidak masuk antrean validasi maupun tindak lanjut. Detail penuh internal (nama + kontak + jawaban + bukti + lokasi) hanya di `/pesantren/hasil-penilaian-mandiri` milik scope sendiri (D-36).
+- Membaca hasil penilaian mandiri (skor/PDF, status `Terbit`) secara hanya-baca; kanal ini tidak masuk antrean validasi maupun tindak lanjut, dan tidak tampil di `/pesantren/laporan` (D-41). Detail penuh internal (nama + kontak + jawaban + bukti + lokasi) hanya di `/pesantren/hasil-penilaian-mandiri` milik scope sendiri (D-36).
 - Mengubah status penanganan `Pending → Proses → Completed` (tidak boleh mundur tanpa catatan audit; aturan mundur lihat FLOWS §5).
 - **Menghapus** laporan berstatus `Completed` saja, dengan dialog konfirmasi + alasan; penghapusan menambah audit event (data audit tidak ikut terhapus).
 - Mengelola gedung/lantai/area/denah, membuat rencana tindak lanjut (PIC + tenggat + catatan), memperbarui progres, mengunggah bukti penyelesaian (upload gambar pola `/lapor` — D-21), membatalkan perbaikan dengan alasan wajib min 10 karakter (status `Dibatalkan` per rekomendasi, baris tidak dihapus — D-21), membaca laporan pimpinan.

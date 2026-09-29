@@ -1,5 +1,19 @@
 # TODO — Kontrol Kerja Aktif
 
+## Pemisahan hasil penilaian mandiri dari Laporan Pesantren (D-41) — 29 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: `/pesantren/laporan` masih memuat penilaian mandiri
+padahal sudah ada `/pesantren/hasil-penilaian-mandiri`. Cakupan: docs (D-41 +
+amendemen D-32.e + ROLES/ROUTES/WIREFRAMES/FLOWS) + `apps/web` (laporan hanya
+kanal `lapor-cepat`) + tujuan notifikasi "telah terbit" (mock + seed + backend)
++ test regresi. Tanpa perubahan schema, hak akses, atau alur validasi.
+
+- [x] Catat D-41 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test regresi halaman Laporan dan target notifikasi.
+- [x] Verifikasi lint + typecheck + 292 test + build (web) + lint/typecheck + 111 test API (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + alur klik browser — belum dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
+- [ ] Review pemilik.
+
 ## Poles UI/UX Dashboard Validator (D-40) — 29 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik untuk `/validator/dashboard`. Fokus pada

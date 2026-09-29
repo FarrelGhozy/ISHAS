@@ -62,7 +62,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi** |
 | `/pesantren/lokasi` | pesantren | Gedung & denah |
 | `/pesantren/tindak-lanjut` | pesantren | Kelola (PIC, tenggat, progres, bukti) |
-| `/pesantren/laporan` | pesantren | Laporan scope sendiri |
+| `/pesantren/laporan` | pesantren | Laporan scope sendiri (kanal `lapor-cepat`; hasil mandiri di `/pesantren/hasil-penilaian-mandiri` — D-41) |
 
 > Prefix `/pesantren` workspace disetujui D-17 (menggantikan `/pengelola`).
 > URL lama `/peneliti/*` dialihkan ke `/validator/*`, `/pengelola/*` ke `/pesantren/*`.

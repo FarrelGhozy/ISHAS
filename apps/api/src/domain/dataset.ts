@@ -205,7 +205,7 @@ export async function applyDatasetImport(
         institutionCode: row.institutionCode,
         sourceObjectId: id,
         message: `Penilaian mandiri ${id} telah terbit.`,
-        targetUrl: "/pesantren/laporan",
+        targetUrl: "/pesantren/hasil-penilaian-mandiri",
         at,
         read: false,
       }));

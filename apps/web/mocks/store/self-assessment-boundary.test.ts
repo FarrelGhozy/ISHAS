@@ -112,6 +112,18 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     // Draft uji mengisi 10 jawaban → cacah bawaan 10 untuk proyeksi publik D-02.
     expect(snapshot?.jawabanTerisi).toBe(10);
   });
+
+  test("notifikasi 'telah terbit' mengarah ke hasil mandiri, bukan Laporan (D-41)", () => {
+    simpan("SELF-PSN-0018");
+    const kirim = storeActions.submitSelfAssessment({ name: "Warga" }, "SELF-PSN-0018");
+    expect(kirim.ok).toBe(true);
+    if (!kirim.ok || !kirim.id) return;
+    const notes = getState().notifications.filter((n) => n.sourceObjectId === kirim.id);
+    expect(notes.length).toBeGreaterThan(0);
+    expect(
+      notes.every((n) => n.targetUrl === "/pesantren/hasil-penilaian-mandiri"),
+    ).toBe(true);
+  });
 });
 
 describe("lokasi manual + scope/checksum draft (D-24/D-11)", () => {

@@ -3243,7 +3243,9 @@ function notifyOwners(
       message: terbit
         ? `Penilaian mandiri ${reportId} telah terbit.`
         : `Laporan baru ${reportId} menunggu validasi.`,
-      targetUrl: terbit ? "/pesantren/laporan" : "/pesantren/validasi-laporan",
+      targetUrl: terbit
+        ? "/pesantren/hasil-penilaian-mandiri"
+        : "/pesantren/validasi-laporan",
     });
   }
 }

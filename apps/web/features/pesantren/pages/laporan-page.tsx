@@ -16,10 +16,12 @@ export function Page() {
       ? user.institutionCodes[0]
       : undefined;
   const reports = state.reports.filter(
-    // D-32: `Terbit` (penilaian mandiri) dapat dibaca read-only; `Diterima` lapor-cepat.
+    // D-41: Laporan pesantren hanya kanal lapor-cepat; hasil penilaian mandiri
+    // (Terbit) dibaca di /pesantren/hasil-penilaian-mandiri (D-36).
     (x) =>
       x.institutionCode === scope &&
-      (x.validationStatus === "Diterima" || x.validationStatus === "Terbit") &&
+      x.channel === "lapor-cepat" &&
+      x.validationStatus === "Diterima" &&
       !x.archivedAt,
   );
   const recommendations = state.recommendations.filter((x) =>
@@ -84,6 +86,10 @@ export function Page() {
           <Link className="text-button" to="/pesantren/tindak-lanjut">
             Buka Tindak lanjut
           </Link>
+          {" · "}
+          <Link className="text-button" to="/pesantren/hasil-penilaian-mandiri">
+            Hasil penilaian mandiri
+          </Link>
         </p>
       </header>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -145,23 +151,12 @@ export function Page() {
                 {x.id} · {x.title}
               </strong>
               <StatusChip value={x.handlingStatus} />
-              {x.channel === "penilaian-mandiri" &&
-              x.scorePercent !== undefined &&
-              x.scorePercent !== null ? (
-                <span className="text-secondary-text">skor {Math.round(x.scorePercent)}%</span>
-              ) : (
-                <span className="text-secondary-text">
-                  {x.instrumentVersionId ?? "Tanpa instrumen"}
-                </span>
-              )}
+              <span className="text-secondary-text">
+                {x.instrumentVersionId ?? "Tanpa instrumen"}
+              </span>
               <span className="text-secondary-text">
                 {new Date(x.createdAt).toLocaleDateString("id-ID")}
               </span>
-              {x.channel === "penilaian-mandiri" ? (
-                <Link className="text-button" to={`/laporan/${x.id}`}>
-                  Lihat PDF
-                </Link>
-              ) : null}
               {x.handlingStatus === "Completed" ? (
                 <span className="flex w-full flex-wrap items-center gap-2">
                   <input

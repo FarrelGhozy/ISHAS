@@ -2177,7 +2177,7 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       sourceObjectId: "RPT-0002",
       message: "Penilaian mandiri RPT-0002 telah terbit.",
-      targetUrl: "/pesantren/laporan",
+      targetUrl: "/pesantren/hasil-penilaian-mandiri",
       at: "2026-09-04T10:30:00.000Z",
       read: false,
     },
