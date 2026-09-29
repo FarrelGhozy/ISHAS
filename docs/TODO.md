@@ -1,5 +1,32 @@
 # TODO — Kontrol Kerja Aktif
 
+## Poles UI/UX Dashboard Validator (D-40) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik untuk `/validator/dashboard`. Fokus pada
+hierarki ringkasan, akses cepat, kejelasan alur dan batas peran, kesiapan publikasi,
+snapshot, serta ringkasan skor/bank. Data, angka, processor, dan kewenangan tetap.
+
+- [x] Catat D-40 sebelum mengubah kode.
+- [x] Implementasi UI + test render.
+- [x] Verifikasi lint + typecheck + 288 test + build (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + keyboard + alur klik browser — belum
+      dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
+- [ ] Review pemilik.
+
+## Poles UI/UX bank instrumen Validator (D-39) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik untuk `/validator/instrumen`. Fokus pada
+ringkasan bank, pencarian/filter indikator, keterbacaan struktur dimensi dan
+indikator, serta form/bobot yang lebih nyaman. Tanpa mengubah kontrak D-24,
+rumus/bobot, akses, atau persistensi.
+
+- [x] Catat D-39 sebelum mengubah kode.
+- [x] Implementasi UI + test render halaman.
+- [x] Verifikasi lint + typecheck + 288 test + build (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + keyboard + alur klik browser — belum
+      dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
+- [ ] Review pemilik.
+
 ## Poles UI/UX SAM-iSAFE Validator (D-38) — 29 September 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik (`ok kerjakan`). Cakupan UI/UX modul SAM-iSAFE

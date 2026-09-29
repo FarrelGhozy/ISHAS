@@ -7,6 +7,7 @@ import { Page as DatasetPage } from "./pages/data-penelitian-page";
 import { Page as DashboardPage } from "./pages/dashboard-page";
 import { Page as SamListPage } from "./pages/sam-list-page";
 import { Page as SamBankPage } from "./pages/sam-bank-page";
+import { Page as InstrumentPage } from "./pages/instrumen-page";
 import { SESSION_STORAGE_KEY } from "~/shared/auth/session";
 
 // Sesi validator dummy (USR-002) sebelum render pertama — pola sama
@@ -70,9 +71,14 @@ test("Dashboard validator menautkan 3 halaman D-25", () => {
       <DashboardPage />
     </MemoryRouter>,
   );
-  expect(html).toContain("Buka Scoring");
-  expect(html).toContain("Buka Audit publikasi");
-  expect(html).toContain("Buka Data penelitian");
+  expect(html).toContain(">Scoring</span>");
+  expect(html).toContain(">Audit publikasi</span>");
+  expect(html).toContain(">Data penelitian</span>");
+  expect(html).toContain("Akses cepat");
+  expect(html).toContain("Alur data dan batas peran");
+  expect(html).toContain("Kesiapan publikasi");
+  expect(html).toContain("Snapshot terbaru");
+  expect(html).toContain("Skor per dimensi");
 });
 
 test("SAM-iSAFE riwayat menampilkan konteks dan filter", () => {
@@ -108,4 +114,17 @@ test("Bank SAM-iSAFE menampilkan editor kategori dan pencarian", () => {
   expect(html).toContain("Kelola checklist SAM-iSAFE");
   expect(html).toContain("Tambah kategori");
   expect(html).toContain("Cari soal");
+});
+
+test("Bank instrumen live menampilkan ringkasan, acuan bobot, dan pencarian", () => {
+  const html = renderToString(
+    <MemoryRouter initialEntries={["/validator/instrumen"]}>
+      <InstrumentPage />
+    </MemoryRouter>,
+  );
+  expect(html).toContain("Bank instrumen");
+  expect(html).toContain("Bangun struktur instrumen");
+  expect(html).toContain("Cari indikator");
+  expect(html).toContain("Acuan bobot jawaban");
+  expect(html).toContain("10<!-- --> indikator ditampilkan");
 });

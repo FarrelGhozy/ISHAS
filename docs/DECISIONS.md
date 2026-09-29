@@ -598,6 +598,28 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   DATA_REQUIREMENTS §2/§4, TEST_PLAN, TODO, STAGE_08. Scope Stage 08 +
   sentuhan baca laporan; status stage lain tidak berubah sepihak.
 
+## D-39 — Poles UI/UX bank instrumen Validator — IN PROGRESS 29 September 2026
+
+- Arahan pemilik: rapikan halaman `/validator/instrumen` agar lebih profesional
+  dan nyaman digunakan.
+- Cakupan: hierarki ringkasan bank, penelusuran dimensi/indikator, keterbacaan
+  acuan bobot dan detail indikator, serta form tambah/edit yang responsif.
+- Batas: perubahan presentasi/interaksi pencarian saja; kontrak bank live D-24,
+  bobot/rumus, hak akses, dan persistensi tidak berubah.
+- Pemeriksaan lint, typecheck, test, build, visual desktop/tablet/ponsel, dan
+  keyboard dicatat di TODO sebelum revisi dipindahkan ke REVIEW.
+
+## D-40 — Poles UI/UX Dashboard Validator — IN PROGRESS 29 September 2026
+
+- Arahan pemilik: poles `/validator/dashboard` agar lebih profesional dan nyaman
+  dipakai, mengikuti ringkasan serta alur yang ditunjukkan pemilik.
+- Cakupan: hierarki metrik, akses cepat ke ruang kerja, penjelasan alur/kewenangan,
+  kesiapan publikasi, snapshot terbaru, skor per dimensi, dan ringkasan bank.
+- Batas: angka, sumber data, aturan kesiapan, akses peran, keputusan moderasi,
+  label ilustrasi, serta tautan tujuan tetap; tidak menambah metrik atau kewenangan.
+- Pemeriksaan lint, typecheck, test, build, visual desktop/tablet/ponsel, dan
+  keyboard dicatat di TODO. Status stage lain tidak berubah sepihak.
+
 ## D-26 — SAM-iSAFE khusus Validator (bank dinamis, MVP) — DISETUJUI 28 September 2026
 
 - Arahan pemilik: SAM-iSAFE menjadi halaman baru di ruang Validator
