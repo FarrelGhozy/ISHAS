@@ -1,4 +1,5 @@
-# ISHAS — Docker Compose. Environment diambil dari `.env` root.
+# ISHAS — Docker Compose. SEMUA environment diambil dari `.env` root (terpusat).
+# Ubah nilai di `.env`, jangan hardcode di sini.
 # Dev dan prod memakai port host yang sama (WEB_PORT), jadi jalankan bergantian:
 #   docker compose --profile dev up --build    # hot reload (bun run dev)
 #   docker compose --profile prod up --build   # hasil build statis via nginx
@@ -6,7 +7,7 @@
 
 services:
   db:
-    image: mysql:8.4
+    image: mysql:${MYSQL_IMAGE_TAG:-8.4}
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${DB_NAME:-ishas}
@@ -30,11 +31,21 @@ services:
       target: development
       args:
         BUN_IMAGE_TAG: ${BUN_IMAGE_TAG:-1}
+        WEB_DEV_CONTAINER_PORT: ${WEB_DEV_CONTAINER_PORT:-3003}
     env_file:
       - path: ./.env
         required: false
+    environment:
+      # Di dalam container, backend Bun berjalan di HOST (bukan di Compose),
+      # jadi proxy menargetkan host gateway. `extra_hosts` di bawah memetakan
+      # `host.docker.internal` ke gateway host agar bekerja di Linux juga.
+      PORT: ${WEB_DEV_CONTAINER_PORT:-3003}
+      API_PROXY_HOST: host.docker.internal
+      API_PORT: ${API_PORT:-3004}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
-      - "${WEB_PORT:-3003}:3003"
+      - "${WEB_PORT:-3003}:${WEB_DEV_CONTAINER_PORT:-3003}"
     volumes:
       - ./apps/web:/app
       - web-dev-modules:/app/node_modules
@@ -55,11 +66,12 @@ services:
         BUN_IMAGE_TAG: ${BUN_IMAGE_TAG:-1}
         NODE_IMAGE_TAG: ${NODE_IMAGE_TAG:-22-slim}
         NGINX_IMAGE_TAG: ${NGINX_IMAGE_TAG:-alpine}
+        WEB_PROD_CONTAINER_PORT: ${WEB_PROD_CONTAINER_PORT:-80}
     env_file:
       - path: ./.env
         required: false
     ports:
-      - "${WEB_PORT:-3003}:80"
+      - "${WEB_PORT:-3003}:${WEB_PROD_CONTAINER_PORT:-80}"
     profiles:
       - prod
 

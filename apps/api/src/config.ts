@@ -1,5 +1,6 @@
-// Konfigurasi backend ISHAS dari environment. Default untuk pengembangan lokal
-// (lihat docker-compose.yml service `db` dan .env.example).
+// Konfigurasi backend ISHAS dari environment. Sumber tunggal nilai adalah
+// `.env` root repo (lihat `.env.example`); fallback di sini hanya pengaman
+// agar dev tanpa `.env` tetap jalan dengan default yang sama.
 
 export type DbConfig = {
   host: string;
