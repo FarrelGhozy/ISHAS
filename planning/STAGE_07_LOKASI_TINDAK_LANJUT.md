@@ -62,6 +62,13 @@ tindak lanjut yang menggerakkan status, dan laporan pimpinan scope sendiri.
 - [x] Editor tingkat risiko per temuan (`Rendah/Sedang/Tinggi/Ekstrem`, teraudit);
   `verifyFinding`/`savePlanVersion` deprecasi lembut; lantai per-gedung; sync kartu.
 
+### 5. Revisi D-34 Dashboard Pesantren (IN PROGRESS 29 Sep 2026)
+
+- [ ] Route `/pesantren/dashboard` (landing Pesantren) + header identitas
+  (nama + kode + kota + status) + 4 kartu rangkuman + antrean terbaru +
+  tindak lanjut + tautan kelola; nav + redirect + test regresi.
+- [ ] Verifikasi: lint + typecheck + test + build + cek visual 3 viewport.
+
 ## Acceptance criteria
 
 - [x] Area/lantai/gedung baru end-to-end terlihat di form publik pesantren yang sama (skenario integrasi).

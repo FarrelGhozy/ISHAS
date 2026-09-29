@@ -1050,3 +1050,27 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Dokumen terdampak: FLOWS §2/§3/§6, BACKEND_STORAGE, apps/web/README.
   Tidak mengubah schema maupun hak akses; status stage lain tidak berubah
   sepihak.
+## D-34 — Dashboard Pesantren + nama pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik: ruang Pesantren tidak punya dashboard dan tidak menampilkan
+  nama pesantren; minta dibuatkan dashboard berisi rangkuman sekaligus nama
+  pesantrennya. Jawaban klarifikasi: dashboard menjadi halaman utama
+  (`/pesantren/dashboard`), isi lengkap sesuai usulan, nama tampil di
+  dashboard saja (bukan banner permanen semua halaman).
+- **D-34.a — Route dan landing:** route baru `/pesantren/dashboard` (workspace
+  Pesantren, guard role `pesantren` + scope satu `institutionCode`). `/pesantren`,
+  `workspaceHome('pesantren')`, dan tombol Ruang kerja akun Pesantren mengarah
+  ke dashboard; `ROUTES.md §5` yang sebelumnya menetapkan Validasi sebagai
+  tujuan diamendemen terbatas untuk peran Pesantren.
+- **D-34.b — Isi:** header identitas pesantren (nama + kode + kota/kabupaten +
+  status, dari `Institution`, tanpa alamat lengkap — D-02) + 4 kartu angka scope
+  sendiri (`Menunggu validasi`, `Pending/Proses`, `Completed` non-arsip,
+  progres tindak lanjut rata-rata non-`Dibatalkan` ala D-23.d) + antrean terbaru
+  (5 laporan `lapor-cepat` terbaru; penilaian mandiri `Terbit` hanya dibaca
+  read-only, D-32) + ringkas tindak lanjut + tautan kelola
+  (Validasi/Lokasi/Tindak lanjut/Laporan). Tanpa logika validasi baru.
+- **D-34.c — Batas:** tanpa perubahan schema, backend (`GET /pesantren/state`
+  D-30.c sudah mencakup data), hak akses, atau dashboard peran lain. Status
+  stage lain tidak berubah sepihak; scope Stage 07 + sentuhan baca Validasi.
+- Dokumen terdampak: ROUTES §2/§5, ROLES §2, WIREFRAMES §6,
+  TODO, STAGE_07.

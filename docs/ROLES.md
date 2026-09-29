@@ -47,6 +47,9 @@
 **Kemampuan dalam rancangan awal:**
 
 - Membaca data publik seperti pengunjung lain. Boleh melapor ke pesantren lain sebagai pelapor umum (D-03): laporannya divalidasi oleh akun Pesantren sasaran; hak kelola tetap terbatas satu pesantren. Saat melapor, field nama **terisi otomatis** dari akun aktif + label `Pesantren`; tetap dapat diubah manual per laporan.
+- Membuka **Dashboard Pesantren** (`/pesantren/dashboard`, halaman utama — D-34):
+  identitas pesantren (nama + kode + kota + status) + rangkuman scope sendiri
+  (antrean, status penanganan, progres tindak lanjut) + tautan kelola.
 - Membuka antrean **Validasi Laporan** (hanya laporan `lapor-cepat` dengan `institutionCode` miliknya; penilaian mandiri terbit langsung — D-32).
 - **Menerima** laporan cepat: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
 - **Menolak** laporan cepat: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.

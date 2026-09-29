@@ -1,5 +1,19 @@
 # TODO — Kontrol Kerja Aktif
 
+## Dashboard Pesantren + nama pesantren (D-34) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (ruang Pesantren tanpa dashboard dan tanpa
+nama pesantren). Cakupan: docs (D-34 + ROUTES/ROLES/WIREFRAMES) + `apps/web`
+(route `/pesantren/dashboard` + halaman rangkuman + nav + redirect landing;
+tanpa schema/backend/hak baru). Scope Stage 07 + sentuhan baca Validasi;
+status stage lain tidak berubah sepihak.
+
+- [x] Catat D-34 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test (dashboard render + redirect/nav regresi).
+- [x] Verifikasi: lint + typecheck + 276 test + build lulus (29 Sep 2026).
+  Cek visual 3 viewport + alur klik browser belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## Pengerasan adapter backend (D-31) — 29 September 2026 — `IN PROGRESS`
 
 Arahan pemilik (`kerjakan`): backend + MySQL sudah menyala (`VITE_USE_BACKEND=true`).

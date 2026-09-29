@@ -123,6 +123,21 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
  `Validasi laporan` milik Pesantren. `Divalidasi oleh` = akun Pesantren,
  bukan peran Validator (`DATA_REQUIREMENTS.md` §9).
 
+## 6.a. `/pesantren/dashboard` Dashboard Pesantren (D-34)
+
+- Judul: kicker `Pesantren saya` + H1 **nama pesantren** + subteks
+  `kode · kota/kabupaten · status` (tanpa alamat lengkap — D-02).
+- 4 kartu angka (`stat-card`, pola dashboard admin/validator): `Menunggu
+  validasi` (lapor-cepat milik scope) + `Pending/Proses` + `Completed`
+  (non-arsip) + `Progres tindak lanjut` (rata-rata rekomendasi aktif
+  non-`Dibatalkan`, D-23.d; hint jumlah aktif + Dibatalkan dikecualikan).
+- `Antrean terbaru`: 5 laporan `lapor-cepat` terbaru milik scope (nomor + chip
+  status + judul + lokasi + tombol `Periksa` ke validasi); empty state bila
+  kosong. Penilaian mandiri `Terbit` hanya blok baca (count + link PDF, D-32).
+- `Tindak lanjut`: ringkas count per status + tautan kelola; blok tautan
+  Validasi/Lokasi/Tindak lanjut/Laporan. Guard: hanya role Pesantren + satu
+  `institutionCode`, selain itu `EmptyState`.
+
 ## 7. Responsif (wajib diperiksa)
 
 - Desktop 1440×900, tablet 834×1112, ponsel 390×844: tidak ada overflow horizontal halaman; header publik memindahkan CTA ke baris kedua di ponsel; tiga kolom penilaian mandiri menumpuk (navigasi dimensi menjadi dropdown/accordion); tabel antrean menjadi kartu; grafik punya tinggi minimum 225px dan hanya render setelah panel terlihat.

@@ -20,14 +20,14 @@ export function workspaceRoleFor(pathname: string): RoleId | null {
 }
 
 export function workspaceHome(roleId: RoleId): string {
-  // ROUTES §5: tujuan Pesantren adalah halaman utama Validasi Laporan.
+  // ROUTES §5 + D-34: tujuan Pesantren adalah Dashboard Pesantren.
   switch (roleId) {
     case "admin":
       return "/admin/dashboard";
     case "validator":
       return "/validator/dashboard";
     case "pesantren":
-      return "/pesantren/validasi-laporan";
+      return "/pesantren/dashboard";
   }
 }
 

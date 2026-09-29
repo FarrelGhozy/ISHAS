@@ -57,7 +57,8 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/validator/sam-isafe/baru` | validator | SAM-iSAFE: info pengamatan + kuesioner 0/1/2 + hasil (D-26) |
 | `/validator/sam-isafe/bank` | validator | SAM-iSAFE: kelola kategori + pertanyaan bank (D-26) |
 | `/validator/sam-isafe/:id` | validator | SAM-iSAFE: detail pengamatan + skor per kategori (D-26) |
-| `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi (halaman kelola utama)** |
+| `/pesantren/dashboard` | pesantren | **Dashboard + rangkuman scope sendiri (halaman utama Pesantren, D-34)** |
+| `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi** |
 | `/pesantren/lokasi` | pesantren | Gedung & denah |
 | `/pesantren/tindak-lanjut` | pesantren | Kelola (PIC, tenggat, progres, bukti) |
 | `/pesantren/laporan` | pesantren | Laporan scope sendiri |
@@ -97,7 +98,8 @@ Pemeriksaan scope juga berlaku pada aksi simpan berdasarkan ID, bukan hanya menu
 - Daftar di atas memuat 29 pola route kanonis (12 publik/bantuan + 17 workspace), termasuk satu pola profil dinamis. Ini bukan 29 URL uji saja.
 - Tambahkan pemeriksaan URL indeks `/admin`, `/validator`, `/pesantren`, tujuan login tiap peran,
   route lama `/peneliti/*` dan `/pengelola/*` yang dialihkan (D-17), route tidak dikenal, dan `/asesor` maupun `/asesor/*`.
-- Tujuan Pesantren pada rancangan baru adalah halaman utama Validasi Laporan; jangan menyisakan
-  tombol **Ruang kerja** ke dashboard Pesantren lama yang tidak ada di inventaris baru.
+- Tujuan Pesantren pada rancangan baru adalah Dashboard Pesantren
+  (`/pesantren/dashboard`, D-34); `/pesantren` mengarah ke sana. Jangan menyisakan
+  tombol **Ruang kerja** ke tujuan lama yang tidak ada di inventaris baru.
 - Tulis URL tujuan untuk setiap CTA/notifikasi; link kelola dari halaman publik tetap memerlukan
   sesi Pesantren yang memiliki objek tersebut. Halaman publik tidak mengubah scope akun aktif.
