@@ -88,10 +88,19 @@ export async function removeStoredBlob(storedPath: string): Promise<void> {
   await rm(join(STORAGE_DIR, storedPath), { force: true });
 }
 
-// Hapus seluruh isi storage (reset demo). Direktori dibuat ulang saat dibutuhkan
-// `saveStoredBlob`, jadi tidak perlu dibuat di sini.
-export async function clearStorageDir(): Promise<void> {
-  await rm(STORAGE_DIR, { recursive: true, force: true });
+// Kosongkan isi storage (reset demo) tanpa menghapus direktorinya sendiri:
+// `STORAGE_DIR` dapat berupa mount point volume sehingga `rm` langsung gagal
+// `EBUSY`. Subdirektori dibuat ulang saat dibutuhkan `saveStoredBlob`.
+export async function clearStorageDir(dir: string = STORAGE_DIR): Promise<void> {
+  let names: string[];
+  try {
+    names = await readdir(dir);
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    await rm(join(dir, name), { recursive: true, force: true });
+  }
 }
 
 // File staging di `tmp-uploads/` yang lebih tua dari batas (job yatim malam).
