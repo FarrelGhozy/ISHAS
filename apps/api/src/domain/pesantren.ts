@@ -135,12 +135,14 @@ export async function acceptReport(
   if (!severity || !priority || severity === "Belum ditentukan" || priority === "Belum ditentukan") {
     return { ok: false, error: "Severity dan priority wajib dipilih tanpa default." };
   }
-  if (scope.report.validationStatus !== "Menunggu validasi") {
-    return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat diterima." };
-  }
   // D-32: hanya lapor-cepat yang divalidasi; penilaian-mandiri langsung Terbit.
+  // Cek kanal lebih dulu agar penilaian mandiri tidak dilaporkan sebagai
+  // "menunggu validasi" (status `Terbit`), melainkan sebagai kanal tanpa validasi.
   if (scope.report.channel !== "lapor-cepat") {
     return { ok: false, error: "Hanya laporan cepat yang memerlukan validasi." };
+  }
+  if (scope.report.validationStatus !== "Menunggu validasi") {
+    return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat diterima." };
   }
   const finalAction = rekomendasiFinal?.trim() || undefined;
   if (!finalAction || finalAction.length < 10) {
@@ -194,11 +196,12 @@ export async function rejectReport(
   }
   const scope = scopedReport(state, actor, reportId);
   if (isScope(scope)) return { ok: false, error: scope.error };
-  if (scope.report.validationStatus !== "Menunggu validasi") {
-    return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat ditolak." };
-  }
+  // D-32: cek kanal lebih dulu; alasan sama dengan acceptReport.
   if (scope.report.channel !== "lapor-cepat") {
     return { ok: false, error: "Hanya laporan cepat yang dapat ditolak." };
+  }
+  if (scope.report.validationStatus !== "Menunggu validasi") {
+    return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat ditolak." };
   }
   const at = nowIso();
   await withTransaction(async (conn) => {

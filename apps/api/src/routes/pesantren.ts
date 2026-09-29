@@ -83,7 +83,11 @@ export function buildPesantrenRoutes(deps: PesantrenRouteDeps): Route[] {
           .filter((r) => r.channel === "lapor-cepat")
           .filter((r) => (status === "all" ? true : r.validationStatus === status))
           .filter((r) => (severity ? r.severity === severity : true))
-          .filter((r) => (q ? `${r.id} ${r.title}`.toLowerCase().includes(q) : true))
+          .filter((r) =>
+            q
+              ? `${r.id} ${r.title} ${r.reporterName} ${r.description}`.toLowerCase().includes(q)
+              : true,
+          )
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
         return ok({ items });
       }),
