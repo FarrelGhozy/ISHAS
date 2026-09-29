@@ -1,8 +1,16 @@
 # ISHAS — Docker Compose. SEMUA environment diambil dari `.env` root (terpusat).
 # Ubah nilai di `.env`, jangan hardcode di sini.
-# Dev dan prod memakai port host yang sama (WEB_PORT), jadi jalankan bergantian:
-#   docker compose --profile dev up --build    # hot reload (bun run dev)
-#   docker compose --profile prod up --build   # hasil build statis via nginx
+#
+# Ringkasan service:
+#   db      = database MySQL (backend)
+#   api     = BACKEND aplikasi (Bun + TypeScript + MySQL)
+#   web-dev = FRONTEND mode ngoding (hot reload)
+#   web-prod= FRONTEND mode rilis (nginx statis)
+#
+# Dev dan prod memakai port host yang sama (WEB_PORT), jadi jalankan bergantian.
+# Profile `dev` menyalakan SEMUA yang dibutuhkan sekaligus: db + api + web-dev.
+#   docker compose --profile dev up --build    # db + backend + frontend (localhost:3003)
+#   docker compose --profile prod up --build   # frontend hasil build statis via nginx
 # Verifikasi interpolasi: `docker compose config`
 
 services:
@@ -22,8 +30,53 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+    # `db` ikut profile `dev` (agar `--profile dev` menyalakan semuanya sekaligus),
+    # `api` (untuk menjalankan backend+migrasi saja), dan `prod` (agar web-prod
+    # dapat meneruskan `/api` ke backend yang butuh database).
     profiles:
+      - dev
       - api
+      - prod
+
+  # BACKEND aplikasi (Bun + MySQL). Bukan tampilan; diakses dari frontend lewat
+  # proxy same-origin `/api`. Di dalam Compose, host database adalah `db`.
+  api:
+    build:
+      # Context ROOT repo: seed backend mengimpor `apps/web/mocks/` (lihat Dockerfile).
+      context: .
+      dockerfile: apps/api/Dockerfile
+      args:
+        BUN_IMAGE_TAG: ${BUN_IMAGE_TAG:-1}
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      # Override `.env` lokal: di dalam Compose, MySQL adalah service `db`.
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-ishas}
+      DB_USER: ${DB_USER:-ishas}
+      DB_PASSWORD: ${DB_PASSWORD:-ishas}
+      API_PORT: ${API_PORT:-3004}
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-3004}:${API_PORT:-3004}"
+    working_dir: /app/apps/api
+    volumes:
+      # Kode backend di-bind agar `bun run dev` (watch) memuat perubahan tanpa rebuild.
+      # (Seed tetap membaca `apps/web/mocks/` dari image, bukan dari bind ini.)
+      - ./apps/api:/app/apps/api
+      - api-modules:/app/apps/api/node_modules
+      # Blob unggahan (bukti/denah/PDF) disimpan di volume agar tidak menulis
+      # file milik root ke bind mount host.
+      - ./apps/api/storage:/app/apps/api/storage
+    profiles:
+      - dev
+      - api
+      - prod
 
   web-dev:
     build:
@@ -36,14 +89,11 @@ services:
       - path: ./.env
         required: false
     environment:
-      # Di dalam container, backend Bun berjalan di HOST (bukan di Compose),
-      # jadi proxy menargetkan host gateway. `extra_hosts` di bawah memetakan
-      # `host.docker.internal` ke gateway host agar bekerja di Linux juga.
+      # Di dalam Compose, backend adalah service `api` (nama service = hostname).
+      # Jadi proxy `/api` diarahkan ke `api`, bukan host gateway.
       PORT: ${WEB_DEV_CONTAINER_PORT:-3003}
-      API_PROXY_HOST: host.docker.internal
+      API_PROXY_HOST: api
       API_PORT: ${API_PORT:-3004}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     ports:
       - "${WEB_PORT:-3003}:${WEB_DEV_CONTAINER_PORT:-3003}"
     volumes:
@@ -55,6 +105,8 @@ services:
       # karena `.react-router/` menjadi milik root.
       - web-dev-router:/app/.react-router
       - web-dev-build:/app/build
+    depends_on:
+      - api
     profiles:
       - dev
 
@@ -70,13 +122,20 @@ services:
     env_file:
       - path: ./.env
         required: false
+    environment:
+      # nginx prod meneruskan `/api` ke service `api` (nama service = hostname).
+      API_HOST: api
+      API_PORT: ${API_PORT:-3004}
     ports:
       - "${WEB_PORT:-3003}:${WEB_PROD_CONTAINER_PORT:-80}"
+    depends_on:
+      - api
     profiles:
       - prod
 
 volumes:
   db-data:
+  api-modules:
   web-dev-modules:
   web-dev-router:
   web-dev-build:

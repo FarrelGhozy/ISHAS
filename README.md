@@ -32,13 +32,44 @@ docker compose --profile dev up --build    # dev + hot reload di localhost:3003
 docker compose --profile prod up --build   # hasil build statis (nginx) di localhost:3003
 ```
 
+Service Docker: `db` (MySQL), `api` (backend Bun), `web-dev` (frontend hot reload),
+`web-prod` (frontend nginx statis). Profile `dev` menyalakan db + backend + frontend
+sekaligus, jadi cukup satu perintah untuk menjalankan semuanya.
+
+### Memilih container yang dinyalakan
+
+| Mau menyalakan | Perintah |
+| --- | --- |
+| Semua (db + backend + frontend) | `docker compose --profile dev up -d` |
+| Database saja (backend) | `docker compose --profile api up -d db` |
+| Database + backend (tanpa web) | `docker compose --profile api up -d` |
+| Hanya web dev | `docker compose --profile dev up -d web-dev` |
+| Hanya backend | `docker compose --profile api up -d api` |
+| Versi rilis (nginx statis) | `docker compose --profile prod up -d web-prod` |
+
 Dev dan prod memakai port host yang sama (`WEB_PORT`), jadi jalankan bergantian.
 Ubah port/tag image cukup lewat `.env`; `docker compose config` untuk memeriksa hasil interpolasi.
 
 ## Menjalankan backend (Fase 0)
 
+Backend (`api`) sudah terdaftar di Docker Compose. Cara tercepat menjalankannya
+bersama database:
+
 ```bash
-docker compose --profile api up -d db   # MySQL 8 (profile `api`)
+docker compose --profile api up --build   # db + backend, backend di http://localhost:3004
+```
+
+Menyiapkan/mengulang data (migrasi + seed) di dalam container `api`:
+
+```bash
+docker compose --profile api run --rm api bun run migrate --fresh
+docker compose --profile api run --rm api bun run seed --mode=demo   # atau --mode=empty
+```
+
+Backend juga bisa dijalankan langsung di host (tanpa Docker) bila MySQL sudah
+tersedia di port `3306`:
+
+```bash
 cd apps/api
 bun install
 bun run migrate

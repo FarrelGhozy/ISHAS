@@ -1,0 +1,15 @@
+# Build context backend = ROOT repo (lihat docker-compose.yml service `api`).
+# Kecualikan artefak besar yang tidak dibutuhkan image backend.
+**/node_modules/
+apps/web/build/
+apps/web/dist/
+apps/web/.react-router/
+apps/api/storage/
+**/*.log
+**/*.tsbuildinfo
+.git/
+.env
+.env.*
+!.env.example
+coverage/
+.nyc_output/
