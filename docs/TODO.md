@@ -12,7 +12,8 @@ Tanpa perubahan schema, hak akses, rumus skor, atau kontrak repository.
       dan label nilai/tanggal yang jelas (arahan pemilik).
 - [x] Test render/interaksi yang relevan.
 - [x] Verifikasi lint + typecheck + 287 test + build (29 Sep 2026).
-- [ ] Cek visual 3 viewport + keyboard + alur klik browser.
+- [ ] Cek visual desktop/tablet/ponsel + keyboard + alur klik browser — belum
+      dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
 - [ ] Review pemilik.
 
 ## Poles UI hasil mandiri Pesantren (D-37) — 29 September 2026 — `IN PROGRESS`

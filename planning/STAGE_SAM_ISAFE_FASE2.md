@@ -27,8 +27,10 @@ profesional seluruh halaman SAM-iSAFE. Scope Validator-only tetap
 ## Revisi D-38 — polish UI/UX Validator — `IN PROGRESS` (29 September 2026)
 
 - [x] Catat D-38 sebelum mengubah kode.
-- [ ] Poles pengisian, riwayat, detail, dan bank data tanpa mengubah behavior.
+- [x] Poles pengisian, riwayat, detail, dan bank data tanpa mengubah behavior.
 - [x] Revisi grafik dashboard menjadi batang vertikal yang mudah dibaca sesuai arahan pemilik.
-- [ ] Test render/interaksi dan verifikasi teknis.
-- [ ] Cek visual 3 viewport + keyboard + alur klik browser.
+- [x] Test render halaman SAM-iSAFE dan verifikasi teknis: lint, typecheck,
+      287 test, dan build lulus (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + keyboard + alur klik browser — belum
+      dijalankan: Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
 - [ ] Review pemilik.
