@@ -138,14 +138,16 @@ export async function acceptReport(
   if (scope.report.validationStatus !== "Menunggu validasi") {
     return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat diterima." };
   }
+  // D-32: hanya lapor-cepat yang divalidasi; penilaian-mandiri langsung Terbit.
+  if (scope.report.channel !== "lapor-cepat") {
+    return { ok: false, error: "Hanya laporan cepat yang memerlukan validasi." };
+  }
   const finalAction = rekomendasiFinal?.trim() || undefined;
-  if (scope.report.channel === "lapor-cepat") {
-    if (!finalAction || finalAction.length < 10) {
-      return { ok: false, error: "Rekomendasi tindakan wajib diisi minimal 10 karakter." };
-    }
-    if (finalAction.length > 500) {
-      return { ok: false, error: "Rekomendasi tindakan maksimal 500 karakter." };
-    }
+  if (!finalAction || finalAction.length < 10) {
+    return { ok: false, error: "Rekomendasi tindakan wajib diisi minimal 10 karakter." };
+  }
+  if (finalAction.length > 500) {
+    return { ok: false, error: "Rekomendasi tindakan maksimal 500 karakter." };
   }
   const derived = deriveWork(state, scope.report, severity, priority, finalAction);
   const at = nowIso();
@@ -194,6 +196,9 @@ export async function rejectReport(
   if (isScope(scope)) return { ok: false, error: scope.error };
   if (scope.report.validationStatus !== "Menunggu validasi") {
     return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat ditolak." };
+  }
+  if (scope.report.channel !== "lapor-cepat") {
+    return { ok: false, error: "Hanya laporan cepat yang dapat ditolak." };
   }
   const at = nowIso();
   await withTransaction(async (conn) => {
@@ -246,6 +251,7 @@ export async function updateHandlingStatus(
     Proses: ["Completed", "Pending"],
     Completed: ["Proses"],
     Ditolak: [],
+    "Tidak berlaku": [],
   };
   if (!valid[previous].includes(next)) {
     return { ok: false, error: `Transisi ${previous} → ${next} tidak sah.` };

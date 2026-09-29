@@ -158,15 +158,15 @@ export async function applyDatasetImport(
         institutionCode: row.institutionCode,
         reporterName: row.reporterName.trim(),
         title: row.title.trim() || "Penilaian mandiri K3L (impor)",
-        description: "Baris impor dataset penelitian; menunggu validasi Pesantren.",
+        description: "Baris impor dataset penelitian; langsung terbit (D-32).",
         instrumentVersionId: BANK_ID,
         instrumentChecksum: checksum,
         scorePercent: row.scorePercent,
         pdfGeneratedAt: at,
-        validationStatus: "Menunggu validasi",
+        validationStatus: "Terbit",
         severity: "Belum ditentukan",
         priority: "Belum ditentukan",
-        handlingStatus: "Menunggu validasi",
+        handlingStatus: "Tidak berlaku",
         createdAt: at,
         submittedAt: at,
         updatedAt: at,
@@ -204,8 +204,8 @@ export async function applyDatasetImport(
         recipientAccountId: owner.id,
         institutionCode: row.institutionCode,
         sourceObjectId: id,
-        message: `Laporan baru ${id} menunggu validasi.`,
-        targetUrl: "/pesantren/validasi-laporan",
+        message: `Penilaian mandiri ${id} telah terbit.`,
+        targetUrl: "/pesantren/laporan",
         at,
         read: false,
       }));
@@ -225,7 +225,7 @@ export type PublicationAuditItem = {
   answered: number;
   expected: number;
   lengkap: boolean;
-  diterima: boolean;
+  terbit: boolean;
   skorAda: boolean;
   pdfAda: boolean;
   checksumCocok: boolean;
@@ -246,7 +246,8 @@ function readinessOf(
     ? Object.values(snapshot.answers).filter((answer) => Boolean(answer?.value)).length
     : 0;
   const lengkap = Boolean(snapshot && expected > 0 && answered === expected);
-  const diterima = report.validationStatus === "Diterima";
+  // D-32: penilaian-mandiri `Terbit`; lapor-cepat tidak masuk dataset ini.
+  const terbit = report.validationStatus === "Terbit" || report.validationStatus === "Diterima";
   const skor = snapshot?.scorePercent ?? report.scorePercent ?? null;
   const skorAda = skor !== null && skor !== undefined;
   const pdfAda = Boolean(report.pdfGeneratedAt);
@@ -260,12 +261,12 @@ function readinessOf(
     answered,
     expected,
     lengkap,
-    diterima,
+    terbit,
     skorAda,
     pdfAda,
     checksumCocok,
     warisan,
-    layak: lengkap && diterima && skorAda && pdfAda && checksumCocok,
+    layak: lengkap && terbit && skorAda && pdfAda && checksumCocok,
   };
 }
 
@@ -289,7 +290,7 @@ export function buildPublicationAudit(state: IshasState): PublicationAuditItem[]
         answered: readiness.answered,
         expected: readiness.expected,
         lengkap: readiness.lengkap,
-        diterima: readiness.diterima,
+        terbit: readiness.terbit,
         skorAda: readiness.skorAda,
         pdfAda: readiness.pdfAda,
         checksumCocok: readiness.checksumCocok,

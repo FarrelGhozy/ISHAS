@@ -1,5 +1,6 @@
 // Port 1:1 `ensureDerivedWork` (mock-store.ts:3020) — kandidat temuan/rekomendasi
-// turunan saat laporan diterima (aturan ilustratif D-04).
+// turunan saat laporan diterima (aturan ilustratif D-04). D-32: hanya `lapor-cepat`;
+// penilaian-mandiri tidak menurunkan temuan.
 
 import { isJawabanTemuan } from "../../../web/mocks/instrument-bank";
 import { snapshotLocation } from "../../../web/mocks/processors/campus-map";
@@ -19,6 +20,7 @@ export function deriveWork(
   priority: Priority,
   finalAction?: string,
 ): { findings: RiskFinding[]; recommendations: Recommendation[] } {
+  if (report.channel !== "lapor-cepat") return { findings: [], recommendations: [] };
   const snapshot = state.selfAssessmentSnapshots.find((s) => s.reportId === report.id);
   const frozenById = new Map((snapshot?.frozenIndicators ?? []).map((f) => [f.id, f]));
   const liveById = new Map(
@@ -99,14 +101,9 @@ export function deriveWork(
       y: locationSnapshot.point?.y ?? 0,
       level,
       issue,
-      indicator:
-        report.channel === "penilaian-mandiri"
-          ? sourceAnswerId || report.instrumentVersionId || "Instrumen"
-          : (report.indicatorId ?? "Tidak menggunakan instrumen"),
+      indicator: report.indicatorId ?? "Tidak menggunakan instrumen",
       recommendation:
-        report.channel === "lapor-cepat" && finalAction
-          ? finalAction
-          : `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
+        finalAction ?? `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
       status: "Belum ditindaklanjuti",
       hazard: "Menunggu kajian Pesantren",
       impact: "Menunggu kajian Pesantren",
@@ -125,14 +122,10 @@ export function deriveWork(
       priority: priority === "Belum ditentukan" ? "Sedang" : priority,
       title: `Tindak lanjut: ${issue}`,
       location,
-      source:
-        report.channel === "penilaian-mandiri"
-          ? `${report.instrumentVersionId ?? "INS"} · ${report.id}`
-          : `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
+      source: `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
       action:
-        report.channel === "lapor-cepat" && finalAction
-          ? finalAction
-          : "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
+        finalAction ??
+        "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
       status: "Belum ditindaklanjuti",
       owner: "",
       dueDate: "",

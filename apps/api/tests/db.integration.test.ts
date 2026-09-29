@@ -145,9 +145,10 @@ describe.skipIf(!dbReady)("seed demo", () => {
     expect(await byChannel("penilaian-mandiri")).toBe(5);
     const byStatus = (status: string) =>
       scalar("SELECT COUNT(*) AS c FROM reports WHERE validation_status = ?", [status]);
-    expect(await byStatus("Menunggu validasi")).toBe(3);
+    expect(await byStatus("Menunggu validasi")).toBe(2);
     expect(await byStatus("Ditolak")).toBe(2);
-    expect(await byStatus("Diterima")).toBe(14);
+    expect(await byStatus("Diterima")).toBe(10);
+    expect(await byStatus("Terbit")).toBe(5);
   });
 
   test("tidak ada relasi yatim antar tabel", async () => {
@@ -286,7 +287,11 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     };
     expect(body.ok).toBe(true);
     expect(body.data.reports.length).toBeGreaterThan(0);
-    expect(body.data.reports.every((r) => r.validationStatus === "Diterima")).toBe(true);
+    expect(
+      body.data.reports.every(
+        (r) => r.validationStatus === "Diterima" || r.validationStatus === "Terbit",
+      ),
+    ).toBe(true);
     expect(body.data.reports.every((r) => r.reporterName === "")).toBe(true);
     expect(body.data.recommendations.length).toBeGreaterThan(0);
     for (const rec of body.data.recommendations) {
@@ -467,11 +472,17 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     expect(submitted.status).toBe(201);
     const body = (await submitted.json()) as { data: { id: string } };
     const [reports] = await pool.query<RowDataPacket[]>(
-      "SELECT channel, validation_status, score_percent FROM reports WHERE id = ?",
+      "SELECT channel, validation_status, handling_status, score_percent FROM reports WHERE id = ?",
       [body.data.id],
     );
     expect(reports[0]?.channel).toBe("penilaian-mandiri");
-    expect(reports[0]?.validation_status).toBe("Menunggu validasi");
+    // D-32: penilaian mandiri langsung terbit, tanpa temuan/tindak lanjut.
+    expect(reports[0]?.validation_status).toBe("Terbit");
+    expect(reports[0]?.handling_status).toBe("Tidak berlaku");
+    const findingsBaru = await scalar("SELECT COUNT(*) AS c FROM findings WHERE report_id = ?", [
+      body.data.id,
+    ]);
+    expect(findingsBaru).toBe(0);
     const snapshots = await scalar(
       "SELECT COUNT(*) AS c FROM self_assessment_snapshots WHERE report_id = ?",
       [body.data.id],
@@ -649,7 +660,8 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
         { method: "POST", headers: { "X-Demo-Account": owner.id } },
       ),
     );
-    expect(accepted.status).toBe(200);
+    // D-32: penilaian mandiri tidak masuk antrean validasi.
+    expect(accepted.status).toBe(400);
 
     const pdf = await call(`/api/v1/public/reports/${reportId}/pdf-data`);
     expect(pdf.status).toBe(200);
@@ -1217,7 +1229,7 @@ describe.skipIf(!dbReady)("Fase 3 HTTP (bank + dokumen + dataset)", () => {
     expect(denied.status).toBe(401);
   });
 
-  test("dataset: impor ≤200 baris → pratinjau → Menunggu validasi + notifikasi", async () => {
+  test("dataset: impor ≤200 baris → pratinjau → Terbit + notifikasi", async () => {
     const text = "institutionCode,reporterName,scorePercent,title\nPSN-0018,Tim impor uji,65,Uji impor dataset\n";
     const preview = await call(
       "/api/v1/validator/dataset/import",
@@ -1254,8 +1266,8 @@ describe.skipIf(!dbReady)("Fase 3 HTTP (bank + dokumen + dataset)", () => {
       "SELECT validation_status, handling_status, score_percent FROM reports WHERE id = ?",
       [appliedBody.data.id],
     );
-    expect(row[0]?.validation_status).toBe("Menunggu validasi");
-    expect(row[0]?.handling_status).toBe("Menunggu validasi");
+    expect(row[0]?.validation_status).toBe("Terbit");
+    expect(row[0]?.handling_status).toBe("Tidak berlaku");
     expect(Number(row[0]?.score_percent)).toBe(65);
     expect(
       await scalar("SELECT COUNT(*) AS c FROM self_assessment_snapshots WHERE report_id = ?", [

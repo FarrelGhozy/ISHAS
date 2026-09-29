@@ -75,13 +75,13 @@ export function buildPesantrenRoutes(deps: PesantrenRouteDeps): Route[] {
         }
         const institutionCode = actor.institutionCodes[0];
         const status = url.searchParams.get("status") ?? "Menunggu validasi";
-        const channel = url.searchParams.get("channel");
         const severity = url.searchParams.get("severity");
         const q = (url.searchParams.get("q") ?? "").toLowerCase();
         const items = state.reports
           .filter((r) => r.institutionCode === institutionCode)
+          // D-32: antrean validasi hanya lapor-cepat; penilaian-mandiri langsung Terbit.
+          .filter((r) => r.channel === "lapor-cepat")
           .filter((r) => (status === "all" ? true : r.validationStatus === status))
-          .filter((r) => (channel ? r.channel === channel : true))
           .filter((r) => (severity ? r.severity === severity : true))
           .filter((r) => (q ? `${r.id} ${r.title}`.toLowerCase().includes(q) : true))
           .sort((a, b) => b.createdAt.localeCompare(a.createdAt));

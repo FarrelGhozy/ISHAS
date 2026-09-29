@@ -249,7 +249,10 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       handler: withState(async ({ state, params }) => {
         const report = state.reports.find((r) => r.id === params.id);
         if (!report) return fail("Laporan tidak ditemukan.", 404);
-        if (report.channel !== "penilaian-mandiri" || report.validationStatus !== "Diterima") {
+        if (
+          report.channel !== "penilaian-mandiri" ||
+          (report.validationStatus !== "Diterima" && report.validationStatus !== "Terbit")
+        ) {
           return fail("Laporan tidak tersedia untuk publik.", 404);
         }
         const institution = selectRegisteredInstitutions(state).find(

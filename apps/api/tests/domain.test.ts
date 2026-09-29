@@ -69,9 +69,13 @@ describe("validateLapor", () => {
 describe("buildPublicState (invarian D-02)", () => {
   const publicState = buildPublicState(SEED);
 
-  test("hanya laporan Diterima yang tampil", () => {
+  test("hanya laporan Diterima/Terbit yang tampil", () => {
     expect(publicState.reports.length).toBeGreaterThan(0);
-    expect(publicState.reports.every((r) => r.validationStatus === "Diterima")).toBe(true);
+    expect(
+      publicState.reports.every(
+        (r) => r.validationStatus === "Diterima" || r.validationStatus === "Terbit",
+      ),
+    ).toBe(true);
     expect(publicState.reports.length).toBeLessThan(SEED.reports.length);
   });
 
