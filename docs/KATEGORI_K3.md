@@ -50,8 +50,8 @@ Aspek (ASP-*)
   ↓ 1..n
 Indikator (IND-K3L-*) — punya categoryId + aspectId
   ↓ jawaban snapshot penilaian-mandiri
-Hasil Pelaporan / Assessment (Report + SelfAssessmentSnapshot)
-  ↓ kandidat temuan ilustratif per jawaban (D-14.b)
+Hasil Penilaian / Assessment (Report + SelfAssessmentSnapshot) — skor saja, tanpa temuan (D-32)
+  ↓ (hanya lapor-cepat) kandidat temuan ilustratif per laporan divalidasi
 Risk Level / Temuan (RiskFinding.level: Rendah/Sedang/Tinggi/Ekstrem)
   ↓ rekomendasi
 Tindak Lanjut (Recommendation)
@@ -62,15 +62,13 @@ Contoh (asumsi prototipe, bukan ketentuan ilmiah):
 - Kategori: Psikososial (`KAT-PSIKOSOSIAL`)
 - Aspek: Beban Kerja (`ASP-PSI-001`)
 - Indikator: "Apakah beban kerja sesuai kapasitas dan standar?" (`IND-K3L-009`)
-- Hasil: Tidak Sesuai → Temuan: "Beban berlebih bagian administrasi."
+- Hasil: Tidak Sesuai → skor dimensi turun (penilaian mandiri tidak lagi membentuk temuan — D-32).
 - Likelihood 3 × Severity 3 = Skor 9 → **Moderate/Sedang** (ilustrasi; skala & ambang final menunggu D-04/D-13).
 
-Aturan turunan temuan (ilustratif, sama seperti D-14.b, diperluas ke indikator baru):
+Aturan turunan temuan (ilustratif) hanya berlaku untuk **lapor-cepat** yang
+diterima Pesantren; penilaian mandiri tidak memicu temuan (D-32).
 
-- `likert-1-5` bernilai `1/2` → temuan.
-- `likert-1-2-tidak` bernilai `1/Tidak` → temuan (nilai `2` = Sesuai, bukan temuan).
-- `boolean-ya-tidak` bernilai `Tidak` → temuan.
-- `severity/priority` tetap **hanya akun Pesantren saat Terima** (FLOWS §4, D-15.c).
+- `severity/priority` tetap **hanya akun Pesantren saat Terima** lapor-cepat (FLOWS §4, D-15.c).
   Form publik tidak berisi Likelihood/Severity/Risk Score/Rekomendasi.
 
 ## 4. Mapping dimensi lama → struktur baru
@@ -111,12 +109,12 @@ DIM-001 → Keselamatan; DIM-002 → campuran (dipetakan per indikator, bukan pe
 Untuk setiap kategori (ditambah baris `Belum dipetakan` untuk lapor-cepat tanpa indikator):
 
 - jumlah indikator (katalog bank live D-24 (turunan `INS-v1.1` pada seed), bukan jumlah jawaban)
-- jumlah temuan (temuan `Diterima` + belum arsip + scope filter)
-- jumlah sesuai / tidak sesuai (dari snapshot `Diterima`; sesuai = jawaban tidak memicu temuan)
+- jumlah temuan (temuan `lapor-cepat` `Diterima` + belum arsip + scope filter; penilaian mandiri tidak menyumbang temuan — D-32)
+- jumlah sesuai / tidak sesuai (dari snapshot `Diterima`/`Terbit`; sesuai = jawaban tidak memicu temuan)
 - jumlah risiko Rendah / Sedang / Tinggi / Ekstrem (satu hitung per ID temuan)
 
-Sumber dataset selalu sama dengan ringkasan utama: `selectPublicReports` (Diterima,
-belum arsip, pesantren terdaftar, bukan Completed). Filter pesantren mempersempit metrik operasional bersama. Katalog Published tetap
+Sumber dataset selalu sama dengan ringkasan utama: `selectPublicReports` (`Diterima`/`Terbit`,
+belum arsip, pesantren terdaftar, bukan Completed). Filter pesantren mempersempit metrik operasional bersama. Katalog bank live tetap
 global. Periode URL masih pratinjau, bukan filter seluruh angka; kontrak lengkap
 di [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md).
 

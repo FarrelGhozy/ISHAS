@@ -49,8 +49,9 @@ yang **sudah tertulis**; tidak menetapkan aturan baru untuk kasus tanpa temuan a
 | `Menunggu validasi` | `Menunggu validasi` | Severity/prioritas `Belum ditentukan`; belum ada validator keputusan |
 | `Ditolak` | `Ditolak` | Validator, waktu, dan alasan minimal 10 karakter; tidak masuk hasil publik |
 | `Diterima` | `Pending`, `Proses`, atau `Completed` | Validator dan waktu; severity/prioritas dipilih menurut rancangan sekarang, dengan pengecualian yang belum diputuskan pada D-05 |
+| `Terbit` | `Tidak berlaku` | Khusus `penilaian-mandiri` (D-32): skor/PDF langsung publik, tanpa validator/severity/priority, tanpa temuan/tindak lanjut |
 
-- `Diterima + Ditolak` dan `Menunggu validasi + Completed` adalah kombinasi tidak konsisten.
+- `Diterima + Ditolak` dan `Menunggu validasi + Completed` adalah kombinasi tidak konsisten. `Terbit` hanya untuk `penilaian-mandiri` (tanpa validasi Pesantren, D-32).
 - Terima/tolak hanya dari keadaan menunggu. Dua akun Pesantren yang membuka item yang sama tidak boleh
  menimpa keputusan terbaru tanpa mendeteksi perubahan; detail pembukaan ulang menunggu D-07.
 - Rancangan mengizinkan kembali `Proses → Pending` dan `Completed → Proses` dengan alasan.
@@ -137,7 +138,7 @@ publik (`/`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/lapor
 | Jawaban mentah per indikator | ❌ (hanya skor/kategori ringkasan) | ✅ |
 | Severity/priority | ✅ (sebagai chip ringkasan) | ✅ |
 | Status penanganan + progres | ✅ | ✅ |
-| Nama validator (akun Pesantren yang menerima) | ✅ | ✅ |
+| Nama validator (akun Pesantren yang menerima) | ✅ untuk `lapor-cepat`; penilaian mandiri tanpa validator (D-32) | ✅ |
 | Nama PIC tindak lanjut | ✅ | ✅ |
 | Tenggat, catatan rencana internal | ❌ (hanya progres/status) | ✅ |
 | Alasan penolakan | ❌ | ✅ |
@@ -205,11 +206,12 @@ ke form mandiri; snapshot kiriman diterima ke hasil; hasil ke dataset; serta dat
 Status Final dan relasi penugasan dari lama tidak boleh diwarisi sebagai syarat tersembunyi.
 
 Hak melihat jawaban mentah/identitas dan pemilihan kiriman untuk penelitian mengikuti D-02
-(jawaban mentah/identitas internal; ringkasan + nama validator Pesantren publik) dan D-04.
+(jawaban mentah/identitas internal; ringkasan + nama validator Pesantren publik untuk
+`lapor-cepat`) dan D-04.
 Impor D-25: upload CSV/JSON → validasi (kolom wajib, pesantren harus terdaftar,
 skor 0–100) → pratinjau valid/error tanpa mutasi → terapkan membuat laporan
-`Menunggu validasi` + snapshot beku + audit (masuk antrean Pesantren, tidak
-langsung publik). Ekspor memakai whitelist D-02 (tanpa nama/kontak pelapor,
+kanal `penilaian-mandiri` `Terbit` + snapshot beku + audit (langsung publik,
+tanpa moderasi — D-32). Ekspor memakai whitelist D-02 (tanpa nama/kontak pelapor,
 bukti, jawaban mentah, alasan tolak, audit mentah). Filter dataset utama hanya
 pesantren terdaftar; non-terdaftar hanya via toggle audit internal dengan chip
 status dan pesan tidak-masuk-agregat.

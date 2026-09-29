@@ -995,3 +995,39 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   - Migrasi schema mock `v14 → v15` aditif (field baru, tanpa hapus data/ID).
 - Dokumen terdampak: FLOWS §2/§4, WIREFRAMES §2/§4, DATA_MODEL §0/§2/§4, TODO.
   Scope Stage 03+05 + sentuhan baca Stage 04/07; status stage lain tidak berubah sepihak.
+
+## D-32 — Penilaian mandiri terbit langsung tanpa validasi & tanpa temuan — DISETUJUI 29 September 2026
+
+- Arahan pemilik: alur penilaian mandiri salah karena ikut divalidasi Pesantren.
+  Yang divalidasi hanya pelaporan mandiri (`lapor-cepat`). Penilaian mandiri
+  setelah dinilai harus langsung keluar karena tidak berhubungan dengan
+  pelaporan mandiri.
+- **D-32.a — Kanal terpisah:** `penilaian-mandiri` murni observasi/penilaian
+  kualitas berbobot dari jawaban. Ia tidak melewati antrean validasi Pesantren
+  dan tidak pernah berstatus `Menunggu validasi`/`Ditolak`.
+- **D-32.b — Status `Terbit`:** `ValidationStatus` bertambah nilai `Terbit`,
+  khusus kanal `penilaian-mandiri`. Semua pembacaan publik
+  (`selectValidatedReports`, indeks/dashboard, rekap kategori, PDF
+  `/laporan/:id`) menerima `Terbit` sederajat `Diterima`. `HandlingStatus`
+  bertambah nilai `Tidak berlaku` (terminal) karena kanal ini tidak punya
+  penanganan tindak lanjut.
+- **D-32.c — Tanpa temuan/tindak lanjut:** penilaian mandiri tidak membentuk
+  temuan maupun rekomendasi. Derivasi temuan (`ensureDerivedWork` frontend,
+  `deriveWork` backend) dibatasi hanya untuk `lapor-cepat`. Temuan penilaian
+  mandiri pada seed dihapus. Ini menggantikan aturan turunan per jawaban D-14.b.
+- **D-32.d — Impor dataset:** baris impor kanal `penilaian-mandiri` juga
+  langsung `Terbit` (kanal ini tidak punya moderasi); bagian impor D-25 yang
+  menyatakan "menunggu validasi Pesantren" gugur untuk kanal ini.
+- **D-32.e — Visibilitas:** hasil penilaian mandiri langsung tampil di
+  `/`/`/hasil`/`/laporan/:id`. Akun Pesantren dapat membacanya (skor/PDF)
+  di `/pesantren/laporan`, tetapi kanal ini tidak muncul di antrean
+  `/pesantren/validasi-laporan` maupun tindak lanjut. Nama pelapor tetap tidak
+  publik (D-02); label "Divalidasi oleh" tidak dipakai kanal ini.
+- **D-32.f — Migrasi:** schema tidak berubah (kolom `validation_status`
+  `VARCHAR`). Seed demo `RPT-0002/0004/0007/0010/0014` menjadi `Terbit` +
+  `Tidak berlaku`, turunannya dihapus, dan komposisi dihitung ulang.
+- Dokumen terdampak: FLOWS §3/§4/§7, ROLES, ROUTES, WIREFRAMES §3/§4,
+  DATA_MODEL, DATA_REQUIREMENTS §2/§6/§9, KATEGORI_K3, TEST_PLAN, TODO,
+  STAGE_08, BACKEND_API_CONTRACT, BACKEND_DATA_MODEL, apps/web/FLOW.md.
+  Scope Stage 08 + sentuhan baca Validasi; status stage lain tidak berubah
+  sepihak.

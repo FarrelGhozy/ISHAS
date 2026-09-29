@@ -11,13 +11,13 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 |---|---|---|---|
 | `/` | Dashboard publik | Agregat semua pesantren terdaftar + pemilih pesantren + tren + prioritas + CTA lapor/nilai | Pengganti landing; tanpa guard login |
 | `/lapor` | Laporan cepat | Form ringan satu langkah | Bisa juga dibuka sebagai dialog dari `/`, tapi URL kanonis tetap `/lapor` |
-| `/penilaian-mandiri` | Penilaian mandiri | Bank live + registrasi penilai + draft lokal checksum + kirim validasi (D-24) | Satu-satunya tempat isi indikator |
-| `/hasil` | Hasil penilaian | Metrik ringkas + per dimensi + antarperiode + daftar PDF penilaian, mengikuti filter pesantren (D-28) | Hanya data `Diterima`; satu-satunya halaman hasil publik |
+| `/penilaian-mandiri` | Penilaian mandiri | Bank live + registrasi penilai + draft lokal checksum + kirim penilaian; hasil langsung `Terbit` tanpa validasi (D-24, D-32) | Satu-satunya tempat isi indikator |
+| `/hasil` | Hasil penilaian | Metrik ringkas + per dimensi + antarperiode + daftar PDF penilaian, mengikuti filter pesantren (D-28) | Hanya data `Diterima`/`Terbit`; satu-satunya halaman hasil publik |
 | `/peta-risiko` | Peta bahaya & risiko | D-14: pilih satu pesantren untuk denah gambaran besar + titik temuan Diterima yang aktif; daftar temuan termasuk tanpa titik | Filter URL: pesantren, `denah`, `risiko`, `statusPeta`; lantai berupa keterangan. Frontend REVIEW |
-| `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId` |
+| `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId`; hanya dari `lapor-cepat` (D-32) |
 | `/tindak-lanjut` | Tindak lanjut (baca) | Progres + status + nama PIC; bukti penyelesaian tidak publik (D-02) | Tombol kelola hanya muncul bila login Pesantren pemilik scope |
 | `/dokumen` | Dokumen indikator (D-16) | Pustaka PDF per indikator: search + filter kategori/status; Public = Lihat tab baru + Unduh; Privat = nama + terkunci tanpa tombol | Global (filter pesantren tidak memfilter dokumen); guard publik `allowed` semua sesi |
-| `/laporan/:id` | PDF laporan penilaian (D-24, D-27, D-28) | Kop + skor % beku + dimensi + temuan diperkaya (lokasi, severity/priority, status/progres/PIC) + foto bukti + metadata; tombol cetak/simpan PDF browser | Hanya `Diterima`; tanpa nama pelapor/kontak/jawaban mentah (D-02, amendemen D-27 untuk foto bukti). `/laporan` publik dihapus (D-28) |
+| `/laporan/:id` | PDF laporan penilaian (D-24, D-27, D-28) | Kop + skor % beku + dimensi + temuan diperkaya (lokasi, severity/priority, status/progres/PIC) + foto bukti + metadata; tombol cetak/simpan PDF browser | Hanya `Terbit`/`Diterima`; tanpa temuan untuk penilaian mandiri (D-32); tanpa nama pelapor/kontak/jawaban mentah (D-02, amendemen D-27 untuk foto bukti). `/laporan` publik dihapus (D-28) |
 | `/pesantren/[kode]` | Profil ringkas lembaga | Sama seperti `/` dengan filter terkunci ke `[kode]` | `[kode]` = `institutionCode` mis. `PSN-0018`; kode tak dikenal → empty state, bukan crash |
 | `/login` | Masuk | 3 kartu akun: Super Admin, Validator, Pesantren | Tanpa kartu asesor; tanpa link "kembali ke beranda" (beranda = `/` itu sendiri) |
 | `/akses-ditolak` | Akses ditolak | Pesan + tombol kembali kontekstual | Lihat §3 |
@@ -52,7 +52,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/validator/versioning` | validator | Dihapus (D-24): halaman pengalihan ke Bank instrumen |
 | `/validator/scoring` | validator | Audit skor % beku (D-24, D-25: filter + nama dimensi + link PDF) |
 | `/validator/validasi-publikasi` | validator | Audit publikasi: checklist 5 kriteria kesiapan snapshot, label menu `Audit publikasi` (D-25; route tetap) |
-| `/validator/data-penelitian` | validator | Dataset + ekspor CSV/JSON whitelist D-02 + impor validasi→pratinjau→terapkan sebagai `Menunggu validasi` (D-25) |
+| `/validator/data-penelitian` | validator | Dataset + ekspor CSV/JSON whitelist D-02 + impor validasi→pratinjau→terapkan; kanal `penilaian-mandiri` langsung `Terbit` (D-25, D-32) |
 | `/validator/sam-isafe` | validator | SAM-iSAFE: riwayat + bank data (D-26; khusus Validator, tidak publik) |
 | `/validator/sam-isafe/baru` | validator | SAM-iSAFE: info pengamatan + kuesioner 0/1/2 + hasil (D-26) |
 | `/validator/sam-isafe/bank` | validator | SAM-iSAFE: kelola kategori + pertanyaan bank (D-26) |

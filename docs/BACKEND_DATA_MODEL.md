@@ -249,7 +249,7 @@ CREATE TABLE reports (
   evidence_asset_id VARCHAR(64) NULL,    -- lapor-cepat (privat)
   evidence_name VARCHAR(200) NULL,
   location_snapshot JSON NULL,           -- LocationSnapshot beku (areaId/locationText/floorNote/campusPlanVersionId/point)
-  validation_status VARCHAR(24) NOT NULL DEFAULT 'Menunggu validasi',
+  validation_status VARCHAR(24) NOT NULL DEFAULT 'Menunggu validasi', -- penilaian-mandiri: 'Terbit' (D-32)
   severity VARCHAR(24) NOT NULL DEFAULT 'Belum ditentukan',
   priority VARCHAR(24) NOT NULL DEFAULT 'Belum ditentukan',
   handling_status VARCHAR(24) NOT NULL DEFAULT 'Menunggu validasi',
@@ -331,7 +331,8 @@ perangkat (lihat `BACKEND_MIGRATION.md`). Draft mandiri **wajib** pindah ke
 ## 4. Temuan + rekomendasi/tindak lanjut
 
 Nilai tampilan temuan berasal dari turunan mock (`ensureDerivedWork`,
-`mock-store.ts:3010`). Backend **menyimpan kolom snapshot** agar output peta/
+`mock-store.ts:3010`) **hanya untuk lapor-cepat**; penilaian-mandiri tidak
+menurunkan temuan (D-32). Backend **menyimpan kolom snapshot** agar output peta/
 rekomendasi identik dengan mock; kolom bertanda *(derived)* boleh dihitung ulang
 saat baca, tetapi nilai tersimpan tetap sumber PDF/audit.
 
@@ -637,7 +638,7 @@ CREATE TABLE sequences (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Riwayat indeks ilustratif per pesantren (periode lampau). Titik periode
--- berjalan TIDAK disimpan: selalu dihitung dari snapshot Diterima (D-04).
+-- berjalan TIDAK disimpan: selalu dihitung dari snapshot Diterima/Terbit (D-04, D-32).
 CREATE TABLE index_history (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   institution_code VARCHAR(16) NOT NULL,
@@ -673,7 +674,8 @@ bun scripts/seed.ts --mode=empty  # production: struktur kosong tapi valid
 - Mode `demo`: port 1:1 dari `apps/web/mocks/seed/seed.ts`. Komposisi terverifikasi
   (dikunci `seed-composition.test.ts`): **5 pesantren** (2 terdaftar: PSN-0018,
   PSN-0019), **6 user**, **19 laporan** (14 lapor-cepat + 5 penilaian-mandiri:
-  3 Menunggu, 2 Ditolak, 14 Diterima), **17 temuan + 17 rekomendasi**, **5
+  2 Menunggu, 5 Terbit, 2 Ditolak, 10 Diterima), **9 temuan + 9 rekomendasi**
+  (penilaian-mandiri tidak menyumbang temuan, D-32), **5
   kategori + 27 soal SAM + 4 pengamatan SAM + 2 follow-up**, **18 audit + 4
   notifikasi**, denah ilustrasi, bank live 10 indikator (dari `INS-v1.1`).
   Counter awal `report=20`, `institution=23`. Setiap akun diberi `password_hash`

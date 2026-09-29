@@ -197,7 +197,8 @@ status stage lain tidak berubah sepihak.
 Revisi atas arahan langsung pemilik (`ok kerjakan`): rekomendasi tindakan
 diusulkan pelapor di `/lapor` (opsional), difinalkan Pesantren saat Terima,
 baru tampil di `/rekomendasi`. Scope lapor-cepat dulu; satu laporan satu
-rekomendasi; penilaian-mandiri tetap perilaku lama. Schema v14→v15.
+rekomendasi. (Perilaku turunan penilaian-mandiri kemudian diganti D-32:
+penilaian mandiri tidak lagi membentuk temuan.) Schema v14→v15.
 
 - [x] Catat D-29 + sinkron FLOWS/WIREFRAMES/DATA_MODEL sebelum mengubah kode.
 - [x] Kode + migrasi v14→v15 + test (lint + typecheck + 219 test + build lulus, 28 Sep 2026; +4 test D-29).
@@ -638,8 +639,22 @@ Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` bel
 ## Stage 08 — Penilaian mandiri — `IN PROGRESS`
 
 - [x] Salin-adaptasi alur tanpa penugasan + kunci versi Published + draft lokal + lanjutkan setelah refresh.
-- [x] Tinjau kelengkapan + kirim untuk validasi (tidak ada jalur tampil langsung sebelum validasi).
-- [ ] Hasil yang `Diterima` tampil dengan label kanal; cek 3 viewport; lint + typecheck + build.
+- [x] Tinjau kelengkapan + kirim penilaian yang langsung `Terbit` (tanpa validasi Pesantren, D-32).
+- [ ] Hasil `Terbit` tampil dengan label kanal tanpa temuan/tindak lanjut; cek 3 viewport; lint + typecheck + build.
+
+## Revisi D-32 — Penilaian mandiri terbit langsung tanpa validasi & tanpa temuan — 29 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: penilaian mandiri tidak divalidasi Pesantren (hanya
+`lapor-cepat` yang divalidasi); hasil penilaian langsung terbit; tidak terhubung
+ke pelaporan/temuan/tindak lanjut.
+
+- [x] Catat D-32 + sinkron FLOWS/ROLES/ROUTES/WIREFRAMES/DATA_MODEL/DATA_REQUIREMENTS/KATEGORI_K3/TEST_PLAN/BACKEND_* + `apps/web/FLOW.md`.
+- [x] Tipe `ValidationStatus` `Terbit` + `HandlingStatus` `Tidak berlaku` + chip status.
+- [x] Frontend: submit mandiri/impor → `Terbit`, derivasi temuan hanya `lapor-cepat`, selector/agregat menerima `Terbit`, UI publik/Pesantren/Validator/Admin.
+- [x] Backend: domain self-assessment/derive/pesantren/dataset + gerbang PDF `Terbit`.
+- [x] Seed: 5 laporan mandiri → `Terbit`/`Tidak berlaku`, hapus 8 temuan + 8 rekomendasi turunan.
+- [x] Test web 258 lulus; backend 98 lulus (6 gagal pra-eksisting unggah/storage/reset-demo, juga gagal di commit basis).
+- [ ] Cek visual 3 viewport + keyboard browser (belum dijalankan; Chromium tidak tersedia di lingkungan ini).
 
 ## Stage 09 — Admin + sinkron dokumen + rilis REVIEW — `IN PROGRESS`
 

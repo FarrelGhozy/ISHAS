@@ -16,7 +16,7 @@
 - Mengirim laporan cepat: wajib isi **nama pelapor** (teks bebas, maks 100 karakter), pesantren (pilih dari daftar), lokasi/area, deskripsi. Foto dan kontak opsional.
 - Mengisi penilaian mandiri: registrasi nama penilai + pesantren, lalu seluruh indikator wajib bank live (D-24).
 - Menyimpan draft penilaian mandiri di perangkat sendiri (localStorage) dan melanjutkannya setelah refresh.
-- Melihat nomor laporan + status `Menunggu validasi` sebagai konfirmasi kirim.
+- Melihat nomor laporan + status `Menunggu validasi` sebagai konfirmasi kirim lapor-cepat; penilaian mandiri langsung berstatus `Terbit` dan tampil publik (D-32).
 
 **TIDAK BOLEH:**
 
@@ -47,9 +47,10 @@
 **Kemampuan dalam rancangan awal:**
 
 - Membaca data publik seperti pengunjung lain. Boleh melapor ke pesantren lain sebagai pelapor umum (D-03): laporannya divalidasi oleh akun Pesantren sasaran; hak kelola tetap terbatas satu pesantren. Saat melapor, field nama **terisi otomatis** dari akun aktif + label `Pesantren`; tetap dapat diubah manual per laporan.
-- Membuka antrean **Validasi Laporan** (hanya laporan dengan `institutionCode` miliknya).
-- **Menerima** laporan: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
-- **Menolak** laporan: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
+- Membuka antrean **Validasi Laporan** (hanya laporan `lapor-cepat` dengan `institutionCode` miliknya; penilaian mandiri terbit langsung — D-32).
+- **Menerima** laporan cepat: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
+- **Menolak** laporan cepat: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
+- Membaca hasil penilaian mandiri (skor/PDF, status `Terbit`) secara hanya-baca; kanal ini tidak masuk antrean validasi maupun tindak lanjut.
 - Mengubah status penanganan `Pending → Proses → Completed` (tidak boleh mundur tanpa catatan audit; aturan mundur lihat FLOWS §5).
 - **Menghapus** laporan berstatus `Completed` saja, dengan dialog konfirmasi + alasan; penghapusan menambah audit event (data audit tidak ikut terhapus).
 - Mengelola gedung/lantai/area/denah, membuat rencana tindak lanjut (PIC + tenggat + catatan), memperbarui progres, mengunggah bukti penyelesaian (upload gambar pola `/lapor` — D-21), membatalkan perbaikan dengan alasan wajib min 10 karakter (status `Dibatalkan` per rekomendasi, baris tidak dihapus — D-21), membaca laporan pimpinan.

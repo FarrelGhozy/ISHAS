@@ -64,10 +64,18 @@ tetap tersimpan internal sesuai scope; jangan menghapusnya otomatis.
 
 ## 3. Penilaian mandiri / self-assessment (Aktor: Publik, tanpa login)
 
+**Amendemen D-32 (29 September 2026):** penilaian mandiri **tidak divalidasi**
+Pesantren. Hanya `lapor-cepat` (§2) yang melewati validasi (§4). Begitu
+dikirim, laporan berstatus `Terbit` + `handlingStatus: Tidak berlaku` dan
+skor/PDF langsung tampil publik. Kanal ini **tidak** membentuk temuan,
+rekomendasi, atau tindak lanjut; ia murni observasi/skor berbobot dari
+jawaban (menggantikan turunan per jawaban D-14.b). `severity/priority` tetap
+`Belum ditentukan` dan tidak dipakai publik.
+
 **Amendemen D-24 (28 September 2026):** versioning dihapus; prasyarat versi
 `Published`, banner kunci versi, dan aturan D-10 historis di bawah diganti.
 Berlaku: bank instrumen live `INS-LIVE` + registrasi penilai + draft checksum
-+ snapshot beku + skor % + PDF per laporan (tampil publik setelah `Diterima`).
++ snapshot beku + skor % + PDF per laporan (langsung terbit, D-32).
 
 **Prasyarat:** sama seperti §2 + bank instrumen live mempunyai minimal satu
 indikator. Jika kosong → halaman menampilkan pesan "Belum ada instrumen" dan
@@ -92,27 +100,27 @@ wajib baru saat kirim); pesantren terakhir diingat per perangkat sehingga reload
 tanpa param tetap memuat draft yang benar; tulis hanya bila isi berubah (anti
 loop save-render-save); lanjutkan dari indikator terakhir via `activeIndex`.
 5. **Tinjau** → ringkasan 4 kelompok: jawaban wajib, bukti wajib, catatan N/A, lokasi → klik item bermasalah melompat ke indikatornya.
-6. **Kirim untuk validasi** (aktif hanya bila 4 kelompok lengkap) → dialog konfirmasi "Setelah dikirim tidak dapat diubah; koreksi lewat laporan baru atau hubungi akun Pesantren." → Ya.
+6. **Kirim penilaian** (aktif hanya bila 4 kelompok lengkap) → dialog konfirmasi "Setelah dikirim tidak dapat diubah; hasil langsung terbit di halaman publik." → Ya.
  → Sistem: simpan snapshot beku (copy soal + opsi + bobot + jawaban +
-bukti + lokasi + `scorePercent` + `byDimension`), hubungkan ke satu `Report`
-kanal `penilaian-mandiri` (`scorePercent` + `pdfGeneratedAt`), lalu kunci
-kiriman. Kandidat temuan mengikuti flag `isFinding` per opsi (ilustratif;
-bukan ambang ilmiah final). Status `Menunggu validasi`; audit; notifikasi akun
-Pesantren. PDF laporan dibuat saat kirim dan baru tampil publik setelah
-`Diterima`. Layar sukses sama seperti §2. Rincian snapshot ada di
-`DATA_REQUIREMENTS.md` §2.
+ bukti + lokasi + `scorePercent` + `byDimension`), hubungkan ke satu `Report`
+ kanal `penilaian-mandiri` (`scorePercent` + `pdfGeneratedAt`) berstatus
+ `Terbit` + `handlingStatus: Tidak berlaku`, lalu kunci kiriman. **Tanpa**
+ temuan/rekomendasi/tindak lanjut (D-32). Audit + notifikasi akun Pesantren
+ "telah terbit". PDF laporan dibuat saat kirim dan langsung tampil publik.
+ Layar sukses sama seperti §2. Rincian snapshot ada di
+ `DATA_REQUIREMENTS.md` §2.
 
 **Kasus yang belum diputuskan:** seluruh jawaban N/A dan arti periode
-penilaian (D-04), serta penilaian lengkap tanpa temuan (D-05). Aturan draft
-versi lama (D-10) diganti aturan checksum D-24: soal berubah = ulang dari awal.
+penilaian (D-04). Aturan draft versi lama (D-10) diganti aturan checksum D-24:
+soal berubah = ulang dari awal.
 
 ## 4. Validasi oleh Pesantren (Aktor: Pesantren, login)
 
-**Prasyarat:** login Pesantren; antrean hanya berisi laporan `institutionCode` miliknya, diurutkan terbaru dulu.
+**Prasyarat:** login Pesantren; antrean **hanya berisi `lapor-cepat`** (penilaian mandiri terbit langsung, D-32) milik `institutionCode`-nya, diurutkan terbaru dulu.
 
-1. Buka `/pesantren/validasi-laporan` → filter status + kanal (`lapor-cepat/penilaian-mandiri`) + severity + pencarian (nomor/judul/pelapor/deskripsi); baris memuat chip kanal + lokasi + handling → pilih item `Menunggu validasi` → baca seluruh isi kiriman: pelapor (nama; label `Publik` bila tanpa login atau label akun bila login), kontak internal, pesantren, lokasi/area (+ titik denah bila ada), kategori/aspek (+ indikator lama bila ada), usulan keparahan/prioritas/rekomendasi pelapor, judul, deskripsi, bukti gambar, waktu kirim, versi instrumen (untuk penilaian mandiri: seluruh jawaban per indikator, hanya-baca).
-2. Keputusan A — **Terima**: tinjau usulan pelapor lalu wajib pilih `severity` (`Tinggi/Sedang/Rendah`, tanpa default, pre-fill dari usulan bila sah; UI memakai placeholder `Pilih…`, bukan opsi `Belum ditentukan`) + wajib pilih `priority` (aturan sama) + untuk lapor-cepat wajib isi rekomendasi final (min 10, maks 500, pre-fill dari usulan pelapor, boleh ubah total; yang tampil di `/rekomendasi` adalah versi final ini) + opsional catatan validasi → konfirmasi.
- → Sistem: `validationStatus: Diterima`, `handlingStatus: Pending`, simpan validator/waktu; data masuk sumber tervalidasi dengan bidang publik sesuai D-02 (ringkasan saja; nama validator publik). Untuk penilaian mandiri, hasil memakai snapshot dan konfigurasi ilustratif; lapor cepat tidak mempunyai skor instrumen. Audit `Memvalidasi laporan` + notifikasi internal. Notifikasi status ke pelapor login masih usulan `SUGGESTIONS.md` §5, bukan fitur yang otomatis disetujui.
+1. Buka `/pesantren/validasi-laporan` → filter status + severity + pencarian (nomor/judul/pelapor/deskripsi); baris memuat chip kanal + lokasi + handling → pilih item `Menunggu validasi` → baca seluruh isi kiriman: pelapor (nama; label `Publik` bila tanpa login atau label akun bila login), kontak internal, pesantren, lokasi/area (+ titik denah bila ada), kategori/aspek (+ indikator lama bila ada), usulan keparahan/prioritas/rekomendasi pelapor, judul, deskripsi, bukti gambar, waktu kirim.
+2. Keputusan A — **Terima**: tinjau usulan pelapor lalu wajib pilih `severity` (`Tinggi/Sedang/Rendah`, tanpa default, pre-fill dari usulan bila sah; UI memakai placeholder `Pilih…`, bukan opsi `Belum ditentukan`) + wajib pilih `priority` (aturan sama) + wajib isi rekomendasi final (min 10, maks 500, pre-fill dari usulan pelapor, boleh ubah total; yang tampil di `/rekomendasi` adalah versi final ini) + opsional catatan validasi → konfirmasi.
+ → Sistem: `validationStatus: Diterima`, `handlingStatus: Pending`, simpan validator/waktu; data masuk sumber tervalidasi dengan bidang publik sesuai D-02 (ringkasan saja; nama validator publik); turunan temuan/rekomendasi dibentuk dari lapor-cepat. Audit `Memvalidasi laporan` + notifikasi internal. Notifikasi status ke pelapor login masih usulan `SUGGESTIONS.md` §5, bukan fitur yang otomatis disetujui.
 3. Keputusan B — **Tolak**: wajib isi alasan min 10 karakter → konfirmasi.
  → Sistem: `validationStatus: Ditolak`, `handlingStatus: Ditolak` (terminal pada rancangan awal, tidak tampil publik); simpan validator, waktu, dan alasan; audit `Menolak laporan`. Arsip dapat dibuka akun Pesantren pemilik scope melalui filter "Ditolak".
 4. Larangan: akun Pesantren DILARANG mengubah isi deskripsi/bukti/jawaban pelapor. Yang boleh diisi hanya: severity, priority, rekomendasi final (lapor-cepat), catatan validasi, alasan tolak, dan status penanganan. Koreksi faktual dilakukan lewat laporan baru.
@@ -175,17 +183,16 @@ perubahan langsung aktif + peringatan draft berjalan harus mengulang. Skor
 lama dibekukan pada snapshot (tidak dihitung ulang). Bobot/ambang/rumus tetap
 dummy ilustratif sampai keputusan ilmiah final.
 
-Alur baca Validator (D-25): snapshot beku + `scorePercent` → antrean
-Pesantren (`Terima/Tolak`, FLOWS §4) → `Diterima` → agregat % + PDF
-`/laporan/:id` → `Scoring` (audit skor) → `Audit publikasi` (checklist 5
-kriteria: lengkap + `Diterima` + skor ada + PDF ada + checksum cocok; tanpa
-aksi moderasi) → `Data penelitian` (filter terdaftar + toggle non-terdaftar
-audit, ekspor whitelist D-02, impor → `Menunggu validasi`, tidak langsung
-publik).
+Alur baca Validator (D-25): snapshot beku + `scorePercent` + laporan `Terbit`
+(D-32, tanpa antrean Pesantren) → agregat % + PDF `/laporan/:id` →
+`Scoring` (audit skor) → `Audit publikasi` (checklist 5 kriteria: lengkap +
+`Terbit`/`Diterima` + skor ada + PDF ada + checksum cocok; tanpa aksi moderasi)
+→ `Data penelitian` (filter terdaftar + toggle non-terdaftar audit, ekspor
+whitelist D-02, impor kanal `penilaian-mandiri` → `Terbit`).
 
- Moderasi laporan oleh akun Pesantren berbeda dari audit ilmiah oleh peran
- Validator. `Divalidasi oleh` = akun Pesantren penerima, bukan peran
- Validator. Impor tidak boleh bypass moderasi; lihat `DATA_REQUIREMENTS.md` §9.
+ Moderasi laporan `lapor-cepat` oleh akun Pesantren berbeda dari audit ilmiah
+ oleh peran Validator. `Divalidasi oleh` hanya berlaku untuk `lapor-cepat`,
+ bukan penilaian mandiri maupun peran Validator; lihat `DATA_REQUIREMENTS.md` §9.
 
 ## 8. Pustaka detail indikator — PDF Public/Privat (Aktor: Validator, D-16—D-17)
 

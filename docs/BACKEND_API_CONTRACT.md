@@ -58,8 +58,9 @@ frontend tetap hijau; kode HTTP mengikuti tabel 0.b.
 | Pesantren + user + audit global + reset | tidak | tidak | tidak | ya |
 | Dokumen `Privat` (metadata penuh + blob) | tidak | tidak | ya | tidak |
 
-Invarian baca publik (D-02): hanya `validationStatus=Diterima`,
-`archivedAt NULL`, `handlingStatus!=Completed`, pesantren terdaftar.
+Invarian baca publik (D-02): `validationStatus IN ('Diterima','Terbit')`
+(D-32: `Terbit` = penilaian-mandiri tanpa validasi), `archivedAt NULL`,
+`handlingStatus!=Completed`, pesantren terdaftar.
 Tanpa: nama/kontak pelapor, bukti lapor-cepat & penyelesaian, jawaban mentah,
 alasan tolak, catatan internal, tenggat, audit mentah.
 Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
@@ -69,9 +70,9 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 
 | Method + Path | Validasi | Efek |
 |---|---|---|
-| `GET /public/dashboard?institution=&period=` | `institution` tak dikenal → fallback semua + notice (bukan error) | Agregat D-04 ilustratif: 1 snapshot `Diterima` terbaru/lembaga, rata-rata per lembaga, `indexHistory` untuk tren |
-| `GET /public/results`, `/public/risk-map`, `/public/recommendations`, `/public/follow-ups` | Filter `institution` sama; peta butuh 1 pesantren dipilih (D-14) | Daftar Area + temuan aktif (tanpa `Dibatalkan`), rekomendasi final |
-| `GET /public/reports/:id/pdf-data` | Hanya laporan `penilaian-mandiri` + `Diterima` | Kop + skor beku + dimensi + temuan (lokasi, severity/priority final, status/progres/PIC) + foto bukti + metadata (D-28). Tanpa jawaban mentah: `snapshot.answers` hanya memuat `evidenceAssetId`/`evidenceName` (foto) + `institution` + `instrumentLabel` |
+| `GET /public/dashboard?institution=&period=` | `institution` tak dikenal → fallback semua + notice (bukan error) | Agregat D-04 ilustratif: 1 snapshot `Diterima`/`Terbit` terbaru/lembaga, rata-rata per lembaga, `indexHistory` untuk tren |
+| `GET /public/results`, `/public/risk-map`, `/public/recommendations`, `/public/follow-ups` | Filter `institution` sama; peta butuh 1 pesantren dipilih (D-14) | Daftar Area + temuan aktif (tanpa `Dibatalkan`), rekomendasi final (hanya turunan `lapor-cepat`, D-32) |
+| `GET /public/reports/:id/pdf-data` | Hanya laporan `penilaian-mandiri` + `Diterima`/`Terbit` | Kop + skor beku + dimensi + foto bukti + metadata (D-28). Tanpa temuan (D-32, kanal ini tidak menurunkan temuan) dan tanpa jawaban mentah: `snapshot.answers` hanya memuat `evidenceAssetId`/`evidenceName` (foto) + `institution` + `instrumentLabel` |
 | `GET /public/docs?q=&category=&visibility=` | Blob privat di-strip (`assetId=""`) | Baris katalog + filter; `Privat` hanya nama + gembok |
 | `GET /public/institutions` | — | Hanya terdaftar (pemilih publik) |
 | `GET /public/institutions/:code` | Tak dikenal → empty, bukan 404 teknis | Profil ringkas (kota saja, tanpa alamat lengkap — D-02) |
@@ -89,9 +90,9 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 
 | Method + Path | Validasi | Efek |
 |---|---|---|
-| `GET /pesantren/queue?status=&channel=&severity=&q=` | Scope = `institutionCode` akun | Antrean `Menunggu validasi` terbaru dulu + chip kanal/lokasi/handling |
+| `GET /pesantren/queue?status=&severity=&q=` | Scope = `institutionCode` akun; hanya kanal `lapor-cepat` (D-32) | Antrean `Menunggu validasi` terbaru dulu + chip lokasi/handling |
 | `GET /pesantren/reports/:id` | Scope sendiri | Detail penuh internal (identitas, kontak, usulan, bukti, jejak) |
-| `POST /pesantren/reports/:id/accept` | `severity/priority` wajib ≠ `Belum ditentukan`; status harus `Menunggu validasi`; lapor-cepat wajib `rekomendasiFinal` 10–500 (D-29) | `Diterima/Pending` + `validatedBy/At` + temuan/rekomendasi turunan (idempoten) + audit |
+| `POST /pesantren/reports/:id/accept` | `severity/priority` wajib ≠ `Belum ditentukan`; status harus `Menunggu validasi`; hanya `lapor-cepat`; wajib `rekomendasiFinal` 10–500 (D-29) | `Diterima/Pending` + `validatedBy/At` + temuan/rekomendasi turunan (idempoten) + audit |
 | `POST /pesantren/reports/:id/reject` | `reason` ≥10; status harus `Menunggu validasi` | `Ditolak` terminal + audit; tidak tampil publik |
 | `GET /pesantren/state` | Scope = `institutionCode` akun (D-30.c) | Proyeksi internal untuk adapter frontend (laporan Menunggu/Ditolak + snapshot + audit scope); **bukan** endpoint publik |
 
@@ -130,7 +131,7 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 | `POST /self-assessments/drafts` | Pesantren terdaftar; bank berdimensi | Draft + `instrumentChecksum`; checksum beda = basi: kirim dikunci, wajib ulang |
 | `GET /self-assessments/drafts/:id` | Perangkat penilai (D-31; model draft prototipe sama dengan POST/DELETE) | Objek draft (`answers`, `activeIndex`, `instrumentChecksum`) atau 404 |
 | `DELETE /self-assessments/drafts/:id` | Pemilik draft | Buang draft basi |
-| `POST /self-assessments/submit` | Aktor publik/Pesantren; checksum cocok; nama 2–100; per indikator: nilai sah (wajib bila `required`), bukti bila `evidenceRequired` (D-27: upload beneran, 1 foto/soal), lokasi bila `locationRequired`, catatan ≥10 bila N/A | 1 `Report` + 1 snapshot beku (soal+opsi+bobot+jawaban+skor) + `scorePercent` + `pdfGeneratedAt` + audit + notifikasi; draft dihapus |
+| `POST /self-assessments/submit` | Aktor publik/Pesantren; checksum cocok; nama 2–100; per indikator: nilai sah (wajib bila `required`), bukti bila `evidenceRequired` (D-27: upload beneran, 1 foto/soal), lokasi bila `locationRequired`, catatan ≥10 bila N/A | 1 `Report` `Terbit` + `Tidak berlaku` + 1 snapshot beku (soal+opsi+bobot+jawaban+skor) + `scorePercent` + `pdfGeneratedAt` + audit + notifikasi "telah terbit"; **tanpa** temuan (D-32); draft dihapus |
 | `POST /uploads/self-evidence` | Pola bukti (≤5 MB/20 MP) | Asset bukti jawaban |
 
 Skor: rata-rata terbobot (`bobotJawaban` × pengali indikator), N/A dilewati
@@ -223,14 +224,15 @@ prototipe ≥80 Rendah / 60–79 Sedang / <60 Tinggi. Tipe observasi dari `SAM_K
   `POST /notifications/read` body `{ids?}` — tandai dibaca (semua bila `ids`
   kosong); id frontend `NOT-<n>` dipetakan ke `notifications.id`.
 
-## 13. Aturan publikasi audit (D-25.b)
+## 13. Aturan publikasi audit (D-25.b, D-32)
 
-Layak publik bila 5 poin terpenuhi: snapshot lengkap + `Diterima` +
+Layak publik bila 5 poin terpenuhi: snapshot lengkap + `Diterima`/`Terbit` +
 `scorePercent` ada + `pdfGeneratedAt` ada + checksum cocok
-(beda = label "bank berubah", snapshot tetap beku).
+(beda = label "bank berubah", snapshot tetap beku). Kanal `penilaian-mandiri`
+selalu `Terbit`; `lapor-cepat` menjadi `Diterima` setelah validasi.
 Endpoint: `GET /validator/publication-audit` — `items[]` berisi `reportId`,
 `institutionCode`, `title`, `validationStatus`, `scorePercent`, `pdfGeneratedAt`
-+ checklist `{answered, expected, lengkap, diterima, skorAda, pdfAda,
++ checklist `{answered, expected, lengkap, terbit, skorAda, pdfAda,
 checksumCocok, warisan, layak}`; UI mengambil `institutionCode` untuk pemilih
 institusi pada filter, bukan nama/kontak pelapor.
 

@@ -58,7 +58,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 - Error inline per field (contoh: "Nama minimal 2 karakter.", "Deskripsi minimal 20 karakter.", "Pilih pesantren terdaftar.").
 - Layar sukses: ikon centang hijau + `Laporan terkirim` + nomor `RPT-XXXX` + chip `Menunggu validasi` (`status-neutral`) + teks "Belum tampil di dashboard sebelum divalidasi." + tombol **Kembali ke dashboard**.
 
-## 3. `/penilaian-mandiri` Self-assessment (amendemen D-24)
+## 3. `/penilaian-mandiri` Self-assessment (amendemen D-24, D-32)
 
 - Header halaman: kicker `Penilaian mandiri` + H1 `Periksa kondisi K3L pesantren` +
   banner bank live ("Bank instrumen live · perubahan soal membuat draft harus mengulang") +
@@ -69,14 +69,14 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
   Bukti berupa tombol upload + pratinjau hanya pada indikator `evidenceRequired` (D-27);
   foto tampil di PDF publik.
 - Tiga kolom (desktop; menumpuk vertikal di ponsel): kiri navigasi dimensi (tombol per dimensi: nomor + nama + "x/y terisi" + centang bila penuh + kunci versi di bawah), tengah panel pertanyaan (kode + "Indikator n dari N" + chip `Wajib`/`Bukti wajib` + judul + prompt + lokasi observasi + opsi radio + catatan + bukti + sumber instrumen + tombol Sebelumnya/Berikutnya), kanan panel kelengkapan (4 statistik: jawaban/bukti/catatan N/A/lokasi + tombol `Lihat ringkasan` + catatan "Draft tersimpan di perangkat ini").
-- Dialog Tinjau: daftar semua indikator (ikon lengkap/belum + kode + judul + jawaban) + klik melompat ke indikator + tombol **Kirim untuk validasi** (disabled bila ada yang kurang) + dialog konfirmasi final ("Setelah dikirim tidak dapat diubah…") → layar sukses seperti lapor.
+- Dialog Tinjau: daftar semua indikator (ikon lengkap/belum + kode + judul + jawaban) + klik melompat ke indikator + tombol **Kirim penilaian** (disabled bila ada yang kurang) + dialog konfirmasi final ("Setelah dikirim tidak dapat diubah; hasil langsung terbit di halaman publik.") → layar sukses seperti lapor dengan status `Terbit` (D-32, tanpa validasi Pesantren).
 
 ## 4. `/pesantren/validasi-laporan` Antrean validasi (login Pesantren)
 
-- Judul: kicker `Moderasi` + H1 `Validasi laporan` + deskripsi "Hanya laporan milik [nama pesantren]. Laporan yang diterima tampil di dashboard publik."
-- Filter: status (`Menunggu validasi/Pending/Proses/Completed/Ditolak/Semua`) + kanal (`lapor-cepat/penilaian-mandiri`) + severity + pencarian teks.
+- Judul: kicker `Moderasi` + H1 `Validasi laporan` + deskripsi "Hanya laporan cepat milik [nama pesantren]. Penilaian mandiri terbit langsung tanpa validasi (D-32)."
+- Filter: status (`Menunggu validasi/Pending/Proses/Completed/Ditolak/Semua`) + severity + pencarian teks. Kanal tidak difilter karena antrean hanya berisi `lapor-cepat`.
 - Kartu/baris antrean: nomor + chip kanal + pelapor (nama apa adanya, tanpa opsi anonim — D-02) + judul + lokasi + waktu + chip status validasi + chip handling + tombol **Periksa**. Pencarian mencakup deskripsi.
-- Detail: seluruh isi laporan (hanya-baca: identitas, kontak internal, kategori/aspek, usulan pelapor termasuk usulan rekomendasi, lokasi + teks denah, bukti gambar, waktu, jejak keputusan) + untuk penilaian mandiri: jawaban per indikator (hanya-baca) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` placeholder `Pilih…` + pre-fill dari usulan sah + untuk lapor-cepat textarea wajib `Rekomendasi tindakan` min 10 maks 500 pre-fill usulan + catatan opsional + tombol konfirmasi; ganti Terima/Tolak membersihkan error) dan **Tolak** (textarea alasan wajib min 10 + counter + konfirmasi). Arsip tidak tampil di antrean.
+- Detail: seluruh isi laporan (hanya-baca: identitas, kontak internal, kategori/aspek, usulan pelapor termasuk usulan rekomendasi, lokasi + teks denah, bukti gambar, waktu, jejak keputusan) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` placeholder `Pilih…` + pre-fill dari usulan sah + textarea wajib `Rekomendasi tindakan` min 10 maks 500 pre-fill usulan + catatan opsional + tombol konfirmasi; ganti Terima/Tolak membersihkan error) dan **Tolak** (textarea alasan wajib min 10 + counter + konfirmasi). Arsip tidak tampil di antrean.
 - Setelah terima: tidak ada kontrol status manual di halaman ini; status bergerak lewat `/pesantren/tindak-lanjut` (D-23.a). Arsip `Completed` via `/pesantren/laporan` (konfirmasi + alasan min 5).
 
 ## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan/:id`
@@ -84,7 +84,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 - Amendemen D-28 (gabung hasil): `/hasil` adalah satu-satunya halaman hasil
   publik — baris metrik (Indeks K3L · Temuan aktif · Terverifikasi) + dimensi
   hasil + daftar PDF penilaian (satu penilai = satu PDF; kartu per laporan:
-  pesantren, periode, skor %, validator + tautan `Lihat PDF laporan`).
+  pesantren, periode, skor %, status `Terbit` + tautan `Lihat PDF laporan`).
   Halaman `/laporan` publik dihapus (404); `/laporan/:id` = halaman cetak
   rekapan satu PDF (kop + skor % beku + dimensi + temuan diperkaya: lokasi
   lengkap, severity/priority, status/progres/PIC tindak lanjut + foto bukti

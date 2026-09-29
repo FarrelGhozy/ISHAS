@@ -256,10 +256,10 @@ penilaian mandiri di PDF** (amendemen D-27). Nama/kontak pelapor, bukti
 lapor-cepat/penyelesaian, denah rinci + titik, jawaban mentah, alasan
 penolakan, dan audit tidak publik. Arsip pesantren nonaktif menunggu D-08.
 
-- Dashboard/hasil/peta/rekomendasi/PDF laporan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (+ temuan/rekomendasi turunannya), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
-- `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor + antrean `/pesantren/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02).
+- Dashboard/hasil/peta/rekomendasi/PDF laporan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (`lapor-cepat`) atau `'Terbit'` (`penilaian-mandiri`, D-32) + temuan/rekomendasi turunan (khusus `lapor-cepat`), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
+- `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor lapor-cepat + antrean `/pesantren/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02). `Terbit` dan `Tidak berlaku` milik penilaian mandiri.
 - `Ditolak` hanya terlihat di arsip antrean Pesantren pemilik scope.
-- Agregat `/` dihitung dari himpunan `Diterima` lintas pesantren terdaftar; filter pesantren mempersempit ke satu `institutionCode`.
+- Agregat `/` dihitung dari himpunan `Diterima`/`Terbit` lintas pesantren terdaftar; filter pesantren mempersempit ke satu `institutionCode`.
 
 ## 4. Store actions (pengganti action asesor lama)
 
@@ -267,7 +267,7 @@ penolakan, dan audit tidak publik. Arsip pesantren nonaktif menunggu D-08.
 |---|---|---|
 | `submitPublicReport` | field §FLOWS-2 + `reporterName` + usulan rekomendasi opsional | `RPT-XXXX` + audit + notifikasi Pesantren |
 | `saveSelfAssessmentDraft` | draft parsial | tersimpan lokal, `progress` dihitung ulang |
-| `submitSelfAssessment` | draft lengkap | snapshot jawaban terkirim + 1 `Report` + kandidat temuan + audit + notifikasi; ulang percobaan yang sama tidak menggandakan kiriman |
+| `submitSelfAssessment` | draft lengkap | snapshot jawaban terkirim + 1 `Report` `Terbit`/`Tidak berlaku` (tanpa temuan; D-32) + audit + notifikasi Pesantren "telah terbit"; ulang percobaan yang sama tidak menggandakan kiriman |
 | `acceptReport` | `id` + `severity` + `priority` (+ catatan) + rekomendasi final wajib untuk lapor-cepat (min 10, maks 500) | `Diterima/Pending` + 1 rekomendasi final; wajib ketiganya untuk lapor-cepat |
 | `rejectReport` | `id` + alasan min 10 | `Ditolak`; arsip + validator/waktu/alasan |
 | `updateHandlingStatus` | `id` + status baru + syarat per transisi (PIC/tenggat/bukti) | status baru + audit; jalur utama maju lewat `updateRecommendation`, manual untuk tanpa-rekomendasi/mundur/arsip (D-23.a) |
@@ -300,16 +300,17 @@ D-26.f + D-29). Angka di bawah dikunci `seed-composition.test.ts`.
   `USR-003` + `USR-004` Pesantren (satu per pesantren terdaftar), `USR-006`
   Pesantren `Menunggu` (belum membuat pesantrennya terdaftar). Kartu login demo
   tetap 3 peran.
-- **19 laporan:** 14 `lapor-cepat` + 5 `penilaian-mandiri`; status: 3 `Menunggu
-  validasi`, 2 `Ditolak` (alasan ≥10), dan 14 `Diterima` (termasuk `RPT-0017`
-  arsip `Completed` D-07 yang tidak tampil publik).
-- **17 temuan + 17 rekomendasi:** seluruh 4 kategori K3 + baris `Belum
+- **19 laporan:** 14 `lapor-cepat` + 5 `penilaian-mandiri`; status: 2 `Menunggu
+  validasi`, 5 `Terbit` (penilaian mandiri, D-32), 2 `Ditolak` (alasan ≥10), dan
+  10 `Diterima` (termasuk `RPT-0017` arsip `Completed` D-07 yang tidak tampil
+  publik).
+- **9 temuan + 9 rekomendasi:** seluruh 4 kategori K3 + baris `Belum
   dipetakan`; level risiko `Rendah/Sedang/Tinggi/Ekstrem` (satu `Ekstrem`
   demo D-15.b); satu temuan tanpa titik; satu temuan `Terverifikasi` di laporan
   `Proses` (D-05 satu laporan banyak temuan); satu `Dibatalkan` (D-21).
   Status rekomendasi mencakup `Belum ditindaklanjuti`, `Berjalan`, `Menunggu
   verifikasi`, `Terverifikasi`, `Dibatalkan` (progres 0–100, PIC, tenggat,
-  bukti bervariasi).
+  bukti bervariasi). Penilaian mandiri tidak lagi menyumbang temuan (D-32).
 - **SAM-iSAFE:** 5 kategori `SAM-KAT-01…05`, 27 soal `SAM-Q-*`, 4 pengamatan
   `SAM-0001…0004` (`SAM-0004` `Berlangsung` dengan jawaban sebagian), 2 tindak
   lanjut `SMF-0001/0002`.
