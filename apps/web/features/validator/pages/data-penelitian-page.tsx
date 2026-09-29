@@ -1,9 +1,9 @@
-// Dataset penelitian D-25 — provenance penuh + filter terdaftar +
-// ekspor whitelist D-02 + impor aman (→ Menunggu validasi).
+// Dataset penelitian D-25/D-32 — provenance penuh + filter terdaftar +
+// ekspor whitelist D-02 + impor aman (kanal penilaian-mandiri → Terbit).
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import { isPublishedStatus, selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { useValidatorState } from "~/shared/api/validator-state";
 import {
   buildResearchRows,
@@ -113,6 +113,7 @@ export function Page() {
           onChange={(e) => setStatus(e.target.value)}
         >
           <option>Semua</option>
+          <option>Terbit</option>
           <option>Diterima</option>
           <option>Menunggu validasi</option>
           <option>Ditolak</option>
@@ -174,7 +175,7 @@ export function Page() {
               </div>
               <StatusChip value={x.validationStatus} />
               <span className="flex gap-2 text-xs">
-                {x.validationStatus === "Diterima" ? (
+                {isPublishedStatus(x.validationStatus) ? (
                   <Link className="text-button" to={`/laporan/${x.reportId}`}>
                     PDF
                   </Link>

@@ -78,12 +78,12 @@ export function ScoreSummary({
             Indeks K3L Pesantren
           </h2>
           <p className="mt-1 text-xs text-secondary-text">
-            Skor dari snapshot penilaian mandiri yang telah diterima.
+            Skor dari snapshot penilaian mandiri yang telah terbit.
           </p>
           <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             <Metric label="Jawaban diharapkan" value={indicators} />
             <Metric label="Jawaban terisi" value={answers} />
-            <Metric label="Penilaian diterima" value={snapshots.length} />
+            <Metric label="Penilaian terbit" value={snapshots.length} />
           </dl>
         </div>
       </div>
@@ -340,7 +340,7 @@ export function RekapKategoriPanel({
       <div className="p-4">
         <h2 className="text-sm font-extrabold text-heading">Rekapitulasi per kategori</h2>
         <p className="mt-0.5 text-xs text-secondary-text">
-          Indikator (katalog) · sesuai/tidak sesuai (snapshot Diterima) · temuan · sebaran risiko.
+          Indikator (katalog) · sesuai/tidak sesuai (snapshot Diterima/Terbit) · temuan · sebaran risiko.
           Jawaban kosong, N/A, atau di luar skala versi asal tidak diklasifikasi. Data ilustrasi.
         </p>
         <p className="mt-1.5 text-xs font-semibold text-secondary-text xl:hidden">

@@ -49,8 +49,8 @@ export function LoginPage() {
             Kerja, dan Lingkungan Pesantren
           </h1>
           <p className="mt-3 max-w-md text-xs leading-relaxed text-white/80">
-            Laporan publik divalidasi akun Pesantren sebelum tampil di dashboard. Instrumen
-            berversi; seluruh angka pada prototipe adalah data ilustrasi.
+            Laporan cepat divalidasi akun Pesantren; penilaian mandiri langsung terbit.
+            Seluruh angka pada prototipe adalah data ilustrasi.
           </p>
         </div>
         <span className="text-sm font-semibold text-white/70">

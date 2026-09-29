@@ -221,11 +221,11 @@ export function PenilaianMandiriPage() {
         </span>
         <p className="kicker mt-5">Penilaian berhasil dikirim</p>
         <h1 className="mt-1 text-2xl font-extrabold text-heading">
-          Terima kasih, data Anda sudah diterima
+          Terima kasih, penilaian sudah terbit
         </h1>
         <p className="mt-2 max-w-lg text-sm text-secondary-text">
-          Penilaian <strong className="text-heading">{submittedId}</strong> akan diperiksa oleh
-          akun Pesantren sebelum digunakan dalam hasil K3L.
+          Penilaian <strong className="text-heading">{submittedId}</strong> langsung tampil di hasil
+          publik dalam bentuk skor dan PDF. Penilaian mandiri tidak memerlukan validasi.
         </p>
         <button
           type="button"
@@ -760,11 +760,11 @@ export function PenilaianMandiriPage() {
               <div className="mr-auto">
                 <p className="kicker">Langkah 3</p>
                 <h2 id="submit-title" className="font-extrabold text-heading">
-                  Kirim untuk divalidasi
+                  Kirim penilaian
                 </h2>
                 <p className="mt-1 text-xs text-secondary-text">
                   {valid
-                    ? "Semua data lengkap. Setelah dikirim, jawaban tidak dapat diubah."
+                    ? "Semua data lengkap. Setelah dikirim, jawaban tidak dapat diubah dan hasil langsung terbit."
                     : `${answeredCount} terjawab · ${completedCount} lengkap · ${indicators.length - completedCount} perlu diselesaikan`}
                 </p>
               </div>

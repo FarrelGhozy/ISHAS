@@ -1,7 +1,8 @@
 // Processor agregat dashboard publik — ATURAN ILUSTRASI D-04 (DECISIONS.md, 8 Sep 2026),
-// bukan rumus final. Sumber skor HANYA snapshot penilaian mandiri dengan laporan `Diterima`;
-// laporan cepat tidak menjadi sumber skor. Per pesantren dipakai SATU snapshot `Diterima`
-// terbaru. Angka selalu tampil dengan periode + versi instrumen + label data ilustrasi.
+// bukan rumus final. Sumber skor HANYA snapshot penilaian mandiri dengan laporan
+// `Diterima`/`Terbit` (D-32); laporan cepat tidak menjadi sumber skor. Per pesantren
+// dipakai SATU snapshot `Diterima`/`Terbit` terbaru. Angka selalu tampil dengan
+// periode + versi instrumen + label data ilustrasi.
 
 import type {
   Area,
@@ -122,8 +123,8 @@ export function skorSnapshot(
   };
 }
 
-// Satu snapshot `Diterima` terbaru per pesantren (aturan ilustrasi D-04:
-// kiriman lain tidak menggandakan bobot lembaga).
+// Satu snapshot `Diterima`/`Terbit` terbaru per pesantren (aturan ilustrasi D-04:
+// kiriman lain tidak menggandakan bobot lembaga; D-32: penilaian mandiri `Terbit`).
 export function pilihSnapshotTerbaruDiterima(
   reports: Report[],
   snapshots: SelfAssessmentSnapshot[],
@@ -135,7 +136,7 @@ export function pilihSnapshotTerbaruDiterima(
         (r) =>
           r.institutionCode === institutionCode &&
           r.channel === "penilaian-mandiri" &&
-          r.validationStatus === "Diterima" &&
+          (r.validationStatus === "Diterima" || r.validationStatus === "Terbit") &&
           !r.archivedAt,
       )
       .map((r) => r.id),
@@ -520,7 +521,7 @@ export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] 
     input.reports
       .filter(
         (report) =>
-          report.validationStatus === "Diterima" &&
+          (report.validationStatus === "Diterima" || report.validationStatus === "Terbit") &&
           !report.archivedAt &&
           report.handlingStatus !== "Completed",
       )

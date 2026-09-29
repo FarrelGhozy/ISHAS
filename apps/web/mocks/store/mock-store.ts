@@ -15,6 +15,7 @@ import type {
   InstrumentIndicator,
   InstrumentOption,
   Report,
+  ReportChannel,
   RiskFinding,
   RiskLevel,
   SelfAssessmentDraft,
@@ -470,15 +471,16 @@ export const storeActions = {
       if (report.validationStatus !== "Menunggu validasi") {
         return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat diterima." };
       }
-      // D-29: lapor-cepat wajib rekomendasi final (min 10, maks 500);
-      // penilaian-mandiri tetap turunan otomatis (final opsional, belum dipakai).
-      if (report.channel === "lapor-cepat") {
-        if (!finalAction || finalAction.length < 10) {
-          return { ok: false, error: "Rekomendasi tindakan wajib diisi minimal 10 karakter." };
-        }
-        if (finalAction.length > 500) {
-          return { ok: false, error: "Rekomendasi tindakan maksimal 500 karakter." };
-        }
+      // D-32: hanya lapor-cepat yang divalidasi; penilaian-mandiri langsung Terbit.
+      if (report.channel !== "lapor-cepat") {
+        return { ok: false, error: "Hanya laporan cepat yang memerlukan validasi." };
+      }
+      // D-29: lapor-cepat wajib rekomendasi final (min 10, maks 500).
+      if (!finalAction || finalAction.length < 10) {
+        return { ok: false, error: "Rekomendasi tindakan wajib diisi minimal 10 karakter." };
+      }
+      if (finalAction.length > 500) {
+        return { ok: false, error: "Rekomendasi tindakan maksimal 500 karakter." };
       }
       report.validationStatus = "Diterima";
       report.handlingStatus = "Pending";
@@ -515,6 +517,9 @@ export const storeActions = {
     return setStateReport(actor, reportId, (draft, report) => {
       if (report.validationStatus !== "Menunggu validasi") {
         return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat ditolak." };
+      }
+      if (report.channel !== "lapor-cepat") {
+        return { ok: false, error: "Hanya laporan cepat yang dapat ditolak." };
       }
       report.validationStatus = "Ditolak";
       report.handlingStatus = "Ditolak";
@@ -555,6 +560,7 @@ export const storeActions = {
         Proses: ["Completed", "Pending"],
         Completed: ["Proses"],
         Ditolak: [],
+        "Tidak berlaku": [],
       };
       if (!valid[previous].includes(next)) {
         return { ok: false, error: `Transisi ${report.handlingStatus} → ${next} tidak sah.` };
@@ -1280,10 +1286,12 @@ export const storeActions = {
         instrumentChecksum: instrument.checksum,
         scorePercent,
         pdfGeneratedAt: stampedAt,
-        validationStatus: "Menunggu validasi",
+        // D-32: penilaian mandiri tidak divalidasi — langsung terbit, tanpa
+        // temuan/tindak lanjut (murni observasi/skor).
+        validationStatus: "Terbit",
         severity: "Belum ditentukan",
         priority: "Belum ditentukan",
-        handlingStatus: "Menunggu validasi",
+        handlingStatus: "Tidak berlaku",
         createdAt: stampedAt,
         submittedAt: stampedAt,
         updatedAt: stampedAt,
@@ -1305,7 +1313,7 @@ export const storeActions = {
         institutionCode: d.institutionCode,
         action: "Mengirim penilaian mandiri",
       });
-      notifyOwners(draft, d.institutionCode, id);
+      notifyOwners(draft, d.institutionCode, id, "penilaian-mandiri");
     });
     return result;
   },
@@ -2229,8 +2237,8 @@ export const storeActions = {
     actor: { id?: string; name: string; role?: string },
     rows: { institutionCode: string; reporterName: string; scorePercent: number | null; title: string }[],
   ): ActionResult {
-    // D-25: hanya Validator aktif; tiap baris jadi Menunggu validasi
-    // (masuk antrean Pesantren, tidak langsung publik).
+    // D-25 + D-32: hanya Validator aktif; tiap baris kanal penilaian-mandiri
+    // langsung Terbit (tanpa moderasi Pesantren).
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
     if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return { ok: false, error: "Hanya akun Validator aktif yang dapat mengimpor dataset." };
@@ -2288,15 +2296,15 @@ export const storeActions = {
           institutionCode: row.institutionCode,
           reporterName: row.reporterName.trim(),
           title: row.title.trim() || "Penilaian mandiri K3L (impor)",
-          description: "Baris impor dataset penelitian; menunggu validasi Pesantren.",
+          description: "Baris impor dataset penelitian; langsung terbit (D-32).",
           instrumentVersionId: BANK_ID,
           instrumentChecksum: bank?.checksum,
           scorePercent: row.scorePercent,
           pdfGeneratedAt: stampedAt,
-          validationStatus: "Menunggu validasi",
+          validationStatus: "Terbit",
           severity: "Belum ditentukan",
           priority: "Belum ditentukan",
-          handlingStatus: "Menunggu validasi",
+          handlingStatus: "Tidak berlaku",
           createdAt: stampedAt,
           submittedAt: stampedAt,
           updatedAt: stampedAt,
@@ -2317,7 +2325,7 @@ export const storeActions = {
           institutionCode: row.institutionCode,
           action: "Mengimpor dataset penelitian",
         });
-        notifyOwners(draft, row.institutionCode, id);
+        notifyOwners(draft, row.institutionCode, id, "penilaian-mandiri");
       }
     });
     return { ok: true, id: pertama };
@@ -3025,8 +3033,8 @@ export const storeActions = {
 };
 
 // Pembentuk kandidat temuan/rekomendasi turunan (aturan ilustratif, bukan final).
-// Menutup flow terputus: kiriman Diterima selalu punya turunan untuk peta/rekomendasi.
-// Usulan ilustratif: 1/2/Tidak memicu temuan per jawaban; bukan aturan ilmiah final.
+// Menutup flow terputus: kiriman lapor-cepat Diterima selalu punya turunan untuk peta/rekomendasi.
+// D-32: penilaian-mandiri TIDAK menurunkan temuan (murni skor/PDF).
 // Idempoten: lewati bila turunan sudah ada (mis. seed).
 function ensureDerivedWork(
   draft: IshasState,
@@ -3035,6 +3043,7 @@ function ensureDerivedWork(
   priority: Priority,
   finalAction?: string,
 ): void {
+  if (report.channel !== "lapor-cepat") return;
   if (
     draft.findings.some((f) => f.reportId === report.id) ||
     draft.recommendations.some((r) => r.reportId === report.id)
@@ -3119,14 +3128,9 @@ function ensureDerivedWork(
       y: locationSnapshot.point?.y ?? 0,
       level,
       issue,
-      indicator:
-        report.channel === "penilaian-mandiri"
-          ? sourceAnswerId || report.instrumentVersionId || "Instrumen"
-          : (report.indicatorId ?? "Tidak menggunakan instrumen"),
+      indicator: report.indicatorId ?? "Tidak menggunakan instrumen",
       recommendation:
-        report.channel === "lapor-cepat" && finalAction
-          ? finalAction
-          : `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
+        finalAction ?? `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
       status: "Belum ditindaklanjuti",
       hazard: "Menunggu kajian Pesantren",
       impact: "Menunggu kajian Pesantren",
@@ -3145,14 +3149,10 @@ function ensureDerivedWork(
       priority: priority === "Belum ditentukan" ? "Sedang" : priority,
       title: `Tindak lanjut: ${issue}`,
       location,
-      source:
-        report.channel === "penilaian-mandiri"
-          ? `${report.instrumentVersionId ?? "INS"} · ${report.id}`
-          : `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
+      source: `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
       action:
-        report.channel === "lapor-cepat" && finalAction
-          ? finalAction
-          : "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
+        finalAction ??
+        "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
       status: "Belum ditindaklanjuti",
       owner: "",
       dueDate: "",
@@ -3200,20 +3200,28 @@ function setStateReport(
   return result;
 }
 
-function notifyOwners(draft: IshasState, institutionCode: string, reportId: string): void {
+function notifyOwners(
+  draft: IshasState,
+  institutionCode: string,
+  reportId: string,
+  channel: ReportChannel = "lapor-cepat",
+): void {
   const owners = draft.users.filter(
     (u) =>
       u.roleId === "pesantren" &&
       u.status === "Aktif" &&
       u.institutionCodes.includes(institutionCode),
   );
+  const terbit = channel === "penilaian-mandiri";
   for (const owner of owners) {
     notify(draft, {
       recipientAccountId: owner.id,
       institutionCode,
       sourceObjectId: reportId,
-      message: `Laporan baru ${reportId} menunggu validasi.`,
-      targetUrl: "/pesantren/validasi-laporan",
+      message: terbit
+        ? `Penilaian mandiri ${reportId} telah terbit.`
+        : `Laporan baru ${reportId} menunggu validasi.`,
+      targetUrl: terbit ? "/pesantren/laporan" : "/pesantren/validasi-laporan",
     });
   }
 }

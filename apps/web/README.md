@@ -1,6 +1,6 @@
 # ISHAS
 
-ISHAS adalah aplikasi React untuk pelaporan dan pemantauan K3L pesantren. Halaman `/` adalah dashboard publik; hasil publik hanya bersumber dari laporan yang sudah diterima.
+ISHAS adalah aplikasi React untuk pelaporan dan pemantauan K3L pesantren. Halaman `/` adalah dashboard publik; hasil publik bersumber dari laporan yang sudah diterima (lapor-cepat) atau terbit (penilaian mandiri).
 
 ## Akun demo
 
@@ -8,7 +8,7 @@ ISHAS adalah aplikasi React untuk pelaporan dan pemantauan K3L pesantren. Halama
 - Validator: `validator@ishas.demo`
 - Pesantren: `pesantren@ishas.demo`
 
-Tidak ada peran atau jalur asesor. Alur utama: publik/pesantren mengirim laporan atau penilaian mandiri, pesantren memvalidasi, lalu mengelola tindak lanjut sampai selesai.
+Tidak ada peran atau jalur asesor. Alur utama: publik/pesantren mengirim laporan cepat (divalidasi Pesantren) atau penilaian mandiri (langsung terbit, tanpa validasi), lalu tindak lanjut lapor-cepat dikelola sampai selesai.
 
 ## Menjalankan
 

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router";
-import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import { isPublishedStatus, selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { hitungIndexSummary } from "~/mocks/processors/dashboard-aggregate";
 import { useValidatorState } from "~/shared/api/validator-state";
 import { EmptyState } from "~/shared/components/empty-state";
@@ -184,7 +184,7 @@ export function Page() {
                   </p>
                 </div>
                 <StatusChip value={report?.validationStatus ?? "Tidak diketahui"} />
-                {report?.validationStatus === "Diterima" ? (
+                {report && isPublishedStatus(report.validationStatus) ? (
                   <Link className="text-button" to={`/laporan/${report.id}`}>
                     PDF
                   </Link>

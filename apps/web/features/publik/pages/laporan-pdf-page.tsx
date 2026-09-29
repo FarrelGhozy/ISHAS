@@ -1,6 +1,7 @@
-// Halaman cetak PDF satu laporan penilaian mandiri (D-24, D-28).
-// Rekapan publik: skor + dimensi + temuan + tindak lanjut + foto + metadata.
-// Tanpa jawaban mentah per soal (D-02). Cetak via browser.
+// Halaman cetak PDF satu laporan penilaian mandiri (D-24, D-28, D-32).
+// Rekapan publik: skor + dimensi + foto + metadata; tanpa temuan/tindak lanjut
+// (penilaian mandiri murni observasi/skor). Tanpa jawaban mentah per soal (D-02).
+// Cetak via browser.
 
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
@@ -124,13 +125,11 @@ export function LaporanPdfPage() {
     return (
       <EmptyState
         title="Laporan tidak tersedia"
-        description="Hanya laporan penilaian mandiri yang sudah Diterima yang dapat dibuka publik."
+        description="Hanya laporan penilaian mandiri yang sudah terbit yang dapat dibuka publik."
       />
     );
 
   const { report, snapshot, institution } = data;
-  const temuan = data.findings;
-  const rekomendasi = new Map(data.recommendations.map((r) => [r.id, r]));
   const checksumPendek = snapshot?.instrumentChecksum
     ? snapshot.instrumentChecksum.slice(0, 8)
     : "";
@@ -166,15 +165,9 @@ export function LaporanPdfPage() {
             : ""}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <StatusChip value="Diterima" />
-          {report.severity !== "Belum ditentukan" ? (
-            <StatusChip value={report.severity} />
-          ) : null}
-          {report.priority !== "Belum ditentukan" ? (
-            <StatusChip value={report.priority} />
-          ) : null}
+          <StatusChip value={report.validationStatus} />
         </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <div className="rounded-lg bg-strip p-4 text-center">
             <p className="text-xs font-bold text-secondary-text">Skor penilaian</p>
             <p className="text-4xl font-extrabold text-heading">
@@ -190,11 +183,6 @@ export function LaporanPdfPage() {
               {snapshot ? Object.keys(snapshot.answers).length : 0}
             </p>
             <p className="text-xs text-secondary-text">jawaban snapshot beku</p>
-          </div>
-          <div className="rounded-lg bg-strip p-4 text-center">
-            <p className="text-xs font-bold text-secondary-text">Temuan</p>
-            <p className="text-4xl font-extrabold text-heading">{temuan.length}</p>
-            <p className="text-xs text-secondary-text">perlu tindak lanjut</p>
           </div>
         </div>
         {snapshot?.byDimension && Object.keys(snapshot.byDimension).length ? (
@@ -221,50 +209,10 @@ export function LaporanPdfPage() {
             </ul>
           </div>
         ) : null}
-        <div className="mt-5">
-          <h2 className="font-extrabold text-heading">Temuan tervalidasi</h2>
-          {temuan.length ? (
-            <ul className="mt-2 divide-y divide-line">
-              {temuan.map((item) => {
-                const tindak = rekomendasi.get(item.recommendationId);
-                const detailLokasi = [item.building, item.zone, item.floor]
-                  .filter((bagian) => bagian && bagian !== "—")
-                  .join(" · ");
-                return (
-                  <li key={item.id} className="py-3 text-sm break-inside-avoid">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <strong className="mr-auto text-heading">{item.issue}</strong>
-                      <StatusChip value={item.level} />
-                    </div>
-                    <p className="mt-1 text-secondary-text">
-                      {item.location}
-                      {detailLokasi ? ` · ${detailLokasi}` : ""}
-                    </p>
-                    {tindak ? (
-                      <p className="mt-1 text-xs text-secondary-text">
-                        Tindak lanjut: {tindak.status} · progres {tindak.progress}%
-                        {tindak.owner ? ` · PIC ${tindak.owner}` : ""}
-                      </p>
-                    ) : null}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="mt-2 text-sm text-secondary-text">
-              Tidak ada temuan bahaya pada penilaian ini.
-            </p>
-          )}
-        </div>
         <BuktiFoto snapshot={snapshot} institutionCode={report.institutionCode} />
-        {report.validatedByName ? (
-          <p className="mt-5 text-sm text-secondary-text">
-            Divalidasi oleh {report.validatedByName}
-            {report.validatedAt
-              ? ` · ${new Date(report.validatedAt).toLocaleDateString("id-ID")}`
-              : ""}
-          </p>
-        ) : null}
+        <p className="mt-5 text-sm text-secondary-text">
+          Penilaian mandiri · tidak memerlukan validasi Pesantren.
+        </p>
         <p className="mt-2 text-xs text-faint">
           Data ilustrasi prototipe · nama pelapor, kontak, dan jawaban mentah tidak
           ditampilkan publik (D-02); foto bukti tampil publik (D-27).

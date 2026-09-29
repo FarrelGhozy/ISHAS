@@ -1,6 +1,6 @@
-// Kriteria layak publik D-25 — dipakai halaman Audit publikasi + test.
-// Lima syarat: snapshot lengkap + Diterima + skor ada + PDF ada + checksum cocok.
-// Tanpa aksi moderasi; keputusan Terima/Tolak milik akun Pesantren.
+// Kriteria layak publik D-25/D-32 — dipakai halaman Audit publikasi + test.
+// Lima syarat: snapshot lengkap + `Terbit`/`Diterima` + skor ada + PDF ada + checksum cocok.
+// Tanpa aksi moderasi; keputusan Terima/Tolak milik akun Pesantren (hanya lapor-cepat).
 
 import type { Report, SelfAssessmentSnapshot } from "~/mocks/types";
 
@@ -8,7 +8,7 @@ export type Kesiapan = {
   answered: number;
   expected: number;
   lengkap: boolean;
-  diterima: boolean;
+  terbit: boolean;
   skorAda: boolean;
   pdfAda: boolean;
   checksumCocok: boolean;
@@ -28,7 +28,8 @@ export function nilaiKesiapan(
     ? Object.values(snapshot.answers).filter((a) => Boolean(a?.value)).length
     : 0;
   const lengkap = Boolean(snapshot && expected > 0 && answered === expected);
-  const diterima = report?.validationStatus === "Diterima";
+  const terbit =
+    report?.validationStatus === "Terbit" || report?.validationStatus === "Diterima";
   const skor = snapshot?.scorePercent ?? report?.scorePercent ?? null;
   const skorAda = skor !== null && skor !== undefined;
   const pdfAda = Boolean(report?.pdfGeneratedAt);
@@ -42,11 +43,11 @@ export function nilaiKesiapan(
     answered,
     expected,
     lengkap,
-    diterima,
+    terbit,
     skorAda,
     pdfAda,
     checksumCocok,
     warisan,
-    layak: lengkap && diterima && skorAda && pdfAda && checksumCocok,
+    layak: lengkap && terbit && skorAda && pdfAda && checksumCocok,
   };
 }

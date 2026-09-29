@@ -1,5 +1,5 @@
-// Panel impor dataset D-25 — upload → validasi → pratinjau → terapkan.
-// Terapkan membuat laporan Menunggu validasi (tidak langsung publik).
+// Panel impor dataset D-25/D-32 — upload → validasi → pratinjau → terapkan.
+// Terapkan membuat laporan penilaian-mandiri langsung Terbit (D-32).
 
 import { useMemo, useState } from "react";
 import {
@@ -60,7 +60,7 @@ export function PanelImpor({ terdaftar }: { terdaftar: string[] }) {
       setCatatan("Tidak ada baris valid untuk diterapkan.");
       return;
     }
-    if (!window.confirm(`${baris.length} baris masuk antrean Menunggu validasi?`)) {
+    if (!window.confirm(`${baris.length} baris akan diterapkan dan langsung terbit?`)) {
       return;
     }
     const hasil = await repository.importResearchDataset(
@@ -69,7 +69,7 @@ export function PanelImpor({ terdaftar }: { terdaftar: string[] }) {
     );
     setCatatan(
       hasil.ok
-        ? `${baris.length} baris masuk antrean Menunggu validasi.`
+        ? `${baris.length} baris terbit sebagai penilaian mandiri.`
         : hasil.error,
     );
     if (hasil.ok) {
@@ -83,8 +83,8 @@ export function PanelImpor({ terdaftar }: { terdaftar: string[] }) {
     <section className="surface p-4" aria-label="Impor dataset">
       <h2 className="font-bold text-heading">Impor dataset</h2>
       <p className="mt-1 text-xs text-secondary-text">
-        CSV/JSON → validasi → pratinjau → terapkan sebagai Menunggu validasi.
-        Tidak langsung tampil publik.
+        CSV/JSON → validasi → pratinjau → terapkan sebagai penilaian mandiri
+        berstatus Terbit (langsung publik).
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <label className="secondary-button cursor-pointer">

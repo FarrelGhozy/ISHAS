@@ -92,9 +92,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     );
     expect(publik.ok).toBe(true);
     if (!publik.ok || !publik.id) return;
-    expect(getState().reports.find((r) => r.id === publik.id)?.validationStatus).toBe(
-      "Menunggu validasi",
-    );
+    expect(getState().reports.find((r) => r.id === publik.id)?.validationStatus).toBe("Terbit");
 
     simpan("SELF-PSN-0018");
     const kelola = storeActions.submitSelfAssessment(PENGELOLA, "SELF-PSN-0018");
@@ -252,20 +250,20 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
 
   test("tindak lanjut laporan yang sudah diarsip ditolak", () => {
     const other = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
-    // RPT-0007 satu rekomendasi: Belum → Berjalan → 100% → verifikasi → Completed → arsip.
-    const id = "REC-RPT-0007-1"; // RPT-0007 Proses, rekomendasi Belum ditindaklanjuti
+    // RPT-0013 (lapor-cepat) satu rekomendasi: Belum → Berjalan → 100% → verifikasi → Completed → arsip.
+    const id = "REC-RPT-0013-1";
     expect(
       storeActions.updateRecommendation(other, id, {
-        owner: "Tim Sarana",
+        owner: "Tim Kesehatan",
         dueDate: "2099-10-01",
-        note: "Rencana penanganan pasokan air.",
+        note: "Rencana perbaikan ventilasi kamar.",
       }).ok,
     ).toBe(true);
     expect(
       storeActions.updateRecommendation(other, id, {
         note: "Selesai, bukti terlampir.",
         progress: 100,
-        evidenceName: "air.jpg",
+        evidenceName: "ventilasi.jpg",
       }).ok,
     ).toBe(true);
     expect(
@@ -274,12 +272,12 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
         verify: true,
       }).ok,
     ).toBe(true);
-    expect(getState().reports.find((report) => report.id === "RPT-0007")?.handlingStatus).toBe(
+    expect(getState().reports.find((report) => report.id === "RPT-0013")?.handlingStatus).toBe(
       "Completed",
     );
-    expect(storeActions.archiveCompletedReport(other, "RPT-0007", "Arsip akhir periode").ok).toBe(
-      true,
-    );
+    expect(
+      storeActions.archiveCompletedReport(other, "RPT-0013", "Arsip akhir periode").ok,
+    ).toBe(true);
     expect(
       storeActions.updateRecommendation(other, id, {
         note: "Cek ulang lagi.",

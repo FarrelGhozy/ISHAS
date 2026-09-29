@@ -16,7 +16,11 @@ export function Page() {
       ? user.institutionCodes[0]
       : undefined;
   const reports = state.reports.filter(
-    (x) => x.institutionCode === scope && x.validationStatus === "Diterima" && !x.archivedAt,
+    // D-32: `Terbit` (penilaian mandiri) dapat dibaca read-only; `Diterima` lapor-cepat.
+    (x) =>
+      x.institutionCode === scope &&
+      (x.validationStatus === "Diterima" || x.validationStatus === "Terbit") &&
+      !x.archivedAt,
   );
   const recommendations = state.recommendations.filter((x) =>
     reports.some((r) => r.id === x.reportId),

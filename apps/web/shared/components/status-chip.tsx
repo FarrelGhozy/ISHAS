@@ -39,6 +39,8 @@ const MAP: Record<string, Chip> = {
   Diarsipkan: { className: NEUTRAL, icon: ClipboardCheck, label: "Diarsipkan" },
   Ditolak: { className: NEUTRAL, icon: X, label: "Ditolak" },
   Diterima: { className: GREEN, icon: CheckCircle2, label: "Diterima" },
+  Terbit: { className: GREEN, icon: CheckCircle2, label: "Terbit" },
+  "Tidak berlaku": { className: NEUTRAL, icon: Minus, label: "Tidak berlaku" },
   "Belum ditindaklanjuti": { className: NEUTRAL, icon: Minus, label: "Belum ditindaklanjuti" },
   Berjalan: { className: BLUE, icon: Activity, label: "Berjalan" },
   "Menunggu verifikasi": { className: AMBER, icon: Clock3, label: "Menunggu verifikasi" },
@@ -70,6 +72,8 @@ const DESKRIPSI: Record<string, string> = {
   Completed: "Seluruh tindak lanjut selesai dan terverifikasi.",
   Ditolak: "Ditolak akun Pesantren; tidak tampil publik.",
   Diterima: "Diterima akun Pesantren pemilik lembaga, bukan peran Validator.",
+  Terbit: "Penilaian mandiri langsung tampil publik tanpa validasi Pesantren (D-32).",
+  "Tidak berlaku": "Kanal penilaian mandiri tidak melewati penanganan tindak lanjut.",
 };
 
 export function StatusChip({ value }: { value: string }) {

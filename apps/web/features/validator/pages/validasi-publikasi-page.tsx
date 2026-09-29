@@ -1,9 +1,9 @@
-// Audit publikasi D-25 (route lama /validator/validasi-publikasi tetap).
+// Audit publikasi D-25/D-32 (route lama /validator/validasi-publikasi tetap).
 // Checklist 5 kriteria kesiapan snapshot; tanpa tombol Terima/Tolak.
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import { isPublishedStatus, selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import type { Report } from "~/mocks/types";
 import { useValidatorState } from "~/shared/api/validator-state";
 import { EmptyState } from "~/shared/components/empty-state";
@@ -241,10 +241,10 @@ function DaftarChecklist({ siap }: { siap: Kesiapan }) {
         {siap.lengkap ? "✓" : "✗"} Lengkap
       </li>
       <li
-        className={`status ${siap.diterima ? "status-green" : "status-neutral"}`}
-        title="Diterima oleh akun Pesantren pemilik lembaga, bukan peran Validator."
+        className={`status ${siap.terbit ? "status-green" : "status-neutral"}`}
+        title="Penilaian mandiri terbit langsung; lapor-cepat diterima akun Pesantren."
       >
-        {siap.diterima ? "✓" : "✗"} Diterima akun Pesantren
+        {siap.terbit ? "✓" : "✗"} Terbit
       </li>
       <li
         className={`status ${siap.skorAda ? "status-green" : "status-red"}`}
@@ -277,7 +277,7 @@ function TombolAksi({
     <div
       className={rataKanan ? "flex flex-wrap justify-end gap-2" : "flex flex-wrap gap-2"}
     >
-      {report.validationStatus === "Diterima" ? (
+      {isPublishedStatus(report.validationStatus) ? (
         <Link className="secondary-button" to={`/laporan/${report.id}`}>
           PDF
         </Link>

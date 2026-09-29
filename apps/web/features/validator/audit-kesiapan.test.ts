@@ -22,7 +22,7 @@ function laporan(isi: Partial<Report>): Report {
     reporterName: "Penilai Uji",
     title: "Penilaian mandiri K3L",
     description: "Uji",
-    validationStatus: "Diterima",
+    validationStatus: "Terbit",
     severity: "Sedang",
     priority: "Sedang",
     handlingStatus: "Pending",
@@ -33,7 +33,7 @@ function laporan(isi: Partial<Report>): Report {
 
 const beku = [{ id: "IND-1" }, { id: "IND-2" }] as SelfAssessmentSnapshot["frozenIndicators"];
 
-describe("nilaiKesiapan D-25", () => {
+describe("nilaiKesiapan D-25/D-32", () => {
   test("layak bila 5 kriteria terpenuhi", () => {
     const siap = nilaiKesiapan(
       snapshot({
@@ -87,7 +87,7 @@ describe("nilaiKesiapan D-25", () => {
     expect(siap.layak).toBe(false);
   });
 
-  test("checksum beda dan status bukan Diterima menggugurkan", () => {
+  test("checksum beda dan status belum terbit menggugurkan", () => {
     const penuh = {
       a: { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
       b: { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
@@ -110,7 +110,30 @@ describe("nilaiKesiapan D-25", () => {
       "ck-live",
       2,
     );
-    expect(tolak.diterima).toBe(false);
+    expect(tolak.terbit).toBe(false);
     expect(tolak.layak).toBe(false);
+  });
+
+  test("lapor-cepat Diterima juga layak", () => {
+    const siap = nilaiKesiapan(
+      snapshot({
+        answers: {
+          a: { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
+          b: { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
+        },
+        frozenIndicators: beku,
+        scorePercent: 70,
+      }),
+      laporan({
+        channel: "lapor-cepat",
+        validationStatus: "Diterima",
+        pdfGeneratedAt: "2026-09-28T01:00:00.000Z",
+        scorePercent: 70,
+      }),
+      "ck-live",
+      2,
+    );
+    expect(siap.terbit).toBe(true);
+    expect(siap.layak).toBe(true);
   });
 });

@@ -9,10 +9,16 @@ export type InstitutionStatus = "Persiapan" | "Aktif" | "Nonaktif";
 export type RoleId = "admin" | "validator" | "pesantren";
 export type RoleLabel = "Super Admin" | "Validator" | "Pesantren";
 export type ReportChannel = "lapor-cepat" | "penilaian-mandiri";
-export type ValidationStatus = "Menunggu validasi" | "Diterima" | "Ditolak";
+export type ValidationStatus = "Menunggu validasi" | "Diterima" | "Ditolak" | "Terbit";
 export type Severity = "Belum ditentukan" | "Tinggi" | "Sedang" | "Rendah";
 export type Priority = "Belum ditentukan" | "Tinggi" | "Sedang" | "Rendah";
-export type HandlingStatus = "Menunggu validasi" | "Pending" | "Proses" | "Completed" | "Ditolak";
+export type HandlingStatus =
+  | "Menunggu validasi"
+  | "Pending"
+  | "Proses"
+  | "Completed"
+  | "Ditolak"
+  | "Tidak berlaku";
 export type InstrumentStatus = "Draft" | "Published" | "Archived";
 export type InstrumentDocVisibility = "Public" | "Privat";
 
@@ -157,9 +163,9 @@ export type Report = {
   instrumentVersionId?: string; // warisan versioning (bacaan legacy); kiriman baru memakai snapshot beku
   instrumentChecksum?: string; // D-24: checksum bank live saat kirim
   scorePercent?: number | null; // D-24: skor % beku penilaian-mandiri (sumber agregat + PDF)
-  pdfGeneratedAt?: string; // D-24: waktu PDF laporan dibuat (tampil publik setelah Diterima)
+  pdfGeneratedAt?: string; // D-24: waktu PDF laporan dibuat (tampil publik saat Diterima/Terbit)
   validationStatus: ValidationStatus;
-  severity: Severity; // keputusan final, 'Belum ditentukan' sampai akun Pesantren menerima (D-19)
+  severity: Severity; // keputusan final, 'Belum ditentukan' sampai akun Pesantren menerima (D-19); selalu 'Belum ditentukan' untuk penilaian mandiri (D-32)
   priority: Priority;
   handlingStatus: HandlingStatus;
   rejectionReason?: string; // wajib bila Ditolak, min 10

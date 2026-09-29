@@ -35,7 +35,7 @@ test("Scoring D-25 ter-render dengan filter + link PDF", () => {
   expect(html).toContain("Lihat PDF");
 });
 
-test("Audit publikasi D-25 ter-render dengan checklist 5 kriteria", () => {
+test("Audit publikasi D-25/D-32 ter-render dengan checklist 5 kriteria", () => {
   const html = renderToString(
     <MemoryRouter initialEntries={["/validator/validasi-publikasi"]}>
       <AuditPage />
@@ -43,7 +43,7 @@ test("Audit publikasi D-25 ter-render dengan checklist 5 kriteria", () => {
   );
   expect(html).toContain("Audit publikasi");
   expect(html).toContain("Checksum bank");
-  expect(html).toContain("Diterima akun Pesantren");
+  expect(html).toContain("Terbit");
   expect(html).toContain("Validator mengaudit");
   expect(html).toContain("Checklist kesiapan");
   expect(html).toContain("Aksi");

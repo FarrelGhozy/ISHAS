@@ -21,20 +21,24 @@ describe("selector", () => {
     expect(codes).toEqual(["PSN-0018", "PSN-0019"]);
   });
 
-  test("hanya Diterima yang menjadi sumber tervalidasi", () => {
+  test("Diterima dan Terbit menjadi sumber tervalidasi", () => {
     const validated = selectValidatedReports(getState());
-    expect(validated.every((r) => r.validationStatus === "Diterima")).toBe(true);
+    expect(
+      validated.every(
+        (r) => r.validationStatus === "Diterima" || r.validationStatus === "Terbit",
+      ),
+    ).toBe(true);
     expect(validated.some((r) => r.id === "RPT-0001")).toBe(false);
     expect(validated.some((r) => r.id === "RPT-0006")).toBe(false);
+    // Penilaian mandiri terbit langsung (D-32).
+    expect(validated.some((r) => r.id === "RPT-0002")).toBe(true);
   });
 
-  test("antrean validasi terfilter scope dan terurut terbaru", () => {
+  test("antrean validasi hanya lapor-cepat, terfilter scope dan terurut terbaru", () => {
     const queue = selectValidationQueue(getState(), "PSN-0018");
     expect(queue.map((r) => r.id)).toEqual(["RPT-0001"]);
-    expect(selectValidationQueue(getState(), "PSN-0019").map((r) => r.id)).toEqual([
-      "RPT-0016",
-      "RPT-0002",
-    ]);
+    // RPT-0002 penilaian mandiri Terbit tidak masuk antrean.
+    expect(selectValidationQueue(getState(), "PSN-0019").map((r) => r.id)).toEqual(["RPT-0016"]);
   });
 
   test("filter pesantren mempersempit hasil tervalidasi", () => {
@@ -91,12 +95,14 @@ describe("aturan aksi", () => {
   test("pesantren tidak dapat memoderasi laporan di luar scope", () => {
     const result = storeActions.acceptReport(
       { id: "USR-003", name: "Uji", role: "Pesantren" },
-      "RPT-0002",
+      "RPT-0016",
       "Sedang",
       "Sedang",
+      undefined,
+      "Rekomendasi yang cukup panjang.",
     );
     expect(result.ok).toBe(false);
-    expect(getState().reports.find((report) => report.id === "RPT-0002")?.validationStatus).toBe(
+    expect(getState().reports.find((report) => report.id === "RPT-0016")?.validationStatus).toBe(
       "Menunggu validasi",
     );
   });
@@ -134,25 +140,30 @@ describe("lifecycle tindak lanjut V2-06", () => {
 
   test("laporan hanya Completed setelah semua temuan terverifikasi dan bukti tersedia", () => {
     expect(
-      storeActions.updateHandlingStatus(manager, "RPT-0004", "Completed", {
+      storeActions.updateHandlingStatus(manager, "RPT-0003", "Completed", {
         progress: 100,
         evidenceName: "perbaikan.jpg",
         note: "Perbaikan telah diperiksa.",
       }).ok,
     ).toBe(false);
     expect(
-      storeActions.verifyFinding(manager, "RSK-RPT-0004-1", "Kabel sudah terlindungi dengan baik.")
-        .ok,
-    ).toBe(true);
-    expect(
-      storeActions.updateHandlingStatus(manager, "RPT-0004", "Completed", {
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Perbaikan tangga selesai dengan bukti.",
         progress: 100,
         evidenceName: "perbaikan.jpg",
-        note: "Perbaikan telah diperiksa.",
       }).ok,
     ).toBe(true);
     expect(
-      getState().recommendations.find((item) => item.reportId === "RPT-0004")?.completionEvidence,
+      storeActions.updateRecommendation(manager, "REC-RPT-0003-1", {
+        note: "Bukti diperiksa pesantren.",
+        verify: true,
+      }).ok,
+    ).toBe(true);
+    expect(getState().reports.find((report) => report.id === "RPT-0003")?.handlingStatus).toBe(
+      "Completed",
+    );
+    expect(
+      getState().recommendations.find((item) => item.reportId === "RPT-0003")?.completionEvidence,
     ).toBe("perbaikan.jpg");
   });
 
@@ -328,38 +339,23 @@ describe("pembatalan tindak lanjut D-21", () => {
     ).toBe(false);
   });
 
-  test("Dibatalkan menghalangi Completed otomatis pada laporan banyak temuan", () => {
+  test("Dibatalkan menghalangi Completed otomatis", () => {
     expect(
-      storeActions.cancelRecommendation(manager, "REC-RPT-0010-2", "Jalur kabel diputuskan memakai rute lain yang sudah ada.").ok,
+      storeActions.cancelRecommendation(
+        manager,
+        "REC-RPT-0003-1",
+        "Perbaikan dialihkan ke rute lain yang sudah ada.",
+      ).ok,
     ).toBe(true);
+    // Rekomendasi satu-satunya Dibatalkan → laporan tidak boleh Completed otomatis.
     expect(
-      storeActions.updateRecommendation(manager, "REC-RPT-0010-1", {
-        note: "Selesai dan diverifikasi.",
+      storeActions.updateHandlingStatus(manager, "RPT-0003", "Completed", {
         progress: 100,
-        evidenceName: "kabel.jpg",
+        evidenceName: "tangga.jpg",
+        note: "Coba selesaikan meski ada tindak lanjut dibatalkan.",
       }).ok,
-    ).toBe(true);
-    expect(
-      storeActions.updateRecommendation(manager, "REC-RPT-0010-1", {
-        note: "Verifikasi.",
-        verify: true,
-      }).ok,
-    ).toBe(true);
-    expect(
-      storeActions.updateRecommendation(manager, "REC-RPT-0010-3", {
-        note: "Selesai dan diverifikasi.",
-        progress: 100,
-        evidenceName: "evakuasi.jpg",
-      }).ok,
-    ).toBe(true);
-    expect(
-      storeActions.updateRecommendation(manager, "REC-RPT-0010-3", {
-        note: "Verifikasi.",
-        verify: true,
-      }).ok,
-    ).toBe(true);
-    // 1 Dibatalkan + 3 Terverifikasi → laporan tetap Proses, bukan Completed.
-    expect(getState().reports.find((item) => item.id === "RPT-0010")?.handlingStatus).toBe(
+    ).toBe(false);
+    expect(getState().reports.find((item) => item.id === "RPT-0003")?.handlingStatus).toBe(
       "Proses",
     );
   });

@@ -46,7 +46,10 @@ describe("K3_CATEGORIES single source of truth", () => {
 
 describe("hitungRekapKategori", () => {
   const reports = SEED.reports.filter(
-    (r) => r.validationStatus === "Diterima" && !r.archivedAt && r.handlingStatus !== "Completed",
+    (r) =>
+      (r.validationStatus === "Diterima" || r.validationStatus === "Terbit") &&
+      !r.archivedAt &&
+      r.handlingStatus !== "Completed",
   );
   const ids = new Set(reports.map((r) => r.id));
   const findings = SEED.findings.filter((f) => ids.has(f.reportId));
@@ -66,13 +69,13 @@ describe("hitungRekapKategori", () => {
   test("temuan terpetakan ke seluruh kategori + Belum dipetakan (lapor-cepat)", () => {
     const rows = hitungRekapKategori(input);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    // Keselamatan: RPT-0004 + RPT-0008 + 3 turunan RPT-0010 + RPT-0019; Kesehatan: RPT-0007 + RPT-0013 + RPT-0015 + RPT-0018;
-    // Lingkungan: RPT-0009 + turunan RPT-0010 + RPT-0014; Psikososial: turunan RPT-0014;
-    // Belum dipetakan: RPT-0003 tanpa kategori/indikator.
-    expect(byName["Keselamatan"].jumlahTemuan).toBe(6);
-    expect(byName["Kesehatan"].jumlahTemuan).toBe(4);
-    expect(byName["Lingkungan"].jumlahTemuan).toBe(3);
-    expect(byName["Psikososial"].jumlahTemuan).toBe(1);
+    // D-32: penilaian mandiri tidak lagi menyumbang temuan. Tersisa lapor-cepat:
+    // Keselamatan: RPT-0008 + RPT-0019; Kesehatan: RPT-0013 + RPT-0015 + RPT-0018;
+    // Lingkungan: RPT-0009; Psikososial: (kosong); Belum dipetakan: RPT-0003.
+    expect(byName["Keselamatan"].jumlahTemuan).toBe(2);
+    expect(byName["Kesehatan"].jumlahTemuan).toBe(3);
+    expect(byName["Lingkungan"].jumlahTemuan).toBe(1);
+    expect(byName["Psikososial"].jumlahTemuan).toBe(0);
     expect(byName[KATEGORI_BELUM_DIPETAKAN].jumlahTemuan).toBe(1);
   });
 
@@ -88,11 +91,11 @@ describe("hitungRekapKategori", () => {
     }
   });
 
-  test("sesuai/tidak sesuai hanya dari snapshot Diterima", () => {
+  test("sesuai/tidak sesuai hanya dari snapshot Diterima/Terbit", () => {
     const rows = hitungRekapKategori(input);
     const total = rows.reduce((n, r) => n + r.jumlahSesuai + r.jumlahTidakSesuai, 0);
-    // 32 jawaban terisi; satu nilai legacy di luar skala versi asal tidak diklasifikasi.
-    expect(total).toBe(31);
+    // 38 jawaban terisi (termasuk RPT-0002 Terbit); satu nilai legacy di luar skala tidak diklasifikasi.
+    expect(total).toBe(37);
   });
 
   test("Draft tidak memperbesar katalog dan tidak mengganti definisi jawaban historis", () => {

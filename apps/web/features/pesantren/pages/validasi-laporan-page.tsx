@@ -32,7 +32,6 @@ export function ValidasiLaporanPage() {
   const state = usePesantrenState();
   const user = useCurrentUser();
   const [filter, setFilter] = useState("Menunggu validasi");
-  const [kanal, setKanal] = useState("Semua");
   const [severityFilter, setSeverityFilter] = useState("Semua");
   const [query, setQuery] = useState("");
   const [report, setReport] = useState<Report | null>(null);
@@ -45,19 +44,20 @@ export function ValidasiLaporanPage() {
   const reports = useMemo(
     () =>
       selectReportsForManager(state, code)
+        // D-32: penilaian mandiri terbit langsung, bukan bagian antrean validasi.
+        .filter((item) => item.channel === "lapor-cepat")
         .filter(
           (item) =>
             (filter === "Semua" ||
               item.validationStatus === filter ||
               item.handlingStatus === filter) &&
-            (kanal === "Semua" || item.channel === kanal) &&
             (severityFilter === "Semua" || item.severity === severityFilter) &&
             `${item.id} ${item.title} ${item.reporterName} ${item.description}`
               .toLowerCase()
               .includes(query.toLowerCase()),
         )
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [state, code, filter, kanal, severityFilter, query],
+    [state, code, filter, severityFilter, query],
   );
   return (
     <section className="flex flex-col gap-4">
@@ -65,10 +65,11 @@ export function ValidasiLaporanPage() {
         <p className="kicker">Moderasi</p>
         <h1 className="text-2xl font-extrabold text-heading">Validasi laporan</h1>
         <p className="mt-1 text-sm text-secondary-text">
-          Hanya laporan milik {institution?.name ?? code}.
+          Hanya laporan cepat milik {institution?.name ?? code}. Penilaian mandiri terbit
+          langsung tanpa validasi.
         </p>
       </header>
-      <div className="surface grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="surface grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm font-bold">
           Status
           <select
@@ -82,18 +83,6 @@ export function ValidasiLaporanPage() {
             <option>Completed</option>
             <option>Ditolak</option>
             <option>Semua</option>
-          </select>
-        </label>
-        <label className="text-sm font-bold">
-          Kanal
-          <select
-            className="mt-1 min-h-11 w-full rounded border border-line-soft px-3"
-            value={kanal}
-            onChange={(e) => setKanal(e.target.value)}
-          >
-            <option>Semua</option>
-            <option value="lapor-cepat">lapor-cepat</option>
-            <option value="penilaian-mandiri">penilaian-mandiri</option>
           </select>
         </label>
         <label className="text-sm font-bold">
