@@ -3,7 +3,9 @@
 Acuan: D-02/D-03 (akses), D-04 (skor ilustratif), D-07/D-08 (arsip dan
 pesantren terdaftar), D-14 (peta), D-15 (kategori), D-13 amendemen penyempurnaan.
 Tema dan token warna tetap. Prototipe frontend memakai schema v15
-(`MOCK_SCHEMA_VERSION` di `apps/web/mocks/store/state.ts`); backend belum ada.
+(`MOCK_SCHEMA_VERSION` di `apps/web/mocks/store/state.ts`). Backend MySQL sudah
+tersedia (D-30) dan diaktifkan lewat flag `VITE_USE_BACKEND`; kontrak endpoint
+ada di `BACKEND_API_CONTRACT.md`. Tanpa flag itu dashboard memakai seed mock.
 
 ## Dari pelaporan ke dashboard
 

@@ -131,7 +131,7 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 | `POST /self-assessments/drafts` | Pesantren terdaftar; bank berdimensi | Draft + `instrumentChecksum`; checksum beda = basi: kirim dikunci, wajib ulang |
 | `GET /self-assessments/drafts/:id` | Perangkat penilai (D-31; model draft prototipe sama dengan POST/DELETE) | Objek draft (`answers`, `activeIndex`, `instrumentChecksum`) atau 404 |
 | `DELETE /self-assessments/drafts/:id` | Pemilik draft | Buang draft basi |
-| `POST /self-assessments/submit` | Aktor publik/Pesantren; checksum cocok; nama 2–100; per indikator: nilai sah (wajib bila `required`), bukti bila `evidenceRequired` (D-27: upload beneran, 1 foto/soal), lokasi bila `locationRequired`, catatan ≥10 bila N/A | 1 `Report` `Terbit` + `Tidak berlaku` + 1 snapshot beku (soal+opsi+bobot+jawaban+skor) + `scorePercent` + `pdfGeneratedAt` + audit + notifikasi "telah terbit"; **tanpa** temuan (D-32); draft dihapus |
+| `POST /self-assessments/submit` | Body `{ draftId }` (+ opsional `reporterName`/`contact` menimpa draft); checksum diambil dari draft lalu dicocokkan; nama 2–100; per indikator: nilai sah (wajib bila `required`), bukti bila `evidenceRequired` (D-27: upload beneran, 1 foto/soal), lokasi bila `locationRequired`, catatan ≥10 bila N/A | 1 `Report` `Terbit` + `Tidak berlaku` + 1 snapshot beku (soal+opsi+bobot+jawaban+skor) + `scorePercent` + `pdfGeneratedAt` + audit + notifikasi "telah terbit"; **tanpa** temuan (D-32); draft dihapus |
 | `POST /uploads/self-evidence` | Pola bukti (≤5 MB/20 MP) | Asset bukti jawaban |
 
 Skor: rata-rata terbobot (`bobotJawaban` × pengali indikator), N/A dilewati
@@ -305,8 +305,8 @@ Rate-limit login in-memory 5/menit per IP+email → `429`.
 { "severity": "Tinggi", "priority": "Tinggi", "note": "Dicek hari ini.",
   "rekomendasiFinal": "Ganti kabel dan pasang conduit dalam 3 hari." }
 
-// POST /self-assessments/submit
-{ "draftId": "SELF-0001", "reporterName": "Ahmad", "instrumentChecksum": "ck-1a2b3c4d" }
+// POST /self-assessments/submit  (checksum diambil dari draft, bukan body)
+{ "draftId": "SELF-0001", "reporterName": "Ahmad", "contact": "0812-3456-7890" }
 
 // GET /public/dashboard?institution=PSN-0018
 { "ok": true, "data": { "summary": { "index": 58.0, "reports": 9, "findings": 11 },

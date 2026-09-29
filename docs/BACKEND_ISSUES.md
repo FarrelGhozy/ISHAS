@@ -4,6 +4,12 @@ Status: **Fase 0–6 (#3–#9) selesai; adapter #10 mencakup publik + Pesantren 
 Validator (bank/dokumen/dataset + SAM-iSAFE) + Super Admin (admin/notifikasi/
 storage/migrasi) + auth sesi** — lihat D-30.b–D-30.h. Tidak ada issue backend
 tersisa (auth fase 6 ditutup via commit terverifikasi).
+
+Verifikasi terakhir (29 September 2026): `bun run lint`, `bun run typecheck`, dan
+`DB_NAME=ishas_test bun test` hijau (104 test integrasi/unit). Unggah bukti dan
+reset demo memerlukan `apps/api/storage` milik pengguna; container `api` memakai
+named volume `api-storage` agar tidak menulis berkas root ke host.
+
 Status awal: **sudah dibuat & disinkronkan** (8 issue, `#3`–`#10`), milestone
 **Backend MVP**, label `backend` + `fase-0`…`fase-6`/`adapter`, relasi native
 `blocked-by`. Skrip bersifat **idempoten**: issue dicocokkan lewat judul persis,
