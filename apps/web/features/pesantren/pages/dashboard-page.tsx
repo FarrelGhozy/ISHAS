@@ -192,8 +192,8 @@ export function Page() {
           <div className="surface p-4">
             <div className="flex items-center justify-between">
               <h2 className="font-bold text-heading">Penilaian mandiri terbit</h2>
-              <Link className="text-button" to="/pesantren/laporan">
-                Lihat laporan
+              <Link className="text-button" to="/pesantren/hasil-penilaian-mandiri">
+                Lihat hasil mandiri
               </Link>
             </div>
             <p className="mt-2 text-sm text-secondary-text">

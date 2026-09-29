@@ -1,5 +1,19 @@
 # TODO — Kontrol Kerja Aktif
 
+## Hasil penilaian mandiri detail Pesantren (D-36) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (hasil mandiri dashboard umum butuh versi
+detail di ruang Pesantren; Pesantren hanya melihat miliknya). Cakupan: docs
+(D-36 + ROUTES/ROLES/WIREFRAMES/FLOWS) + `apps/web` (route
+`/pesantren/hasil-penilaian-mandiri` + menu + halaman daftar/detail full
+internal scope ketat + test; tanpa schema/backend/hak baru). Scope Stage 07 +
+sentuhan baca Validasi/PDF; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-36 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test (route/menu/daftar/detail Terbit scope sendiri + blokir lintas-scope; 5 test baru termasuk regresi registrasi route + guard).
+- [x] Verifikasi: lint + typecheck + 284 test + build lulus (29 Sep 2026). Perbaikan: route didaftarkan di `app/routes.ts` (sebelumnya URL jatuh ke tidak-dikenal). Cek visual 3 viewport + alur klik browser belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## Dashboard publik kosong pada mode backend (D-35) — 29 September 2026 — `IN PROGRESS`
 
 Revisi atas laporan pemilik (dashboard `/` mode backend menampilkan `—/100`,

@@ -69,6 +69,12 @@ tindak lanjut yang menggerakkan status, dan laporan pimpinan scope sendiri.
   tindak lanjut + tautan kelola; nav + redirect + test regresi.
 - [ ] Verifikasi: lint + typecheck + test + build + cek visual 3 viewport.
 
+### 6. Revisi D-36 Hasil mandiri detail (IN PROGRESS 29 Sep 2026)
+
+- [ ] Route `/pesantren/hasil-penilaian-mandiri` + menu `Hasil mandiri` +
+  daftar/detail `Terbit` full internal scope sendiri + blokir lintas-scope.
+- [ ] Verifikasi: lint + typecheck + test + build + cek visual 3 viewport.
+
 ## Acceptance criteria
 
 - [x] Area/lantai/gedung baru end-to-end terlihat di form publik pesantren yang sama (skenario integrasi).

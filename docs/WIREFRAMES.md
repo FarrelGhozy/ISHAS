@@ -138,6 +138,19 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
   Validasi/Lokasi/Tindak lanjut/Laporan. Guard: hanya role Pesantren + satu
   `institutionCode`, selain itu `EmptyState`.
 
+## 6.b. `/pesantren/hasil-penilaian-mandiri` Hasil mandiri detail (D-36)
+
+- Judul: kicker `Hasil pesantren saya` + H1 **nama pesantren** + subteks
+  `kode · kota/kabupaten · status` + hint `Hanya milik pesantren ini`.
+- Daftar laporan `penilaian-mandiri` `Terbit` milik scope (terbaru dulu):
+  nomor + judul + skor % + tanggal + nama penilai + tombol `Lihat detail`.
+  Cari teks (nomor/judul/nama penilai). Tanpa pemilih pesantren.
+- Detail per laporan (read-only): nama penilai + kontak internal + skor beku +
+  skor per dimensi + jawaban per indikator (nilai, catatan, bukti privat,
+  lokasi + denah) + waktu kirim + checksum + tautan `Lihat PDF`.
+  Milik pesantren lain tidak pernah dibaca; tampil `EmptyState` blokir.
+- Guard: hanya role Pesantren + satu `institutionCode`; selain itu `EmptyState`.
+
 ## 7. Responsif (wajib diperiksa)
 
 - Desktop 1440×900, tablet 834×1112, ponsel 390×844: tidak ada overflow horizontal halaman; header publik memindahkan CTA ke baris kedua di ponsel; tiga kolom penilaian mandiri menumpuk (navigasi dimensi menjadi dropdown/accordion); tabel antrean menjadi kartu; grafik punya tinggi minimum 225px dan hanya render setelah panel terlihat.

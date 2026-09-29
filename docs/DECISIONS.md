@@ -1144,3 +1144,29 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   stage lain tidak berubah sepihak; scope Stage 07 + sentuhan baca Validasi.
 - Dokumen terdampak: ROUTES §2/§5, ROLES §2, WIREFRAMES §6,
   TODO, STAGE_07.
+
+## D-36 — Hasil penilaian mandiri detail khusus Pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik: bagian Pesantren butuh hasil penilaian mandiri dari
+  dashboard umum, tetapi versi detail dengan semua datanya; Pesantren hanya
+  boleh melihat laporan milik pesantrennya sendiri.
+- **D-36.a — Route dan menu:** route baru `/pesantren/hasil-penilaian-mandiri`
+  (workspace Pesantren, guard role `pesantren` + scope satu `institutionCode`).
+  Menu sidebar Pesantren bertambah `Hasil mandiri`. Tanpa pemilih pesantren;
+  param `?pesantren=` milik pesantren lain diabaikan.
+- **D-36.b — Isi full internal milik scope:** daftar laporan kanal
+  `penilaian-mandiri` berstatus `Terbit` + belum diarsip milik scope
+  (terbaru dulu) + detail per laporan: nama penilai, kontak internal, skor %
+  beku, skor per dimensi, jawaban per indikator (nilai + catatan + bukti +
+  lokasi), waktu kirim, checksum snapshot, tautan PDF. Bidang ini internal
+  pemilik scope; tetap tidak publik (D-02).
+- **D-36.c — Scope ketat:** baca selalu `institutionCode` milik akun aktif.
+  Laporan pesantren lain tidak pernah dibaca; akses langsung via URL ke milik
+  orang lain menampilkan pesan kosong/blokir, bukan redirect silang. Read-only
+  (D-32): tanpa Terima/Tolak, tanpa temuan/tindak lanjut baru.
+- **D-36.d — Batas:** tanpa perubahan schema, tanpa endpoint backend baru
+  (`GET /pesantren/state` D-30.c sudah scope per lembaga + cek scope handler).
+  Status stage lain tidak berubah sepihak; scope Stage 07 + sentuhan baca
+  Validasi/PDF.
+- Dokumen terdampak: ROUTES §2, ROLES §2, WIREFRAMES §6, FLOWS §6,
+  TODO, STAGE_07.

@@ -58,6 +58,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/validator/sam-isafe/bank` | validator | SAM-iSAFE: kelola kategori + pertanyaan bank (D-26) |
 | `/validator/sam-isafe/:id` | validator | SAM-iSAFE: detail pengamatan + skor per kategori (D-26) |
 | `/pesantren/dashboard` | pesantren | **Dashboard + rangkuman scope sendiri (halaman utama Pesantren, D-34)** |
+| `/pesantren/hasil-penilaian-mandiri` | pesantren | **Hasil mandiri detail scope sendiri (Terbit, full internal, D-36)** |
 | `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi** |
 | `/pesantren/lokasi` | pesantren | Gedung & denah |
 | `/pesantren/tindak-lanjut` | pesantren | Kelola (PIC, tenggat, progres, bukti) |
