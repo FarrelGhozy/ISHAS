@@ -644,6 +644,27 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `DESIGN_SYSTEM.md` (tanpa kelas `.status`/warna merek baru).
 - Dokumen terdampak: DATA_MODEL schema v13, TODO, stage `STAGE_SAM_ISAFE_FASE2.md`.
 
+## D-38 — Poles UI/UX SAM-iSAFE Validator — IN PROGRESS 29 September 2026
+
+- Arahan pemilik (`ok kerjakan`): perbaiki tampilan dan pengalaman pengisian
+  SAM-iSAFE agar lebih profesional, mudah dipindai, dan nyaman pada desktop
+  maupun ponsel.
+- Cakupan: header konteks, stepper pengamatan, progress dan status simpan,
+  kartu pilihan skor, navigasi kategori, field catatan/bukti, riwayat, detail,
+  dan bank data.
+- Batas: tidak mengubah scope Validator-only, schema, rumus/ambang skor,
+  validasi domain, hak akses, atau kontrak repository. Warna dan komponen tetap
+  mengikuti `DESIGN_SYSTEM.md`.
+- Pemeriksaan visual 3 viewport dan keyboard tetap menjadi bagian verifikasi;
+  status stage SAM-iSAFE tidak dinaikkan sepihak dari `REVIEW`.
+- Revisi lanjutan: dashboard SAM-iSAFE juga dipoles agar ringkasan metrik,
+  pengamatan terakhir, tren, dan rata-rata kategori memiliki hierarki visual
+  yang lebih profesional tanpa mengubah angka atau processor.
+- Arahan pemilik (`buat jadi diagram batang yang normal aja ke atas`): grafik
+  Perkembangan skor memakai batang vertikal yang jelas tumbuh dari baseline
+  bawah ke atas, dengan label nilai dan tanggal mudah dibaca; bukan tampilan
+  batang yang tampak gepeng/ambigu. Data dan makna skor tidak berubah.
+
 ## D-26.f — Pematangan bank data SAM-iSAFE (CRUD lengkap + mobile) — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` atas keluhan bank kurang matang + tampilan HP):

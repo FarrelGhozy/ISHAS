@@ -4,6 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
+import { ArrowLeft, Database, Plus, Search } from "lucide-react";
 import { samActiveQuestions, samDuplicateQuestions } from "~/mocks/sam-isafe";
 import { repository } from "~/shared/api/repository";
 import { refreshValidatorState, useValidatorState } from "~/shared/api/validator-state";
@@ -89,12 +90,13 @@ export function Page() {
 
   return (
     <section className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-      <header className="flex flex-wrap items-end gap-3">
+      <header className="surface flex flex-wrap items-end gap-4 p-5 sm:p-6">
         <div className="mr-auto min-w-0">
           <p className="kicker">
             Bank data
           </p>
-          <h1 className="text-2xl font-extrabold text-heading">
+          <h1 className="mt-1 flex items-center gap-2 text-2xl font-extrabold text-heading">
+            <Database className="text-primary" size={25} />
             Kelola checklist SAM-iSAFE
           </h1>
           <p className="mt-1 text-sm text-secondary-text">
@@ -105,7 +107,8 @@ export function Page() {
           className="text-button"
           to="/validator/sam-isafe"
         >
-          ← Kembali ke riwayat
+          <ArrowLeft size={15} />
+          Kembali ke riwayat
         </Link>
       </header>
       <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
@@ -138,13 +141,14 @@ export function Page() {
         </p>
       ) : null}
       <div className="surface flex flex-col gap-3 p-4">
-        <h2 className="font-bold text-heading">
+        <h2 className="flex items-center gap-2 font-bold text-heading">
+          <Plus size={17} className="text-primary" />
           Tambah kategori
         </h2>
         <label className="flex flex-col gap-1 text-xs font-bold text-secondary-text">
           Nama kategori*
-          <input
-            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+           <input
+             className="min-h-11 w-full rounded-lg border border-line-soft bg-white px-3 text-base font-normal text-heading"
             value={nama}
             onChange={(event) => setNama(event.target.value)}
             placeholder="Contoh: Keselamatan Laboratorium"
@@ -152,8 +156,8 @@ export function Page() {
         </label>
         <label className="flex flex-col gap-1 text-xs font-bold text-secondary-text">
           Deskripsi (opsional)
-          <input
-            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+           <input
+             className="min-h-11 w-full rounded-lg border border-line-soft bg-white px-3 text-base font-normal text-heading"
             value={deskripsi}
             onChange={(event) => setDeskripsi(event.target.value)}
             placeholder="Contoh: bahan kimia, APD, ventilasi lab"
@@ -170,17 +174,20 @@ export function Page() {
       <div className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
         <label className="flex flex-1 flex-col gap-1 text-xs font-bold text-secondary-text">
           Cari soal
-          <input
-            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+           <div className="relative">
+           <Search className="absolute left-3 top-3.5 text-faint" size={16} />
+           <input
+             className="min-h-11 w-full rounded-lg border border-line-soft bg-white pl-9 pr-3 text-base font-normal text-heading"
             value={cari}
             onChange={(event) => setCari(event.target.value)}
             placeholder="Kata kunci atau kode SAM-Q-xxx"
-          />
+           />
+           </div>
         </label>
         <label className="flex flex-col gap-1 text-xs font-bold text-secondary-text sm:w-44">
           Status
           <select
-            className="min-h-11 w-full rounded border border-line-soft px-3 text-base font-normal text-heading"
+             className="min-h-11 w-full rounded-lg border border-line-soft bg-white px-3 text-base font-normal text-heading"
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           >

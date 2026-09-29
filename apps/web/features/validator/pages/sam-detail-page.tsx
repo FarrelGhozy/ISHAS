@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
-import { Printer } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Printer } from "lucide-react";
 import { samCategoryScores } from "~/mocks/sam-isafe";
 import { useValidatorState } from "~/shared/api/validator-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
@@ -45,7 +45,8 @@ export function Page() {
           className="text-button"
           to="/validator/sam-isafe"
         >
-          ← Kembali ke riwayat
+          <ArrowLeft size={15} />
+          Kembali ke riwayat
         </Link>
         <EmptyState
           title="Pengamatan tidak ditemukan"
@@ -81,7 +82,18 @@ export function Page() {
           {pesan}
         </p>
       ) : null}
-      <header>
+      <header className="surface overflow-hidden">
+        <div className="flex flex-wrap items-center gap-3 border-b border-line bg-brand-bg px-5 py-4">
+          <span className="grid size-10 place-items-center rounded-xl bg-white text-primary shadow-sm">
+            <ClipboardCheck size={20} />
+          </span>
+          <div className="mr-auto">
+            <p className="kicker">Detail pengamatan</p>
+            <p className="mt-1 text-sm font-bold text-heading">{item.id} · {item.kind}</p>
+          </div>
+          <span className="text-xs font-semibold text-secondary-text">Data internal Validator</span>
+        </div>
+        <div className="p-5 sm:p-6">
         <p className="kicker">
           {item.id} · {item.kind}
         </p>
@@ -102,6 +114,7 @@ export function Page() {
           {item.reviewedBy ? (
             <StatusChip value="Ditinjau" />
           ) : null}
+        </div>
         </div>
       </header>
       <section className="surface p-5">

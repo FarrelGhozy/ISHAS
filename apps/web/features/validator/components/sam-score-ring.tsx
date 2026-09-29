@@ -14,11 +14,13 @@ export function SamScoreRing({
   risk,
   total,
   max,
+  onDark = false,
 }: {
   percent: number;
   risk: SamRiskLevel;
   total: number;
   max: number;
+  onDark?: boolean;
 }) {
   const radius = 52;
   const keliling = 2 * Math.PI * radius;
@@ -40,7 +42,7 @@ export function SamScoreRing({
           cy="64"
           r={radius}
           fill="none"
-          stroke="#eef2f6"
+          stroke={onDark ? "rgb(255 255 255 / 24%)" : "#eef2f6"}
           strokeWidth="12"
         />
         <circle
@@ -61,7 +63,7 @@ export function SamScoreRing({
           textAnchor="middle"
           fontSize="22"
           fontWeight="800"
-          fill="#2A3F54"
+          fill={onDark ? "#ffffff" : "#2A3F54"}
         >
           {percent.toFixed(1)}%
         </text>
@@ -70,16 +72,16 @@ export function SamScoreRing({
           y="82"
           textAnchor="middle"
           fontSize="11"
-          fill="#64748b"
+          fill={onDark ? "#dbeafe" : "#64748b"}
         >
           {total}/{max}
         </text>
       </svg>
       <div>
-        <p className="text-sm font-extrabold text-heading">
+        <p className={`text-sm font-extrabold ${onDark ? "text-white" : "text-heading"}`}>
           {risk}
         </p>
-        <p className="mt-1 text-xs text-secondary-text">
+        <p className={`mt-1 text-xs ${onDark ? "text-blue-100" : "text-secondary-text"}`}>
           {risk === "Risiko Rendah"
             ? "Kesiapan keselamatan baik."
             : risk === "Risiko Sedang"

@@ -5,6 +5,8 @@ import { Page as ScoringPage } from "./pages/scoring-page";
 import { Page as AuditPage } from "./pages/validasi-publikasi-page";
 import { Page as DatasetPage } from "./pages/data-penelitian-page";
 import { Page as DashboardPage } from "./pages/dashboard-page";
+import { Page as SamListPage } from "./pages/sam-list-page";
+import { Page as SamBankPage } from "./pages/sam-bank-page";
 import { SESSION_STORAGE_KEY } from "~/shared/auth/session";
 
 // Sesi validator dummy (USR-002) sebelum render pertama — pola sama
@@ -71,4 +73,39 @@ test("Dashboard validator menautkan 3 halaman D-25", () => {
   expect(html).toContain("Buka Scoring");
   expect(html).toContain("Buka Audit publikasi");
   expect(html).toContain("Buka Data penelitian");
+});
+
+test("SAM-iSAFE riwayat menampilkan konteks dan filter", () => {
+  const html = renderToString(
+    <MemoryRouter initialEntries={["/validator/sam-isafe"]}>
+      <SamListPage />
+    </MemoryRouter>,
+  );
+  expect(html).toContain("SAM-iSAFE");
+  expect(html).toContain("Riwayat pengamatan");
+  expect(html).toContain("Pengamatan baru");
+  expect(html).toContain("Kode, pesantren, pengamat");
+});
+
+test("Dashboard SAM-iSAFE menampilkan ringkasan profesional", () => {
+  const html = renderToString(
+    <MemoryRouter initialEntries={["/validator/sam-isafe"]}>
+      <SamListPage />
+    </MemoryRouter>,
+  );
+  expect(html).toContain("Ringkasan keselamatan");
+  expect(html).toContain("Pantau kesiapan keselamatan secara terukur");
+  expect(html).toContain("Perkembangan skor");
+  expect(html).toContain("Rata-rata per kategori");
+});
+
+test("Bank SAM-iSAFE menampilkan editor kategori dan pencarian", () => {
+  const html = renderToString(
+    <MemoryRouter initialEntries={["/validator/sam-isafe/bank"]}>
+      <SamBankPage />
+    </MemoryRouter>,
+  );
+  expect(html).toContain("Kelola checklist SAM-iSAFE");
+  expect(html).toContain("Tambah kategori");
+  expect(html).toContain("Cari soal");
 });

@@ -1,5 +1,20 @@
 # TODO — Kontrol Kerja Aktif
 
+## Poles UI/UX SAM-iSAFE Validator (D-38) — 29 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik (`ok kerjakan`). Cakupan UI/UX modul SAM-iSAFE
+Validator: pengisian, riwayat, detail, bank data, responsif, dan akses keyboard.
+Tanpa perubahan schema, hak akses, rumus skor, atau kontrak repository.
+
+- [x] Catat D-38 sebelum mengubah kode.
+- [x] Implementasi komponen dan halaman.
+- [x] Ubah grafik Perkembangan skor menjadi batang vertikal dengan baseline bawah
+      dan label nilai/tanggal yang jelas (arahan pemilik).
+- [x] Test render/interaksi yang relevan.
+- [x] Verifikasi lint + typecheck + 287 test + build (29 Sep 2026).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser.
+- [ ] Review pemilik.
+
 ## Poles UI hasil mandiri Pesantren (D-37) — 29 September 2026 — `IN PROGRESS`
 
 Revisi visual atas arahan langsung pemilik. Cakupan hanya halaman
