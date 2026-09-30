@@ -16,6 +16,7 @@ import { seedEmpty } from "../src/seed/empty";
 import { ALL_TABLES, countRows } from "../src/seed/helpers";
 import { seedDefaultPassword } from "../src/config";
 import { loginLimiter } from "../src/domain/auth";
+import { nextSequence, withTransaction } from "../src/repo/writes";
 
 const dbName = process.env.DB_NAME ?? "ishas";
 const isTestDb = /test/i.test(dbName);
@@ -2350,6 +2351,320 @@ describe.skipIf(!dbReady)("Fase 6 auth (cookie + RBAC + CSRF)", () => {
       }),
     );
     expect(restored.status).toBe(200);
+  });
+});
+
+// Pengujian alur data tulis (30 Sep 2026): isolasi scope antar-pesantren,
+// validasi impor dataset via `rows`, dan jaminan transaksi `sequences`.
+describe.skipIf(!dbReady)("Fase 2 tulis: isolasi scope antar-pesantren", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...((init.headers as Record<string, string> | undefined)),
+    },
+    body: JSON.stringify(body),
+  });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+  const asAccount =
+    (accountId: string) =>
+    (init: RequestInit = {}): RequestInit => ({
+      ...init,
+      headers: {
+        ...(init.headers as Record<string, string> | undefined),
+        "X-Demo-Account": accountId,
+      },
+    });
+  const asOwner = asAccount("USR-003"); // Pesantren PSN-0018
+  const asForeign = asAccount("USR-004"); // Pesantren PSN-0019
+
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("akun Pesantren lain tidak dapat menulis laporan/temuan/rekomendasi scope A", async () => {
+    const created = await call(
+      "/api/v1/reports/lapor-cepat",
+      json(
+        {
+          institutionCode: "PSN-0018",
+          reporterName: "Ahmad",
+          title: "Kabel terkelupas di area isolasi",
+          description: "Kabel dekat kompor terkelupas dan berisiko tersengat listrik.",
+          manualLocation: "Dapur utama",
+        },
+        { method: "POST" },
+      ),
+    );
+    expect(created.status).toBe(201);
+    const reportId = ((await created.json()) as { data: { id: string } }).data.id;
+
+    const accepted = await call(
+      `/api/v1/pesantren/reports/${reportId}/accept`,
+      asOwner(
+        json(
+          {
+            severity: "Sedang",
+            priority: "Sedang",
+            note: "Diterima untuk uji isolasi.",
+            rekomendasiFinal: "Perbaiki instalasi listrik dalam tiga hari.",
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(accepted.status).toBe(200);
+
+    const [findingRows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM findings WHERE report_id = ? LIMIT 1",
+      [reportId],
+    );
+    const [recRows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM recommendations WHERE report_id = ? LIMIT 1",
+      [reportId],
+    );
+    const findingId = String(findingRows[0].id);
+    const recommendationId = String(recRows[0].id);
+
+    const attempts: [string, RequestInit][] = [
+      [
+        `/api/v1/pesantren/reports/${reportId}/reject`,
+        json({ reason: "Alasan penolakan dari akun lain." }, { method: "POST" }),
+      ],
+      [
+        `/api/v1/pesantren/reports/${reportId}/status`,
+        json(
+          { next: "Proses", owner: "Tim Lain", dueDate: "2026-12-31", note: "Coba lintas scope." },
+          { method: "POST" },
+        ),
+      ],
+      [
+        `/api/v1/pesantren/reports/${reportId}/archive`,
+        json({ reason: "Arsip lintas scope." }, { method: "POST" }),
+      ],
+      [
+        `/api/v1/pesantren/findings/${findingId}/level`,
+        json({ level: "Ekstrem" }, { method: "PATCH" }),
+      ],
+      [
+        `/api/v1/pesantren/recommendations/${recommendationId}/progress`,
+        json({ note: "Coba progress.", progress: 25 }, { method: "POST" }),
+      ],
+      [
+        `/api/v1/pesantren/recommendations/${recommendationId}/verify`,
+        json({ verify: true, note: "Coba verifikasi." }, { method: "POST" }),
+      ],
+      [
+        `/api/v1/pesantren/recommendations/${recommendationId}/cancel`,
+        json({ reason: "Coba pembatalan lintas scope." }, { method: "POST" }),
+      ],
+    ];
+
+    for (const [path, init] of attempts) {
+      const denied = await call(path, asForeign(init));
+      expect(denied.status).toBe(403);
+    }
+
+    const [report] = await pool.query<RowDataPacket[]>(
+      "SELECT validation_status, handling_status, archived_at FROM reports WHERE id = ?",
+      [reportId],
+    );
+    expect(report[0]?.validation_status).toBe("Diterima");
+    expect(report[0]?.handling_status).toBe("Pending");
+    expect(report[0]?.archived_at).toBeNull();
+    const [rec] = await pool.query<RowDataPacket[]>(
+      "SELECT status FROM recommendations WHERE id = ?",
+      [recommendationId],
+    );
+    expect(rec[0]?.status).not.toBe("Dibatalkan");
+  });
+
+  test("lantai gedung lintas scope ditolak", async () => {
+    const building = await call(
+      "/api/v1/pesantren/buildings",
+      asOwner(json({ code: "GD-ISO", name: "Gedung Isolasi" }, { method: "POST" })),
+    );
+    expect(building.status).toBe(201);
+    const buildingId = ((await building.json()) as { data: { id: string } }).data.id;
+
+    const foreignFloor = await call(
+      `/api/v1/pesantren/buildings/${buildingId}/floors`,
+      asForeign(json({ name: "Lantai Lintas Scope" }, { method: "POST" })),
+    );
+    expect(foreignFloor.status).toBe(403);
+  });
+
+  test("detail laporan: pemilik 200, lintas scope 403, anonim 401", async () => {
+    const own = await call("/api/v1/pesantren/reports/RPT-0001", asOwner());
+    expect(own.status).toBe(200);
+    const body = (await own.json()) as {
+      data: { report: { id: string }; findings: unknown[]; recommendations: unknown[] };
+    };
+    expect(body.data.report.id).toBe("RPT-0001");
+
+    const foreign = await call("/api/v1/pesantren/reports/RPT-0001", asForeign());
+    expect(foreign.status).toBe(403);
+
+    const anonymous = await call("/api/v1/pesantren/reports/RPT-0001");
+    expect(anonymous.status).toBe(401);
+  });
+
+  test("unggah bukti penyelesaian: scope + peran + 201", async () => {
+    const png = (() => {
+      const bytes = new Uint8Array(24);
+      bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      bytes[18] = 0;
+      bytes[19] = 20;
+      bytes[22] = 0;
+      bytes[23] = 20;
+      return bytes;
+    })();
+
+    const wrongRole = await call("/api/v1/uploads/completion-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-002" },
+      body: (() => {
+        const form = new FormData();
+        form.append("file", new File([png], "selesai.png", { type: "image/png" }));
+        form.append("institutionCode", "PSN-0018");
+        return form;
+      })(),
+    });
+    expect(wrongRole.status).toBe(403);
+
+    const foreignScope = await call("/api/v1/uploads/completion-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-003" },
+      body: (() => {
+        const form = new FormData();
+        form.append("file", new File([png], "selesai.png", { type: "image/png" }));
+        form.append("institutionCode", "PSN-0019");
+        return form;
+      })(),
+    });
+    expect(foreignScope.status).toBe(403);
+
+    const uploaded = await call("/api/v1/uploads/completion-evidence", {
+      method: "POST",
+      headers: { "X-Demo-Account": "USR-003" },
+      body: (() => {
+        const form = new FormData();
+        form.append("file", new File([png], "selesai.png", { type: "image/png" }));
+        form.append("institutionCode", "PSN-0018");
+        return form;
+      })(),
+    });
+    expect(uploaded.status).toBe(201);
+    const assetId = ((await uploaded.json()) as { data: { id: string } }).data.id;
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM file_assets WHERE asset_id = ?", [assetId]),
+    ).toBe(1);
+  });
+});
+
+describe.skipIf(!dbReady)("Fase 3 tulis: validasi impor dataset via rows", () => {
+  const app = createApp({ ping: pingDb, loadActor, loadState: loadIshasState });
+  const json = (body: unknown, init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...((init.headers as Record<string, string> | undefined)),
+    },
+    body: JSON.stringify(body),
+  });
+  const call = (path: string, init?: RequestInit) =>
+    app(new Request(`http://localhost${path}`, init));
+  const asValidator = (init: RequestInit = {}): RequestInit => ({
+    ...init,
+    headers: {
+      ...(init.headers as Record<string, string> | undefined),
+      "X-Demo-Account": "USR-002",
+    },
+  });
+
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("baris `rows` langsung tetap divalidasi server (tidak dipercaya buta)", async () => {
+    const invalid = await call(
+      "/api/v1/validator/dataset/import",
+      asValidator(
+        json(
+          {
+            rows: [
+              {
+                institutionCode: "PSN-9999",
+                reporterName: "Tim Uji",
+                scorePercent: 50,
+                title: "Uji baris tak sah",
+              },
+            ],
+            apply: true,
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(invalid.status).toBe(400);
+    expect(((await invalid.json()) as { error: string }).error).toContain(
+      "bukan pesantren terdaftar",
+    );
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM reports WHERE institution_code = 'PSN-9999'"),
+    ).toBe(0);
+
+    const badScore = await call(
+      "/api/v1/validator/dataset/import",
+      asValidator(
+        json(
+          {
+            rows: [
+              {
+                institutionCode: "PSN-0018",
+                reporterName: "Tim Uji",
+                scorePercent: 150,
+                title: "Uji skor",
+              },
+            ],
+            apply: true,
+          },
+          { method: "POST" },
+        ),
+      ),
+    );
+    expect(badScore.status).toBe(400);
+    expect(((await badScore.json()) as { error: string }).error).toContain("scorePercent 0–100");
+    expect(await scalar("SELECT COUNT(*) AS c FROM reports WHERE title = 'Uji skor'")).toBe(0);
+  });
+});
+
+describe.skipIf(!dbReady)("Transaksi tulis: jaminan rollback sequences", () => {
+  beforeAll(async () => {
+    await seedDemo();
+  });
+
+  test("rollback transaksi tidak memajukan urutan", async () => {
+    await expect(
+      withTransaction(async (conn) => {
+        await nextSequence(conn, "rollback_probe");
+        throw new Error("gagal di tengah transaksi");
+      }),
+    ).rejects.toThrow("gagal di tengah transaksi");
+    expect(
+      await scalar("SELECT COUNT(*) AS c FROM sequences WHERE seq_name = 'rollback_probe'"),
+    ).toBe(0);
+  });
+
+  test("commit transaksi memajukan urutan sekali", async () => {
+    await withTransaction(async (conn) => {
+      await nextSequence(conn, "commit_probe");
+    });
+    expect(await scalar("SELECT value AS c FROM sequences WHERE seq_name = 'commit_probe'")).toBe(
+      2,
+    );
   });
 });
 
