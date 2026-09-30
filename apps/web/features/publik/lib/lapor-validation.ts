@@ -14,6 +14,7 @@ export type LaporValues = {
   aspectId: string; // D-19: ASP-* opsional, harus milik categoryId
   reporterSeverity: string; // D-19: usulan mandiri opsional ("Belum ditentukan" = kosong)
   reporterPriority: string; // D-19: usulan mandiri opsional ("Belum ditentukan" = kosong)
+  reporterRecommendation: string; // D-29: usulan rekomendasi tindakan (opsional; bila diisi min 10, maks 500)
   title: string;
   description: string;
   evidenceName: string;
@@ -30,6 +31,7 @@ export const EMPTY_LAPOR_VALUES: LaporValues = {
   aspectId: "",
   reporterSeverity: "Belum ditentukan",
   reporterPriority: "Belum ditentukan",
+  reporterRecommendation: "",
   title: "",
   description: "",
   evidenceName: "",
@@ -102,6 +104,13 @@ export function validateLapor(
   }
   if (!levels.includes(values.reporterPriority)) {
     errors.reporterPriority = "Usulan prioritas perbaikan tidak dikenal.";
+  }
+  // D-29: usulan rekomendasi opsional; bila diisi min 10, maks 500.
+  const usulanRekomendasi = values.reporterRecommendation.trim();
+  if (usulanRekomendasi && usulanRekomendasi.length < 10) {
+    errors.reporterRecommendation = "Usulan rekomendasi minimal 10 karakter.";
+  } else if (usulanRekomendasi.length > 500) {
+    errors.reporterRecommendation = "Usulan rekomendasi maksimal 500 karakter.";
   }
 
   return errors;

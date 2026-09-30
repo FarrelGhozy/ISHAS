@@ -1,9 +1,10 @@
 // Form tambah/edit indikator bank (D-24). Opsi + bobot diatur via modal Atur Bobot.
 
 import { useState } from "react";
-import { storeActions } from "~/mocks/store/mock-store";
 import { K3_CATEGORIES } from "~/mocks/kategori-k3";
 import type { InstrumentAnswerType, InstrumentIndicator } from "~/mocks/types";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 
 const TIPE_BARU: { value: InstrumentAnswerType; label: string }[] = [
   { value: "ya-tidak", label: "Ya / Tidak" },
@@ -54,7 +55,7 @@ export function BankIndikatorForm({
   const aspekPilihan =
     K3_CATEGORIES.find((c) => c.id === (form.categoryId || kategoriDimensi))?.aspects ?? [];
 
-  const simpan = () => {
+  const simpan = async () => {
     const payload = {
       code: form.code,
       title: form.title,
@@ -67,8 +68,9 @@ export function BankIndikatorForm({
       aspectId: form.aspectId || undefined,
     };
     const r = awal
-      ? storeActions.updateBankIndicator(awal.id, payload)
-      : storeActions.addBankIndicator(dimensionId, payload);
+      ? await repository.updateBankIndicator(awal.id, payload)
+      : await repository.addBankIndicator(dimensionId, payload);
+    if (r.ok) refreshValidatorState();
     onDone(r.ok ? (awal ? `Indikator ${form.code} diubah.` : `Indikator ${form.code} ditambahkan.`) : r.error);
   };
 
@@ -77,7 +79,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Kode
         <input
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.code}
           onChange={(e) => patch({ code: e.target.value })}
           placeholder="IND-K3L-011"
@@ -86,7 +88,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Judul
         <input
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.title}
           onChange={(e) => patch({ title: e.target.value })}
         />
@@ -94,7 +96,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Tipe jawaban
         <select
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.answerType}
           onChange={(e) => patch({ answerType: e.target.value as InstrumentAnswerType })}
         >
@@ -111,7 +113,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Kategori
         <select
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.categoryId}
           onChange={(e) => patch({ categoryId: e.target.value, aspectId: "" })}
         >
@@ -126,7 +128,7 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold">
         Aspek
         <select
-          className="mt-1 min-h-10 w-full rounded border border-line-soft px-2 font-normal"
+          className="mt-1 min-h-10 w-full rounded border border-line-soft bg-white px-2 font-normal"
           value={form.aspectId}
           onChange={(e) => patch({ aspectId: e.target.value })}
         >
@@ -167,14 +169,14 @@ export function BankIndikatorForm({
       <label className="text-xs font-bold md:col-span-3">
         Prompt
         <textarea
-          className="mt-1 min-h-16 w-full rounded border border-line-soft p-2 font-normal"
+          className="mt-1 min-h-16 w-full rounded border border-line-soft bg-white p-2 font-normal"
           value={form.prompt}
           onChange={(e) => patch({ prompt: e.target.value })}
           placeholder="Tulis pertanyaan observasi min 10 karakter"
         />
       </label>
       <div className="flex flex-wrap gap-2 md:col-span-3">
-        <button type="button" className="primary-button" onClick={simpan}>
+        <button type="button" className="primary-button" onClick={() => void simpan()}>
           {awal ? "Simpan perubahan" : "Tambah indikator"}
         </button>
         <button type="button" className="secondary-button" onClick={() => onDone("")}>

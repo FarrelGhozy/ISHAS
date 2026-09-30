@@ -1,16 +1,17 @@
-// Audit publikasi D-25 (route lama /validator/validasi-publikasi tetap).
+// Audit publikasi D-25/D-32 (route lama /validator/validasi-publikasi tetap).
 // Checklist 5 kriteria kesiapan snapshot; tanpa tombol Terima/Tolak.
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
-import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import { isPublishedStatus, selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import type { Report } from "~/mocks/types";
+import { useValidatorState } from "~/shared/api/validator-state";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
-import { nilaiKesiapan } from "../audit-kesiapan";
+import { nilaiKesiapan, type Kesiapan } from "../audit-kesiapan";
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const [query, setQuery] = useState("");
   const [institution, setInstitution] = useState("Semua terdaftar");
   const [kelengkapan, setKelengkapan] = useState("Semua");
@@ -94,7 +95,7 @@ export function Page() {
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="Cari audit"
-          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft px-3"
+          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft bg-white px-3"
           placeholder="Cari ID atau judul laporan…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -130,17 +131,71 @@ export function Page() {
           description="Sesuaikan pencarian, filter pesantren, atau kelengkapan."
         />
       ) : (
-        <div className="surface divide-y divide-line">
-          {rows.map(({ report, siap, inst }) => (
-            <article
-              className="flex flex-wrap items-center gap-3 p-4"
-              key={report.id}
-            >
-              <div className="mr-auto min-w-60 flex-1">
-                <strong className="text-heading">
-                  {report.id} · {inst?.name ?? report.institutionCode}
-                </strong>
-                <p className="text-xs text-secondary-text">
+        <>
+          <div className="surface hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[960px] text-left text-sm">
+              <thead className="bg-strip text-xs text-secondary-text">
+                <tr>
+                  <th className="p-3">Laporan</th>
+                  <th className="p-3">Checklist kesiapan</th>
+                  <th className="p-3">Validasi</th>
+                  <th className="p-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {rows.map(({ report, siap, inst }) => (
+                  <tr key={report.id}>
+                    <td className="p-3 align-top">
+                      <strong className="text-heading">
+                        {report.id} · {inst?.name ?? report.institutionCode}
+                      </strong>
+                      <p className="mt-1 text-xs text-secondary-text">
+                        Bank live · {siap.answered}/{siap.expected} jawaban
+                        terisi
+                        {report.scorePercent !== undefined &&
+                        report.scorePercent !== null
+                          ? ` · skor ${Math.round(report.scorePercent)}%`
+                          : ""}
+                        {report.pdfGeneratedAt ? " · PDF tersedia" : ""}
+                        {siap.warisan ? " · warisan INS-v1.x" : ""}
+                      </p>
+                      <p className="mt-1 text-xs text-faint">
+                        {siap.layak
+                          ? "Layak menjadi sumber publik"
+                          : "Belum menjadi sumber publik"}
+                      </p>
+                    </td>
+                    <td className="p-3 align-top">
+                      <DaftarChecklist siap={siap} />
+                    </td>
+                    <td className="p-3 align-top">
+                      <div className="flex flex-col items-start gap-1.5">
+                        <StatusChip value={report.validationStatus} />
+                        <span
+                          className={`status ${siap.lengkap ? "status-green" : "status-red"}`}
+                        >
+                          {siap.lengkap ? "Lengkap" : "Tidak lengkap"}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-3 align-top">
+                      <TombolAksi report={report} rataKanan />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex flex-col gap-3 md:hidden">
+            {rows.map(({ report, siap, inst }) => (
+              <article className="surface p-4 text-sm" key={report.id}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong className="mr-auto text-heading">
+                    {report.id} · {inst?.name ?? report.institutionCode}
+                  </strong>
+                  <StatusChip value={report.validationStatus} />
+                </div>
+                <p className="mt-1 text-xs text-secondary-text">
                   Bank live · {siap.answered}/{siap.expected} jawaban terisi
                   {report.scorePercent !== undefined &&
                   report.scorePercent !== null
@@ -149,62 +204,90 @@ export function Page() {
                   {report.pdfGeneratedAt ? " · PDF tersedia" : ""}
                   {siap.warisan ? " · warisan INS-v1.x" : ""}
                 </p>
-                <ul className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                  <li
+                <div className="mt-2">
+                  <DaftarChecklist siap={siap} />
+                </div>
+                <div className="mt-2">
+                  <span
                     className={`status ${siap.lengkap ? "status-green" : "status-red"}`}
                   >
-                    {siap.lengkap ? "✓" : "✗"} Lengkap
-                  </li>
-                  <li
-                    className={`status ${siap.diterima ? "status-green" : "status-neutral"}`}
-                  >
-                    {siap.diterima ? "✓" : "✗"} Diterima Pesantren
-                  </li>
-                  <li
-                    className={`status ${siap.skorAda ? "status-green" : "status-red"}`}
-                  >
-                    {siap.skorAda ? "✓" : "✗"} Skor
-                  </li>
-                  <li
-                    className={`status ${siap.pdfAda ? "status-green" : "status-neutral"}`}
-                  >
-                    {siap.pdfAda ? "✓" : "✗"} PDF
-                  </li>
-                  <li
-                    className={`status ${siap.checksumCocok ? "status-green" : "status-amber"}`}
-                  >
-                    {siap.checksumCocok ? "✓" : "✗"} Checksum bank
-                  </li>
-                </ul>
+                    {siap.lengkap ? "Lengkap" : "Tidak lengkap"}
+                  </span>
+                </div>
                 <p className="mt-1 text-xs text-faint">
                   {siap.layak
                     ? "Layak menjadi sumber publik"
                     : "Belum menjadi sumber publik"}
                 </p>
-              </div>
-              <StatusChip value={report.validationStatus} />
-              <span
-                className={`status ${siap.lengkap ? "status-green" : "status-red"}`}
-              >
-                {siap.lengkap ? "Lengkap" : "Tidak lengkap"}
-              </span>
-              <span className="flex flex-wrap gap-2 text-xs">
-                {report.validationStatus === "Diterima" ? (
-                  <Link className="text-button" to={`/laporan/${report.id}`}>
-                    PDF
-                  </Link>
-                ) : null}
-                <Link className="text-button" to="/validator/scoring">
-                  Scoring
-                </Link>
-                <Link className="text-button" to="/validator/data-penelitian">
-                  Dataset
-                </Link>
-              </span>
-            </article>
-          ))}
-        </div>
+                <div className="mt-3">
+                  <TombolAksi report={report} />
+                </div>
+              </article>
+            ))}
+          </div>
+        </>
       )}
     </section>
+  );
+}
+
+// Checklist 5 kriteria — dipakai tabel desktop dan kartu ponsel.
+function DaftarChecklist({ siap }: { siap: Kesiapan }) {
+  return (
+    <ul className="flex max-w-64 flex-wrap gap-1.5 text-xs">
+      <li
+        className={`status ${siap.lengkap ? "status-green" : "status-red"}`}
+      >
+        {siap.lengkap ? "✓" : "✗"} Lengkap
+      </li>
+      <li
+        className={`status ${siap.terbit ? "status-green" : "status-neutral"}`}
+        title="Penilaian mandiri terbit langsung; lapor-cepat diterima akun Pesantren."
+      >
+        {siap.terbit ? "✓" : "✗"} Terbit
+      </li>
+      <li
+        className={`status ${siap.skorAda ? "status-green" : "status-red"}`}
+      >
+        {siap.skorAda ? "✓" : "✗"} Skor
+      </li>
+      <li
+        className={`status ${siap.pdfAda ? "status-green" : "status-neutral"}`}
+      >
+        {siap.pdfAda ? "✓" : "✗"} PDF
+      </li>
+      <li
+        className={`status ${siap.checksumCocok ? "status-green" : "status-amber"}`}
+      >
+        {siap.checksumCocok ? "✓" : "✗"} Checksum bank
+      </li>
+    </ul>
+  );
+}
+
+// Tombol aksi di kolom akhir tabel (rata kanan) atau bawah kartu ponsel.
+function TombolAksi({
+  report,
+  rataKanan,
+}: {
+  report: Report;
+  rataKanan?: boolean;
+}) {
+  return (
+    <div
+      className={rataKanan ? "flex flex-wrap justify-end gap-2" : "flex flex-wrap gap-2"}
+    >
+      {isPublishedStatus(report.validationStatus) ? (
+        <Link className="secondary-button" to={`/laporan/${report.id}`}>
+          PDF
+        </Link>
+      ) : null}
+      <Link className="secondary-button" to="/validator/scoring">
+        Scoring
+      </Link>
+      <Link className="secondary-button" to="/validator/data-penelitian">
+        Dataset
+      </Link>
+    </div>
   );
 }

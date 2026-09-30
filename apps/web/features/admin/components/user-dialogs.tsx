@@ -56,7 +56,7 @@ export function DialogBuatAkun({
   open: boolean;
   pesantrenAktif: Institution[];
   onClose: () => void;
-  onCreate: (nilai: NilaiAkunBaru) => { ok: boolean; error?: string };
+  onCreate: (nilai: NilaiAkunBaru) => Promise<{ ok: boolean; error?: string }>;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -77,7 +77,7 @@ export function DialogBuatAkun({
     setInstitutionCode("");
     setGalat(null);
   }, [open]);
-  const simpan = () => {
+  const simpan = async () => {
     if (name.trim().length < 2) {
       setGalat("Nama pengguna minimal 2 karakter.");
       return;
@@ -95,7 +95,7 @@ export function DialogBuatAkun({
       setGalat("Pesantren wajib memilih satu pesantren aktif.");
       return;
     }
-    const hasil = onCreate({ name, email, roleId, institutionCode });
+    const hasil = await onCreate({ name, email, roleId, institutionCode });
     if (hasil.ok) onClose();
     else setGalat(hasil.error ?? "Gagal membuat akun.");
   };
@@ -123,7 +123,7 @@ export function DialogBuatAkun({
             onChange={(e) => setEmail(e.target.value)}
           />
         </Field>
-        <Field label="Kata sandi* (tidak disimpan di prototipe)">
+        <Field label="Kata sandi*">
           <input
             type={tampil ? "text" : "password"}
             className={inputCls}
@@ -190,7 +190,7 @@ export function DialogBuatAkun({
           <button type="button" className="secondary-button" onClick={onClose}>
             Batal
           </button>
-          <button type="button" className="primary-button" onClick={simpan}>
+          <button type="button" className="primary-button" onClick={() => void simpan()}>
             Buat akun
           </button>
         </div>
@@ -210,10 +210,10 @@ export function DialogUbahAkun({
   user: User | null;
   pesantrenAktif: Institution[];
   onClose: () => void;
-  onSave: (id: string, nilai: { name: string; email: string; institutionCode: string }) => {
-    ok: boolean;
-    error?: string;
-  };
+  onSave: (
+    id: string,
+    nilai: { name: string; email: string; institutionCode: string },
+  ) => Promise<{ ok: boolean; error?: string }>;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -227,7 +227,7 @@ export function DialogUbahAkun({
     setGalat(null);
   }, [open, user]);
   if (!user) return null;
-  const simpan = () => {
+  const simpan = async () => {
     if (name.trim().length < 2) {
       setGalat("Nama pengguna minimal 2 karakter.");
       return;
@@ -240,7 +240,7 @@ export function DialogUbahAkun({
       setGalat("Pesantren wajib terhubung ke satu pesantren aktif.");
       return;
     }
-    const hasil = onSave(user.id, { name, email, institutionCode });
+    const hasil = await onSave(user.id, { name, email, institutionCode });
     if (hasil.ok) onClose();
     else setGalat(hasil.error ?? "Gagal menyimpan.");
   };
@@ -293,7 +293,7 @@ export function DialogUbahAkun({
           <button type="button" className="secondary-button" onClick={onClose}>
             Batal
           </button>
-          <button type="button" className="primary-button" onClick={simpan}>
+          <button type="button" className="primary-button" onClick={() => void simpan()}>
             Simpan
           </button>
         </div>
@@ -311,7 +311,7 @@ export function DialogResetSandi({
   open: boolean;
   user: User | null;
   onClose: () => void;
-  onReset: (id: string, sandiBaru: string) => { ok: boolean; error?: string };
+  onReset: (id: string, sandiBaru: string) => Promise<{ ok: boolean; error?: string }>;
 }) {
   const [sandi, setSandi] = useState("");
   const [konfirmasi, setKonfirmasi] = useState("");
@@ -323,13 +323,13 @@ export function DialogResetSandi({
     setGalat(null);
   }, [open]);
   if (!user) return null;
-  const simpan = () => {
+  const simpan = async () => {
     const salah = validasiSandi(sandi, konfirmasi);
     if (salah) {
       setGalat(salah);
       return;
     }
-    const hasil = onReset(user.id, sandi);
+    const hasil = await onReset(user.id, sandi);
     if (hasil.ok) onClose();
     else setGalat(hasil.error ?? "Gagal mereset sandi.");
   };
@@ -368,7 +368,7 @@ export function DialogResetSandi({
           <button type="button" className="secondary-button" onClick={onClose}>
             Batal
           </button>
-          <button type="button" className="primary-button" onClick={simpan}>
+          <button type="button" className="primary-button" onClick={() => void simpan()}>
             Reset sandi
           </button>
         </div>

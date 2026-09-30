@@ -56,7 +56,7 @@ function escapePdfText(text: string): string {
 /** PDF satu halaman untuk seed/demo agar Lihat/Unduh langsung berfungsi tanpa biner bawaan. */
 export function buildSeedPdfBlob(code: string, title: string, fileName: string): Blob {
   const lines = [
-    "ISHAS — Dokumen detail indikator (data ilustrasi, prototipe frontend).",
+    "ISHAS — Dokumen detail indikator.",
     "",
     `Indikator: ${code} — ${title}`,
     `Berkas: ${fileName}`,

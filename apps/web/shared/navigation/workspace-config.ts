@@ -41,6 +41,8 @@ export const ROLE_NAVIGATION: Record<RoleId, NavItem[]> = {
     { label: "Data penelitian", path: "/validator/data-penelitian", icon: FileBarChart },
   ],
   pesantren: [
+    { label: "Dashboard", path: "/pesantren/dashboard", icon: Activity },
+    { label: "Hasil mandiri", path: "/pesantren/hasil-penilaian-mandiri", icon: FileBarChart },
     { label: "Validasi laporan", path: "/pesantren/validasi-laporan", icon: ListChecks },
     { label: "Lokasi & denah", path: "/pesantren/lokasi", icon: MapPinned },
     { label: "Tindak lanjut", path: "/pesantren/tindak-lanjut", icon: Activity },

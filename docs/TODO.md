@@ -1,5 +1,463 @@
 # TODO — Kontrol Kerja Aktif
 
+## Hapus penanda data dummy/ilustrasi dari UI (D-45) — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: aplikasi masuk tahap finishing, seluruh penanda dummy/
+ilustrasi/prototipe di UI dihapus (tanpa pengganti). Footer login diganti atribusi
+`Dibuat oleh FarrelGhozy · Projek ISHAS 2026`. Hanya teks UI; tanpa perubahan
+angka, rumus, hak akses, alur, atau struktur data.
+
+- [x] Shell workspace & publik: hapus footer sidebar + chip `Data publik · ilustrasi` + footer publik.
+- [x] Footer panel login → atribusi; hapus kalimat data ilustrasi.
+- [x] Hapus penanda dummy di halaman/komponen publik, Validator, Pesantren, Admin.
+- [x] `status-chip` entri `Data publik · ilustrasi` dihapus; ekspor JSON + PDF seed dibersihkan.
+- [x] Sinkronkan DESIGN_SYSTEM, ROUTES, WIREFRAMES, ROLES + catat D-45.
+- [x] Verifikasi: web lint/typecheck/312 test/build; API lint/typecheck/120 test hijau.
+- [ ] Cek visual browser belum dijalankan (Chrome Playwright tidak tersedia di lingkungan ini).
+- [ ] Review pemilik.
+
+## Login rilis + koreksi profile `prod` (D-43) — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: pastikan Docker Compose profile `prod` benar dan
+halaman `/login` di sana berupa form email + kata sandi, bukan pemilih akun demo.
+Cakupan: compose (service `api-prod`), Dockerfile web (build arg VITE), config
+auth (`DEMO_AUTH_ENABLED`/`COOKIE_SECURE`), endpoint `GET /auth/methods`, halaman
+`/login`. Tanpa perubahan schema, hak akses, atau rumus; mode mock dan login
+kartu dev tidak berubah.
+
+- [x] Backend: `DEMO_AUTH_ENABLED` + `COOKIE_SECURE` (config) dan `GET /auth/methods`.
+- [x] Frontend: `repository.authMethods`, halaman `/login` memilih form sandi
+      atau kartu demo dari respons server (`resolveLoginMode`).
+- [x] Docker: `api-prod` (`NODE_ENV=production`, `bun run start`, tanpa bind
+      mount), `web-prod` menerima build arg `VITE_USE_BACKEND`/`VITE_API_BASE`
+      (sebelumnya rilis terjebak mode mock), `api-prod` memaksa `DEMO_AUTH_ENABLED=false`.
+- [x] Test: `login-mode.test`, `authMethods` adapter, `GET /auth/methods` backend.
+- [ ] Cek visual `/login` mode prod di browser (belum dijalankan di sesi ini).
+- [ ] Review pemilik.
+
+## Instrumen penilaian mandiri 6 dimensi / 59 indikator (D-44) — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: ganti instrumen penilaian mandiri lama dengan 6 dimensi/
+59 indikator, masukkan ke seed demo dan seed inisiasi (`empty`). Kategori K3
+menjadi 6 (tambah Tanggap Darurat + Aksesibilitas). Regenerasi data demo ke
+instrumen baru; wording disesuaikan pemilik.
+
+- [x] Dokumen: D-44, `KATEGORI_K3.md` (tulis ulang), `INSTRUMEN_MANDIRI.md` (katalog baru).
+- [x] Kode: `kategori-k3.ts` 6 kategori + aspek; ikon `Siren`/`Accessibility`; tipe `K3CategoryId`.
+- [x] Bank: `instrument-v2.ts` (`INS-v2.0`, 6 dimensi/59 indikator) → bank live `INS-LIVE`.
+- [x] Seed demo: snapshot/draft/temuan/docs diregenerasi ke `INS-v2.0`.
+- [x] Seed inisiasi: `empty.ts` memuat bank penuh.
+- [x] `normalisasiJawaban` menangani skala frekuensi/keparahan; opsi frekuensi bank benar.
+- [x] Test web (312) + API (120) hijau; lint/typecheck hijau.
+- [ ] Cek browser desktop/tablet/ponsel (`/penilaian-mandiri`, `/hasil`, `/`, `/lapor`, `/validator/instrumen`).
+- [ ] Review pemilik.
+
+## Pengujian alur data + API tulis per fitur — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik (`ok kerjakan`): uji alur data dan API, terutama bagian
+yang menginputkan data, serta pastikan API berfungsi di setiap fitur. Cakupan:
+`apps/api/tests` (integrasi scope/rollback/idempotensi/upload), kontrak payload
+`apps/web/shared/api/http-repository` vs backend asli, dan E2E browser per peran.
+Tanpa mengubah perilaku produk/hak akses/rumus; perbaikan hanya untuk bug yang
+ditemukan + test regresi. Operasi destruktif hanya pada DB uji `ishas_test`.
+
+- [x] Baseline lint + typecheck + test (API 111, web 292) serta siapkan `ishas_test`.
+- [x] Tambah test L2 (isolasi scope tulis Pesantren, rollback `sequences`, unggah
+      bukti penyelesaian, detail laporan lintas-scope) + L3 kontrak payload
+      `http-repository` (opsi bank, dokumen, impor dataset, SAM, penanganan).
+- [x] Verifikasi temuan: impor dataset via `rows` **tetap divalidasi** server
+      (`dataset.ts:144`) + test regresi.
+- [x] Perbaikan bug (D-42) + test regresi + E2E: `?pesantren=` diabaikan pada
+      muat dingin sehingga draft penilaian mandiri tak dipulihkan dan prefill
+      `/lapor` hilang.
+- [x] E2E browser per peran (13/13 lulus: login 3 kartu, lapor, draft mandiri,
+      bank Validator, antrean Pesantren).
+- [x] Verifikasi akhir: API lint/typecheck/118 test; web lint/typecheck/305 test/build.
+- [x] Laporan hasil: [DATA_FLOW_API_TEST_REPORT.md](DATA_FLOW_API_TEST_REPORT.md).
+- [ ] Review pemilik.
+
+## Pemulihan draft/tautan `?pesantren=` pada muat dingin (D-42) — 30 September 2026 — `IN PROGRESS`
+
+Temuan pengujian alur data (L4/E2E): pada muat dingin mode backend, daftar
+pesantren terdaftar belum termuat sehingga `?pesantren=` dianggap tidak valid:
+`/penilaian-mandiri` jatuh ke draft `SELF-baru` (draft tersimpan tak dipulihkan)
+dan prefill `/lapor` hilang. Perbaikan: helper `pilihInstitusiAwal` +
+`paramPesantrenTidakSah` (`features/publik/lib/param-pesantren.ts`) dipakai kedua
+halaman; pesan "tidak sah" ditahan sampai daftar siap; pesantren terakhir
+dipulihkan saat daftar tiba. Memulihkan perilaku ROUTES §1 (param = sumber
+kebenaran tautan), tanpa mengubah hak akses/rumus.
+
+- [x] Catat temuan + akar masalah + cakupan.
+- [x] Kode perbaikan + 7 test regresi (`param-pesantren.test.ts`).
+- [x] Verifikasi: web lint/typecheck/305 test/build + E2E deep link & alur (13/13).
+- [ ] Review pemilik.
+
+## Pemisahan hasil penilaian mandiri dari Laporan Pesantren (D-41) — 29 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: `/pesantren/laporan` masih memuat penilaian mandiri
+padahal sudah ada `/pesantren/hasil-penilaian-mandiri`. Cakupan: docs (D-41 +
+amendemen D-32.e + ROLES/ROUTES/WIREFRAMES/FLOWS) + `apps/web` (laporan hanya
+kanal `lapor-cepat`) + tujuan notifikasi "telah terbit" (mock + seed + backend)
++ test regresi. Tanpa perubahan schema, hak akses, atau alur validasi.
+
+- [x] Catat D-41 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test regresi halaman Laporan dan target notifikasi.
+- [x] Verifikasi lint + typecheck + 292 test + build (web) + lint/typecheck + 111 test API (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + alur klik browser — belum dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
+- [ ] Review pemilik.
+
+## Poles UI/UX Dashboard Validator (D-40) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik untuk `/validator/dashboard`. Fokus pada
+hierarki ringkasan, akses cepat, kejelasan alur dan batas peran, kesiapan publikasi,
+snapshot, serta ringkasan skor/bank. Data, angka, processor, dan kewenangan tetap.
+
+- [x] Catat D-40 sebelum mengubah kode.
+- [x] Implementasi UI + test render.
+- [x] Verifikasi lint + typecheck + 288 test + build (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + keyboard + alur klik browser — belum
+      dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
+- [ ] Review pemilik.
+
+## Poles UI/UX bank instrumen Validator (D-39) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik untuk `/validator/instrumen`. Fokus pada
+ringkasan bank, pencarian/filter indikator, keterbacaan struktur dimensi dan
+indikator, serta form/bobot yang lebih nyaman. Tanpa mengubah kontrak D-24,
+rumus/bobot, akses, atau persistensi.
+
+- [x] Catat D-39 sebelum mengubah kode.
+- [x] Implementasi UI + test render halaman.
+- [x] Verifikasi lint + typecheck + 288 test + build (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + keyboard + alur klik browser — belum
+      dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
+- [ ] Review pemilik.
+
+## Poles UI/UX SAM-iSAFE Validator (D-38) — 29 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik (`ok kerjakan`). Cakupan UI/UX modul SAM-iSAFE
+Validator: pengisian, riwayat, detail, bank data, responsif, dan akses keyboard.
+Tanpa perubahan schema, hak akses, rumus skor, atau kontrak repository.
+
+- [x] Catat D-38 sebelum mengubah kode.
+- [x] Implementasi komponen dan halaman.
+- [x] Ubah grafik Perkembangan skor menjadi batang vertikal dengan baseline bawah
+      dan label nilai/tanggal yang jelas (arahan pemilik).
+- [x] Test render/interaksi yang relevan.
+- [x] Verifikasi lint + typecheck + 287 test + build (29 Sep 2026).
+- [ ] Cek visual desktop/tablet/ponsel + keyboard + alur klik browser — belum
+      dijalankan karena Chromium tidak tersedia (`/opt/google/chrome/chrome` tidak ditemukan).
+- [ ] Review pemilik.
+
+## Poles UI hasil mandiri Pesantren (D-37) — 29 September 2026 — `IN PROGRESS`
+
+Revisi visual atas arahan langsung pemilik. Cakupan hanya halaman
+`/pesantren/hasil-penilaian-mandiri` dan komponen detailnya: ringkasan metrik,
+kartu daftar, panel detail, metadata, serta responsive polish. Tidak mengubah
+scope, schema, hak akses, atau data publik.
+
+- [x] Catat D-37 sebelum mengubah kode.
+- [ ] Kode + test render.
+- [ ] Verifikasi lint + typecheck + test + build + cek visual 3 viewport.
+- [ ] Review pemilik.
+
+## Hasil penilaian mandiri detail Pesantren (D-36) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (hasil mandiri dashboard umum butuh versi
+detail di ruang Pesantren; Pesantren hanya melihat miliknya). Cakupan: docs
+(D-36 + ROUTES/ROLES/WIREFRAMES/FLOWS) + `apps/web` (route
+`/pesantren/hasil-penilaian-mandiri` + menu + halaman daftar/detail full
+internal scope ketat + test; tanpa schema/backend/hak baru). Scope Stage 07 +
+sentuhan baca Validasi/PDF; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-36 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test (route/menu/daftar/detail Terbit scope sendiri + blokir lintas-scope; 5 test baru termasuk regresi registrasi route + guard).
+- [x] Verifikasi: lint + typecheck + 284 test + build lulus (29 Sep 2026). Perbaikan: route didaftarkan di `app/routes.ts` (sebelumnya URL jatuh ke tidak-dikenal). Cek visual 3 viewport + alur klik browser belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## Dashboard publik kosong pada mode backend (D-35) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas laporan pemilik (dashboard `/` mode backend menampilkan `—/100`,
+`Jawaban terisi 0`, dan tren `Belum ada hasil tervalidasi` padahal seed demo
+sudah masuk). Cakupan: docs (D-35) + seed backend (backfill frozen/skor snapshot
+warisan) + `jawabanTerisi` end-to-end (tipe, mock submit, mapping backend,
+ScoreSummary) + test. Tanpa migrasi schema/kolom; tanpa mengubah redaksi D-02
+(jawaban mentah tetap tidak publik). Status stage lain tidak berubah sepihak.
+
+- [x] Catat D-35 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test (backfill frozen/skor seed + jawabanTerisi end-to-end;
+  paritas public-state stripped vs mock).
+- [x] Verifikasi: lint + typecheck + 279 test + build FE + lint + typecheck +
+  111 test BE lulus (29 Sep 2026, DB uji `ishas_test`). Cek visual 3 viewport
+  belum dijalankan di lingkungan ini.
+- [ ] Review pemilik + **seed ulang DB demo** (`cd apps/api && bun run seed:demo`)
+  agar frozen/skor snapshot masuk DB; tanpa seed ulang dashboard tetap kosong.
+
+## Dashboard Pesantren + nama pesantren (D-34) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (ruang Pesantren tanpa dashboard dan tanpa
+nama pesantren). Cakupan: docs (D-34 + ROUTES/ROLES/WIREFRAMES) + `apps/web`
+(route `/pesantren/dashboard` + halaman rangkuman + nav + redirect landing;
+tanpa schema/backend/hak baru). Scope Stage 07 + sentuhan baca Validasi;
+status stage lain tidak berubah sepihak.
+
+- [x] Catat D-34 + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + test (dashboard render + redirect/nav regresi).
+- [x] Verifikasi: lint + typecheck + 276 test + build lulus (29 Sep 2026).
+  Cek visual 3 viewport + alur klik browser belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
+## Pengerasan validasi SAM-iSAFE (D-26.h) — 29 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan perbaikanya`) dari temuan
+audit API + database SAM-iSAFE. Cakupan: validasi tanggal/kind/tenggat/bukti
+(mock + backend 1:1) + pelurusan docs (audit, status, transisi). Tanpa migrasi
+schema; status stage SAM (`REVIEW`) tidak berubah sepihak.
+
+- [x] Catat D-26.h + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Sinkron docs (DECISIONS D-26.h, BACKEND_API_CONTRACT §11, BACKEND_DATA_MODEL §7).
+- [x] Kode + test (tanggal kalender, kind whitelist, PATCH dueDate, bukti server;
+  tipe `Draft` SAM dihapus; tanpa migrasi).
+- [x] Verifikasi: lint + typecheck + 272 test FE + 105 test BE (DB uji
+  `ishas_test`) + build lulus (29 Sep 2026). Cek visual 3 viewport belum
+  dijalankan (Chromium tidak tersedia di lingkungan ini).
+- [ ] Review pemilik.
+
+## Pengerasan adapter backend (D-31) — 29 September 2026 — `IN PROGRESS`
+
+Arahan pemilik (`kerjakan`): backend + MySQL sudah menyala (`VITE_USE_BACKEND=true`).
+Tutup celah mode backend agar tidak menyajikan data dummy diam-diam.
+
+- [x] P0 — factory `backend-state` tanpa fallback mock + banner/coba lagi + `useCurrentUser`
+      (4 hook memakai `createBackendState`, `emptyIshasState`; `BackendNotice` di kedua shell).
+- [x] P1 — resolver tidak lagi memakai selector mock (spread `...mockRepository` dihapus;
+      test memastikan metode tidak ada).
+- [x] P2a — `buildPublicState` bertipe `IshasState` eksplisit + test draft tidak ikut publik.
+- [x] P2b — `GET /self-assessments/drafts/:id` + `getSelfAssessmentDraft` + restore draft
+      di `/penilaian-mandiri` (guard `draftLoading` agar autosave tidak menimpa draft server).
+- [ ] P2c — utang modul domain bersama: **ditunda** (refactor besar, docs sudah mencatat
+      pemindahan seed/modul saat backend mandiri); dikerjakan sebagai stage tersendiri.
+- [x] Verifikasi: lint + typecheck + test + build FE (257 test) & BE (104 test, DB uji)
+      + smoke endpoint (proxy `/api`, GET draft 200/404). Cek klik browser 3 viewport
+      belum dijalankan (channel Chrome Playwright tidak tersedia di lingkungan ini).
+- [ ] Review pemilik.
+
+## Backend Fase 6 — auth server + RBAC + seed dua mode (D-30.h, issue #9) — 29 September 2026 — `REVIEW`
+
+Arahan pemilik (`ok kerjakan` Fase 6 backend + commit + tutup issue): auth server
+(bcrypt + cookie sesi HttpOnly + RBAC + CSRF + rate limit), **login dev tetap
+satu klik kartu peran**, dan seed dua mode (demo kaya vs inti/awal). Cakupan:
+`apps/api` (auth, sessions repo, actor, app RBAC, routes auth, seed) dan
+`apps/web` (repository/http-client/auth-session/useCurrentUser/login/logout).
+Status stage lain tidak berubah.
+
+- [x] Backend: `auth/password` (bcrypt), `auth/session`, `auth/cookie`,
+      `auth/rate-limit`, `repo/sessions`, `domain/auth`, `routes/auth`,
+      `POST/GET /auth/login|demo-login|logout|me|password`.
+- [x] RBAC terpusat prefix di `app.ts` + CSRF double-submit; `X-Demo-Account`
+      hanya fallback non-production; `loadActor` cookie-first.
+- [x] Admin: `POST /admin/users` terima `password` opsional; reset sandi ke
+      sandi awal prototipe.
+- [x] Seed: demo beri `password_hash` semua user; `empty` jadi 3 akun inti +
+      `PSN-0018` aktif + bank minimal (data display kosong).
+- [x] Frontend: `httpRepository` auth, `auth-session` (`/auth/me`), `useCurrentUser`
+      klaim server, `X-CSRF-Token` otomatis, login kartu via `/auth/demo-login`,
+      Keluar via `/auth/logout`.
+- [x] Verifikasi: lint + typecheck + **101 test backend** (DB uji) + **249 test
+      frontend** + build lulus; smoke `demo-login → /auth/me → RBAC 403` OK.
+- [ ] Cek visual 3 viewport mode backend belum dijalankan (Chromium tidak tersedia).
+- [ ] Review pemilik.
+
+## Audit + perbaikan backend Fase 0–5 sebelum issue #6 (D-30.g) — 29 September 2026 — `REVIEW`
+
+Arahan pemilik (`validasi issues backend yang sudah ditutup fase 0–5 … sebelum
+lanjut ke #6`, lalu `ok kerjakan`): audit menyeluruh #3–#8 + #10 dan perbaikan
+semua temuan A–F. Cakupan: `apps/api` (rute, domain, migrasi, seed, test) dan
+`apps/web` (adapter/facade/halaman publik). Status stage lain tidak berubah.
+
+- [x] A — redaksi publik D-02 (`/public/results|recommendations|follow-ups`,
+      `pdf-data`), delete bukti kind+scope, urutan sesi/scope `accept`, status
+      HTTP 401/413, idempotensi `X-Request-Id`, pagination audit.
+- [x] B — migrasi `0004` FK bukti → `file_assets` + test.
+- [x] C — `uploadSelfEvidence` (`POST /uploads/self-evidence`), pustaka dokumen
+      publik via `repository`, halaman PDF publik via `pdf-data`
+      (`usePublicReportPdf`) + `openCampusPlanAsset`, `refreshPublicState`.
+- [x] D — seed fidelity: notifikasi `legacy_id`, deskripsi dimensi, `updated_by`,
+      ilustrasi denah disalin ke storage.
+- [x] E — higiene test: integrasi auto-skip bila `DB_NAME` bukan DB uji;
+      verifikasi `DB_NAME=ishas_test`.
+- [x] F — sinkron `BACKEND_API_CONTRACT`/`DATA_MODEL`/`STORAGE`/README/AGENTS.
+- [x] Verifikasi: lint + typecheck + 78 test backend (DB uji) + 244 test frontend
+      + build lulus; migrate `--fresh` (5 migrasi) + seed demo/empty OK.
+- [ ] Cek visual 3 viewport adapter (publik/Pesantren/Validator/SAM/admin).
+- [ ] Review pemilik sebelum mulai issue #6 (auth server + RBAC).
+
+## Implementasi backend Fase 1 + adapter publik (D-30.b) — 29 September 2026 — `DONE`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan fase 1`): endpoint Fase 1
+(issue #4) + swap adapter frontend publik (issue #10 parsial). Cakupan:
+`apps/api` (router, middleware aktor, repo/state, domain, storage, test) dan
+`apps/web` (http-client/repository/resolver/public-state). Status stage lain
+tidak berubah sepihak.
+
+- [x] Backend: baca publik + `/public/state`, lapor-cepat (+idempotensi),
+      penilaian-mandiri (draft/submit), unggah bukti, berkas, audit/notifikasi.
+- [x] Adapter: flag `VITE_USE_BACKEND`, proxy Vite, `usePublicState`; tulis
+      lapor/mandiri/bukti + baca publik beralih; sisanya fallback mock.
+- [x] Verifikasi: lint + typecheck + 48 test backend + 234 test frontend +
+      migrate/seed + build + smoke endpoint.
+- [ ] Cek visual 3 viewport + alur klik browser (publik adapter) — belum dijalankan.
+- [ ] Review pemilik; issue #4/#10 ditutup setelah disetujui/terverifikasi.
+
+## Rancangan backend (D-30) — 28 September 2026 — `REVIEW`
+
+Rancangan dulu, kode backend setelah review pemilik. Stack: Bun + TypeScript +
+MySQL 8.0.13+, storage lokal (tanpa S3), auth ditunda fase 6, seed satu file dua mode.
+Dokumen: `BACKEND_OVERVIEW/DATA_MODEL/API_CONTRACT/STORAGE/MIGRATION/ISSUES.md`.
+Issues GitHub: **8 issue `#3`–`#10`**, milestone `Backend MVP`, label
+`backend`/`fase-0`…`fase-6`/`adapter`, relasi `blocked-by`. Sinkron idempoten via
+`bash scripts/create-backend-issues.sh` (pakai `env -u GITHUB_TOKEN` bila token environment invalid).
+
+- [x] Tulis 6 dokumen backend + D-30 + skrip issues.
+- [x] Validasi & pendetailan dokumentasi + issue (D-30.a): sinkron `DATA_MODEL.md`
+      ke v15; lengkapi DDL (kolom hilang, FK, `sequences`, `index_history`,
+      `lapor_drafts`, `k3_*`, `instrument_versions`); perdetail API/storage;
+      skrip issues idempoten + label fase/milestone/blocked-by.
+- [x] Fase 0 (issue #3): `apps/api` (Bun+TS+MySQL) — migrasi schema v15, seed
+      `--mode=demo|empty`, `GET /health`. Verifikasi: migrate + seed demo/empty +
+      3 test + health lulus; lint + typecheck bersih (28 Sep 2026).
+- [x] Fase 1 (issue #4): baca publik + lapor + penilaian-mandiri + unggah bukti +
+      berkas + `/public/state` (D-30.b). Verifikasi: lint + typecheck + 48 test
+      (unit + integrasi DB) + migrate/seed + smoke endpoint lulus (29 Sep 2026).
+- [x] Adapter frontend publik (issue #10, parsial): `shared/api/http-client`,
+      `http-repository`, resolver `VITE_USE_BACKEND`, `usePublicState`, proxy
+      Vite; tulis `lapor`/`mandiri`/bukti + baca publik beralih. Verifikasi:
+      lint + typecheck + 229 test + build lulus (29 Sep 2026); modul lain
+      (Pesantren/Validator/SAM/admin) menyusul per fase, fallback mock.
+- [x] Fase 2 (issue #5): validasi + lifecycle + lokasi/denah + tindak lanjut +
+      `GET /pesantren/state` (D-30.c). Verifikasi: lint + typecheck + 55 test
+      (unit + integrasi DB) + smoke endpoint lulus (29 Sep 2026).
+- [x] Adapter ruang Pesantren (issue #10, lanjutan): `usePesantrenState` +
+      `refreshPesantrenState`, method Pesantren di resolver; validasi/lokasi/
+      denah/tindak lanjut/laporan beralih. Verifikasi: 233 test frontend + build.
+- [x] Fase 3 (issue #6): bank live (CRUD + checksum + audit) + dokumen PDF
+      (unggah/upsert/manual/visibilitas) + dataset (ekspor whitelist D-02 +
+      impor pratinjau→`Menunggu validasi`) + audit publikasi 5 kriteria (D-30.d).
+      Verifikasi: lint + typecheck + 61 test (unit + integrasi DB) + build lulus
+      (29 Sep 2026).
+- [x] Adapter ruang Validator non-SAM (issue #10, lanjutan): `useValidatorState`
+      + `refreshValidatorState`, method bank/dokumen/dataset di resolver,
+      `apiBlob`; halaman bank/dokumen/dataset/audit/scoring/dashboard beralih
+      saat `VITE_USE_BACKEND=true`. Verifikasi: 233 test frontend + build lulus.
+- [x] Fase 4 (issue #7): SAM-iSAFE — bank kategori/soal (CRUD + pindah + urutan
+      + aktif, tolak hapus terpakai), pengamatan (buat/jawab/complete/review/hapus),
+      tindak lanjut temuan 0/1 (unik aktif per soal + batal ≥10), skor dinamis
+      aktif×2, bukti foto; migrasi `0002` unique aktif generated (D-30.e).
+      Verifikasi: lint + typecheck + 65 test (unit + integrasi DB) + build lulus
+      (29 Sep 2026). Adapter ruang Validator SAM: `useValidatorState` + method
+      bank/pengamatan/tindak lanjut/`uploadSamEvidence` + `EvidencePreview`
+      backend; 238 test frontend + build lulus.
+- [x] Fase 5 (issue #8): admin (pesantren + pengguna + proteksi + audit filter +
+      reset demo) + notifikasi baca + storage penuh (tmp→rename, `owner_ref`,
+      sweep yatim) + migrasi aset IndexedDB→server terkunci flag (D-30.f).
+      Verifikasi: lint + typecheck + 71 test (unit + integrasi DB) + build lulus
+      (29 Sep 2026). Adapter ruang Super Admin: `useAdminState` +
+      `useWorkspaceState` (shell), method admin/notifikasi/migrasi, `reset()`
+      via endpoint, tombol tandai-dibaca, kartu migrasi aset; 242 test frontend
+      + build lulus. Catatan: `sharp` belum dipakai (decode menggantung di
+      lingkungan ini); validasi magic-bytes + dimensi tetap.
+- [x] Fase 6 (issue #9): auth server + RBAC + seed dua mode (D-30.h; rincian di
+      bagian paling atas).
+- [ ] Cek visual 3 viewport adapter publik/Pesantren/Validator termasuk SAM +
+      review pemilik (Fase 1–4/#10).
+
+## Perbaikan invarian seed + bug alur data frontend — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`kerjakan semuanya`) dari hasil validasi seed
+dan alur data frontend. Cakupan: seed, dua bug store, robustness processor, dan
+sinkronisasi satu dokumen. Tanpa mengubah perilaku produk, hak akses, copy, atau
+rumus/ambang. Issues: **#11–#15**. Status stage lain tidak berubah sepihak.
+
+- [x] #11 Seed invarian: `RPT-0003` → `Proses` (rec sudah `Berjalan`); `RPT-0007`
+      → `Pending` (rec masih `Belum ditindaklanjuti`) + test invarian; komposisi
+      19 laporan/17 temuan/17 rekomendasi dipertahankan. Catatan: temuan awal
+      RPT-0004 keliru (finding-nya memang `Berjalan`), tidak diubah.
+- [x] #12 `upsertInstrumentDoc` mengenali indikator bank live (`instrument`), bukan
+      hanya `instrumentVersions` + test unggah.
+- [x] #13 `createSamAssessment` memakai `selectRegisteredInstitutions` + test negatif.
+- [x] #14 Draft seed `SELF-PSN-0018` diberi `instrumentChecksum`;
+      `kategoriOfFinding` meneruskan bank live.
+- [x] #15 Sinkronkan `DASHBOARD_DATA_FLOW.md` schema v6 → v15.
+- [x] Verifikasi: lint + typecheck + 224 test + build lulus (28 Sep 2026; +5 test baru).
+- [ ] Review pemilik.
+
+Catatan validasi 28 September 2026: alur inti `lapor → Menunggu validasi →
+Terima/Tolak → selectPublicReports` sudah benar dan tidak membocorkan laporan
+Menunggu/Ditolak/Completed/arsip. Temuan hanya konsistensi data seed (RPT-0003 &
+RPT-0007), dua celah store, robustness processor, dan satu dokumen usang.
+
+## Penjelasan label Diterima + stage Proses di area Validator — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan, kaya gini dulu aja`):
+label `Validator Pesantren` rancu dengan peran Validator, dan stage `Proses`
+membingungkan untuk penilaian mandiri. Cakupan baca-saja (tanpa ubah perilaku):
+`StatusChip` dapat tooltip arti tiap stage; label dataset menjadi
+`Diterima oleh (akun Pesantren)`; placeholder cari menyebut akun Pesantren;
+checklist audit memakai `Diterima akun Pesantren`. Tambahan 28 Sep 2026:
+daftar Audit publikasi menjadi tabel (kolom Laporan + Checklist kesiapan +
+Validasi + Aksi) dengan tombol PDF/Scoring/Dataset di akhir; kartu menumpuk
+tetap dipakai di layar kecil. Scope Stage 08 + sentuhan baca Validator;
+status stage lain tidak berubah sepihak.
+
+- [x] Kode + test render (+ tooltip chip, label, placeholder).
+- [x] Verifikasi: lint + typecheck + 219 test + build lulus (28 Sep 2026).
+- [x] Tabel audit + tombol aksi (kode + test; lint + typecheck + 219 test + build lulus, 28 Sep 2026).
+- [ ] Cek visual browser (tooltip hover chip + label dataset/audit): belum dijalankan di lingkungan ini (Chrome tidak tersedia).
+- [ ] Review pemilik.
+
+## Usulan rekomendasi pelapor + final Pesantren (D-29) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): rekomendasi tindakan
+diusulkan pelapor di `/lapor` (opsional), difinalkan Pesantren saat Terima,
+baru tampil di `/rekomendasi`. Scope lapor-cepat dulu; satu laporan satu
+rekomendasi. (Perilaku turunan penilaian-mandiri kemudian diganti D-32:
+penilaian mandiri tidak lagi membentuk temuan.) Schema v14→v15.
+
+- [x] Catat D-29 + sinkron FLOWS/WIREFRAMES/DATA_MODEL sebelum mengubah kode.
+- [x] Kode + migrasi v14→v15 + test (lint + typecheck + 219 test + build lulus, 28 Sep 2026; +4 test D-29).
+- [ ] Cek visual 3 viewport + alur klik browser (lapor → validasi → rekomendasi): belum dijalankan di lingkungan ini (Chrome tidak tersedia).
+- [ ] Review pemilik.
+
+## Pengayaan seed demo presentasi — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (seed harus menampilkan semua data dan
+kondisi untuk presentasi). Cakupan: seed saja (tanpa perubahan perilaku):
+RPT-0017 arsip D-07, RPT-0018 Pending prioritas Rendah + bukti, RPT-0019
+milik PSN-0023 Nonaktif (demo D-08), USR-006 Menunggu, draft SELF-PSN-0018,
+SAM-0004 Berlangsung, AREA-013/BLD-005 tanpa denah, audit + notifikasi,
+counters report 20/institusi 23. Test komposisi
+`seed-composition.test.ts` mengunci kondisi demo.
+
+- [x] Tambah record + sesuaikan test angka (laporan 19, kanal 9/4, rekap 6/4, peta 6, RPT-0020).
+- [x] Verifikasi teknis: lint + typecheck + 215 test + build lulus (28 Sep 2026).
+- [ ] Cek visual browser (arsip tampil, filter Berlangsung/Menunggu terisi, draft lanjut, PSN-0023 tersembunyi publik).
+- [ ] Review pemilik.
+
+## Pematangan bank data SAM-iSAFE (D-26.f) — 28 September 2026 — `IN PROGRESS`
+
+Revisi atas arahan langsung pemilik (`ok kerjakan`): bank SAM-iSAFE kurang
+matang + tampilan HP lemah. Cakupan: CRUD lengkap kategori/soal (ubah, hapus
+berkonfirmasi, pindah kategori, urutan), panduan observasi + contoh bukti per
+soal yang bisa diubah, penanda duplikat KAT-03/KAT-05, accordion + tombol
+44px + input 16px untuk portrait 390×844. Bank `SAM-KAT-*` terpisah dari
+kategori sistem `KAT-*`. Schema v13→v14. Stage: `planning/STAGE_SAM_ISAFE.md`.
+
+- [x] Catat D-26.f + revisi IN PROGRESS sebelum mengubah kode.
+- [x] Kode + migrasi v13→v14 + seed + test.
+- [x] Verifikasi teknis: lint + typecheck + 208 test + build lulus (28 Sep 2026; +10 test bank D-26.f).
+- [ ] Cek visual 3 viewport + keyboard + alur klik browser (bank CRUD, accordion HP): belum dijalankan di lingkungan ini.
+- [ ] Review pemilik.
+
 ## SAM-iSAFE fase 2 Validator (D-26.e) — 27 September 2026 — `IN PROGRESS`
 
 Revisi atas arahan langsung pemilik (`ok kerjakan fase 2` + UI profesional):
@@ -241,7 +699,7 @@ IN PROGRESS karena pemeriksaan penerimaannya belum lengkap, bukan dinyatakan DON
 - [x] Patokan dokumen: `KATEGORI_K3.md` + D-15 (struktur Kategori→Aspek→Indikator, Ekstrem prototipe, risiko tetap pengelola).
 - [x] Sinkronisasi: DATA_MODEL (schema v6, RiskLevel, category/aspect), FLOWS (cascading opsional lapor-cepat), DESIGN_SYSTEM (Ekstrem → status-red + Flame).
 - [ ] Review dokumen bersama pemilik/dosen sebelum implementasi dianggap final.
-- [x] Implementasi kode mengikuti patokan ini (seed INS-v1.1, migrasi v6, rekap per kategori, form cascading, test).
+- [x] Implementasi kode mengikuti patokan ini (seed INS-v1.1, migrasi v6, rekap per kategori, form cascading, test). **Digantikan D-44** (6 kategori/59 indikator).
 - [x] Verifikasi: lint + typecheck + 103 test + build lulus (19 Sep 2026). Cek visual 3 viewport browser menyusul (Chromium tak tersedia di lingkungan ini).
 
 ## Gambar bukti Pelaporan — 18 September 2026
@@ -404,8 +862,22 @@ Keputusan produk dicatat di `DECISIONS.md`; calon pembangunan di `planning/` bel
 ## Stage 08 — Penilaian mandiri — `IN PROGRESS`
 
 - [x] Salin-adaptasi alur tanpa penugasan + kunci versi Published + draft lokal + lanjutkan setelah refresh.
-- [x] Tinjau kelengkapan + kirim untuk validasi (tidak ada jalur tampil langsung sebelum validasi).
-- [ ] Hasil yang `Diterima` tampil dengan label kanal; cek 3 viewport; lint + typecheck + build.
+- [x] Tinjau kelengkapan + kirim penilaian yang langsung `Terbit` (tanpa validasi Pesantren, D-32).
+- [ ] Hasil `Terbit` tampil dengan label kanal tanpa temuan/tindak lanjut; cek 3 viewport; lint + typecheck + build.
+
+## Revisi D-32 — Penilaian mandiri terbit langsung tanpa validasi & tanpa temuan — 29 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: penilaian mandiri tidak divalidasi Pesantren (hanya
+`lapor-cepat` yang divalidasi); hasil penilaian langsung terbit; tidak terhubung
+ke pelaporan/temuan/tindak lanjut.
+
+- [x] Catat D-32 + sinkron FLOWS/ROLES/ROUTES/WIREFRAMES/DATA_MODEL/DATA_REQUIREMENTS/KATEGORI_K3/TEST_PLAN/BACKEND_* + `apps/web/FLOW.md`.
+- [x] Tipe `ValidationStatus` `Terbit` + `HandlingStatus` `Tidak berlaku` + chip status.
+- [x] Frontend: submit mandiri/impor → `Terbit`, derivasi temuan hanya `lapor-cepat`, selector/agregat menerima `Terbit`, UI publik/Pesantren/Validator/Admin.
+- [x] Backend: domain self-assessment/derive/pesantren/dataset + gerbang PDF `Terbit`.
+- [x] Seed: 5 laporan mandiri → `Terbit`/`Tidak berlaku`, hapus 8 temuan + 8 rekomendasi turunan.
+- [x] Test web 258 lulus; backend 98 lulus (6 gagal pra-eksisting unggah/storage/reset-demo, juga gagal di commit basis).
+- [ ] Cek visual 3 viewport + keyboard browser (belum dijalankan; Chromium tidak tersedia di lingkungan ini).
 
 ## Stage 09 — Admin + sinkron dokumen + rilis REVIEW — `IN PROGRESS`
 

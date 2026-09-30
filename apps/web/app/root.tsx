@@ -16,7 +16,7 @@ export const meta: Route.MetaFunction = () => [
   {
     name: "description",
     content:
-      "ISHAS: penilaian K3L pesantren. Dashboard publik, lapor cepat, dan penilaian mandiri. Data ilustrasi prototipe frontend.",
+      "ISHAS: penilaian K3L pesantren. Dashboard publik, lapor cepat, dan penilaian mandiri.",
   },
 ];
 

@@ -1,7 +1,13 @@
 // Selector murni di atas IshasState. Semua pembacaan data tervalidasi lewat sini
 // agar dashboard/hasil/peta konsisten — docs DATA_MODEL.md §3, DATA_REQUIREMENTS §6.
 
-import type { Institution, Recommendation, Report, RiskFinding, User } from "../types";
+import type { Institution, Recommendation, Report, RiskFinding, User, ValidationStatus } from "../types";
+
+// D-32: `Diterima` (lapor-cepat) dan `Terbit` (penilaian-mandiri) sama-sama
+// sudah tampil/tersedia publik.
+export function isPublishedStatus(status: ValidationStatus | string): boolean {
+  return status === "Diterima" || status === "Terbit";
+}
 
 export function selectRegisteredInstitutions(state: {
   institutions: Institution[];
@@ -18,7 +24,7 @@ export function selectRegisteredInstitutions(state: {
 }
 
 export function selectValidatedReports(state: { reports: Report[] }): Report[] {
-  return state.reports.filter((r) => r.validationStatus === "Diterima" && !r.archivedAt);
+  return state.reports.filter((r) => isPublishedStatus(r.validationStatus) && !r.archivedAt);
 }
 
 // Bacaan publik (D-08): hanya laporan Diterima + belum diarsip + milik pesantren

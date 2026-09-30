@@ -2,23 +2,46 @@ import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { Bell, BriefcaseBusiness, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
-import { sessionStore, useSession } from "~/shared/auth/session";
-import { resolveWorkspaceAccess, workspaceRoleFor } from "~/shared/auth/access-policy";
+import { useSession } from "~/shared/auth/session";
+import {
+  getServerAccount,
+  refreshServerSession,
+  useServerAccount,
+} from "~/shared/auth/auth-session";
+import { resolveWorkspaceAccess, workspaceHome, workspaceRoleFor } from "~/shared/auth/access-policy";
 import { IshasMark } from "~/shared/components/ishas-mark";
 import { Modal } from "~/shared/components/modal";
 import { ROLE_NAVIGATION } from "~/shared/navigation/workspace-config";
-import { useMockState } from "~/mocks/store/mock-store";
+import { repository, USE_BACKEND } from "~/shared/api/repository";
+import { useWorkspaceState, useWorkspaceStatus } from "~/shared/api/workspace-state";
+import { BackendNotice } from "~/shared/components/backend-notice";
 
 export default function WorkspaceLayout() {
   const location = useLocation();
   const session = useSession();
+  const account = useServerAccount();
   const user = useCurrentUser();
-  const state = useMockState();
+  const state = useWorkspaceState();
+  const { error: stateNotice, refresh: refreshState } = useWorkspaceStatus();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Tab baru: cookie ada tapi cache sesi kosong → pulihkan sebelum guard menilai.
+  const [restoring, setRestoring] = useState(
+    () => USE_BACKEND && !getServerAccount() && !session,
+  );
   const profileRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!restoring) return;
+    let active = true;
+    refreshServerSession().finally(() => {
+      if (active) setRestoring(false);
+    });
+    return () => {
+      active = false;
+    };
+  }, [restoring]);
   useEffect(() => {
     setMobileOpen(false);
     setNotifOpen(false);
@@ -47,8 +70,17 @@ export default function WorkspaceLayout() {
     return () => media.removeEventListener("change", close);
   }, []);
 
+  if (restoring)
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <p className="text-xs font-semibold text-secondary-text">Memeriksa sesi…</p>
+      </div>
+    );
+
   const expectedRole = workspaceRoleFor(location.pathname);
-  const access = resolveWorkspaceAccess(location.pathname, session, user?.roleId ?? null);
+  // Mode backend memakai cookie (tanpa sessionStore); samakan bentuk sesi untuk guard.
+  const effectiveSession = session ?? (account ? { accountId: account.id, loginAt: "" } : null);
+  const access = resolveWorkspaceAccess(location.pathname, effectiveSession, user?.roleId ?? null);
   if (access === "login")
     return (
       <Navigate
@@ -91,16 +123,25 @@ export default function WorkspaceLayout() {
       </a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
         <div className="border-b border-line px-4 py-4">
-          <IshasMark variant="compact" />
+          <Link
+            to={workspaceHome(user.roleId)}
+            aria-label="ISHAS — dashboard"
+            className="inline-flex"
+          >
+            <IshasMark variant="compact" wordmark />
+          </Link>
         </div>
         {navigation}
-        <p className="border-t border-line p-4 text-xs text-secondary-text">
-          Data ilustrasi · prototipe frontend
-        </p>
       </aside>
       <Modal open={mobileOpen} onClose={() => setMobileOpen(false)} label="Menu ruang kerja">
         <div className="flex items-center justify-between gap-3">
-          <IshasMark variant="compact" />
+          <Link
+            to={workspaceHome(user.roleId)}
+            aria-label="ISHAS — dashboard"
+            onClick={() => setMobileOpen(false)}
+          >
+            <IshasMark variant="compact" wordmark />
+          </Link>
           <button
             type="button"
             className="secondary-button px-3"
@@ -178,9 +219,9 @@ export default function WorkspaceLayout() {
                     type="button"
                     role="menuitem"
                     className="flex min-h-14 w-full items-center gap-2 px-4 text-left text-xs font-bold text-[#b91c1c] hover:bg-[#fef2f2]"
-                    onClick={() => {
+                    onClick={async () => {
                       try {
-                        sessionStore.logout();
+                        await repository.logout();
                         window.location.assign("/");
                       } catch {
                         setError(
@@ -203,19 +244,37 @@ export default function WorkspaceLayout() {
           </p>
         ) : null}
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-4 py-6 lg:px-6">
+          <BackendNotice error={stateNotice} onRetry={refreshState} />
           <Outlet />
         </main>
       </div>
       <Modal open={notifOpen} onClose={() => setNotifOpen(false)} label="Notifikasi">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold text-heading">Notifikasi</h2>
-          <button
-            className="secondary-button px-3"
-            onClick={() => setNotifOpen(false)}
-            aria-label="Tutup notifikasi"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {notifications.some((n) => !n.read) ? (
+              <button
+                type="button"
+                className="text-button text-xs"
+                onClick={() =>
+                  void repository.markNotificationsRead({
+                    id: user.id,
+                    name: user.name,
+                    role: user.role,
+                  })
+                }
+              >
+                Tandai semua dibaca
+              </button>
+            ) : null}
+            <button
+              className="secondary-button px-3"
+              onClick={() => setNotifOpen(false)}
+              aria-label="Tutup notifikasi"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
         {notifications.length === 0 ? (
           <p className="py-4 text-sm text-secondary-text">Belum ada notifikasi.</p>

@@ -38,7 +38,7 @@ describe("administrasi Super Admin", () => {
         status: "Persiapan",
       }).ok,
     ).toBe(true);
-    expect(getState().counters.institution).toBe(23);
+    expect(getState().counters.institution).toBe(24); // seed 23 (termasuk PSN-0023) + 1
     // Validasi form: nama duplikat, alamat pendek, dan penanggung jawab kosong ditolak.
     expect(
       storeActions.addInstitution({

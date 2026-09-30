@@ -1,9 +1,14 @@
-// Single source of truth kategori/aspek K3 — turunan kode dari docs/KATEGORI_K3.md (D-15).
+// Single source of truth kategori/aspek K3 — turunan kode dari docs/KATEGORI_K3.md (D-15, D-44).
 // Dilarang mendefinisikan ulang daftar kategori di komponen/processor/seed lain;
 // impor dari sini. Ikon berupa nama komponen lucide-react yang sudah tersedia.
 
 export type K3CategoryId =
-  "KAT-KESELAMATAN" | "KAT-KESEHATAN" | "KAT-LINGKUNGAN" | "KAT-PSIKOSOSIAL";
+  | "KAT-KESELAMATAN"
+  | "KAT-DARURAT"
+  | "KAT-KESEHATAN"
+  | "KAT-LINGKUNGAN"
+  | "KAT-PSIKOSOSIAL"
+  | "KAT-AKSESIBILITAS";
 
 export type K3Aspect = {
   id: string;
@@ -16,7 +21,7 @@ export type K3Category = {
   name: string;
   description: string;
   /** Nama ikon lucide-react yang sudah dipakai proyek (tanpa lib baru). */
-  icon: "ShieldCheck" | "HeartPulse" | "Leaf" | "Brain";
+  icon: "ShieldCheck" | "Siren" | "HeartPulse" | "Leaf" | "Brain" | "Accessibility";
   coverage: string[];
   aspects: K3Aspect[];
 };
@@ -24,89 +29,147 @@ export type K3Category = {
 export const K3_CATEGORIES: K3Category[] = [
   {
     id: "KAT-KESELAMATAN",
-    name: "Keselamatan",
+    name: "Keselamatan dan Keamanan Gedung & Asrama",
     description:
-      "Aspek yang berkaitan dengan keselamatan fisik, fasilitas, dan kondisi lingkungan kerja/tempat kegiatan.",
+      "Aspek keselamatan fisik gedung/asrama, keamanan lingkungan, serta fasilitas khusus tempat kegiatan.",
     icon: "ShieldCheck",
     coverage: [
-      "Keselamatan bangunan",
+      "Kelaikan bangunan",
+      "Kondisi tangga",
+      "Koridor & jalur sirkulasi",
+      "Pintu & akses keluar",
       "Instalasi listrik",
-      "Risiko kebakaran",
-      "Jalur evakuasi",
-      "APAR",
-      "Tangga",
-      "Kondisi lantai",
-      "Pintu darurat",
-      "Peralatan keselamatan",
+      "Pencegahan kebakaran",
+      "Keamanan asrama",
+      "Keamanan area kampus",
+      "Keselamatan fasilitas olahraga",
+      "Keselamatan laboratorium/workshop",
     ],
     aspects: [
-      { id: "ASP-KES-001", categoryId: "KAT-KESELAMATAN", name: "Instalasi listrik" },
-      { id: "ASP-KES-002", categoryId: "KAT-KESELAMATAN", name: "Proteksi kebakaran & APAR" },
-      { id: "ASP-KES-003", categoryId: "KAT-KESELAMATAN", name: "Jalur evakuasi & pintu darurat" },
-      { id: "ASP-KES-004", categoryId: "KAT-KESELAMATAN", name: "Bangunan, tangga & lantai" },
-      { id: "ASP-KES-005", categoryId: "KAT-KESELAMATAN", name: "Peralatan keselamatan" },
+      { id: "ASP-KES-001", categoryId: "KAT-KESELAMATAN", name: "Struktur & bangunan" },
+      { id: "ASP-KES-002", categoryId: "KAT-KESELAMATAN", name: "Kelistrikan & kebakaran" },
+      { id: "ASP-KES-003", categoryId: "KAT-KESELAMATAN", name: "Keamanan lingkungan" },
+      { id: "ASP-KES-004", categoryId: "KAT-KESELAMATAN", name: "Fasilitas khusus" },
+    ],
+  },
+  {
+    id: "KAT-DARURAT",
+    name: "Sistem Tanggap Darurat & Antisipasi Kebencanaan",
+    description:
+      "Aspek kesiapan evakuasi, sistem peringatan, perlengkapan darurat, serta prosedur dan simulasi kebencanaan.",
+    icon: "Siren",
+    coverage: [
+      "Jalur evakuasi",
+      "Titik kumpul",
+      "Rambu keselamatan",
+      "Sistem alarm darurat",
+      "APAR",
+      "Kotak P3K",
+      "Emergency lighting",
+      "Sistem komunikasi darurat",
+      "Simulasi kebencanaan",
+      "SOP/Rencana tanggap darurat",
+    ],
+    aspects: [
+      { id: "ASP-DAR-001", categoryId: "KAT-DARURAT", name: "Jalur & titik evakuasi" },
+      { id: "ASP-DAR-002", categoryId: "KAT-DARURAT", name: "Sistem peringatan & perlengkapan" },
+      { id: "ASP-DAR-003", categoryId: "KAT-DARURAT", name: "Kesiapan & prosedur" },
     ],
   },
   {
     id: "KAT-KESEHATAN",
     name: "Kesehatan",
-    description: "Aspek yang berkaitan dengan kesehatan penghuni/pengguna lingkungan pesantren.",
+    description:
+      "Aspek kesehatan penghuni/pengguna lingkungan pesantren: layanan, sanitasi personal, dan kualitas lingkungan sehat.",
     icon: "HeartPulse",
     coverage: [
-      "Kebersihan",
-      "Sanitasi",
-      "Ketersediaan air bersih",
-      "Toilet",
-      "Pengelolaan makanan",
-      "Kebersihan dapur",
-      "Ventilasi",
-      "Sirkulasi udara",
+      "Ruang/fasilitas kesehatan",
+      "Pelayanan kesehatan",
+      "Akses pertolongan medis",
+      "P3K",
+      "Ketersediaan air minum",
+      "Sanitasi personal",
+      "Ventilasi & kualitas udara",
+      "Pencahayaan",
+      "Pengendalian penyakit",
+      "Fasilitas kebugaran/olahraga",
     ],
     aspects: [
-      { id: "ASP-SEH-001", categoryId: "KAT-KESEHATAN", name: "Air bersih & sanitasi" },
-      { id: "ASP-SEH-002", categoryId: "KAT-KESEHATAN", name: "Kebersihan dapur & makanan" },
-      { id: "ASP-SEH-003", categoryId: "KAT-KESEHATAN", name: "Ventilasi & sirkulasi udara" },
+      { id: "ASP-SEH-001", categoryId: "KAT-KESEHATAN", name: "Layanan & fasilitas kesehatan" },
+      { id: "ASP-SEH-002", categoryId: "KAT-KESEHATAN", name: "Air & sanitasi personal" },
+      { id: "ASP-SEH-003", categoryId: "KAT-KESEHATAN", name: "Kualitas lingkungan & aktivitas" },
     ],
   },
   {
     id: "KAT-LINGKUNGAN",
-    name: "Lingkungan",
-    description: "Aspek yang berkaitan dengan kondisi dan pengelolaan lingkungan pesantren.",
+    name: "Kesehatan Lingkungan",
+    description:
+      "Aspek pengelolaan sampah/limbah, air & drainase, sanitasi, pengendalian vektor, serta kebersihan lingkungan.",
     icon: "Leaf",
     coverage: [
       "Pengelolaan sampah",
+      "Pengelolaan limbah",
       "Drainase",
-      "Kualitas air",
-      "Kualitas udara",
-      "Limbah",
-      "Penghijauan",
+      "Air bersih",
+      "Air limbah",
+      "Toilet & kamar mandi",
+      "Pengendalian vektor",
       "Kebersihan lingkungan",
+      "Ruang terbuka hijau",
+      "Kualitas lingkungan",
     ],
     aspects: [
-      { id: "ASP-LING-001", categoryId: "KAT-LINGKUNGAN", name: "Pengelolaan sampah" },
-      { id: "ASP-LING-002", categoryId: "KAT-LINGKUNGAN", name: "Drainase, limbah & kualitas air" },
-      { id: "ASP-LING-003", categoryId: "KAT-LINGKUNGAN", name: "Kualitas udara & penghijauan" },
+      { id: "ASP-LING-001", categoryId: "KAT-LINGKUNGAN", name: "Sampah & limbah" },
+      { id: "ASP-LING-002", categoryId: "KAT-LINGKUNGAN", name: "Air & drainase" },
+      { id: "ASP-LING-003", categoryId: "KAT-LINGKUNGAN", name: "Sanitasi & vektor" },
+      { id: "ASP-LING-004", categoryId: "KAT-LINGKUNGAN", name: "Kebersihan & kualitas lingkungan" },
     ],
   },
   {
     id: "KAT-PSIKOSOSIAL",
-    name: "Psikososial",
+    name: "Psikososial: Bullying & Kesehatan Mental",
     description:
-      "Aspek yang berkaitan dengan kondisi psikologis, sosial, beban aktivitas, dan interaksi antar individu.",
+      "Aspek kebijakan dan penanganan bullying, layanan kesehatan mental, serta kondisi psikososial dan perlindungan kelompok rentan.",
     icon: "Brain",
     coverage: [
-      "Beban kerja",
-      "Beban aktivitas",
-      "Dukungan sosial",
-      "Stres",
-      "Konflik",
-      "Kepuasan kerja",
-      "Tekanan aktivitas",
-      "Hubungan antar individu",
+      "Kebijakan anti-bullying",
+      "Mekanisme pelaporan",
+      "Penanganan kasus bullying",
+      "Fasilitas konseling",
+      "Layanan kesehatan mental",
+      "Program promotif kesehatan mental",
+      "Kondisi psikososial",
+      "Perlindungan kelompok rentan",
     ],
     aspects: [
-      { id: "ASP-PSI-001", categoryId: "KAT-PSIKOSOSIAL", name: "Beban kerja & aktivitas" },
-      { id: "ASP-PSI-002", categoryId: "KAT-PSIKOSOSIAL", name: "Dukungan sosial & hubungan" },
+      { id: "ASP-PSI-001", categoryId: "KAT-PSIKOSOSIAL", name: "Kebijakan & penanganan bullying" },
+      { id: "ASP-PSI-002", categoryId: "KAT-PSIKOSOSIAL", name: "Layanan kesehatan mental" },
+      { id: "ASP-PSI-003", categoryId: "KAT-PSIKOSOSIAL", name: "Kondisi psikososial & perlindungan" },
+    ],
+  },
+  {
+    id: "KAT-AKSESIBILITAS",
+    name: "Fasilitas Disabilitas & Aksesibilitas",
+    description:
+      "Aspek ketersediaan jalur, ruang, fasilitas, dan informasi yang aksesibel bagi penyandang disabilitas.",
+    icon: "Accessibility",
+    coverage: [
+      "Jalur aksesibilitas",
+      "Toilet aksesibel",
+      "Tangga & handrail",
+      "Lift/platform lift",
+      "Pintu aksesibel",
+      "Parkir disabilitas",
+      "Guiding block",
+      "Signage aksesibilitas",
+      "Aksesibilitas asrama",
+      "Aksesibilitas ruang akademik",
+      "Aksesibilitas informasi",
+    ],
+    aspects: [
+      { id: "ASP-AKS-001", categoryId: "KAT-AKSESIBILITAS", name: "Jalur & sirkulasi" },
+      { id: "ASP-AKS-002", categoryId: "KAT-AKSESIBILITAS", name: "Ruang & fasilitas" },
+      { id: "ASP-AKS-003", categoryId: "KAT-AKSESIBILITAS", name: "Informasi & akses ruang" },
     ],
   },
 ];

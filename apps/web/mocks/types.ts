@@ -9,10 +9,16 @@ export type InstitutionStatus = "Persiapan" | "Aktif" | "Nonaktif";
 export type RoleId = "admin" | "validator" | "pesantren";
 export type RoleLabel = "Super Admin" | "Validator" | "Pesantren";
 export type ReportChannel = "lapor-cepat" | "penilaian-mandiri";
-export type ValidationStatus = "Menunggu validasi" | "Diterima" | "Ditolak";
+export type ValidationStatus = "Menunggu validasi" | "Diterima" | "Ditolak" | "Terbit";
 export type Severity = "Belum ditentukan" | "Tinggi" | "Sedang" | "Rendah";
 export type Priority = "Belum ditentukan" | "Tinggi" | "Sedang" | "Rendah";
-export type HandlingStatus = "Menunggu validasi" | "Pending" | "Proses" | "Completed" | "Ditolak";
+export type HandlingStatus =
+  | "Menunggu validasi"
+  | "Pending"
+  | "Proses"
+  | "Completed"
+  | "Ditolak"
+  | "Tidak berlaku";
 export type InstrumentStatus = "Draft" | "Published" | "Archived";
 export type InstrumentDocVisibility = "Public" | "Privat";
 
@@ -20,7 +26,7 @@ export type InstrumentDocVisibility = "Public" | "Privat";
 // versioning instrumen. Blob PDF di IndexedDB perangkat-lokal.
 export type InstrumentDoc = {
   id: string; // 'DOC-IND-K3L-001' stabil per indicatorId
-  indicatorId: string; // FK indikator INS-v1.1 ('IND-K3L-*')
+  indicatorId: string; // FK indikator bank live ('IND-K3L-*', D-44)
   categoryId?: string; // denormalisasi untuk filter (KAT-*)
   aspectId?: string; // denormalisasi (ASP-*)
   fileName: string;
@@ -142,6 +148,7 @@ export type Report = {
   indicatorId?: string; // D-19: warisan lapor-cepat lama; lapor-cepat baru tidak mengisi
   reporterSeverity?: Severity; // D-19: usulan mandiri pelapor (opsional, default 'Belum ditentukan')
   reporterPriority?: Priority; // D-19: usulan mandiri pelapor (opsional, default 'Belum ditentukan')
+  reporterRecommendation?: string; // D-29: usulan rekomendasi tindakan lapor-cepat (opsional, maks 500; mentah tidak publik)
   reporterName: string; // 2–100 karakter, wajib; tanpa opsi anonim (D-02)
   reporterUserId?: string; // FK User.id bila dikirim saat login (DATA_REQUIREMENTS §2); email bukan kunci relasi
   reporterAccountEmail?: string; // terisi bila dikirim saat login (pengelola)
@@ -156,9 +163,9 @@ export type Report = {
   instrumentVersionId?: string; // warisan versioning (bacaan legacy); kiriman baru memakai snapshot beku
   instrumentChecksum?: string; // D-24: checksum bank live saat kirim
   scorePercent?: number | null; // D-24: skor % beku penilaian-mandiri (sumber agregat + PDF)
-  pdfGeneratedAt?: string; // D-24: waktu PDF laporan dibuat (tampil publik setelah Diterima)
+  pdfGeneratedAt?: string; // D-24: waktu PDF laporan dibuat (tampil publik saat Diterima/Terbit)
   validationStatus: ValidationStatus;
-  severity: Severity; // keputusan final, 'Belum ditentukan' sampai akun Pesantren menerima (D-19)
+  severity: Severity; // keputusan final, 'Belum ditentukan' sampai akun Pesantren menerima (D-19); selalu 'Belum ditentukan' untuk penilaian mandiri (D-32)
   priority: Priority;
   handlingStatus: HandlingStatus;
   rejectionReason?: string; // wajib bila Ditolak, min 10
@@ -181,6 +188,7 @@ export type IndicatorAnswer = {
   value: string;
   note: string;
   evidenceName: string;
+  evidenceAssetId?: string; // D-27: blob foto upload (IndexedDB perangkat pengunggah)
   areaId: string;
   manualLocation?: string; // deskripsi manual bila area tak tersedia (D-11)
   planPoint: { x: number; y: number } | null;
@@ -195,6 +203,7 @@ export type SelfAssessmentSnapshot = {
   frozenIndicators?: FrozenIndicator[]; // D-24: copy beku soal + opsi + bobot
   scorePercent?: number | null; // D-24: skor % beku (sumber agregat + PDF)
   byDimension?: Record<string, number | null>; // D-24: skor % per dimensi
+  jawabanTerisi?: number; // D-35: cacah jawaban terisi (bukan isi; D-02 aman, dibawa publik)
 };
 
 export type SelfAssessmentDraft = {
@@ -388,7 +397,8 @@ export type IshasState = {
 
 // D-26: SAM-iSAFE khusus Validator — bank dinamis + pengamatan.
 // Skor per soal 0/1/2; maksimum dinamis = COUNT(aktif) x 2.
-export type SamAssessmentStatus = "Draft" | "Berlangsung" | "Selesai";
+// D-26.h.f: hanya Berlangsung|Selesai (Draft tidak pernah dipakai kode/seed).
+export type SamAssessmentStatus = "Berlangsung" | "Selesai";
 export type SamRiskLevel = "Risiko Rendah" | "Risiko Sedang" | "Risiko Tinggi";
 export type SamCategory = {
   id: string; // 'SAM-KAT-01' stabil
@@ -401,6 +411,8 @@ export type SamQuestion = {
   id: string; // 'SAM-Q-001' stabil
   categoryId: string;
   text: string;
+  panduan: string; // D-26.f: cara mengamati, bisa diubah Validator
+  contohBukti: string; // D-26.f: contoh bukti foto, bisa diubah Validator
   sortOrder: number;
   isActive: boolean;
 };

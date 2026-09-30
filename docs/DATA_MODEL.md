@@ -2,8 +2,11 @@
 
 ## Kontrak pembacaan dashboard — 18 September 2026
 
-Schema v6 mengikuti D-15 yang sudah ditambahkan. Tidak ada migrasi baru pada
-penyempurnaan ini. Katalog indikator hanya Published; klasifikasi jawaban memakai
+Schema `v15` mengikuti D-15, D-24 (bank live `INS-LIVE`), D-26/D-26.f
+(SAM-iSAFE + `panduan`/`contohBukti`), dan D-29 (`reporterRecommendation`).
+Rincian migrasi di §0. Nilai `MOCK_SCHEMA_VERSION` aktual ada di
+`apps/web/mocks/store/state.ts`.
+Bank instrumen live; klasifikasi jawaban memakai
 instrumentVersionId snapshot asal. Rekap lokasi memakai areaId, bukan nama area.
 Relasi dan batas metrik: [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md).
 Periode URL belum menjadi filter semua metrik; klaim periode mempersempit semua
@@ -21,10 +24,10 @@ Kode/schema belum diubah; jangan membuat titik tengah sebagai fallback lokasi.
 Semua relasi memakai **ID stabil**; label tampilan tidak pernah menjadi kunci.
 Persistensi browser berversi + reset seed. Dilarang menyimpan kata sandi/token.
 
-**Status: sketsa awal, belum kontrak yang siap dibuat menjadi kode.** Audit menemukan jawaban
-terkirim, hasil/periode, akun sesi, audit/notifikasi, dan riwayat denah belum lengkap. Baca
-`DATA_REQUIREMENTS.md` sebelum memakai skema di bawah. D-01–D-03 telah dijawab (8 September 2026);
-keputusan D-04–D-11 masih memengaruhi isinya.
+**Status: kontrak aktif frontend (schema v15).** Temuan audit 8 September
+sudah ditindaklanjuti lewat D-05–D-11 (9 September 2026), D-24, D-26, dan D-29.
+Baca `DATA_REQUIREMENTS.md` bersama skema di bawah; rumus/skala ilmiah final
+tetap menunggu penelitian.
 
 ## 0. Versi schema
 
@@ -34,11 +37,28 @@ keputusan D-04–D-11 masih memengaruhi isinya.
   menyimpan `scorePercent` + `pdfGeneratedAt`; draft memakai
   `instrumentChecksum` (berubah = ulang).
 
-- Calon `MOCK_STORAGE_KEY`: `ishas-mock-v11`. Aplikasi ISHAS
-- `MOCK_SCHEMA_VERSION`: `11` (v11 bank live D-24: `instrument` +
-  `instrumentChecksum` + opsi/bobot per jawaban + snapshot beku + skor % +
-  PDF artifact; `instrumentVersions` lama hanya bacaan legacy).
-- Rancangan pemeriksaan state yang benar-benar dibaca dari key : jika `schemaVersion !== 11`, pulihkan seed.
+- **Amendemen D-26.f (28 September 2026):** schema `v14`
+  (`MOCK_STORAGE_KEY: ishas-mock-v14`): `SamQuestion` bertambah
+  `panduan` + `contohBukti` (opsional, bisa diubah Validator);
+  migrasi v13→v14 mengisi default kosong. Bank `SAM-KAT-*` terpisah
+  dari kategori sistem `KAT-*`.
+
+- **Amendemen D-29 (28 September 2026):** schema `v15`
+  (`MOCK_STORAGE_KEY: ishas-mock-v15`): `Report` bertambah
+  `reporterRecommendation` (usulan rekomendasi tindakan lapor-cepat,
+  opsional, maks 500; usulan mentah tidak publik). Migrasi v14→v15
+  menormalisasi field baru tanpa menghapus record/ID.
+
+- **Versi aktif sekarang:** `MOCK_SCHEMA_VERSION: 15`
+  (`MOCK_STORAGE_KEY: ishas-mock-v15`, lihat `store/state.ts`). Pemeriksaan
+  state: bila `schemaVersion !== 15`, pulihkan seed.
+- **Rantai migrasi yang dipertahankan kode:** v4→v5→v6→…→v14→v15. Semua
+  langkah mempertahankan record/ID; snapshot/temuan lama tidak dihitung ulang.
+  - v10→v11: bank live `INS-LIVE` (D-24) — `instrument`, `instrumentChecksum`,
+    opsi/bobot per jawaban, snapshot beku, skor %, artefak PDF;
+    `instrumentVersions` lama menjadi bacaan legacy.
+  - v13→v14 (D-26.f): `SamQuestion.panduan` + `contohBukti` (default kosong).
+  - v14→v15 (D-29): `Report.reporterRecommendation` (opsional, maks 500).
 - Migrasi v6→v7 mempertahankan seluruh record/ID; hanya menambah
   `instrumentDocs` (seed 2 Public + 2 Privat ilustrasi). Snapshot/temuan lama
   tidak dihitung ulang.
@@ -47,7 +67,7 @@ keputusan D-04–D-11 masih memengaruhi isinya.
 type InstrumentDocVisibility = 'Public' | 'Privat';
 type InstrumentDoc = {
   id: string; // 'DOC-IND-K3L-001' stabil per indicatorId
-  indicatorId: string; // FK indikator INS-v1.1 ('IND-K3L-*')
+  indicatorId: string; // FK indikator bank live ('IND-K3L-*', D-44)
   categoryId?: string; // denormalisasi untuk filter (KAT-*)
   aspectId?: string; // denormalisasi (ASP-*)
   fileName: string; // 'detail-xxx.pdf'
@@ -84,7 +104,7 @@ type HandlingStatus =
 // 'Dihapus' (FLOWS §5) bukan nilai tersimpan: record dihapus beserta temuan + audit tetap ada;
 // alternatif arsip alih-alih hapus menunggu D-07.
 type InstrumentStatus = 'Draft' | 'Published' | 'Archived';
-type KategoriK3Id = 'KAT-KESELAMATAN' | 'KAT-KESEHATAN' | 'KAT-LINGKUNGAN' | 'KAT-PSIKOSOSIAL';
+type KategoriK3Id = 'KAT-KESELAMATAN' | 'KAT-DARURAT' | 'KAT-KESEHATAN' | 'KAT-LINGKUNGAN' | 'KAT-PSIKOSOSIAL' | 'KAT-AKSESIBILITAS'; // D-44
 type RiskLevel = 'Rendah' | 'Sedang' | 'Tinggi' | 'Ekstrem'; // D-15.b, asumsi prototipe
 type RecommendationStatus =
   | 'Belum ditindaklanjuti' | 'Berjalan' | 'Menunggu verifikasi' | 'Terverifikasi' | 'Dibatalkan'; // D-21: terminal per rekomendasi, wajib alasan
@@ -125,14 +145,18 @@ type Report = {
    indicatorId?: string; // warisan lapor-cepat lama + penilaian-mandiri; lapor-cepat baru tidak mengisi (D-19)
    reporterSeverity?: Severity; // usulan pelapor, opsional (D-19); default 'Belum ditentukan'
    reporterPriority?: Priority; // usulan pelapor, opsional (D-19); default 'Belum ditentukan'
- reporterName: string; // 2-100 karakter, wajib; selalu tampil apa adanya secara internal (tanpa opsi anonim, D-02)
+   reporterRecommendation?: string; // D-29: usulan rekomendasi tindakan lapor-cepat, opsional, maks 500; mentah tidak publik
+  reporterName: string; // 2-100 karakter, wajib; selalu tampil apa adanya secara internal (tanpa opsi anonim, D-02)
+  reporterUserId?: string; // FK User.id bila dikirim saat login (bukan email)
   reporterAccountEmail?: string; // terisi bila dikirim saat login (Pesantren)
- title: string; // 10-140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
- description: string; // min 20 (lapor-cepat) / ringkasan otomatis dari jawaban terkirim (penilaian-mandiri; aturan penyusunannya belum ditetapkan, D-04/D-05)
- areaId?: string; // FK Area.id; kebijakan tanpa area menunggu D-11
- planPoint?: { x: number; y: number } | null; // 0-100
- evidenceName?: string; // nama lampiran; data lama bisa hanya berupa nama dummy
- evidenceAssetId?: string; // ID blob bukti privat di IndexedDB perangkat-lokal (/lapor)
+  title: string; // 10-140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
+  description: string; // min 20 (lapor-cepat) / ringkasan otomatis dari jawaban terkirim (penilaian-mandiri; aturan penyusunannya belum ditetapkan, D-04/D-05)
+  areaId?: string; // FK Area.id; kebijakan tanpa area menunggu D-11
+  manualLocation?: string; // lokasi manual bila area belum tersedia (D-11)
+  locationSnapshot?: LocationSnapshot; // beku: { areaId?, locationText, floorNote, campusPlanVersionId, point }
+  planPoint?: { x: number; y: number } | null; // 0-100 (warisan baca)
+  evidenceName?: string; // nama lampiran; data lama bisa hanya berupa nama dummy
+  evidenceAssetId?: string; // ID blob bukti privat di IndexedDB perangkat-lokal (/lapor)
   contact?: string;
   instrumentVersionId?: string; // warisan versioning (bacaan legacy)
   instrumentChecksum?: string; // D-24: checksum bank live saat kirim
@@ -141,11 +165,18 @@ type Report = {
     validationStatus: ValidationStatus;
    severity: Severity; // default 'Belum ditentukan', hanya akun Pesantren yang mengubah (keputusan final, D-19)
    priority: Priority; // idem
- handlingStatus: HandlingStatus;
- rejectionReason?: string; // wajib bila Ditolak, min 10
- validationNote?: string;
- validatedBy?: string; validatedAt?: string;
- createdAt: string;
+  handlingStatus: HandlingStatus;
+  rejectionReason?: string; // wajib bila Ditolak, min 10
+  validationNote?: string;
+  validatedBy?: string; // FK User.id akun Pesantren
+  validatedByName?: string; // snapshot nama akun Pesantren saat keputusan (anti-rewrite histori)
+  validatedByRole?: string; // snapshot peran akun Pesantren saat keputusan
+  validatedAt?: string;
+  archivedAt?: string; // D-07: arsip, bukan hapus
+  archivedReason?: string;
+  observedAt?: string; // waktu observasi (bukan nama pelapor)
+  correctionOf?: string; // FK Report.id asal bila koreksi lewat laporan baru (D-07)
+  createdAt: string; submittedAt?: string; updatedAt?: string;
 };
 
 type SelfAssessmentDraft = { // belum dikirim; per perangkat (localStorage)
@@ -155,6 +186,7 @@ type SelfAssessmentDraft = { // belum dikirim; per perangkat (localStorage)
   instrumentVersionId: string; // warisan ('INS-LIVE' untuk kiriman baru)
   instrumentChecksum?: string; // D-24: checksum bank (beda = ulang dari awal)
   answers: Record<string, { value: string; note: string; evidenceName: string;
+  evidenceAssetId?: string; // D-27: blob foto upload (IndexedDB perangkat pengunggah)
   areaId: string; planPoint: { x: number; y: number } | null }>;
   activeIndex: number; updatedAt: string;
 };
@@ -163,6 +195,7 @@ type SelfAssessmentSnapshot = { // D-24: beku saat kirim
   submittedAt: string; answers: Record<string, {...}>;
   frozenIndicators?: { id, code, title, answerType, options[{value,label,weight,isFinding}], weight }[];
   scorePercent?: number | null; byDimension?: Record<string, number | null>;
+  jawabanTerisi?: number; // D-35: cacah jawaban terisi (D-02 aman), dibawa proyeksi publik
 };
 // Saat kirim perlu snapshot permanen seluruh jawaban yang terkait Report.
 // Sketsa ini belum memuat entitas snapshot/status kirim; lihat DATA_REQUIREMENTS §2.
@@ -202,6 +235,16 @@ type Floor = { id: string; name: string; planFile: string; planVersion: string;
 type Area = { id: string; institutionCode: string; buildingId: string;
  name: string; floor: string; zone: string;
  x: number; y: number; width: number; height: number };
+// D-14.a: lokasi beku per laporan/jawaban; titik tetap di versi denah asal.
+type LocationSnapshot = {
+  areaId?: string; locationText: string; floorNote: string;
+  campusPlanVersionId: string | null; point: { x: number; y: number } | null;
+};
+type CampusPlanVersion = {
+  id: string; institutionCode: string; revision: number; assetId: string;
+  width: number; height: number; uploadedBy: string; uploadedAt: string;
+  illustration: boolean;
+};
 // Format ID: BLD-001, FLR-001, AREA-001, RPT-0001, SELF-0001,
 // REC-<reportId>-<n>, RSK-<reportId>-<n>, INS-v1.0, IND-XXX-000,
 // AUD-DEMO-001, NOT-001 — semuanya stabil, tidak memakai nama sebagai kunci.
@@ -209,23 +252,24 @@ type Area = { id: string; institutionCode: string; buildingId: string;
 
 ## 3. Aturan tampil — bidang publik mengikuti D-02 (dijawab 8 September 2026)
 
-D-02: publik melihat **ringkasan saja** + **nama validator/PIC**. Nama/kontak pelapor, bukti,
-denah rinci + titik, jawaban mentah, alasan penolakan, dan audit tidak publik. Arsip pesantren
-nonaktif menunggu D-08.
+D-02: publik melihat **ringkasan saja** + **nama validator/PIC** + **foto bukti
+penilaian mandiri di PDF** (amendemen D-27). Nama/kontak pelapor, bukti
+lapor-cepat/penyelesaian, denah rinci + titik, jawaban mentah, alasan
+penolakan, dan audit tidak publik. Arsip pesantren nonaktif menunggu D-08.
 
-- Dashboard/hasil/peta/rekomendasi/laporan pimpinan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (+ temuan/rekomendasi turunannya), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
-- `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor + antrean `/pesantren/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02).
+- Dashboard/hasil/peta/rekomendasi/PDF laporan HANYA membaca `Report` dengan `validationStatus: 'Diterima'` (`lapor-cepat`) atau `'Terbit'` (`penilaian-mandiri`, D-32) + temuan/rekomendasi turunan (khusus `lapor-cepat`), dengan bidang sesuai matriks `DATA_REQUIREMENTS.md` §6.
+- `Menunggu validasi` hanya terlihat di layar konfirmasi pelapor lapor-cepat + antrean `/pesantren/validasi-laporan` pemilik scope. Tidak ada count antrean di dashboard publik (D-02). `Terbit` dan `Tidak berlaku` milik penilaian mandiri.
 - `Ditolak` hanya terlihat di arsip antrean Pesantren pemilik scope.
-- Agregat `/` dihitung dari himpunan `Diterima` lintas pesantren terdaftar; filter pesantren mempersempit ke satu `institutionCode`.
+- Agregat `/` dihitung dari himpunan `Diterima`/`Terbit` lintas pesantren terdaftar; filter pesantren mempersempit ke satu `institutionCode`.
 
 ## 4. Store actions (pengganti action asesor lama)
 
 | Action | Input | Hasil |
 |---|---|---|
-| `submitPublicReport` | field §FLOWS-2 + `reporterName` | `RPT-XXXX` + audit + notifikasi Pesantren |
+| `submitPublicReport` | field §FLOWS-2 + `reporterName` + usulan rekomendasi opsional | `RPT-XXXX` + audit + notifikasi Pesantren |
 | `saveSelfAssessmentDraft` | draft parsial | tersimpan lokal, `progress` dihitung ulang |
-| `submitSelfAssessment` | draft lengkap | snapshot jawaban terkirim + 1 `Report` + kandidat temuan + audit + notifikasi; ulang percobaan yang sama tidak menggandakan kiriman |
-| `acceptReport` | `id` + `severity` + `priority` (+ catatan) | `Diterima/Pending`; wajib keduanya terisi |
+| `submitSelfAssessment` | draft lengkap | snapshot jawaban terkirim + 1 `Report` `Terbit`/`Tidak berlaku` (tanpa temuan; D-32) + audit + notifikasi Pesantren "telah terbit"; ulang percobaan yang sama tidak menggandakan kiriman |
+| `acceptReport` | `id` + `severity` + `priority` (+ catatan) + rekomendasi final wajib untuk lapor-cepat (min 10, maks 500) | `Diterima/Pending` + 1 rekomendasi final; wajib ketiganya untuk lapor-cepat |
 | `rejectReport` | `id` + alasan min 10 | `Ditolak`; arsip + validator/waktu/alasan |
 | `updateHandlingStatus` | `id` + status baru + syarat per transisi (PIC/tenggat/bukti) | status baru + audit; jalur utama maju lewat `updateRecommendation`, manual untuk tanpa-rekomendasi/mundur/arsip (D-23.a) |
 | `updateRecommendation` | `id` + PIC/tenggat/progres/bukti/catatan/`verify` | rekomendasi maju + laporan otomatis `Proses`/`Completed`; progres dinormalisasi D-20 |
@@ -245,42 +289,45 @@ Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAsse
 ## 5. Seed kaya demo (agar setiap halaman dapat didemo ke dosen)
 
 Komposisi minimum §5 lama telah diperkaya (September 2026) menjadi data demo
-penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v11, D-24):
+penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v15, D-24 +
+D-26.f + D-29). Angka di bawah dikunci `seed-composition.test.ts`.
 
-- 3 pesantren `Aktif` (`PSN-0018` PP Al-Hikmah Malang, `PSN-0019` PP Nurul Iman
-  Batu, `PSN-0020` PP Darussalam Kediri) + 1 `Persiapan` (`PSN-0021`, tidak tampil
-  di pemilih — untuk demo aturan). `PSN-0020` sengaja tanpa pengelola aktif
-  sehingga TIDAK terdaftar: 2 pesantren terdaftar (kasus batas D-08/D-09).
-- 5 akun: Super Admin, 2 Validator, 2 Pesantren (satu per pesantren
-  terdaftar; kartu login tetap 3 akun — akun kedua ada di data untuk demo
-  isolasi scope di sisi data).
-- 3 laporan `Menunggu validasi` (antrean 1 untuk PSN-0018, 2 untuk PSN-0019) +
-  2 laporan `Ditolak` (arsip penolakan dengan alasan ≥ 10 karakter).
-- 11 laporan `Diterima`: 3 `Pending`/6 `Proses` tampil publik (5 lapor-cepat +
-  4 penilaian-mandiri) + 2 `Completed` non-arsip yang hanya tampil internal
-  (demo arsip D-07). Lapor-cepat baru memakai cascading D-15
-  (kategori → aspek → indikator opsional).
-- 15 temuan: `Ekstrem` 1 (APAR musala — demo D-15.b + ikon Flame), `Tinggi` 4,
-  `Sedang` 7, `Rendah` 3; seluruh 4 kategori K3 + baris `Belum dipetakan`
-  (lapor-cepat tanpa kategori); 1 temuan tanpa titik (demo "tanpa titik") dan
-  1 temuan non-fisik Psikososial tanpa titik; 1 temuan `Terverifikasi` di dalam
-  laporan `Proses` (demo penyelesaian sebagian, D-05: satu laporan banyak temuan);
-  1 temuan `Dibatalkan` (RPT-0009, demo D-21).
-- 15 rekomendasi: `Belum ditindaklanjuti` 3, `Berjalan` 7,
-  `Menunggu verifikasi` 1, `Terverifikasi` 3, `Dibatalkan` 1 (RPT-0009 +
-  alasan publik, demo D-21; progres 0–100, PIC, tenggat, bukti bervariasi).
-- 2 snapshot `INS-v1.1` terbaru sebagai sumber indeks (kontras demo: PSN-0018
-  ≈ 58 perlu perhatian vs PSN-0019 ≈ 70 baik) + 3 snapshot `INS-v1.0` historis
-  (tidak dihitung ulang); tren 6 periode ilustratif (Mar–Agu 2026) + periode
-  berjalan Sep 2026.
-- Lokasi: denah ilustrasi + titik untuk KEDUA pesantren terdaftar, 4 gedung,
-  12 area; 15 audit event + 3 notifikasi antrean; counter laporan `17`.
-- D-15: seed aktif `INS-v1.1` (4 kategori K3, 10 indikator termasuk Psikososial;
-  `INS-v1.0` diarsipkan untuk reproduksi snapshot lama). Mapping lama→baru di `KATEGORI_K3.md` §4.
-- D-24: bank live `INS-LIVE` turunan `INS-v1.1` (10 indikator + opsi/bobot bawaan);
-  kiriman baru membeku (`frozenIndicators` + `scorePercent` + `pdfGeneratedAt`).
+- **5 pesantren:** `PSN-0018` PP Al-Hikmah Malang (`Aktif`, terdaftar),
+  `PSN-0019` PP Nurul Iman Batu (`Aktif`, terdaftar), `PSN-0020` PP Darussalam
+  Kediri (`Aktif` tetapi **tanpa akun Pesantren aktif** → tidak terdaftar, kasus
+  batas D-08/D-09), `PSN-0021` (`Persiapan`, tidak tampil di pemilih),
+  `PSN-0023` (`Nonaktif`, arsip internal D-08).
+- **6 akun:** `USR-001` Super Admin, `USR-002` + `USR-005` Validator,
+  `USR-003` + `USR-004` Pesantren (satu per pesantren terdaftar), `USR-006`
+  Pesantren `Menunggu` (belum membuat pesantrennya terdaftar). Kartu login demo
+  tetap 3 peran.
+- **19 laporan:** 14 `lapor-cepat` + 5 `penilaian-mandiri`; status: 2 `Menunggu
+  validasi`, 5 `Terbit` (penilaian mandiri, D-32), 2 `Ditolak` (alasan ≥10), dan
+  10 `Diterima` (termasuk `RPT-0017` arsip `Completed` D-07 yang tidak tampil
+  publik).
+- **9 temuan + 9 rekomendasi:** seluruh 6 kategori K3 + baris `Belum
+  dipetakan`; level risiko `Rendah/Sedang/Tinggi/Ekstrem` (satu `Ekstrem`
+  demo D-15.b); satu temuan tanpa titik; satu temuan `Terverifikasi` di laporan
+  `Proses` (D-05 satu laporan banyak temuan); satu `Dibatalkan` (D-21).
+  Status rekomendasi mencakup `Belum ditindaklanjuti`, `Berjalan`, `Menunggu
+  verifikasi`, `Terverifikasi`, `Dibatalkan` (progres 0–100, PIC, tenggat,
+  bukti bervariasi). Penilaian mandiri tidak lagi menyumbang temuan (D-32).
+- **SAM-iSAFE:** 5 kategori `SAM-KAT-01…05`, 27 soal `SAM-Q-*`, 4 pengamatan
+  `SAM-0001…0004` (`SAM-0004` `Berlangsung` dengan jawaban sebagian), 2 tindak
+  lanjut `SMF-0001/0002`.
+- **Audit + notifikasi:** 18 `audit_events` + 4 `notifications`.
+- **Lokasi:** denah ilustrasi + titik untuk kedua pesantren terdaftar, 4 gedung,
+  12 area (snapshot `INS-v2.0` sebagai sumber indeks + tren 6 periode
+  ilustratif Mar–Agu 2026).
+- **Bank:** `INS-v2.0` (6 kategori K3, 6 dimensi, 59 indikator) →
+  bank live `INS-LIVE` turunan (D-24/D-44); `INS-v1.0` diarsipkan untuk reproduksi
+  snapshot lama. Katalog di `INSTRUMEN_MANDIRI.md`; mapping lama→baru di
+  `KATEGORI_K3.md` §4.
+- **Counter seed:** `counters.report = 20`, `counters.institution = 23` (nomor
+  berikutnya; `> 0` adalah syarat validator lama).
 
-**Catatan validasi seed:** komposisi di atas baru menjamin dua pesantren terdaftar, bukan tiga,
-karena akun Pesantren aktif baru tersedia untuk dua pesantren. Pilih skenario seed setelah D-09;
-lihat `DATA_REQUIREMENTS.md` §8. Seed tidak boleh membuat ketiga pesantren muncul dengan
-mengabaikan syarat pengelola aktif. Lokasi demo juga perlu mengikuti kebijakan D-11.
+**Catatan validasi seed:** seed hanya menjamin **dua** pesantren terdaftar
+(`PSN-0018`, `PSN-0019`), bukan tiga, karena `PSN-0020` sengaja tanpa akun
+Pesantren aktif. Pilih skenario seed setelah D-09; lihat `DATA_REQUIREMENTS.md`
+§8. Seed tidak boleh membuat pesantren muncul dengan mengabaikan syarat
+pengelola aktif. Lokasi demo mengikuti kebijakan D-11.

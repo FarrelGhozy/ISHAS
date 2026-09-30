@@ -11,14 +11,13 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 |---|---|---|---|
 | `/` | Dashboard publik | Agregat semua pesantren terdaftar + pemilih pesantren + tren + prioritas + CTA lapor/nilai | Pengganti landing; tanpa guard login |
 | `/lapor` | Laporan cepat | Form ringan satu langkah | Bisa juga dibuka sebagai dialog dari `/`, tapi URL kanonis tetap `/lapor` |
-| `/penilaian-mandiri` | Penilaian mandiri | Bank live + registrasi penilai + draft lokal checksum + kirim validasi (D-24) | Satu-satunya tempat isi indikator |
-| `/hasil` | Hasil assessment | Per dimensi + antarperiode, mengikuti filter pesantren | Hanya data `Diterima` |
+| `/penilaian-mandiri` | Penilaian mandiri | Bank live + registrasi penilai + draft lokal checksum + kirim penilaian; hasil langsung `Terbit` tanpa validasi (D-24, D-32) | Satu-satunya tempat isi indikator |
+| `/hasil` | Hasil penilaian | Metrik ringkas + per dimensi + antarperiode + daftar PDF penilaian, mengikuti filter pesantren (D-28) | Hanya data `Diterima`/`Terbit`; satu-satunya halaman hasil publik |
 | `/peta-risiko` | Peta bahaya & risiko | D-14: pilih satu pesantren untuk denah gambaran besar + titik temuan Diterima yang aktif; daftar temuan termasuk tanpa titik | Filter URL: pesantren, `denah`, `risiko`, `statusPeta`; lantai berupa keterangan. Frontend REVIEW |
-| `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId` |
+| `/rekomendasi` | Rekomendasi | Prioritas + PIC + tenggat + progres | Sumber menunjuk `reportId`; hanya dari `lapor-cepat` (D-32) |
 | `/tindak-lanjut` | Tindak lanjut (baca) | Progres + status + nama PIC; bukti penyelesaian tidak publik (D-02) | Tombol kelola hanya muncul bila login Pesantren pemilik scope |
 | `/dokumen` | Dokumen indikator (D-16) | Pustaka PDF per indikator: search + filter kategori/status; Public = Lihat tab baru + Unduh; Privat = nama + terkunci tanpa tombol | Global (filter pesantren tidak memfilter dokumen); guard publik `allowed` semua sesi |
-| `/laporan` | Laporan pimpinan | Ringkasan + dimensi + status + daftar PDF penilaian (D-24) | Satu penilai = satu PDF; unduh Excel simulasi (label dummy) |
-| `/laporan/:id` | PDF laporan penilaian (D-24) | Skor % beku + dimensi + temuan tervalidasi + validator; tombol cetak/simpan PDF browser | Hanya `Diterima`; tanpa nama pelapor/kontak/bukti/jawaban mentah (D-02) |
+| `/laporan/:id` | PDF laporan penilaian (D-24, D-27, D-28) | Kop + skor % beku + dimensi + temuan diperkaya (lokasi, severity/priority, status/progres/PIC) + foto bukti + metadata; tombol cetak/simpan PDF browser | Hanya `Terbit`/`Diterima`; tanpa temuan untuk penilaian mandiri (D-32); tanpa nama pelapor/kontak/jawaban mentah (D-02, amendemen D-27 untuk foto bukti). `/laporan` publik dihapus (D-28) |
 | `/pesantren/[kode]` | Profil ringkas lembaga | Sama seperti `/` dengan filter terkunci ke `[kode]` | `[kode]` = `institutionCode` mis. `PSN-0018`; kode tak dikenal → empty state, bukan crash |
 | `/login` | Masuk | 3 kartu akun: Super Admin, Validator, Pesantren | Tanpa kartu asesor; tanpa link "kembali ke beranda" (beranda = `/` itu sendiri) |
 | `/akses-ditolak` | Akses ditolak | Pesan + tombol kembali kontekstual | Lihat §3 |
@@ -53,15 +52,17 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | `/validator/versioning` | validator | Dihapus (D-24): halaman pengalihan ke Bank instrumen |
 | `/validator/scoring` | validator | Audit skor % beku (D-24, D-25: filter + nama dimensi + link PDF) |
 | `/validator/validasi-publikasi` | validator | Audit publikasi: checklist 5 kriteria kesiapan snapshot, label menu `Audit publikasi` (D-25; route tetap) |
-| `/validator/data-penelitian` | validator | Dataset + ekspor CSV/JSON whitelist D-02 + impor validasi→pratinjau→terapkan sebagai `Menunggu validasi` (D-25) |
+| `/validator/data-penelitian` | validator | Dataset + ekspor CSV/JSON whitelist D-02 + impor validasi→pratinjau→terapkan; kanal `penilaian-mandiri` langsung `Terbit` (D-25, D-32) |
 | `/validator/sam-isafe` | validator | SAM-iSAFE: riwayat + bank data (D-26; khusus Validator, tidak publik) |
 | `/validator/sam-isafe/baru` | validator | SAM-iSAFE: info pengamatan + kuesioner 0/1/2 + hasil (D-26) |
 | `/validator/sam-isafe/bank` | validator | SAM-iSAFE: kelola kategori + pertanyaan bank (D-26) |
 | `/validator/sam-isafe/:id` | validator | SAM-iSAFE: detail pengamatan + skor per kategori (D-26) |
-| `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi (halaman kelola utama)** |
+| `/pesantren/dashboard` | pesantren | **Dashboard + rangkuman scope sendiri (halaman utama Pesantren, D-34)** |
+| `/pesantren/hasil-penilaian-mandiri` | pesantren | **Hasil mandiri detail scope sendiri (Terbit, full internal, D-36)** |
+| `/pesantren/validasi-laporan` | pesantren | **Antrean moderasi** |
 | `/pesantren/lokasi` | pesantren | Gedung & denah |
 | `/pesantren/tindak-lanjut` | pesantren | Kelola (PIC, tenggat, progres, bukti) |
-| `/pesantren/laporan` | pesantren | Laporan scope sendiri |
+| `/pesantren/laporan` | pesantren | Laporan scope sendiri (kanal `lapor-cepat`; hasil mandiri di `/pesantren/hasil-penilaian-mandiri` — D-41) |
 
 > Prefix `/pesantren` workspace disetujui D-17 (menggantikan `/pengelola`).
 > URL lama `/peneliti/*` dialihkan ke `/validator/*`, `/pengelola/*` ke `/pesantren/*`.
@@ -78,7 +79,7 @@ nama validator/PIC); hak kirim mengikuti D-03 (publik + Pesantren).
 | Route workspace + tanpa sesi | redirect `/login` (setelah login kembali ke URL tujuan semula) |
 | Route workspace + role cocok | `allowed`, scope difilter (`pesantren` hanya `institutionCode` miliknya) |
 | Route workspace + role salah | `/akses-ditolak` dengan pesan "Akun [label] hanya dapat membuka ruang kerjanya" + tombol kembali ke ruang kerja yang benar |
-| `/asesor/*` (sisa lama) | `/akses-ditolak` dengan pesan "Peran Asesor sudah dihapus pada ; gunakan Penilaian Mandiri" + tombol ke `/penilaian-mandiri` |
+| `/asesor/*` (sisa lama) | halaman pesan "Peran Asesor sudah dihapus pada V2; gunakan Penilaian Mandiri" + tombol ke `/penilaian-mandiri` |
 | `/pesantren/[kode tak dikenal]` | `allowed` + empty state "Pesantren tidak ditemukan" (bukan 404 teknis) |
 
 Guard frontend hanya simulasi UX; backend wajib memeriksa ulang role + permission + scope.
@@ -89,7 +90,7 @@ Pemeriksaan scope juga berlaku pada aksi simpan berdasarkan ID, bukan hanya menu
 ## 4. Navigasi dan shell
 
 - Satu shared workspace shell untuk route workspace (sidebar, header, akun aktif kanan atas, notifikasi, menu mobile, konten).
-- Route publik memakai shell publik ringan: logo + nama ISHAS + penanda `Data publik · ilustrasi` + pemilih pesantren (di `/`) + tombol **Masuk** / jalan ke workspace bila sudah login.
+- Route publik memakai shell publik ringan: logo + nama ISHAS + tombol **Masuk** / jalan ke workspace bila sudah login + pemilih pesantren (di `/`). Penanda data dummy/ilustrasi dihapus dari UI (D-45).
 - Menu aktif selalu diturunkan dari URL. Tidak ada state navigasi kedua.
 - Notifikasi: target path publik (`/hasil`, `/peta-risiko`) untuk info umum; target `/pesantren/validasi-laporan` hanya untuk Pesantren pemilik scope; target `/admin/pengguna` dan `/admin/pesantren` untuk super admin.
 
@@ -98,7 +99,8 @@ Pemeriksaan scope juga berlaku pada aksi simpan berdasarkan ID, bukan hanya menu
 - Daftar di atas memuat 29 pola route kanonis (12 publik/bantuan + 17 workspace), termasuk satu pola profil dinamis. Ini bukan 29 URL uji saja.
 - Tambahkan pemeriksaan URL indeks `/admin`, `/validator`, `/pesantren`, tujuan login tiap peran,
   route lama `/peneliti/*` dan `/pengelola/*` yang dialihkan (D-17), route tidak dikenal, dan `/asesor` maupun `/asesor/*`.
-- Tujuan Pesantren pada rancangan baru adalah halaman utama Validasi Laporan; jangan menyisakan
-  tombol **Ruang kerja** ke dashboard Pesantren lama yang tidak ada di inventaris baru.
+- Tujuan Pesantren pada rancangan baru adalah Dashboard Pesantren
+  (`/pesantren/dashboard`, D-34); `/pesantren` mengarah ke sana. Jangan menyisakan
+  tombol **Ruang kerja** ke tujuan lama yang tidak ada di inventaris baru.
 - Tulis URL tujuan untuk setiap CTA/notifikasi; link kelola dari halaman publik tetap memerlukan
   sesi Pesantren yang memiliki objek tersebut. Halaman publik tidak mengubah scope akun aktif.

@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   Clock3,
   Flame,
-  Info,
   Lock,
   Megaphone,
   Minus,
@@ -39,6 +38,8 @@ const MAP: Record<string, Chip> = {
   Diarsipkan: { className: NEUTRAL, icon: ClipboardCheck, label: "Diarsipkan" },
   Ditolak: { className: NEUTRAL, icon: X, label: "Ditolak" },
   Diterima: { className: GREEN, icon: CheckCircle2, label: "Diterima" },
+  Terbit: { className: GREEN, icon: CheckCircle2, label: "Terbit" },
+  "Tidak berlaku": { className: NEUTRAL, icon: Minus, label: "Tidak berlaku" },
   "Belum ditindaklanjuti": { className: NEUTRAL, icon: Minus, label: "Belum ditindaklanjuti" },
   Berjalan: { className: BLUE, icon: Activity, label: "Berjalan" },
   "Menunggu verifikasi": { className: AMBER, icon: Clock3, label: "Menunggu verifikasi" },
@@ -55,18 +56,32 @@ const MAP: Record<string, Chip> = {
   "penilaian-mandiri": { className: BLUE, icon: ClipboardCheck, label: "Penilaian mandiri" },
   Public: { className: GREEN, icon: CheckCircle2, label: "Public" },
   Privat: { className: NEUTRAL, icon: Lock, label: "Privat" },
-  "Data publik · ilustrasi": { className: BLUE, icon: Info, label: "Data publik · ilustrasi" },
 };
 
 export function statusChip(value: string): Chip {
   return MAP[value] ?? { className: NEUTRAL, icon: Minus, label: value };
 }
 
+// Penjelasan singkat tiap stage (tooltip); tanpa mengubah label/desain.
+const DESKRIPSI: Record<string, string> = {
+  "Menunggu validasi": "Belum dimoderasi akun Pesantren; belum tampil publik.",
+  Pending: "Sudah diterima akun Pesantren; belum ada rencana tindak lanjut.",
+  Proses: "Sudah diterima akun Pesantren; sedang ditindaklanjuti.",
+  Completed: "Seluruh tindak lanjut selesai dan terverifikasi.",
+  Ditolak: "Ditolak akun Pesantren; tidak tampil publik.",
+  Diterima: "Diterima akun Pesantren pemilik lembaga, bukan peran Validator.",
+  Terbit: "Penilaian mandiri langsung tampil publik tanpa validasi Pesantren (D-32).",
+  "Tidak berlaku": "Kanal penilaian mandiri tidak melewati penanganan tindak lanjut.",
+};
+
 export function StatusChip({ value }: { value: string }) {
   const chip = statusChip(value);
   const Icon = chip.icon;
   return (
-    <span className={`status ${chip.className}`}>
+    <span
+      className={`status ${chip.className}`}
+      title={DESKRIPSI[value] ?? chip.label}
+    >
       <Icon size={11} aria-hidden />
       {chip.label}
     </span>

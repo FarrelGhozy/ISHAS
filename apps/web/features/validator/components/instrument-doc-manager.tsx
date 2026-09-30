@@ -3,7 +3,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Download, Eye, Lock, Plus, Trash2, Upload } from "lucide-react";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
 import { K3_CATEGORIES, aspectsOfCategory } from "~/mocks/kategori-k3";
 import type { InstrumentDocVisibility } from "~/mocks/types";
 import {
@@ -13,7 +12,8 @@ import {
   type DocFilter,
   type IndicatorDocRow,
 } from "~/mocks/processors/instrument-docs";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState, useValidatorState } from "~/shared/api/validator-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { Modal } from "~/shared/components/modal";
@@ -41,7 +41,7 @@ const EMPTY_CREATE: CreateForm = {
 };
 
 export function InstrumentDocManager() {
-  const state = useMockState();
+  const state = useValidatorState();
   const user = useCurrentUser();
   const [filter, setFilter] = useState<DocFilter>({
     q: "",
@@ -87,13 +87,14 @@ export function InstrumentDocManager() {
     setError("");
     setNote("");
     try {
-      const result = await mockRepository.uploadInstrumentDoc(
+      const result = await repository.uploadInstrumentDoc(
         ActorOf(user),
         indicatorId,
         file,
         "Privat",
       );
       if (result.ok) {
+        refreshValidatorState();
         setNote(
           `Berkas ${file.name.trim()} tersimpan sebagai Privat. Ubah ke Public bila siap tampil penuh di publik.`,
         );
@@ -108,7 +109,7 @@ export function InstrumentDocManager() {
 
   const openDoc = async (row: IndicatorDocRow, mode: "view" | "download") => {
     setError("");
-    const result = await mockRepository.openInstrumentDoc({ id: user.id }, row.indicatorId);
+    const result = await repository.openInstrumentDoc({ id: user.id }, row.indicatorId);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -132,22 +133,26 @@ export function InstrumentDocManager() {
     }
   };
 
-  const toggleVisibility = (row: IndicatorDocRow) => {
+  const toggleVisibility = async (row: IndicatorDocRow) => {
     if (!row.doc) return;
     const next = row.doc.visibility === "Public" ? "Privat" : "Public";
-    const result = storeActions.setInstrumentDocVisibility(ActorOf(user), row.indicatorId, next);
-    if (result.ok) setNote(`Visibilitas ${row.code} diubah menjadi ${next}.`);
-    else setError(result.error);
+    const result = await repository.setInstrumentDocVisibility(ActorOf(user), row.indicatorId, next);
+    if (result.ok) {
+      refreshValidatorState();
+      setNote(`Visibilitas ${row.code} diubah menjadi ${next}.`);
+    } else setError(result.error);
   };
 
   const doDelete = async (row: IndicatorDocRow) => {
     setBusyId(row.indicatorId);
     setError("");
-    const result = await mockRepository.removeInstrumentDoc(ActorOf(user), row.indicatorId);
+    const result = await repository.removeInstrumentDoc(ActorOf(user), row.indicatorId);
     setBusyId("");
     setDeleting(null);
-    if (result.ok) setNote(`Berkas ${row.code} dihapus permanen beserta blob-nya.`);
-    else setError(result.error);
+    if (result.ok) {
+      refreshValidatorState();
+      setNote(`Berkas ${row.code} dihapus permanen beserta blob-nya.`);
+    } else setError(result.error);
   };
 
   const closeCreate = () => {
@@ -167,7 +172,7 @@ export function InstrumentDocManager() {
     setBusyId("create");
     setCreateError("");
     setNote("");
-    const result = await mockRepository.createInstrumentDoc(
+    const result = await repository.createInstrumentDoc(
       ActorOf(user),
       {
         code: createForm.code,
@@ -182,6 +187,7 @@ export function InstrumentDocManager() {
     if (result.ok) {
       const label = createForm.visibility;
       const code = createForm.code.trim();
+      refreshValidatorState();
       closeCreate();
       setNote(`Dokumen ${code} ditambahkan sebagai ${label}.`);
     } else {
@@ -376,7 +382,7 @@ export function InstrumentDocManager() {
                           <button
                             type="button"
                             className="secondary-button px-3 py-2 text-xs"
-                            onClick={() => toggleVisibility(row)}
+                            onClick={() => void toggleVisibility(row)}
                           >
                             <Lock size={14} aria-hidden />
                             Jadikan {row.doc.visibility === "Public" ? "Privat" : "Public"}
@@ -406,7 +412,7 @@ export function InstrumentDocManager() {
         </div>
       )}
       <p className="text-xs text-faint">
-        Hanya PDF · maksimal 10 MB · prototipe lokal tersimpan di browser perangkat ini.
+        Hanya PDF · maksimal 10 MB · tersimpan lokal di browser perangkat ini.
       </p>
 
       <Modal

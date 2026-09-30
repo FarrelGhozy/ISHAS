@@ -64,6 +64,7 @@ function jawabanSama(
       (x.value ?? "") !== (y.value ?? "") ||
       (x.note ?? "") !== (y.note ?? "") ||
       (x.evidenceName ?? "") !== (y.evidenceName ?? "") ||
+      (x.evidenceAssetId ?? "") !== (y.evidenceAssetId ?? "") ||
       (x.areaId ?? "") !== (y.areaId ?? "") ||
       (x.manualLocation ?? "") !== (y.manualLocation ?? "") ||
       JSON.stringify(x.planPoint ?? null) !== JSON.stringify(y.planPoint ?? null)

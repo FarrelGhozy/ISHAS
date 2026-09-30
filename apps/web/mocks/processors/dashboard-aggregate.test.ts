@@ -4,6 +4,7 @@ import { describe, expect, test } from "bun:test";
 import {
   buatDashboardInsight,
   hitungIndexSummary,
+  hitungJawabanTerisi,
   hitungRisikoTinggi,
   normalisasiJawaban,
   pilihSnapshotTerbaruDiterima,
@@ -12,6 +13,7 @@ import {
   skorSnapshot,
 } from "./dashboard-aggregate";
 import { SEED } from "../seed/seed";
+import { isPublishedStatus } from "../store/selectors";
 
 describe("normalisasiJawaban", () => {
   test("likert 1–5 → 20–100; Ya=100; Tidak=20", () => {
@@ -28,6 +30,15 @@ describe("normalisasiJawaban", () => {
     expect(normalisasiJawaban("0")).toBeNull();
     expect(normalisasiJawaban("6")).toBeNull();
   });
+
+  test("skala frekuensi/keparahan dipetakan 20–100 (D-44)", () => {
+    expect(normalisasiJawaban("Tidak pernah")).toBe(100);
+    expect(normalisasiJawaban("Jarang")).toBe(80);
+    expect(normalisasiJawaban("Kadang")).toBe(60);
+    expect(normalisasiJawaban("Sering")).toBe(40);
+    expect(normalisasiJawaban("Selalu")).toBe(20);
+    expect(normalisasiJawaban("Kritis")).toBe(20);
+  });
 });
 
 describe("hitungIndexSummary dengan seed", () => {
@@ -40,60 +51,30 @@ describe("hitungIndexSummary dengan seed", () => {
 
   test("satu pesantren: snapshot Diterima terbaru menjadi sumber", () => {
     const summary = hitungIndexSummary(input, ["PSN-0018"]);
-    // RPT-0010 (Diterima, INS-v1.1): 2,1,Ya,4,Tidak,2,4,4,2,4 → (40+20+100+80+20+40+80+80+40+80)/10 = 58
-    expect(summary.currentIndex).toBeCloseTo(58, 6);
+    // RPT-0010 (Terbit, INS-v2.0) profil buruk → indeks 37.29 (ilustrasi D-04).
+    expect(summary.currentIndex).toBeCloseTo(37.28813559322034, 6);
     expect(summary.series.at(-1)?.period).toBe("Sep 2026");
-    expect(summary.instrumentVersionIds).toEqual(["INS-v1.1"]);
+    expect(summary.instrumentVersionIds).toEqual(["INS-v2.0"]);
   });
 
-  test("Menunggu validasi tidak memengaruhi angka dalam kondisi apa pun", () => {
-    const base = hitungIndexSummary(input, ["PSN-0019"]).currentIndex;
+  test("laporan Menunggu validasi tidak memengaruhi angka dalam kondisi apa pun", () => {
+    // RPT-0002 dijadikan Menunggu validasi: snapshot-nya harus diabaikan (D-32).
+    const reports = input.reports.map((r) =>
+      r.id === "RPT-0002" ? { ...r, validationStatus: "Menunggu validasi" as const } : r,
+    );
+    const base = hitungIndexSummary({ ...input, reports }, ["PSN-0019"]).currentIndex;
     const denganMenunggu = hitungIndexSummary(
       {
         ...input,
+        reports,
         selfAssessmentSnapshots: [
           ...input.selfAssessmentSnapshots,
           {
-            reportId: "RPT-0002", // status Menunggu validasi
+            reportId: "RPT-0002",
             instrumentVersionId: "INS-v1.0",
             submittedAt: "2026-09-08T00:00:00.000Z",
             answers: {
               "IND-K3L-001": {
-                value: "5",
-                note: "",
-                evidenceName: "",
-                areaId: "AREA-005",
-                planPoint: null,
-              },
-              "IND-K3L-002": {
-                value: "5",
-                note: "",
-                evidenceName: "",
-                areaId: "AREA-005",
-                planPoint: null,
-              },
-              "IND-K3L-003": {
-                value: "Ya",
-                note: "",
-                evidenceName: "",
-                areaId: "AREA-005",
-                planPoint: null,
-              },
-              "IND-K3L-004": {
-                value: "5",
-                note: "",
-                evidenceName: "",
-                areaId: "AREA-005",
-                planPoint: null,
-              },
-              "IND-K3L-005": {
-                value: "Ya",
-                note: "",
-                evidenceName: "",
-                areaId: "AREA-005",
-                planPoint: null,
-              },
-              "IND-K3L-006": {
                 value: "5",
                 note: "",
                 evidenceName: "",
@@ -139,54 +120,56 @@ describe("hitungIndexSummary dengan seed", () => {
     const summary = hitungIndexSummary(input, ["PSN-0018", "PSN-0019"]);
     expect(summary.dimensions.map((d) => d.id)).toEqual([
       "DIM-KES",
+      "DIM-DARURAT",
       "DIM-SEH",
       "DIM-LING",
       "DIM-PSI",
+      "DIM-AKSES",
     ]);
     expect(summary.dimensions.every((d) => d.score !== null)).toBe(true);
   });
 });
 
 describe("pilihSnapshotTerbaruDiterima", () => {
-  test("hanya snapshot laporan Diterima", () => {
+  test("snapshot terbaru laporan Diterima/Terbit", () => {
     const pilihan = pilihSnapshotTerbaruDiterima(
       SEED.reports,
       SEED.selfAssessmentSnapshots,
       "PSN-0019",
     );
-    expect(pilihan?.reportId).toBe("RPT-0014"); // RPT-0002 Menunggu validasi → dilewati
+    expect(pilihan?.reportId).toBe("RPT-0014");
   });
 });
 
 describe("panel temuan dan tindak lanjut", () => {
-  const diterima = SEED.reports.filter((r) => r.validationStatus === "Diterima");
+  const diterima = SEED.reports.filter((r) => isPublishedStatus(r.validationStatus));
   const ids = new Set(diterima.map((r) => r.id));
   const findings = SEED.findings.filter((f) => ids.has(f.reportId));
   const recs = SEED.recommendations.filter((r) => ids.has(r.reportId));
 
   test("temuan aktif terurut Ekstrem → Tinggi → Sedang → Rendah dan membatasi jumlah", () => {
     const prioritas = pilihTemuanPrioritas(findings, 4);
-    expect(prioritas.map((f) => f.level)).toEqual(["Ekstrem", "Tinggi", "Tinggi", "Tinggi"]);
+    expect(prioritas.map((f) => f.level)).toEqual(["Ekstrem", "Tinggi", "Sedang", "Sedang"]);
     expect(prioritas.every((f) => f.status !== "Terverifikasi" && f.status !== "Dibatalkan")).toBe(
       true,
     );
   });
 
   test("risiko tinggi menghitung temuan aktif level Tinggi", () => {
-    expect(hitungRisikoTinggi(findings)).toBe(4);
+    expect(hitungRisikoTinggi(findings)).toBe(1);
   });
 
   test("ringkasan tindak lanjut: rata-rata progres + count + dibatalkan", () => {
     const ringkas = ringkasTindakLanjut(recs);
-    expect(ringkas.pekerjaan).toBe(15);
-    expect(ringkas.terverifikasi).toBe(3);
+    expect(ringkas.pekerjaan).toBe(9);
+    expect(ringkas.terverifikasi).toBe(2);
     expect(ringkas.dibatalkan).toBe(1);
-    expect(ringkas.rataProgress).toBe(39); // total progres 590 / 15 laporan Diterima
+    expect(ringkas.rataProgress).toBe(41); // total progres 370 / 9 rekomendasi
   });
 
   test("distribusi tindak lanjut memuat lima status termasuk Dibatalkan", () => {
     const reports = SEED.reports.filter(
-      (report) => report.validationStatus === "Diterima" && !report.archivedAt,
+      (report) => isPublishedStatus(report.validationStatus) && !report.archivedAt,
     );
     const ids = new Set(reports.map((report) => report.id));
     const result = buatDashboardInsight({
@@ -237,6 +220,73 @@ describe("skorSnapshot", () => {
   });
 });
 
+describe("paritas proyeksi publik tanpa jawaban mentah (D-35)", () => {
+  // Simulasi `GET /public/state`: answers dikosongkan (D-02), tetapi frozen +
+  // skor + jawabanTerisi dibawa (backfill seed backend).
+  function stripUntukPublik() {
+    return SEED.selfAssessmentSnapshots.map((snapshot) => {
+      const version = SEED.instrumentVersions.find((v) => v.id === snapshot.instrumentVersionId);
+      const frozenIndicators = (version?.dimensions ?? []).flatMap((dim) =>
+        dim.indicators.map((ind) => ({
+          id: ind.id,
+          code: ind.code,
+          title: ind.title,
+          prompt: ind.prompt,
+          dimensionId: dim.id,
+          dimensionName: dim.name,
+          categoryId: ind.categoryId ?? dim.categoryId,
+          aspectId: ind.aspectId,
+          answerType: ind.answerType,
+          weight: 1,
+          options: [],
+        })),
+      );
+      const skor = skorSnapshot(SEED.instrumentVersions, snapshot);
+      return {
+        ...snapshot,
+        answers: {},
+        frozenIndicators,
+        scorePercent: skor.index,
+        byDimension: skor.byDimension,
+        jawabanTerisi: hitungJawabanTerisi(snapshot),
+      };
+    });
+  }
+
+  test("jalur beku tanpa jawaban menghasilkan indeks sama dengan jalur warisan", () => {
+    const mock = hitungIndexSummary(
+      {
+        reports: SEED.reports,
+        selfAssessmentSnapshots: SEED.selfAssessmentSnapshots,
+        instrumentVersions: SEED.instrumentVersions,
+        indexHistory: SEED.indexHistory,
+      },
+      ["PSN-0018", "PSN-0019"],
+    );
+    const publik = hitungIndexSummary(
+      {
+        reports: SEED.reports,
+        selfAssessmentSnapshots: stripUntukPublik(),
+        instrumentVersions: SEED.instrumentVersions,
+        indexHistory: SEED.indexHistory,
+      },
+      ["PSN-0018", "PSN-0019"],
+    );
+    expect(mock.currentIndex).not.toBeNull();
+    expect(publik.currentIndex).toBeCloseTo(mock.currentIndex as number, 6);
+    expect(publik.series.length).toBeGreaterThan(0);
+    expect(publik.dimensions.length).toBe(mock.dimensions.length);
+  });
+
+  test("hitungJawabanTerisi memakai field bawaan bila ada", () => {
+    const snapshot = SEED.selfAssessmentSnapshots[0];
+    const terisi = hitungJawabanTerisi(snapshot);
+    expect(terisi).toBeGreaterThan(0);
+    expect(hitungJawabanTerisi({ ...snapshot, answers: {}, jawabanTerisi: terisi })).toBe(terisi);
+    expect(hitungJawabanTerisi({ ...snapshot, answers: {}, jawabanTerisi: undefined })).toBe(0);
+  });
+});
+
 test("riwayat lembaga tanpa penilaian Diterima tidak memengaruhi tren agregat", () => {
   const input = structuredClone(SEED);
   input.reports = input.reports.filter((r) => r.institutionCode !== "PSN-0019");
@@ -247,9 +297,9 @@ test("riwayat lembaga tanpa penilaian Diterima tidak memengaruhi tren agregat", 
 });
 
 describe("insight dashboard publik", () => {
-  test("menghitung cakupan dan distribusi hanya dari laporan Diterima", () => {
+  test("menghitung cakupan dan distribusi hanya dari laporan Diterima/Terbit", () => {
     const reports = SEED.reports.filter(
-      (report) => report.validationStatus === "Diterima" && !report.archivedAt,
+      (report) => isPublishedStatus(report.validationStatus) && !report.archivedAt,
     );
     const ids = new Set(reports.map((report) => report.id));
     const result = buatDashboardInsight({
@@ -267,17 +317,18 @@ describe("insight dashboard publik", () => {
 
     expect(result.overview.pesantrenTercakup).toBe(2);
     expect(result.overview.penggunaAktif).toBe(5);
-    expect(result.overview.laporanTervalidasi).toBe(11);
+    expect(result.overview.laporanTervalidasi).toBe(14);
     expect(result.distribution.kanal).toEqual([
-      { label: "Lapor cepat", value: 7 },
-      { label: "Penilaian mandiri", value: 4 },
+      { label: "Lapor cepat", value: 9 },
+      { label: "Penilaian mandiri", value: 5 },
     ]);
-    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(11);
+    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(14);
   });
 
   test("filter pesantren mempersempit seluruh angka insight", () => {
     const reports = SEED.reports.filter(
-      (report) => report.validationStatus === "Diterima" && report.institutionCode === "PSN-0018",
+      (report) =>
+        isPublishedStatus(report.validationStatus) && report.institutionCode === "PSN-0018",
     );
     const ids = new Set(reports.map((report) => report.id));
     const result = buatDashboardInsight({
@@ -296,6 +347,6 @@ describe("insight dashboard publik", () => {
     expect(result.overview.pesantrenTercakup).toBe(1);
     expect(result.overview.penggunaAktif).toBe(4);
     expect(result.overview.laporanTervalidasi).toBe(6);
-    expect(result.distribution.risiko.reduce((sum, item) => sum + item.value, 0)).toBe(9);
+    expect(result.distribution.risiko.reduce((sum, item) => sum + item.value, 0)).toBe(4);
   });
 });

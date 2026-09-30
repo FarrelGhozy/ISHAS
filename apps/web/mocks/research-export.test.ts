@@ -9,7 +9,7 @@ import {
   RESEARCH_TEMPLATE_CSV,
 } from "./research-export";
 
-describe("dataset penelitian D-25", () => {
+describe("dataset penelitian D-25/D-32", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("baris hanya penilaian-mandiri + ekspor whitelist D-02", () => {
@@ -29,7 +29,8 @@ describe("dataset penelitian D-25", () => {
       expect(csv.toLowerCase()).not.toContain(kolomTerlarang.toLowerCase());
     }
     const json = researchToJSON(rows);
-    expect(json).toContain("Data ilustrasi");
+    expect(json).toContain("exportedAt");
+    expect(json).not.toContain("ilustrasi");
   });
 
   test("parser menerima template dan menolak baris bermasalah", () => {
@@ -65,7 +66,7 @@ describe("dataset penelitian D-25", () => {
     expect(parseResearchImport("institutionCode\n", codes).errors.length).toBeGreaterThan(0);
   });
 
-  test("impor validator menjadi Menunggu validasi, bukan publik", () => {
+  test("impor validator langsung Terbit (kanal penilaian mandiri)", () => {
     const state = getState();
     const validator = state.users.find(
       (u) => u.roleId === "validator" && u.status === "Aktif",
@@ -80,8 +81,8 @@ describe("dataset penelitian D-25", () => {
     const sesudah = getState();
     expect(sesudah.reports.length).toBe(sebelum + 1);
     const baru = sesudah.reports[sesudah.reports.length - 1];
-    expect(baru.validationStatus).toBe("Menunggu validasi");
-    expect(baru.handlingStatus).toBe("Menunggu validasi");
+    expect(baru.validationStatus).toBe("Terbit");
+    expect(baru.handlingStatus).toBe("Tidak berlaku");
     expect(baru.scorePercent).toBe(66);
     expect(
       sesudah.selfAssessmentSnapshots.some((s) => s.reportId === baru.id),

@@ -33,7 +33,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 ## 0. Pola umum semua halaman publik
 
-- Header publik: logo ISHAS + teks `ISHAS` + subteks `Penilaian K3L Pesantren` | kanan: penanda `Data publik · ilustrasi` (`status-blue`) + tombol **Masuk** (`secondary-button`; bila sudah login menjadi tombol **Ruang kerja** + nama akun).
+- Header publik: logo ISHAS + teks `ISHAS` + subteks `Penilaian K3L Pesantren` | kanan: tombol **Masuk** (`secondary-button`; bila sudah login menjadi tombol **Ruang kerja** + nama akun).
 - Di bawah header pada `/`: bar konteks berisi **Pemilih pesantren** (dropdown, opsi pertama `Semua pesantren terdaftar`) + info periode + tombol **Laporkan temuan** (`primary-button`, ikon plus) + tombol **Penilaian mandiri** (`secondary-button`, ikon clipboard).
 - Setiap angka indeks/skor selalu disertai: kategori + periode + versi instrumen + status data. Tidak ada angka telanjang.
 - State halaman: `loading` ("Menyiapkan halaman…"), `empty` (pesan + aksi), `error` (pesan + tombol muat ulang). Tabel lebar di ponsel boleh scroll horizontal; halaman tidak boleh overflow.
@@ -42,9 +42,9 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 **Region (atas → bawah):**
 
-1. Bar konteks (lihat §0) + banner scope: ikon gedung + `Pesantren aktif: [Semua terdaftar | nama]` + `Periode hasil: [periode]` + chip `Data ilustrasi` (`status-blue`).
+1. Bar konteks (lihat §0) + banner scope: ikon gedung + `Pesantren aktif: [Semua terdaftar | nama]` + `Periode hasil: [periode]` + versi instrumen.
 2. Kartu statistik (4, `stats-grid`): Indeks K3L (nilai + "Naik/turun X dari periode lalu" + ikon perisai), Risiko tinggi (`stat-red`, "Perlu tindakan segera"), Tindak lanjut (`stat-amber`, rata-rata progres + "N pekerjaan"), Terverifikasi (`stat-blue`, count + "Oleh akun Pesantren").
-3. Panel grafik: `Perkembangan indeks` (sub: "Perbandingan enam periode terakhir") + tren `+X periode ini` (`trend-up` hijau) + grafik area marun; panel samping `Hasil per dimensi` (bar per dimensi + "Area nilai terendah diprioritaskan").
+3. Panel grafik: `Perkembangan indeks` (sub: "Perbandingan enam periode terakhir") + tren `+X periode ini` (`trend-up` hijau) + grafik area biru (identitas D-18); panel samping `Hasil per dimensi` (bar per dimensi + "Area nilai terendah diprioritaskan").
 4. Panel `Temuan yang perlu ditindaklanjuti` (sub: "Peta risiko awal memakai lokasi/area pesantren, bukan peta geografis") + link `Buka peta bahaya →` + kartu temuan (chip severity + zona + lokasi + isu + tombol `Kelola tindak lanjut →`). Nama validator tampil pada kartu; nama pelapor tidak tampil (D-02).
 5. Panel count antrean **dihapus** (D-02, 8 Sep 2026): jumlah laporan menunggu validasi tidak publik.
 
@@ -53,12 +53,12 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 ## 2. `/lapor` Laporan cepat
 
 - Judul: kicker `Laporan publik` + H1 `Laporkan temuan bahaya` + deskripsi "Laporan Anda tidak langsung tampil; akun Pesantren memvalidasi dan menentukan tingkat bahaya terlebih dahulu."
-- Field berurutan: Nama pelapor* → Pesantren* (dropdown terdaftar) → Lokasi/area* (dropdown mengikuti pesantren; bila kosong tampilkan pesan hubungi akun Pesantren) → Kategori K3 (opsional) → Aspek (opsional, terfilter kategori) → Usulan mandiri: Tingkat keparahan (opsional) + Prioritas perbaikan (opsional) → Judul temuan* → Deskripsi* (dengan hint "Tulis apa, di mana tepatnya, sejak kapan, siapa terdampak") → Foto (tombol unggah, label "Opsional · tersimpan sebagai nama file pada prototipe") → Kontak (opsional). Tanpa field Indikator terkait (D-19). Checkbox anonim dihapus (D-02); nama selalu tampil apa adanya secara internal.
+- Field berurutan: Nama pelapor* → Pesantren* (dropdown terdaftar) → Lokasi/area* (dropdown mengikuti pesantren; bila kosong tampilkan pesan hubungi akun Pesantren) → Kategori K3 (opsional) → Aspek (opsional, terfilter kategori) → Usulan mandiri: Tingkat keparahan (opsional) + Prioritas perbaikan (opsional) + Usulan rekomendasi tindakan (opsional, textarea maks 500; bila diisi min 10) → Judul temuan* → Deskripsi* (dengan hint "Tulis apa, di mana tepatnya, sejak kapan, siapa terdampak") → Foto (tombol unggah, label "Opsional · tersimpan sebagai nama file pada prototipe") → Kontak (opsional). Tanpa field Indikator terkait (D-19). Checkbox anonim dihapus (D-02); nama selalu tampil apa adanya secara internal.
 - Tombol: **Kirim laporan** (`primary-button`, disabled sampai semua wajib valid) + **Batal** (kembali, dengan konfirmasi bila sudah mengetik).
 - Error inline per field (contoh: "Nama minimal 2 karakter.", "Deskripsi minimal 20 karakter.", "Pilih pesantren terdaftar.").
 - Layar sukses: ikon centang hijau + `Laporan terkirim` + nomor `RPT-XXXX` + chip `Menunggu validasi` (`status-neutral`) + teks "Belum tampil di dashboard sebelum divalidasi." + tombol **Kembali ke dashboard**.
 
-## 3. `/penilaian-mandiri` Self-assessment (amendemen D-24)
+## 3. `/penilaian-mandiri` Self-assessment (amendemen D-24, D-32)
 
 - Header halaman: kicker `Penilaian mandiri` + H1 `Periksa kondisi K3L pesantren` +
   banner bank live ("Bank instrumen live · perubahan soal membuat draft harus mengulang") +
@@ -66,38 +66,43 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
   Satu penilai = satu laporan PDF.
 - Tiap soal menampilkan hint kurangnya ("Kurang: jawaban/bukti/area-lokasi/catatan N/A")
   + status tersimpan ("Draft tersimpan otomatis · HH:MM"); autosave tanpa menunggu nama.
+  Bukti berupa tombol upload + pratinjau hanya pada indikator `evidenceRequired` (D-27);
+  foto tampil di PDF publik.
 - Tiga kolom (desktop; menumpuk vertikal di ponsel): kiri navigasi dimensi (tombol per dimensi: nomor + nama + "x/y terisi" + centang bila penuh + kunci versi di bawah), tengah panel pertanyaan (kode + "Indikator n dari N" + chip `Wajib`/`Bukti wajib` + judul + prompt + lokasi observasi + opsi radio + catatan + bukti + sumber instrumen + tombol Sebelumnya/Berikutnya), kanan panel kelengkapan (4 statistik: jawaban/bukti/catatan N/A/lokasi + tombol `Lihat ringkasan` + catatan "Draft tersimpan di perangkat ini").
-- Dialog Tinjau: daftar semua indikator (ikon lengkap/belum + kode + judul + jawaban) + klik melompat ke indikator + tombol **Kirim untuk validasi** (disabled bila ada yang kurang) + dialog konfirmasi final ("Setelah dikirim tidak dapat diubah…") → layar sukses seperti lapor.
+- Dialog Tinjau: daftar semua indikator (ikon lengkap/belum + kode + judul + jawaban) + klik melompat ke indikator + tombol **Kirim penilaian** (disabled bila ada yang kurang) + dialog konfirmasi final ("Setelah dikirim tidak dapat diubah; hasil langsung terbit di halaman publik.") → layar sukses seperti lapor dengan status `Terbit` (D-32, tanpa validasi Pesantren).
 
 ## 4. `/pesantren/validasi-laporan` Antrean validasi (login Pesantren)
 
-- Judul: kicker `Moderasi` + H1 `Validasi laporan` + deskripsi "Hanya laporan milik [nama pesantren]. Laporan yang diterima tampil di dashboard publik."
-- Filter: status (`Menunggu validasi/Pending/Proses/Completed/Ditolak/Semua`) + kanal (`lapor-cepat/penilaian-mandiri`) + severity + pencarian teks.
+- Judul: kicker `Moderasi` + H1 `Validasi laporan` + deskripsi "Hanya laporan cepat milik [nama pesantren]. Penilaian mandiri terbit langsung tanpa validasi (D-32)."
+- Filter: status (`Menunggu validasi/Pending/Proses/Completed/Ditolak/Semua`) + severity + pencarian teks. Kanal tidak difilter karena antrean hanya berisi `lapor-cepat`.
 - Kartu/baris antrean: nomor + chip kanal + pelapor (nama apa adanya, tanpa opsi anonim — D-02) + judul + lokasi + waktu + chip status validasi + chip handling + tombol **Periksa**. Pencarian mencakup deskripsi.
-- Detail: seluruh isi laporan (hanya-baca: identitas, kontak internal, kategori/aspek, usulan pelapor, lokasi + teks denah, bukti gambar, waktu, jejak keputusan) + untuk penilaian mandiri: jawaban per indikator (hanya-baca) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` placeholder `Pilih…` + pre-fill dari usulan sah + catatan opsional + tombol konfirmasi; ganti Terima/Tolak membersihkan error) dan **Tolak** (textarea alasan wajib min 10 + counter + konfirmasi). Arsip tidak tampil di antrean.
+- Detail: seluruh isi laporan (hanya-baca: identitas, kontak internal, kategori/aspek, usulan pelapor termasuk usulan rekomendasi, lokasi + teks denah, bukti gambar, waktu, jejak keputusan) + panel keputusan: **Terima** (dua dropdown wajib `Tingkat keparahan`, `Prioritas perbaikan` placeholder `Pilih…` + pre-fill dari usulan sah + textarea wajib `Rekomendasi tindakan` min 10 maks 500 pre-fill usulan + catatan opsional + tombol konfirmasi; ganti Terima/Tolak membersihkan error) dan **Tolak** (textarea alasan wajib min 10 + counter + konfirmasi). Arsip tidak tampil di antrean.
 - Setelah terima: tidak ada kontrol status manual di halaman ini; status bergerak lewat `/pesantren/tindak-lanjut` (D-23.a). Arsip `Completed` via `/pesantren/laporan` (konfirmasi + alasan min 5).
 
-## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`, `/laporan/:id`
+## 5. `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan/:id`
 
-- Amendemen D-24 (PDF per laporan): `/hasil` seksi `Laporan PDF penilaian`
-  (kartu per laporan: pesantren, periode, skor %, validator + tautan
-  `Lihat PDF laporan`); `/laporan` memuat daftar PDF penilaian mandiri (satu
-  penilai = satu PDF) + ringkasan pimpinan; `/laporan/:id` = halaman cetak
-  satu PDF (skor % beku, dimensi, temuan tervalidasi, validator + tombol
-  `Cetak / simpan PDF`); hanya `Diterima`; tanpa nama pelapor/kontak/bukti/
-  jawaban mentah (D-02).
+- Amendemen D-28 (gabung hasil): `/hasil` adalah satu-satunya halaman hasil
+  publik — baris metrik (Indeks K3L · Temuan aktif · Terverifikasi) + dimensi
+  hasil + daftar PDF penilaian (satu penilai = satu PDF; kartu per laporan:
+  pesantren, periode, skor %, status `Terbit` + tautan `Lihat PDF laporan`).
+  Halaman `/laporan` publik dihapus (404); `/laporan/:id` = halaman cetak
+  rekapan satu PDF (kop + skor % beku + dimensi + temuan diperkaya: lokasi
+  lengkap, severity/priority, status/progres/PIC tindak lanjut + foto bukti
+  per jawaban + metadata bank/checksum/validator/waktu + tombol
+  `Cetak / simpan PDF`); hanya `Diterima`; tanpa nama pelapor/kontak/jawaban
+  mentah (D-02, amendemen D-27 untuk foto bukti).
 
 - Struktur dan copy mengikuti lama (hasil per dimensi/periode; Daftar Area default + Daftar Temuan; rekomendasi + PIC + tenggat; tindak lanjut + status; laporan pimpinan + metadata versi), dengan perubahan wajib : (a) tambah **filter pesantren** di tiap halaman, (b) sumber temuan menunjuk `reportId` + nama validator (nama validator publik sesuai D-02; nama pelapor dan bukti internal), (c) area tanpa temuan aktif tampil netral (bukan marker hijau), (d) tampilan Denah Bangunan dan bukti penyelesaian hanya di workspace Pesantren, tidak di halaman publik (D-02).
 - Tombol kelola (buat rencana, ubah status, unggah bukti) hanya render bila login sebagai Pesantren pemilik scope; publik melihat mode baca + ajakan "Masuk sebagai Pesantren untuk mengelola." Input progres pada kartu kelola memakai slider titik `0/25/50/75/100` + label tahap (D-20).
 - Kartu kelola Pesantren `/pesantren/tindak-lanjut` (D-21, D-23): panel baca relasi laporan induk (nomor + kanal + judul + deskripsi + kategori/aspek + usulan + severity/priority final + lokasi + bukti pelapor privat + validator/waktu + temuan tertaut) + tautan ke `/pesantren/validasi-laporan`; blok kelola (PIC/tenggat khusus `Belum ditindaklanjuti`, slider khusus `Berjalan`, upload bukti penyelesaian + pratinjau + lepas/ganti, catatan, verifikasi, Batalkan + dialog alasan min 10); editor tingkat risiko per temuan (`Rendah/Sedang/Tinggi/Ekstrem`, teraudit); hint bila `Dibatalkan` menghalangi `Completed`; form tersinkron ulang saat data berubah (`updatedAt`); filter status memuat `Dibatalkan`; empty state menjelaskan penyebab kosong (menunggu validasi / filter / arsip / beda scope).
 - `/pesantren/lokasi`: input nama lantai per gedung (tidak berbagi); denah per lantai legacy hanya historis, jalur utama denah gambaran besar.
-- `/pesantren/laporan`: progres = rata-rata non-`Dibatalkan`; tanggal memakai data terbaru (bukan `new Date()` saat render); tautan silang ke Validasi/Tindak lanjut; riwayat memuat versi instrumen per laporan.
+- `/pesantren/laporan`: prosedur hanya kanal `lapor-cepat` (`Diterima`, belum diarsip); hasil `penilaian-mandiri` (`Terbit`) dipisah ke `/pesantren/hasil-penilaian-mandiri` (D-36/D-41). Progres = rata-rata non-`Dibatalkan`; tanggal memakai data terbaru (bukan `new Date()` saat render); tautan silang ke Validasi/Tindak lanjut; riwayat memuat versi instrumen per laporan.
 - Halaman baca publik `/tindak-lanjut` (D-21): status `Dibatalkan` + alasan pembatalan tampil; bukti/tenggat/catatan internal tetap tidak tampil.
 - Denah baca tampil sebagai pratinjau kecil dulu (tombol `Lihat denah besar` → penuh + `Tutup`) pada peta publik, detail laporan/temuan, dan pratinjau denah aktif Pesantren (D-22). Form penandaan titik (`LocationPicker`) tetap penuh agar presisi.
 
 ## 6. `/login`, `/admin/*`, `/validator/*`, `/pesantren/*`
 
-- Login: panel kiri sama seperti lama (gradien marun + alur), panel kanan hanya 3 kartu: `Masuk sebagai Super Admin` ("Mengelola pesantren, akun, audit."), `Masuk sebagai Validator` ("Mengelola instrumen dan penilaian."), `Masuk sebagai Pesantren` ("Memvalidasi laporan dan mengelola tindak lanjut."). Tanpa kartu asesor; tanpa link "Kembali ke beranda".
+- Login: panel kiri sama seperti lama (gradien biru identitas D-18 + alur), panel kanan hanya 3 kartu: `Masuk sebagai Super Admin` ("Mengelola pesantren, akun, audit."), `Masuk sebagai Validator` ("Mengelola instrumen dan penilaian."), `Masuk sebagai Pesantren` ("Memvalidasi laporan dan mengelola tindak lanjut."). Tanpa kartu asesor; tanpa link "Kembali ke beranda".
 - Admin: halaman sama lama minus semua opsi Asesor; tambah aksi verifikasi pesantren `Persiapan → Aktif` dan alur buat akun Pesantren via popup (`Buat akun` → modal nama/email/sandi + konfirmasi/peran/pesantren → `Menunggu` → aktivasi) + ubah + reset sandi demo + hapus berkonfirmasi dengan proteksi akun sendiri/admin terakhir.
 - Validator (D-24): `/validator/instrumen` = Bank live (tambah/edit/hapus dimensi +
   indikator, pilih tipe jawaban 4 opsi, tombol `Atur bobot` per indikator +
@@ -117,6 +122,47 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
  Catatan D-25: label `Audit publikasi` menghilangkan tabrakan dengan
  `Validasi laporan` milik Pesantren. `Divalidasi oleh` = akun Pesantren,
  bukan peran Validator (`DATA_REQUIREMENTS.md` §9).
+
+## 6.a. `/pesantren/dashboard` Dashboard Pesantren (D-34)
+
+- Judul: kicker `Pesantren saya` + H1 **nama pesantren** + subteks
+  `kode · kota/kabupaten · status` (tanpa alamat lengkap — D-02).
+- 4 kartu angka (`stat-card`, pola dashboard admin/validator): `Menunggu
+  validasi` (lapor-cepat milik scope) + `Pending/Proses` + `Completed`
+  (non-arsip) + `Progres tindak lanjut` (rata-rata rekomendasi aktif
+  non-`Dibatalkan`, D-23.d; hint jumlah aktif + Dibatalkan dikecualikan).
+- `Antrean terbaru`: 5 laporan `lapor-cepat` terbaru milik scope (nomor + chip
+  status + judul + lokasi + tombol `Periksa` ke validasi); empty state bila
+  kosong. Penilaian mandiri `Terbit` hanya blok baca (count + link PDF, D-32).
+- `Tindak lanjut`: ringkas count per status + tautan kelola; blok tautan
+  Validasi/Lokasi/Tindak lanjut/Laporan. Guard: hanya role Pesantren + satu
+  `institutionCode`, selain itu `EmptyState`.
+
+## 6.b. `/pesantren/hasil-penilaian-mandiri` Hasil mandiri detail (D-36)
+
+- Judul: kicker `Hasil pesantren saya` + H1 **nama pesantren** + subteks
+  `kode · kota/kabupaten · status` + hint `Hanya milik pesantren ini`.
+- Daftar laporan `penilaian-mandiri` `Terbit` milik scope (terbaru dulu):
+  nomor + judul + skor % + tanggal + nama penilai + tombol `Lihat detail`.
+  Cari teks (nomor/judul/nama penilai). Tanpa pemilih pesantren.
+- Detail per laporan (read-only): nama penilai + kontak internal + skor beku +
+  skor per dimensi + jawaban per indikator (nilai, catatan, bukti privat,
+  lokasi + denah) + waktu kirim + checksum + tautan `Lihat PDF`.
+  Milik pesantren lain tidak pernah dibaca; tampil `EmptyState` blokir.
+- Guard: hanya role Pesantren + satu `institutionCode`; selain itu `EmptyState`.
+
+### Poles visual D-37
+
+- Header memakai banner konteks biru lembut berisi nama lembaga, scope, status,
+  dan keterangan `Read-only · data internal pesantren`.
+- Di bawahnya tampil metrik `Total hasil`, `Skor rata-rata`, `Skor tertinggi`,
+  dan `Jawaban terisi` agar halaman tidak terasa seperti tabel arsip.
+- Daftar memakai kartu dengan nomor, status, skor besar, penilai, tanggal, dan
+  indikator jumlah jawaban; kartu aktif memiliki penanda visual yang tetap
+  terbaca tanpa mengandalkan warna saja.
+- Panel detail memiliki header laporan, skor utama, skor per dimensi, metadata
+  teknis, dan kelompok jawaban yang dapat dipindai. Pada ponsel panel detail
+  turun di bawah daftar.
 
 ## 7. Responsif (wajib diperiksa)
 

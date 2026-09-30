@@ -11,12 +11,12 @@
 
 **BOLEH (tanpa login):**
 
-- Membuka `/`, `/lapor`, `/penilaian-mandiri`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut` (mode baca), `/laporan`, `/pesantren/[kode]`.
+- Membuka `/`, `/lapor`, `/penilaian-mandiri`, `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut` (mode baca), `/laporan/:id`, `/pesantren/[kode]`.
 - Menggunakan pemilih pesantren (hanya berisi pesantren terdaftar) dan filter periode/tingkat/status pada tampilan publik.
 - Mengirim laporan cepat: wajib isi **nama pelapor** (teks bebas, maks 100 karakter), pesantren (pilih dari daftar), lokasi/area, deskripsi. Foto dan kontak opsional.
 - Mengisi penilaian mandiri: registrasi nama penilai + pesantren, lalu seluruh indikator wajib bank live (D-24).
 - Menyimpan draft penilaian mandiri di perangkat sendiri (localStorage) dan melanjutkannya setelah refresh.
-- Melihat nomor laporan + status `Menunggu validasi` sebagai konfirmasi kirim.
+- Melihat nomor laporan + status `Menunggu validasi` sebagai konfirmasi kirim lapor-cepat; penilaian mandiri langsung berstatus `Terbit` dan tampil publik (D-32).
 
 **TIDAK BOLEH:**
 
@@ -47,9 +47,13 @@
 **Kemampuan dalam rancangan awal:**
 
 - Membaca data publik seperti pengunjung lain. Boleh melapor ke pesantren lain sebagai pelapor umum (D-03): laporannya divalidasi oleh akun Pesantren sasaran; hak kelola tetap terbatas satu pesantren. Saat melapor, field nama **terisi otomatis** dari akun aktif + label `Pesantren`; tetap dapat diubah manual per laporan.
-- Membuka antrean **Validasi Laporan** (hanya laporan dengan `institutionCode` miliknya).
-- **Menerima** laporan: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
-- **Menolak** laporan: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
+- Membuka **Dashboard Pesantren** (`/pesantren/dashboard`, halaman utama — D-34):
+  identitas pesantren (nama + kode + kota + status) + rangkuman scope sendiri
+  (antrean, status penanganan, progres tindak lanjut) + tautan kelola.
+- Membuka antrean **Validasi Laporan** (hanya laporan `lapor-cepat` dengan `institutionCode` miliknya; penilaian mandiri terbit langsung — D-32).
+- **Menerima** laporan cepat: wajib mengisi `severity` + `priority` (tidak ada nilai default; harus pilih eksplisit) → status menjadi `Pending` → laporan tampil di dashboard.
+- **Menolak** laporan cepat: wajib mengisi alasan (min 10 karakter) → status `Ditolak` → arsip, tidak tampil.
+- Membaca hasil penilaian mandiri (skor/PDF, status `Terbit`) secara hanya-baca; kanal ini tidak masuk antrean validasi maupun tindak lanjut, dan tidak tampil di `/pesantren/laporan` (D-41). Detail penuh internal (nama + kontak + jawaban + bukti + lokasi) hanya di `/pesantren/hasil-penilaian-mandiri` milik scope sendiri (D-36).
 - Mengubah status penanganan `Pending → Proses → Completed` (tidak boleh mundur tanpa catatan audit; aturan mundur lihat FLOWS §5).
 - **Menghapus** laporan berstatus `Completed` saja, dengan dialog konfirmasi + alasan; penghapusan menambah audit event (data audit tidak ikut terhapus).
 - Mengelola gedung/lantai/area/denah, membuat rencana tindak lanjut (PIC + tenggat + catatan), memperbarui progres, mengunggah bukti penyelesaian (upload gambar pola `/lapor` — D-21), membatalkan perbaikan dengan alasan wajib min 10 karakter (status `Dibatalkan` per rekomendasi, baris tidak dihapus — D-21), membaca laporan pimpinan.
@@ -130,7 +134,7 @@ Daftar hapus eksplisit (agar tidak ada sisa tafsir "asesor masih ada di balik la
 
 1. Pergantian peran = keluar lalu masuk sebagai akun lain. Tidak ada pemilih peran di dalam aplikasi.
 2. Akun aktif tampil di kanan atas seluruh halaman setelah login (nama + label peran + inisial).
-3. Pada halaman publik: tanpa sesi tampil **Masuk**; dengan sesi tampil identitas akun aktif (nama + label peran + inisial) dan tombol **Ruang kerja**. Penanda `Data publik · ilustrasi` tetap ada. Ini identitas pengguna yang sedang memakai perangkat, bukan publikasi identitas pelapor pada suatu laporan.
-4. Refresh tidak boleh mengeluarkan sesi login (sessionStorage) dan tidak boleh menghapus draft laporan (localStorage) — keduanya dipulihkan diam-diam.
-5. Logout membersihkan sesi dan mengarah ke `/` (dashboard publik), bukan ke halaman kosong.
+3. Pada halaman publik: tanpa sesi tampil **Masuk**; dengan sesi tampil identitas akun aktif (nama + label peran + inisial) dan tombol **Ruang kerja**. Ini identitas pengguna yang sedang memakai perangkat, bukan publikasi identitas pelapor pada suatu laporan.
+4. Refresh tidak boleh mengeluarkan sesi login (sessionStorage; mode backend memakai cookie sesi `ishas_session` + `/auth/me`, Fase 6 D-30.h) dan tidak boleh menghapus draft laporan (localStorage) — keduanya dipulihkan diam-diam.
+5. Logout membersihkan sesi (`/auth/logout` di mode backend) dan mengarah ke `/` (dashboard publik), bukan ke halaman kosong.
 6. Sesi perlu membedakan ID akun, bukan role saja, agar dua akun Pesantren memiliki scope yang benar. Cara login akun tambahan dan aktivasi menunggu D-09; draft saat berganti akun menunggu D-10.

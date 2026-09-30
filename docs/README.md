@@ -10,7 +10,7 @@ Identitas biru D-18 menggantikan batas tema/warna pada catatan ini. Kontrak:
 [planning/README.md](../planning/README.md); DONE hanya setelah persetujuan.
 
 Bagian audit/persiapan lama di bawah adalah historis. D-13 telah diamendemen;
-D-14 berlaku untuk denah publik terbatas, D-15 untuk empat kategori dan Ekstrem.
+D-14 berlaku untuk denah publik terbatas, D-15/D-44 untuk enam kategori (59 indikator) dan Ekstrem.
 Skala ilmiah/bobot/ambang final tetap menunggu penelitian. Tanggal 19 September
 pada perubahan pengguna dipertahankan sebagai catatan asal, bukan hasil uji baru
 sesi 18 September ini.
@@ -40,7 +40,8 @@ Bagian status di bawah merupakan catatan audit awal 8 September. Keputusan lanju
 bersamanya; klaim semua stage kode masih BACKLOG tidak menggambarkan kondisi kini.
 Perbedaan status antarfile dicatat di review dashboard, belum ditetapkan ulang sepihak.
 
-**Status saat ini: rencana tervalidasi sebagian — D-01–D-03 dijawab, D-04–D-12 masih terbuka.**
+**Status saat ini: D-01–D-03 dijawab (8 Sep); D-05–D-11 dijawab (9 Sep);
+D-13–D-14, D-17–D-26.f menyusul. Rumus/skala ilmiah final tetap menunggu penelitian.**
 
 ISHAS direncanakan sebagai perubahan besar berdasarkan evaluasi dosen (September 2026).
 Keputusan pemilik 8 September 2026: **ISHAS dibangun sebagai aplikasi**
@@ -56,9 +57,9 @@ penilaian mandiri per indikator masih memakai nama file dummy.
 ## Cara membaca hasil validasi
 
 1. Baca [hasil pemeriksaan](VALIDATION_REVIEW.md) untuk melihat kekurangan dan konflik yang ditemukan.
-2. Keputusan D-01–D-03 telah dijawab pemilik (8 September 2026, lihat `DECISIONS.md`); pertanyaan lanjutan D-04–D-12 masih terbuka dan dibahas sebelum spesifikasi terkait dikatakan siap.
+2. Keputusan D-01–D-03 telah dijawab pemilik (8 September 2026, lihat `DECISIONS.md`); D-05–D-11 telah dijawab (9 September 2026). D-04 (agregat) dan D-12 (tampilan) memakai aturan ilustrasi interim sampai keputusan final.
 3. Tinjau [kebutuhan data tambahan](DATA_REQUIREMENTS.md) sebelum memfinalkan model data dan alur.
-4. Stage aktif adalah [Stage 00 — Validasi rencana](../planning/STAGE_00_PLAN_REVIEW.md). Stage 01–Stage 09 tetap `BACKLOG`.
+4. Tahap kode berjalan: Stage 01–06 `REVIEW`, Stage 07–09 `IN PROGRESS`, revisi D-19–D-26.f tercatat di `TODO.md`. Stage 00 tersisa sebagai arsip validasi rencana.
 
 Keterangan status isi dokumen:
 
@@ -108,6 +109,12 @@ Perubahan arah produk tidak mengesahkan rumus, skala, atau kategori ilmiah.
 | `BACKLOG.md` | Urutan pembangunan + dependensi + yang ditunda ke backend |
 | `TODO.md` | Kontrol validasi rencana dan antrean pembangunan yang belum diaktifkan |
 | `TEST_PLAN.md` | Matriks route/guard/E2E/visual/teknis + template hasil |
+| `BACKEND_OVERVIEW.md` | Stack, arsitektur, prinsip, fase backend (D-30) |
+| `BACKEND_DATA_MODEL.md` | Tabel MySQL + DDL + indeks + seed demo/kosong |
+| `BACKEND_API_CONTRACT.md` | Endpoint REST + matriks otorisasi + validasi |
+| `BACKEND_STORAGE.md` | File lokal: tabel, direktori, validasi, serving |
+| `BACKEND_MIGRATION.md` | Tahapan mock → server + swap adapter + kriteria hijau |
+| `BACKEND_ISSUES.md` | Daftar issue GitHub backend + perintah `gh` |
 | `planning/` | Stage 00 untuk diskusi rencana, diikuti 9 calon stage pembangunan Stage 01…Stage 09 |
 
 ## Aturan prototipe (tidak boleh dilanggar)

@@ -4,7 +4,6 @@ import {
   BookOpen,
   ClipboardCheck,
   ClipboardList,
-  FileText,
   ListChecks,
   MapPin,
   Megaphone,
@@ -19,7 +18,6 @@ const links = [
   ["/peta-risiko", "Peta risiko", MapPin],
   ["/rekomendasi", "Rekomendasi", ShieldAlert],
   ["/tindak-lanjut", "Tindak lanjut", ListChecks],
-  ["/laporan", "Laporan", FileText],
   ["/dokumen", "Dokumen", BookOpen],
 ] as const;
 

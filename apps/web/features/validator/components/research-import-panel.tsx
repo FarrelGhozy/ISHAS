@@ -1,13 +1,14 @@
-// Panel impor dataset D-25 — upload → validasi → pratinjau → terapkan.
-// Terapkan membuat laporan Menunggu validasi (tidak langsung publik).
+// Panel impor dataset D-25/D-32 — upload → validasi → pratinjau → terapkan.
+// Terapkan membuat laporan penilaian-mandiri langsung Terbit (D-32).
 
 import { useMemo, useState } from "react";
-import { storeActions } from "~/mocks/store/mock-store";
 import {
   RESEARCH_TEMPLATE_CSV,
   parseResearchImport,
   type ValidImportRow,
 } from "~/mocks/research-export";
+import { repository } from "~/shared/api/repository";
+import { refreshValidatorState } from "~/shared/api/validator-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 
 function unduh(nama: string, isi: string, tipe: string): void {
@@ -53,25 +54,26 @@ export function PanelImpor({ terdaftar }: { terdaftar: string[] }) {
     reader.readAsText(file);
   };
 
-  const terapkan = (): void => {
+  const terapkan = async (): Promise<void> => {
     const baris: ValidImportRow[] = pratinjau?.valid ?? [];
     if (!baris.length) {
       setCatatan("Tidak ada baris valid untuk diterapkan.");
       return;
     }
-    if (!window.confirm(`${baris.length} baris masuk antrean Menunggu validasi?`)) {
+    if (!window.confirm(`${baris.length} baris akan diterapkan dan langsung terbit?`)) {
       return;
     }
-    const hasil = storeActions.importResearchDataset(
+    const hasil = await repository.importResearchDataset(
       { id: user?.id, name: user?.name ?? "Validator" },
       baris,
     );
     setCatatan(
       hasil.ok
-        ? `${baris.length} baris masuk antrean Menunggu validasi.`
+        ? `${baris.length} baris terbit sebagai penilaian mandiri.`
         : hasil.error,
     );
     if (hasil.ok) {
+      refreshValidatorState();
       setTeks("");
       setNamaBerkas("");
     }
@@ -81,8 +83,8 @@ export function PanelImpor({ terdaftar }: { terdaftar: string[] }) {
     <section className="surface p-4" aria-label="Impor dataset">
       <h2 className="font-bold text-heading">Impor dataset</h2>
       <p className="mt-1 text-xs text-secondary-text">
-        CSV/JSON → validasi → pratinjau → terapkan sebagai Menunggu validasi.
-        Tidak langsung tampil publik.
+        CSV/JSON → validasi → pratinjau → terapkan sebagai penilaian mandiri
+        berstatus Terbit (langsung publik).
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <label className="secondary-button cursor-pointer">
@@ -138,7 +140,7 @@ export function PanelImpor({ terdaftar }: { terdaftar: string[] }) {
             type="button"
             className="primary-button mt-3"
             disabled={pratinjau.valid.length === 0}
-            onClick={terapkan}
+            onClick={() => void terapkan()}
           >
             Terapkan {pratinjau.valid.length} baris
           </button>

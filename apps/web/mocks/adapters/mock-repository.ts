@@ -3,12 +3,7 @@
 // terpusat di satu titik.
 
 import { storeActions, getState, type ActionResult, type ReportActor } from "../store/mock-store";
-import {
-  selectFindingsByReports,
-  selectRecommendationsByReports,
-  selectRegisteredInstitutions,
-  selectPublicReports,
-} from "../store/selectors";
+import { selectRegisteredInstitutions } from "../store/selectors";
 import type { CampusPlanVersion, LocationSnapshot } from "../types";
 import { putCampusAsset, deleteCampusAsset, clearCampusAssets } from "./campus-assets";
 import {
@@ -32,21 +27,6 @@ let resettingAssets = false;
 let assetEpoch = 0;
 
 export const mockRepository = {
-  registeredInstitutions() {
-    return selectRegisteredInstitutions(getState());
-  },
-  validatedReports(institutionCode: string | null) {
-    return selectPublicReports(getState(), institutionCode);
-  },
-  findingsFor(institutionCode: string | null) {
-    return selectFindingsByReports(getState(), selectPublicReports(getState(), institutionCode));
-  },
-  recommendationsFor(institutionCode: string | null) {
-    return selectRecommendationsByReports(
-      getState(),
-      selectPublicReports(getState(), institutionCode),
-    );
-  },
   async reset() {
     if (resettingAssets) throw new Error("Reset demo sedang berlangsung.");
     resettingAssets = true;
@@ -431,6 +411,26 @@ export const mockRepository = {
     }
   },
 
+  // Pratinjau bukti gambar dari IndexedDB (mock) — pola sama `EvidencePreview`.
+  async openEvidenceAsset(
+    assetId: string,
+    institutionCode: string,
+  ): Promise<{ ok: true; blob: Blob; name: string } | { ok: false; error: string }> {
+    try {
+      const asset = await getEvidenceAsset(assetId);
+      if (!asset || asset.institutionCode !== institutionCode) {
+        return {
+          ok: false,
+          error:
+            "Gambar bukti tidak tersedia pada perangkat ini. Pilih ulang atau lepas lampiran sebelum mengirim.",
+        };
+      }
+      return { ok: true, blob: asset.blob, name: asset.name };
+    } catch {
+      return { ok: false, error: "Gambar bukti gagal dimuat. Periksa penyimpanan browser atau coba lagi." };
+    }
+  },
+
   async removeInstrumentDoc(actor: ReportActor, indicatorId: string): Promise<ActionResult> {
     const state = getState();
     const doc = state.instrumentDocs.find((item) => item.indicatorId === indicatorId);
@@ -453,6 +453,7 @@ export const mockRepository = {
       aspectId?: string;
       reporterSeverity?: string;
       reporterPriority?: string;
+      reporterRecommendation?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;

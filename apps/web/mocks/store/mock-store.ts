@@ -15,6 +15,7 @@ import type {
   InstrumentIndicator,
   InstrumentOption,
   Report,
+  ReportChannel,
   RiskFinding,
   RiskLevel,
   SelfAssessmentDraft,
@@ -39,7 +40,7 @@ import {
   isJawabanTemuan,
   skorLaporanBeku,
 } from "../instrument-bank";
-import { samActiveQuestions, samCompute } from "../sam-isafe";
+import { SAM_KINDS, isValidSamDate, samActiveQuestions, samCompute } from "../sam-isafe";
 import { isEvidenceAssetId } from "../adapters/report-evidence";
 import type { SamFollowUpStatus } from "../types";
 
@@ -233,6 +234,17 @@ export const storeActions = {
     return currentState;
   },
 
+  // Fase 5: tandai notifikasi dibaca (semua bila `ids` kosong).
+  markNotificationsRead(accountId: string, ids?: string[]): ActionResult {
+    setState((draft) => {
+      for (const item of draft.notifications) {
+        if (item.recipientAccountId !== accountId) continue;
+        if (!ids || ids.length === 0 || ids.includes(item.id)) item.read = true;
+      }
+    });
+    return { ok: true };
+  },
+
   submitPublicReport(
     actor: ReportActor,
     input: {
@@ -246,6 +258,7 @@ export const storeActions = {
       aspectId?: string;
       reporterSeverity?: string;
       reporterPriority?: string;
+      reporterRecommendation?: string;
       evidenceName?: string;
       evidenceAssetId?: string;
       contact?: string;
@@ -344,6 +357,14 @@ export const storeActions = {
     if (!levels.includes(reporterPriority)) {
       return { ok: false, error: "Usulan prioritas perbaikan tidak dikenal." };
     }
+    // D-29: usulan rekomendasi lapor-cepat opsional; bila diisi min 10, maks 500.
+    const reporterRecommendation = input.reporterRecommendation?.trim() || undefined;
+    if (reporterRecommendation && reporterRecommendation.length < 10) {
+      return { ok: false, error: "Usulan rekomendasi minimal 10 karakter." };
+    }
+    if (reporterRecommendation && reporterRecommendation.length > 500) {
+      return { ok: false, error: "Usulan rekomendasi maksimal 500 karakter." };
+    }
     const mapError = validateMapLocation(
       currentState,
       input.institutionCode,
@@ -382,6 +403,7 @@ export const storeActions = {
           aspectId,
           reporterSeverity: reporterSeverity as Report["reporterSeverity"],
           reporterPriority: reporterPriority as Report["reporterPriority"],
+          reporterRecommendation,
           title,
           description,
           areaId: input.areaId,
@@ -434,6 +456,7 @@ export const storeActions = {
     severity: Severity,
     priority: Priority,
     note?: string,
+    rekomendasiFinal?: string,
   ): ActionResult {
     if (
       !severity ||
@@ -443,9 +466,21 @@ export const storeActions = {
     ) {
       return { ok: false, error: "Severity dan priority wajib dipilih tanpa default." };
     }
+    const finalAction = rekomendasiFinal?.trim() || undefined;
     return setStateReport(actor, reportId, (draft, report) => {
       if (report.validationStatus !== "Menunggu validasi") {
         return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat diterima." };
+      }
+      // D-32: hanya lapor-cepat yang divalidasi; penilaian-mandiri langsung Terbit.
+      if (report.channel !== "lapor-cepat") {
+        return { ok: false, error: "Hanya laporan cepat yang memerlukan validasi." };
+      }
+      // D-29: lapor-cepat wajib rekomendasi final (min 10, maks 500).
+      if (!finalAction || finalAction.length < 10) {
+        return { ok: false, error: "Rekomendasi tindakan wajib diisi minimal 10 karakter." };
+      }
+      if (finalAction.length > 500) {
+        return { ok: false, error: "Rekomendasi tindakan maksimal 500 karakter." };
       }
       report.validationStatus = "Diterima";
       report.handlingStatus = "Pending";
@@ -459,7 +494,8 @@ export const storeActions = {
       report.validationNote = note;
       // Bentuk kandidat temuan/rekomendasi turunan agar kiriman yang diterima
       // langsung mengalir ke peta/rekomendasi (aturan ilustratif, bukan final).
-      ensureDerivedWork(draft, report, severity, priority);
+      // D-29: lapor-cepat memakai teks final Pesantren sebagai isi tindakan.
+      ensureDerivedWork(draft, report, severity, priority, finalAction);
       audit(draft, actor, {
         objectType: "Report",
         objectId: reportId,
@@ -481,6 +517,9 @@ export const storeActions = {
     return setStateReport(actor, reportId, (draft, report) => {
       if (report.validationStatus !== "Menunggu validasi") {
         return { ok: false, error: "Hanya laporan Menunggu validasi yang dapat ditolak." };
+      }
+      if (report.channel !== "lapor-cepat") {
+        return { ok: false, error: "Hanya laporan cepat yang dapat ditolak." };
       }
       report.validationStatus = "Ditolak";
       report.handlingStatus = "Ditolak";
@@ -521,6 +560,7 @@ export const storeActions = {
         Proses: ["Completed", "Pending"],
         Completed: ["Proses"],
         Ditolak: [],
+        "Tidak berlaku": [],
       };
       if (!valid[previous].includes(next)) {
         return { ok: false, error: `Transisi ${report.handlingStatus} → ${next} tidak sah.` };
@@ -1213,6 +1253,7 @@ export const storeActions = {
           value: v.value ?? "",
           note: v.note ?? "",
           evidenceName: v.evidenceName ?? "",
+          evidenceAssetId: v.evidenceAssetId ?? undefined,
           areaId: v.areaId ?? "",
           manualLocation: v.manualLocation?.trim() || undefined,
           planPoint: v.planPoint ?? null,
@@ -1245,10 +1286,12 @@ export const storeActions = {
         instrumentChecksum: instrument.checksum,
         scorePercent,
         pdfGeneratedAt: stampedAt,
-        validationStatus: "Menunggu validasi",
+        // D-32: penilaian mandiri tidak divalidasi — langsung terbit, tanpa
+        // temuan/tindak lanjut (murni observasi/skor).
+        validationStatus: "Terbit",
         severity: "Belum ditentukan",
         priority: "Belum ditentukan",
-        handlingStatus: "Menunggu validasi",
+        handlingStatus: "Tidak berlaku",
         createdAt: stampedAt,
         submittedAt: stampedAt,
         updatedAt: stampedAt,
@@ -1262,6 +1305,8 @@ export const storeActions = {
         frozenIndicators: frozen,
         scorePercent,
         byDimension,
+        // D-35: cacah terisi dibawa proyeksi publik (answers dikosongkan D-02).
+        jawabanTerisi: Object.values(builtAnswers).filter((a) => a.value.trim()).length,
       });
       delete draft.selfAssessmentDrafts[draftId];
       audit(draft, sender, {
@@ -1270,7 +1315,7 @@ export const storeActions = {
         institutionCode: d.institutionCode,
         action: "Mengirim penilaian mandiri",
       });
-      notifyOwners(draft, d.institutionCode, id);
+      notifyOwners(draft, d.institutionCode, id, "penilaian-mandiri");
     });
     return result;
   },
@@ -1971,9 +2016,16 @@ export const storeActions = {
     const indicatorId = input.indicatorId.trim();
     const fileName = input.fileName.trim();
     if (!indicatorId) return { ok: false, error: "Indikator tidak ditemukan." };
-    const catalog = currentState.instrumentVersions.flatMap((v) =>
-      v.dimensions.flatMap((d) => d.indicators.map((i) => ({ dim: d, ind: i }))),
-    );
+    // D-24/D-16: katalog = bank live dulu (sumber indikator baru), lalu versi
+    // warisan. Tanpa ini, unggah PDF untuk indikator hasil editor bank selalu gagal.
+    const catalog = [
+      ...currentState.instrument.dimensions.flatMap((d) =>
+        d.indicators.map((i) => ({ dim: d, ind: i })),
+      ),
+      ...currentState.instrumentVersions.flatMap((v) =>
+        v.dimensions.flatMap((d) => d.indicators.map((i) => ({ dim: d, ind: i }))),
+      ),
+    ];
     const found = catalog.find((entry) => entry.ind.id === indicatorId);
     const existing = currentState.instrumentDocs.find((item) => item.indicatorId === indicatorId);
     if (!found && !existing) return { ok: false, error: "Indikator tidak ditemukan." };
@@ -2187,8 +2239,8 @@ export const storeActions = {
     actor: { id?: string; name: string; role?: string },
     rows: { institutionCode: string; reporterName: string; scorePercent: number | null; title: string }[],
   ): ActionResult {
-    // D-25: hanya Validator aktif; tiap baris jadi Menunggu validasi
-    // (masuk antrean Pesantren, tidak langsung publik).
+    // D-25 + D-32: hanya Validator aktif; tiap baris kanal penilaian-mandiri
+    // langsung Terbit (tanpa moderasi Pesantren).
     const account = actor.id ? currentState.users.find((user) => user.id === actor.id) : undefined;
     if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return { ok: false, error: "Hanya akun Validator aktif yang dapat mengimpor dataset." };
@@ -2246,15 +2298,15 @@ export const storeActions = {
           institutionCode: row.institutionCode,
           reporterName: row.reporterName.trim(),
           title: row.title.trim() || "Penilaian mandiri K3L (impor)",
-          description: "Baris impor dataset penelitian; menunggu validasi Pesantren.",
+          description: "Baris impor dataset penelitian; langsung terbit (D-32).",
           instrumentVersionId: BANK_ID,
           instrumentChecksum: bank?.checksum,
           scorePercent: row.scorePercent,
           pdfGeneratedAt: stampedAt,
-          validationStatus: "Menunggu validasi",
+          validationStatus: "Terbit",
           severity: "Belum ditentukan",
           priority: "Belum ditentukan",
-          handlingStatus: "Menunggu validasi",
+          handlingStatus: "Tidak berlaku",
           createdAt: stampedAt,
           submittedAt: stampedAt,
           updatedAt: stampedAt,
@@ -2275,7 +2327,7 @@ export const storeActions = {
           institutionCode: row.institutionCode,
           action: "Mengimpor dataset penelitian",
         });
-        notifyOwners(draft, row.institutionCode, id);
+        notifyOwners(draft, row.institutionCode, id, "penilaian-mandiri");
       }
     });
     return { ok: true, id: pertama };
@@ -2302,10 +2354,13 @@ export const storeActions = {
     if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
       return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat pengamatan." };
     }
-    const institution = currentState.institutions.find(
-      (item) => item.code === input.institutionCode,
-    );
-    if (!institution || institution.status !== "Aktif") {
+    // D-26.c: hanya pesantren terdaftar (Aktif + punya akun Pesantren aktif).
+    if (
+      !input.institutionCode ||
+      !selectRegisteredInstitutions(currentState).some(
+        (item) => item.code === input.institutionCode,
+      )
+    ) {
       return { ok: false, error: "Pilih pesantren terdaftar." };
     }
     const areaOk =
@@ -2318,6 +2373,12 @@ export const storeActions = {
       return { ok: false, error: "Lokasi wajib diisi (area atau deskripsi manual)." };
     }
     if (!input.observedAt) return { ok: false, error: "Tanggal pengamatan wajib diisi." };
+    if (!isValidSamDate(input.observedAt)) {
+      return { ok: false, error: "Tanggal pengamatan tidak valid." };
+    }
+    if (!SAM_KINDS.includes(input.kind)) {
+      return { ok: false, error: "Jenis pengamatan tidak dikenal." };
+    }
     if (input.observerName.trim().length < 2) {
       return { ok: false, error: "Nama pengamat minimal 2 karakter." };
     }
@@ -2480,6 +2541,9 @@ export const storeActions = {
     const pic = input.pic.trim();
     if (pic.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
     if (!input.dueDate) return { ok: false, error: "Tenggat wajib diisi." };
+    if (!isValidSamDate(input.dueDate)) {
+      return { ok: false, error: "Tenggat tidak valid." };
+    }
     if (input.dueDate < assessment.observedAt) {
       return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
     }
@@ -2534,6 +2598,17 @@ export const storeActions = {
     }
     if (input.pic !== undefined && input.pic.trim().length < 2) {
       return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    }
+    if (input.dueDate) {
+      if (!isValidSamDate(input.dueDate)) {
+        return { ok: false, error: "Tenggat tidak valid." };
+      }
+      const assessment = currentState.samAssessments.find(
+        (item) => item.id === target.assessmentId,
+      );
+      if (assessment && input.dueDate < assessment.observedAt) {
+        return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
+      }
     }
     setState((draft) => {
       const item = draft.samFollowUps.find((entry) => entry.id === followUpId)!;
@@ -2660,14 +2735,28 @@ export const storeActions = {
     }
     const name = input.name.trim();
     if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    if (
+      currentState.samCategories.some((item) => item.name.toLowerCase() === name.toLowerCase())
+    ) {
+      return { ok: false, error: "Nama kategori sudah digunakan." };
+    }
+    const description = input.description?.trim() ?? "";
+    if (description.length > 280) {
+      return { ok: false, error: "Deskripsi maksimal 280 karakter." };
+    }
     let id = "";
     setState((draft) => {
-      const order = Math.max(0, ...draft.samCategories.map((item) => item.sortOrder)) + 1;
-      id = `SAM-KAT-${String(order).padStart(2, "0")}`;
+      const used = new Set(
+        draft.samCategories.map((item) => Number(item.id.replace("SAM-KAT-", "")) || 0),
+      );
+      let order = Math.max(0, ...draft.samCategories.map((item) => item.sortOrder)) + 1;
+      let n = order;
+      while (used.has(n)) n += 1;
+      id = `SAM-KAT-${String(n).padStart(2, "0")}`;
       draft.samCategories.push({
         id,
         name,
-        description: input.description?.trim() || "",
+        description,
         sortOrder: order,
         isActive: true,
       });
@@ -2681,9 +2770,82 @@ export const storeActions = {
     return { ok: true, id };
   },
 
+  // D-26.f: ubah nama/deskripsi kategori bank SAM-iSAFE.
+  updateSamCategory(
+    actor: { id?: string },
+    categoryId: string,
+    patch: { name?: string; description?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah kategori." };
+    }
+    const target = currentState.samCategories.find((item) => item.id === categoryId);
+    if (!target) return { ok: false, error: "Kategori tidak ditemukan." };
+    const name = patch.name?.trim() ?? target.name;
+    if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    if (
+      currentState.samCategories.some(
+        (item) => item.id !== categoryId && item.name.toLowerCase() === name.toLowerCase(),
+      )
+    ) {
+      return { ok: false, error: "Nama kategori sudah digunakan." };
+    }
+    const description = patch.description?.trim() ?? target.description;
+    if (description.length > 280) {
+      return { ok: false, error: "Deskripsi maksimal 280 karakter." };
+    }
+    setState((draft) => {
+      const live = draft.samCategories.find((item) => item.id === categoryId)!;
+      live.name = name;
+      live.description = description;
+      audit(draft, account, {
+        objectType: "SamCategory",
+        objectId: categoryId,
+        action: "Mengubah kategori SAM-iSAFE",
+        note: name,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.f: hapus kategori hanya bila kosong (tanpa pertanyaan).
+  deleteSamCategory(actor: { id?: string }, categoryId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus kategori." };
+    }
+    const target = currentState.samCategories.find((item) => item.id === categoryId);
+    if (!target) return { ok: false, error: "Kategori tidak ditemukan." };
+    if (currentState.samCategories.length <= 1) {
+      return { ok: false, error: "Kategori terakhir tidak dapat dihapus." };
+    }
+    const isi = currentState.samQuestions.filter((item) => item.categoryId === categoryId);
+    if (isi.length > 0) {
+      return {
+        ok: false,
+        error: `Kategori masih berisi ${isi.length} pertanyaan. Pindahkan atau hapus dulu.`,
+      };
+    }
+    setState((draft) => {
+      draft.samCategories = draft.samCategories.filter((item) => item.id !== categoryId);
+      audit(draft, account, {
+        objectType: "SamCategory",
+        objectId: categoryId,
+        action: "Menghapus kategori SAM-iSAFE",
+        note: `${target.name} (pengamatan baru memakai bank sisa)`,
+      });
+    });
+    return { ok: true };
+  },
+
   addSamQuestion(
     actor: { id?: string },
-    input: { categoryId: string; text: string },
+    input: { categoryId: string; text: string; panduan?: string; contohBukti?: string },
   ): ActionResult {
     const account = actor.id
       ? currentState.users.find((user) => user.id === actor.id)
@@ -2695,6 +2857,14 @@ export const storeActions = {
     if (!category) return { ok: false, error: "Kategori tidak ditemukan." };
     const text = input.text.trim();
     if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    const panduan = input.panduan?.trim() ?? "";
+    const contohBukti = input.contohBukti?.trim() ?? "";
+    if (panduan.length > 500) {
+      return { ok: false, error: "Panduan maksimal 500 karakter." };
+    }
+    if (contohBukti.length > 280) {
+      return { ok: false, error: "Contoh bukti maksimal 280 karakter." };
+    }
     let id = "";
     setState((draft) => {
       const order =
@@ -2704,12 +2874,18 @@ export const storeActions = {
             .filter((item) => item.categoryId === input.categoryId)
             .map((item) => item.sortOrder),
         ) + 1;
-      const n = draft.samQuestions.length + 1;
+      const used = new Set(
+        draft.samQuestions.map((item) => Number(item.id.replace("SAM-Q-", "")) || 0),
+      );
+      let n = draft.samQuestions.length + 1;
+      while (used.has(n)) n += 1;
       id = `SAM-Q-${String(n).padStart(3, "0")}`;
       draft.samQuestions.push({
         id,
         categoryId: input.categoryId,
         text,
+        panduan,
+        contohBukti,
         sortOrder: order,
         isActive: true,
       });
@@ -2721,6 +2897,136 @@ export const storeActions = {
       });
     });
     return { ok: true, id };
+  },
+
+  // D-26.f: ubah teks/panduan/contoh bukti + pindah kategori.
+  updateSamQuestion(
+    actor: { id?: string },
+    questionId: string,
+    patch: { text?: string; panduan?: string; contohBukti?: string; categoryId?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const text = patch.text?.trim() ?? target.text;
+    if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    const panduan = patch.panduan?.trim() ?? target.panduan ?? "";
+    const contohBukti = patch.contohBukti?.trim() ?? target.contohBukti ?? "";
+    if (panduan.length > 500) {
+      return { ok: false, error: "Panduan maksimal 500 karakter." };
+    }
+    if (contohBukti.length > 280) {
+      return { ok: false, error: "Contoh bukti maksimal 280 karakter." };
+    }
+    const categoryId = patch.categoryId ?? target.categoryId;
+    const category = currentState.samCategories.find((item) => item.id === categoryId);
+    if (!category) return { ok: false, error: "Kategori tujuan tidak ditemukan." };
+    setState((draft) => {
+      const live = draft.samQuestions.find((item) => item.id === questionId)!;
+      live.text = text;
+      live.panduan = panduan;
+      live.contohBukti = contohBukti;
+      if (categoryId !== live.categoryId) {
+        const order =
+          Math.max(
+            0,
+            ...draft.samQuestions
+              .filter((item) => item.categoryId === categoryId)
+              .map((item) => item.sortOrder),
+          ) + 1;
+        live.categoryId = categoryId;
+        live.sortOrder = order;
+      }
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: "Mengubah pertanyaan SAM-iSAFE",
+        note: `${category.name} (pengamatan baru memakai teks baru)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.f: hapus soal hanya bila belum pernah dipakai pengamatan.
+  deleteSamQuestion(actor: { id?: string }, questionId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const dipakai = currentState.samAssessments.filter(
+      (item) => item.answers[questionId] !== undefined,
+    ).length;
+    if (dipakai > 0) {
+      return {
+        ok: false,
+        error: `Sudah dipakai ${dipakai} pengamatan. Nonaktifkan saja agar riwayat utuh.`,
+      };
+    }
+    setState((draft) => {
+      draft.samQuestions = draft.samQuestions.filter((item) => item.id !== questionId);
+      // Rapatkan urutan dalam kategori yang ditinggalkan.
+      const sisa = draft.samQuestions
+        .filter((item) => item.categoryId === target.categoryId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      sisa.forEach((item, index) => {
+        item.sortOrder = index + 1;
+      });
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: "Menghapus pertanyaan SAM-iSAFE",
+        note: `${target.id} (belum pernah dipakai pengamatan)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-26.f: geser urutan soal dalam kategorinya.
+  moveSamQuestion(
+    actor: { id?: string },
+    questionId: string,
+    direction: "naik" | "turun",
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengurutkan pertanyaan." };
+    }
+    const target = currentState.samQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const group = currentState.samQuestions
+      .filter((item) => item.categoryId === target.categoryId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const posisi = group.findIndex((item) => item.id === questionId);
+    const tukar = direction === "naik" ? posisi - 1 : posisi + 1;
+    if (tukar < 0 || tukar >= group.length) {
+      return { ok: false, error: "Sudah di ujung urutan." };
+    }
+    const lawan = group[tukar].id;
+    setState((draft) => {
+      const a = draft.samQuestions.find((item) => item.id === questionId)!;
+      const b = draft.samQuestions.find((item) => item.id === lawan)!;
+      const temp = a.sortOrder;
+      a.sortOrder = b.sortOrder;
+      b.sortOrder = temp;
+      audit(draft, account, {
+        objectType: "SamQuestion",
+        objectId: questionId,
+        action: "Mengurutkan pertanyaan SAM-iSAFE",
+        note: `${direction} dalam ${target.categoryId}`,
+      });
+    });
+    return { ok: true };
   },
 
   setSamQuestionActive(
@@ -2749,15 +3055,17 @@ export const storeActions = {
 };
 
 // Pembentuk kandidat temuan/rekomendasi turunan (aturan ilustratif, bukan final).
-// Menutup flow terputus: kiriman Diterima selalu punya turunan untuk peta/rekomendasi.
-// Usulan ilustratif: 1/2/Tidak memicu temuan per jawaban; bukan aturan ilmiah final.
+// Menutup flow terputus: kiriman lapor-cepat Diterima selalu punya turunan untuk peta/rekomendasi.
+// D-32: penilaian-mandiri TIDAK menurunkan temuan (murni skor/PDF).
 // Idempoten: lewati bila turunan sudah ada (mis. seed).
 function ensureDerivedWork(
   draft: IshasState,
   report: Report,
   severity: Severity,
   priority: Priority,
+  finalAction?: string,
 ): void {
+  if (report.channel !== "lapor-cepat") return;
   if (
     draft.findings.some((f) => f.reportId === report.id) ||
     draft.recommendations.some((r) => r.reportId === report.id)
@@ -2842,11 +3150,9 @@ function ensureDerivedWork(
       y: locationSnapshot.point?.y ?? 0,
       level,
       issue,
-      indicator:
-        report.channel === "penilaian-mandiri"
-          ? sourceAnswerId || report.instrumentVersionId || "Instrumen"
-          : (report.indicatorId ?? "Tidak menggunakan instrumen"),
-      recommendation: `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
+      indicator: report.indicatorId ?? "Tidak menggunakan instrumen",
+      recommendation:
+        finalAction ?? `Kaji hasil validasi ${report.id} dan susun rencana tindak lanjut.`,
       status: "Belum ditindaklanjuti",
       hazard: "Menunggu kajian Pesantren",
       impact: "Menunggu kajian Pesantren",
@@ -2865,11 +3171,9 @@ function ensureDerivedWork(
       priority: priority === "Belum ditentukan" ? "Sedang" : priority,
       title: `Tindak lanjut: ${issue}`,
       location,
-      source:
-        report.channel === "penilaian-mandiri"
-          ? `${report.instrumentVersionId ?? "INS"} · ${report.id}`
-          : `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
+      source: `${report.indicatorId ?? "IND-LAPOR-CEPAT"} · ${report.id}`,
       action:
+        finalAction ??
         "Susun rencana tindakan (PIC + tenggat + catatan), laksanakan, lalu ajukan verifikasi.",
       status: "Belum ditindaklanjuti",
       owner: "",
@@ -2918,20 +3222,30 @@ function setStateReport(
   return result;
 }
 
-function notifyOwners(draft: IshasState, institutionCode: string, reportId: string): void {
+function notifyOwners(
+  draft: IshasState,
+  institutionCode: string,
+  reportId: string,
+  channel: ReportChannel = "lapor-cepat",
+): void {
   const owners = draft.users.filter(
     (u) =>
       u.roleId === "pesantren" &&
       u.status === "Aktif" &&
       u.institutionCodes.includes(institutionCode),
   );
+  const terbit = channel === "penilaian-mandiri";
   for (const owner of owners) {
     notify(draft, {
       recipientAccountId: owner.id,
       institutionCode,
       sourceObjectId: reportId,
-      message: `Laporan baru ${reportId} menunggu validasi.`,
-      targetUrl: "/pesantren/validasi-laporan",
+      message: terbit
+        ? `Penilaian mandiri ${reportId} telah terbit.`
+        : `Laporan baru ${reportId} menunggu validasi.`,
+      targetUrl: terbit
+        ? "/pesantren/hasil-penilaian-mandiri"
+        : "/pesantren/validasi-laporan",
     });
   }
 }

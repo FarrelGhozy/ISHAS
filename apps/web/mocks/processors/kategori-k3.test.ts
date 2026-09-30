@@ -13,24 +13,30 @@ import { SEED } from "../seed/seed";
 import type { RiskFinding } from "../types";
 
 describe("K3_CATEGORIES single source of truth", () => {
-  test("tepat 4 kategori dengan ID/nama/ikon stabil", () => {
+  test("tepat 6 kategori dengan ID/nama/ikon stabil", () => {
     expect(K3_CATEGORIES.map((c) => c.id)).toEqual([
       "KAT-KESELAMATAN",
+      "KAT-DARURAT",
       "KAT-KESEHATAN",
       "KAT-LINGKUNGAN",
       "KAT-PSIKOSOSIAL",
+      "KAT-AKSESIBILITAS",
     ]);
     expect(K3_CATEGORIES.map((c) => c.name)).toEqual([
-      "Keselamatan",
+      "Keselamatan dan Keamanan Gedung & Asrama",
+      "Sistem Tanggap Darurat & Antisipasi Kebencanaan",
       "Kesehatan",
-      "Lingkungan",
-      "Psikososial",
+      "Kesehatan Lingkungan",
+      "Psikososial: Bullying & Kesehatan Mental",
+      "Fasilitas Disabilitas & Aksesibilitas",
     ]);
     expect(K3_CATEGORIES.map((c) => c.icon)).toEqual([
       "ShieldCheck",
+      "Siren",
       "HeartPulse",
       "Leaf",
       "Brain",
+      "Accessibility",
     ]);
     for (const c of K3_CATEGORIES) {
       expect(c.description.length).toBeGreaterThan(10);
@@ -46,59 +52,71 @@ describe("K3_CATEGORIES single source of truth", () => {
 
 describe("hitungRekapKategori", () => {
   const reports = SEED.reports.filter(
-    (r) => r.validationStatus === "Diterima" && !r.archivedAt && r.handlingStatus !== "Completed",
+    (r) =>
+      (r.validationStatus === "Diterima" || r.validationStatus === "Terbit") &&
+      !r.archivedAt &&
+      r.handlingStatus !== "Completed",
   );
   const ids = new Set(reports.map((r) => r.id));
   const findings = SEED.findings.filter((f) => ids.has(f.reportId));
   const snapshots = SEED.selfAssessmentSnapshots.filter((s) => ids.has(s.reportId));
   const input = { reports, findings, snapshots, versions: SEED.instrumentVersions };
 
-  test("katalog indikator unik: 4 Keselamatan + 2 + 2 + 2", () => {
+  test("katalog indikator unik: 10 + 10 + 10 + 10 + 8 + 11", () => {
     const rows = hitungRekapKategori(input);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    expect(byName["Keselamatan"].jumlahIndikator).toBe(4);
-    expect(byName["Kesehatan"].jumlahIndikator).toBe(2);
-    expect(byName["Lingkungan"].jumlahIndikator).toBe(2);
-    expect(byName["Psikososial"].jumlahIndikator).toBe(2);
+    expect(byName["Keselamatan dan Keamanan Gedung & Asrama"].jumlahIndikator).toBe(10);
+    expect(byName["Sistem Tanggap Darurat & Antisipasi Kebencanaan"].jumlahIndikator).toBe(10);
+    expect(byName["Kesehatan"].jumlahIndikator).toBe(10);
+    expect(byName["Kesehatan Lingkungan"].jumlahIndikator).toBe(10);
+    expect(byName["Psikososial: Bullying & Kesehatan Mental"].jumlahIndikator).toBe(8);
+    expect(byName["Fasilitas Disabilitas & Aksesibilitas"].jumlahIndikator).toBe(11);
     expect(byName[KATEGORI_BELUM_DIPETAKAN].jumlahIndikator).toBe(0);
   });
 
   test("temuan terpetakan ke seluruh kategori + Belum dipetakan (lapor-cepat)", () => {
     const rows = hitungRekapKategori(input);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    // Keselamatan: RPT-0004 + RPT-0008 + 3 turunan RPT-0010; Kesehatan: RPT-0007 + RPT-0013 + RPT-0015;
-    // Lingkungan: RPT-0009 + turunan RPT-0010 + RPT-0014; Psikososial: turunan RPT-0014;
-    // Belum dipetakan: RPT-0003 tanpa kategori/indikator.
-    expect(byName["Keselamatan"].jumlahTemuan).toBe(5);
+    // D-32: penilaian mandiri tidak lagi menyumbang temuan. Tersisa lapor-cepat:
+    // Keselamatan: RPT-0019; Tanggap Darurat: RPT-0008 (APAR);
+    // Kesehatan: RPT-0013 + RPT-0015 + RPT-0018; Lingkungan: RPT-0009;
+    // Psikososial/Aksesibilitas: (kosong); Belum dipetakan: RPT-0003.
+    expect(byName["Keselamatan dan Keamanan Gedung & Asrama"].jumlahTemuan).toBe(1);
+    expect(byName["Sistem Tanggap Darurat & Antisipasi Kebencanaan"].jumlahTemuan).toBe(1);
     expect(byName["Kesehatan"].jumlahTemuan).toBe(3);
-    expect(byName["Lingkungan"].jumlahTemuan).toBe(3);
-    expect(byName["Psikososial"].jumlahTemuan).toBe(1);
+    expect(byName["Kesehatan Lingkungan"].jumlahTemuan).toBe(1);
+    expect(byName["Psikososial: Bullying & Kesehatan Mental"].jumlahTemuan).toBe(0);
+    expect(byName["Fasilitas Disabilitas & Aksesibilitas"].jumlahTemuan).toBe(0);
     expect(byName[KATEGORI_BELUM_DIPETAKAN].jumlahTemuan).toBe(1);
   });
 
   test("risiko Ekstrem terisi satu (temuan APAR musala) dan konsisten dengan total", () => {
     const rows = hitungRekapKategori(input);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    expect(byName["Keselamatan"].risiko.Ekstrem).toBe(1);
+    expect(byName["Sistem Tanggap Darurat & Antisipasi Kebencanaan"].risiko.Ekstrem).toBe(1);
     for (const row of rows) {
-      if (row.name !== "Keselamatan") expect(row.risiko.Ekstrem).toBe(0);
+      if (row.name !== "Sistem Tanggap Darurat & Antisipasi Kebencanaan")
+        expect(row.risiko.Ekstrem).toBe(0);
       expect(row.jumlahTemuan).toBe(
         row.risiko.Ekstrem + row.risiko.Tinggi + row.risiko.Sedang + row.risiko.Rendah,
       );
     }
   });
 
-  test("sesuai/tidak sesuai hanya dari snapshot Diterima", () => {
+  test("sesuai/tidak sesuai hanya dari snapshot Diterima/Terbit", () => {
     const rows = hitungRekapKategori(input);
     const total = rows.reduce((n, r) => n + r.jumlahSesuai + r.jumlahTidakSesuai, 0);
-    // 32 jawaban terisi; satu nilai legacy di luar skala versi asal tidak diklasifikasi.
-    expect(total).toBe(31);
+    // D-44: 5 snapshot penilaian mandiri × 59 indikator = 295 jawaban terklasifikasi.
+    expect(total).toBe(295);
   });
 
   test("Draft tidak memperbesar katalog dan tidak mengganti definisi jawaban historis", () => {
     const historical = structuredClone(
       SEED.instrumentVersions.find((version) => version.id === snapshots[0].instrumentVersionId)!,
     );
+    // Versi asal snapshot bukan lagi satu-satunya Published (INS-v2.0); tandai
+    // arsip agar katalog hanya dihitung dari versi Published.
+    historical.status = "Archived";
     const indicator = historical.dimensions[0].indicators[0];
     indicator.answerType = "likert-1-2-tidak";
     indicator.categoryId = "KAT-PSIKOSOSIAL";
@@ -117,7 +135,9 @@ describe("hitungRekapKategori", () => {
       snapshots: [snapshot],
       versions: [draft, historical],
     });
-    expect(rows.find((row) => row.name === "Psikososial")!.jumlahSesuai).toBe(1);
+    expect(
+      rows.find((row) => row.name === "Psikososial: Bullying & Kesehatan Mental")!.jumlahSesuai,
+    ).toBe(1);
     expect(rows.reduce((sum, row) => sum + row.jumlahTidakSesuai, 0)).toBe(0);
     expect(rows.reduce((sum, row) => sum + row.jumlahIndikator, 0)).toBe(0);
   });
@@ -159,6 +179,28 @@ describe("kategoriOfFinding", () => {
       indicator: "Tidak menggunakan instrumen",
     } as RiskFinding;
     expect(kategoriOfFinding(unmapped, SEED.instrumentVersions)).toBeNull();
+  });
+
+  test("meneruskan bank live untuk indikator yang tak ada di versi warisan", () => {
+    const bank = structuredClone(SEED.instrument);
+    bank.dimensions[0].indicators.push({
+      id: "IND-K3L-099",
+      code: "IND-K3L-099",
+      title: "Indikator bank baru",
+      prompt: "Prompt indikator bank baru.",
+      categoryId: "KAT-PSIKOSOSIAL",
+      answerType: "ya-tidak",
+      required: true,
+      evidenceRequired: false,
+      locationRequired: false,
+      weight: 1,
+      options: [{ value: "Ya", label: "Ya", weight: 100, isFinding: false }],
+    });
+    const finding = { reportId: "RPT-0004", indicator: "IND-K3L-099" } as RiskFinding;
+    expect(kategoriOfFinding(finding, SEED.instrumentVersions)).toBeNull();
+    expect(kategoriOfFinding(finding, SEED.instrumentVersions, undefined, bank)).toBe(
+      "KAT-PSIKOSOSIAL",
+    );
   });
 });
 

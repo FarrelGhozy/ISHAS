@@ -62,6 +62,32 @@ export async function getEvidenceAsset(id: string): Promise<EvidenceAsset | unde
     };
   });
 }
+// Fase 5: enumerasi seluruh bukti perangkat untuk migrasi IndexedDB → server.
+export async function getAllEvidenceAssets(): Promise<{ id: string; asset: EvidenceAsset }[]> {
+  if (typeof indexedDB === "undefined") return [];
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction("assets", "readonly");
+    const out: { id: string; asset: EvidenceAsset }[] = [];
+    const cursor = transaction.objectStore("assets").openCursor();
+    cursor.onsuccess = () => {
+      const request = cursor.result;
+      if (request) {
+        out.push({ id: String(request.key), asset: request.value as EvidenceAsset });
+        request.continue();
+      }
+    };
+    transaction.oncomplete = () => {
+      db.close();
+      resolve(out);
+    };
+    transaction.onerror = transaction.onabort = () => {
+      db.close();
+      reject(new Error("Bukti tidak dapat dibaca."));
+    };
+  });
+}
+
 export async function clearEvidenceAssets(): Promise<void> {
   if (typeof indexedDB === "undefined") return;
   const db = await database();

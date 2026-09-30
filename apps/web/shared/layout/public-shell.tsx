@@ -1,5 +1,5 @@
 // Shell publik ringan — docs ROUTES.md §4 dan WIREFRAMES.md §0.
-// Header: logo ISHAS + subteks | penanda `Data publik · ilustrasi` | Masuk / identitas + Ruang kerja.
+// Header: logo ISHAS + subteks | Masuk / identitas + Ruang kerja.
 // Sesi login TIDAK mengubah isi halaman publik (aturan `/`).
 
 import { useEffect, useState } from "react";
@@ -7,17 +7,24 @@ import { Outlet, useLocation } from "react-router";
 import { Link, useNavigate } from "react-router";
 import { Menu, ShieldCheck, X } from "lucide-react";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
+import { refreshServerSession } from "~/shared/auth/auth-session";
 import { workspaceHome } from "~/shared/auth/access-policy";
 import { IshasMark } from "~/shared/components/ishas-mark";
-import { StatusChip } from "~/shared/components/status-chip";
 import { PublicNavigation } from "~/shared/navigation/public-navigation";
 import { Modal } from "~/shared/components/modal";
+import { BackendNotice } from "~/shared/components/backend-notice";
+import { refreshPublicState, usePublicStateWithStatus } from "~/shared/api/public-state";
 
 export default function PublicLayout() {
   const user = useCurrentUser();
   const navigate = useNavigate();
+  const { error } = usePublicStateWithStatus();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  useEffect(() => {
+    // Tab baru: selaraskan cache akun dengan cookie sesi bila mode backend.
+    void refreshServerSession();
+  }, []);
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname, location.search]);
@@ -37,18 +44,17 @@ export default function PublicLayout() {
       </a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
         <div className="border-b border-line px-4 py-4">
-          <Link to="/" aria-label="ISHAS — beranda">
-            <IshasMark variant="compact" />
+          <Link to="/" aria-label="ISHAS — beranda" className="inline-flex">
+            <IshasMark variant="compact" wordmark />
           </Link>
         </div>
         <PublicNavigation />
-        <p className="border-t border-line p-4 text-xs text-secondary-text">
-          Data ilustrasi · prototipe frontend
-        </p>
       </aside>
       <Modal open={mobileOpen} onClose={() => setMobileOpen(false)} label="Menu publik">
         <div className="flex items-center justify-between gap-3">
-          <IshasMark variant="compact" />
+          <Link to="/" aria-label="ISHAS — beranda" onClick={() => setMobileOpen(false)}>
+            <IshasMark variant="compact" wordmark />
+          </Link>
           <button
             type="button"
             className="secondary-button px-3"
@@ -75,7 +81,6 @@ export default function PublicLayout() {
             Publik / Pelapor
           </span>
           <div className="ms-auto flex min-w-0 flex-1 flex-wrap justify-end items-center gap-2">
-            <StatusChip value="Data publik · ilustrasi" />
             {user ? (
               <>
                 <span className="flex min-h-11 min-w-0 items-center gap-2 rounded-[7px] border border-line-soft bg-white px-2">
@@ -110,11 +115,9 @@ export default function PublicLayout() {
           tabIndex={-1}
           className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-6"
         >
+          <BackendNotice error={error} onRetry={refreshPublicState} />
           <Outlet />
         </main>
-        <footer className="border-t border-line py-4 text-center text-xs font-semibold text-secondary-text">
-          ISHAS · prototipe frontend · seluruh angka adalah data ilustrasi
-        </footer>
       </div>
     </div>
   );

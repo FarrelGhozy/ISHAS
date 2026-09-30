@@ -1,9 +1,10 @@
-// Antrean validasi Pesantren — daftar + modal periksa (FLOWS §4, D-19).
+// Antrean validasi Pesantren — daftar + modal periksa (FLOWS §4, D-19, D-29).
 // Detail hanya-baca tinggal di komponen review; halaman ini mengatur
 // filter, keputusan Terima/Tolak, dan pre-fill usulan pelapor.
 
 import { useMemo, useState } from "react";
-import { useMockState, storeActions } from "~/mocks/store/mock-store";
+import { usePesantrenState, refreshPesantrenState } from "~/shared/api/workspace-state";
+import { repository } from "~/shared/api/repository";
 import { selectAreasByInstitution } from "~/mocks/store/lapor-selectors";
 import { selectInstitutionByCode, selectReportsForManager } from "~/mocks/store/selectors";
 import { StatusChip } from "~/shared/components/status-chip";
@@ -28,10 +29,9 @@ function usulanPrioritas(value?: string): string {
 }
 
 export function ValidasiLaporanPage() {
-  const state = useMockState();
+  const state = usePesantrenState();
   const user = useCurrentUser();
   const [filter, setFilter] = useState("Menunggu validasi");
-  const [kanal, setKanal] = useState("Semua");
   const [severityFilter, setSeverityFilter] = useState("Semua");
   const [query, setQuery] = useState("");
   const [report, setReport] = useState<Report | null>(null);
@@ -44,19 +44,20 @@ export function ValidasiLaporanPage() {
   const reports = useMemo(
     () =>
       selectReportsForManager(state, code)
+        // D-32: penilaian mandiri terbit langsung, bukan bagian antrean validasi.
+        .filter((item) => item.channel === "lapor-cepat")
         .filter(
           (item) =>
             (filter === "Semua" ||
               item.validationStatus === filter ||
               item.handlingStatus === filter) &&
-            (kanal === "Semua" || item.channel === kanal) &&
             (severityFilter === "Semua" || item.severity === severityFilter) &&
             `${item.id} ${item.title} ${item.reporterName} ${item.description}`
               .toLowerCase()
               .includes(query.toLowerCase()),
         )
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [state, code, filter, kanal, severityFilter, query],
+    [state, code, filter, severityFilter, query],
   );
   return (
     <section className="flex flex-col gap-4">
@@ -64,10 +65,11 @@ export function ValidasiLaporanPage() {
         <p className="kicker">Moderasi</p>
         <h1 className="text-2xl font-extrabold text-heading">Validasi laporan</h1>
         <p className="mt-1 text-sm text-secondary-text">
-          Hanya laporan milik {institution?.name ?? code}.
+          Hanya laporan cepat milik {institution?.name ?? code}. Penilaian mandiri terbit
+          langsung tanpa validasi.
         </p>
       </header>
-      <div className="surface grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="surface grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3">
         <label className="text-sm font-bold">
           Status
           <select
@@ -81,18 +83,6 @@ export function ValidasiLaporanPage() {
             <option>Completed</option>
             <option>Ditolak</option>
             <option>Semua</option>
-          </select>
-        </label>
-        <label className="text-sm font-bold">
-          Kanal
-          <select
-            className="mt-1 min-h-11 w-full rounded border border-line-soft px-3"
-            value={kanal}
-            onChange={(e) => setKanal(e.target.value)}
-          >
-            <option>Semua</option>
-            <option value="lapor-cepat">lapor-cepat</option>
-            <option value="penilaian-mandiri">penilaian-mandiri</option>
           </select>
         </label>
         <label className="text-sm font-bold">
@@ -171,15 +161,19 @@ function Review({
 }: {
   report: Report | null;
   user: NonNullable<ReturnType<typeof useCurrentUser>>;
-  state: ReturnType<typeof useMockState>;
+  state: ReturnType<typeof usePesantrenState>;
   close: () => void;
 }) {
   const [accept, setAccept] = useState(true);
   const [severity, setSeverity] = useState<string>(() => usulanKeputusan(report?.reporterSeverity));
   const [priority, setPriority] = useState<string>(() => usulanPrioritas(report?.reporterPriority));
+  const [rekomendasi, setRekomendasi] = useState<string>(
+    () => report?.reporterRecommendation?.trim() ?? "",
+  );
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   if (!report) return null;
+  const isLaporCepat = report.channel === "lapor-cepat";
   const live = state.reports.find((item) => item.id === report.id) ?? report;
   const decided = live.validationStatus !== "Menunggu validasi";
   const areas = selectAreasByInstitution(state, report.institutionCode);
@@ -197,18 +191,21 @@ function Review({
   const plans = state.campusPlans.filter(
     (plan) => plan.institutionCode === report.institutionCode,
   );
-  const submit = () => {
+  const submit = async () => {
     const result = accept
-      ? storeActions.acceptReport(
+      ? await repository.acceptReport(
           user,
           report.id,
           severity as Severity,
           priority as Priority,
           note || undefined,
+          isLaporCepat ? rekomendasi || undefined : undefined,
         )
-      : storeActions.rejectReport(user, report.id, note);
-    if (result.ok) close();
-    else setError(result.error);
+      : await repository.rejectReport(user, report.id, note);
+    if (result.ok) {
+      refreshPesantrenState();
+      close();
+    } else setError(result.error);
   };
   return (
     <Modal open={true} onClose={close} label={`Periksa ${report.id}`}>
@@ -257,6 +254,11 @@ function Review({
             {report.reporterPriority ?? "Belum ditentukan"}
             {" — tinjau ulang sebelum konfirmasi."}
           </p>
+          {report.reporterRecommendation?.trim() ? (
+            <p className="mt-2 rounded-lg bg-strip p-3 text-sm text-secondary-text">
+              Usulan rekomendasi pelapor: {report.reporterRecommendation}
+            </p>
+          ) : null}
           {accept ? (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="text-sm font-bold">
@@ -286,6 +288,22 @@ function Review({
                 </select>
               </label>
             </div>
+          ) : null}
+          {accept && isLaporCepat ? (
+            <label className="mt-4 block text-sm font-bold">
+              Rekomendasi tindakan*
+              <textarea
+                className="mt-1 min-h-24 w-full rounded border border-line-soft p-3 font-normal"
+                value={rekomendasi}
+                maxLength={500}
+                placeholder="Tulis tindakan perbaikan yang tampil di rekomendasi publik."
+                onChange={(e) => setRekomendasi(e.target.value)}
+              />
+              <span className="text-secondary-text">
+                {rekomendasi.trim().length} karakter · minimal 10 · terisi awal dari usulan pelapor,
+                boleh diubah total.
+              </span>
+            </label>
           ) : null}
           <label className="mt-4 block text-sm font-bold">
             {accept ? "Catatan validasi (opsional)" : "Alasan penolakan (minimal 10 karakter)"}

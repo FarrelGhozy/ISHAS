@@ -17,7 +17,6 @@ export default [
     route("peta-risiko", "routes/peta-risiko.tsx"),
     route("rekomendasi", "routes/rekomendasi.tsx"),
     route("tindak-lanjut", "routes/tindak-lanjut.tsx"),
-    route("laporan", "routes/laporan.tsx"),
     route("laporan/:id", "routes/laporan.$id.tsx"),
     route("dokumen", "routes/dokumen.tsx"),
     route("pesantren/:kode", "routes/pesantren.$kode.tsx"),
@@ -52,6 +51,8 @@ export default [
   ]),
   route("pesantren", "routes/_workspace.pesantren.tsx", [
     index("routes/pesantren.index.tsx"),
+    route("dashboard", "routes/pesantren.dashboard.tsx"),
+    route("hasil-penilaian-mandiri", "routes/pesantren.hasil-penilaian-mandiri.tsx"),
     route("validasi-laporan", "routes/pesantren.validasi-laporan.tsx"),
     route("lokasi", "routes/pesantren.lokasi.tsx"),
     route("tindak-lanjut", "routes/pesantren.tindak-lanjut.tsx"),

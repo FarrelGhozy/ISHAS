@@ -51,6 +51,10 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
         parsed.reporterPriority === "Rendah"
           ? parsed.reporterPriority
           : "Belum ditentukan",
+      reporterRecommendation:
+        typeof parsed.reporterRecommendation === "string"
+          ? parsed.reporterRecommendation.slice(0, 500)
+          : "",
       title: typeof parsed.title === "string" ? parsed.title : "",
       description: typeof parsed.description === "string" ? parsed.description : "",
       evidenceName: typeof parsed.evidenceName === "string" ? parsed.evidenceName : "",
@@ -102,7 +106,8 @@ export function isLaporEmpty(values: LaporValues): boolean {
     values.categoryId === "" &&
     values.aspectId === "" &&
     values.reporterSeverity === "Belum ditentukan" &&
-    values.reporterPriority === "Belum ditentukan"
+    values.reporterPriority === "Belum ditentukan" &&
+    values.reporterRecommendation.trim() === ""
   );
 }
 

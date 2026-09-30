@@ -1,17 +1,18 @@
 // Daftar PDF laporan penilaian mandiri (D-24): satu penilai = satu PDF.
-// PDF dibuat saat kirim; tampil publik setelah Diterima. Cetak via browser.
+// PDF dibuat saat kirim; langsung tampil publik berstatus Terbit (D-32).
+// Cetak via browser.
 
 import { Link } from "react-router";
 import { FileText } from "lucide-react";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function LaporanPdfList({
   reports,
 }: {
-  reports: ReturnType<typeof useMockState>["reports"];
+  reports: ReturnType<typeof usePublicState>["reports"];
 }) {
-  const state = useMockState();
+  const state = usePublicState();
   const items = reports.filter((r) => r.channel === "penilaian-mandiri");
   if (!items.length)
     return (
@@ -26,7 +27,7 @@ export function LaporanPdfList({
         return (
           <div key={report.id} className="rounded-lg border border-line p-3">
             <div className="flex flex-wrap gap-2">
-              <StatusChip value="Diterima" />
+              <StatusChip value={report.validationStatus} />
               <StatusChip value="penilaian-mandiri" />
             </div>
             <p className="mt-2 font-bold text-heading">{report.title}</p>
@@ -40,11 +41,6 @@ export function LaporanPdfList({
                 ? ` · skor ${Math.round(report.scorePercent)}%`
                 : ""}
             </p>
-            {report.validatedByName ? (
-              <p className="mt-1 text-sm text-secondary-text">
-                Divalidasi oleh {report.validatedByName}
-              </p>
-            ) : null}
             <Link
               className="text-button mt-3 inline-flex items-center gap-1"
               to={`/laporan/${report.id}`}

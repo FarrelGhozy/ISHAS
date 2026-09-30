@@ -11,7 +11,7 @@ export function PublicFilter({ institutions }: { institutions: Institution[] }) 
           role="status"
           className="rounded-lg border border-line bg-strip p-3 text-sm text-secondary-text"
         >
-          Pratinjau periode {periodeParam} (ilustrasi). Rincian filter periode menunggu D-04 final.
+          Pratinjau periode {periodeParam}. Rincian filter periode menunggu D-04 final.
         </p>
       ) : null}
       <label className="surface flex min-w-0 flex-col gap-1 p-3 text-sm font-bold text-heading sm:flex-row sm:items-center sm:gap-3">

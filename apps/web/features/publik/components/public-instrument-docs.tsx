@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { Download, Eye, FileText, Lock } from "lucide-react";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { repository } from "~/shared/api/repository";
 import { K3_CATEGORIES } from "~/mocks/kategori-k3";
 import {
   filterDocRows,
@@ -14,13 +14,13 @@ import {
   stripPrivateAsset,
   type DocFilter,
 } from "~/mocks/processors/instrument-docs";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 function usePublicDocRows() {
-  const state = useMockState();
+  const state = usePublicState();
   const user = useCurrentUser();
   const canOpenPrivate = user?.roleId === "validator" && user?.status === "Aktif";
   const rows = useMemo(
@@ -39,7 +39,7 @@ async function openDoc(
   mode: "view" | "download",
   onError: (message: string) => void,
 ) {
-  const result = await mockRepository.openInstrumentDoc({ id: viewerId }, indicatorId);
+  const result = await repository.openInstrumentDoc({ id: viewerId }, indicatorId);
   if (!result.ok) {
     onError(result.error);
     return;
@@ -67,10 +67,12 @@ function DocTable({
   rows,
   viewerId,
   onError,
+  layout = "table",
 }: {
   rows: ReturnType<typeof usePublicDocRows>["rows"];
   viewerId: string | undefined;
   onError: (m: string) => void;
+  layout?: "table" | "cards";
 }) {
   if (rows.length === 0) {
     return (
@@ -80,11 +82,66 @@ function DocTable({
       />
     );
   }
+  if (layout === "cards") {
+    return (
+      <div className="space-y-2" aria-label="Daftar dokumen indikator">
+        {rows.map((row) => (
+          <article key={row.indicatorId} className="rounded-lg border border-line bg-strip/40 p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-bold leading-snug text-heading">
+                  {row.code} · {row.title}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-faint">
+                  {row.categoryName}
+                  {row.aspectName ? ` · ${row.aspectName}` : ""}
+                </p>
+              </div>
+              {row.doc ? <StatusChip value={row.doc.visibility} /> : null}
+            </div>
+            {row.doc ? (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
+                <p className="min-w-0 text-xs text-secondary-text">
+                  <span className="break-all">{row.doc.fileName}</span>
+                  <span className="whitespace-nowrap"> · {formatFileSize(row.doc.fileSize)}</span>
+                </p>
+                {row.doc.visibility === "Public" && row.doc.assetId ? (
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="secondary-button min-h-9 px-3 py-1.5 text-xs"
+                      onClick={() => void openDoc(viewerId, row.indicatorId, "view", onError)}
+                    >
+                      <Eye size={14} aria-hidden />
+                      Lihat
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button min-h-9 px-3 py-1.5 text-xs"
+                      onClick={() => void openDoc(viewerId, row.indicatorId, "download", onError)}
+                    >
+                      <Download size={14} aria-hidden />
+                      Unduh
+                    </button>
+                  </div>
+                ) : (
+                  <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-faint">
+                    <Lock size={14} aria-hidden />
+                    Terkunci
+                  </span>
+                )}
+              </div>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    );
+  }
   return (
     <div
       role="region"
       aria-label="Daftar dokumen indikator"
-      className="overflow-x-auto rounded-lg border border-line"
+      className="overflow-x-auto rounded-lg border border-line bg-white"
     >
       <table className="min-w-[720px] w-full text-left text-sm">
         <thead className="sticky top-0 bg-strip">
@@ -157,7 +214,7 @@ function FilterBar({ filter, onChange }: { filter: DocFilter; onChange: (f: DocF
       <label className="min-w-44 flex-1 text-xs font-bold sm:max-w-64">
         Cari dokumen
         <input
-          className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
+          className="mt-1 min-h-11 w-full rounded border border-line-soft bg-white px-3 font-normal"
           value={filter.q}
           onChange={(e) => onChange({ ...filter, q: e.target.value })}
           placeholder="Kode, judul, nama file…"
@@ -239,7 +296,6 @@ export function DashboardDocPanel() {
           <FileText size={18} aria-hidden className="text-primary" />
           Dokumen detail instrumen
         </h2>
-        <StatusChip value="Data publik · ilustrasi" />
       </div>
       <p className="mb-3 text-xs text-secondary-text">
         Penjelasan PDF per indikator ({publicCount} Public dari {rows.length} dokumen). Berkas
@@ -250,7 +306,7 @@ export function DashboardDocPanel() {
           {error}
         </p>
       ) : null}
-      <DocTable rows={top} viewerId={viewerId} onError={setError} />
+      <DocTable rows={top} viewerId={viewerId} onError={setError} layout="cards" />
       <Link to="/dokumen" className="text-button mt-3 inline-block min-h-11 py-2 text-sm">
         Buka semua dokumen →
       </Link>

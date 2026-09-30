@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
+import { repository } from "~/shared/api/repository";
+import { useAdminState } from "~/shared/api/admin-state";
+import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
@@ -7,7 +9,9 @@ import { StatusChip } from "~/shared/components/status-chip";
 // alamat + penanggung jawab) → verifikasi Aktif → buat akun Pesantren di
 // halaman Pengguna → baru terdaftar di pemilih publik.
 export function Page() {
-  const state = useMockState();
+  const state = useAdminState();
+  const user = useCurrentUser();
+  const actor = { id: user?.id, name: user?.name ?? "Super Admin" };
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [address, setAddress] = useState("");
@@ -43,20 +47,11 @@ export function Page() {
       ),
     [state.institutions, query],
   );
-  const add = () => {
-    const code = `PSN-${String(state.counters.institution).padStart(4, "0")}`;
-    const r = storeActions.addInstitution({
-      code,
-      name,
-      location,
-      address,
-      manager,
-      assessment: "Belum dimulai",
-      status: "Persiapan",
-    });
+  const add = async () => {
+    const r = await repository.addInstitution(actor, { name, location, address, manager });
     setNote(
       r.ok
-        ? `${code} ditambahkan sebagai Persiapan. Verifikasi menjadi Aktif, lalu buat akun Pesantren agar terdaftar di pemilih publik.`
+        ? `${r.id} ditambahkan sebagai Persiapan. Verifikasi menjadi Aktif, lalu buat akun Pesantren agar terdaftar di pemilih publik.`
         : (r.error ?? "Gagal menambah pesantren."),
     );
     if (r.ok) {
@@ -66,7 +61,7 @@ export function Page() {
       setManager("");
     }
   };
-  const update = (code: string, status: "Persiapan" | "Aktif" | "Nonaktif") => {
+  const update = async (code: string, status: "Persiapan" | "Aktif" | "Nonaktif") => {
     const target = state.institutions.find((x) => x.code === code);
     if (!target || target.status === status) return;
     const effect =
@@ -74,7 +69,7 @@ export function Page() {
         ? "Pesantren menjadi Aktif. Ia baru muncul di pemilih publik setelah punya akun Pesantren aktif (lihat halaman Pengguna)."
         : "Pesantren hilang dari pemilih publik dan menolak laporan baru. Laporan Diterima lama tidak tampil publik (D-08).";
     if (!window.confirm(`${code}: ubah ${target.status} → ${status}?\n\n${effect}`)) return;
-    const r = storeActions.setInstitutionStatus(code, status);
+    const r = await repository.setInstitutionStatus(actor, code, status);
     setNote(r.ok ? `Status ${code} diperbarui menjadi ${status}.` : (r.error ?? "Gagal."));
   };
   return (
@@ -129,7 +124,7 @@ export function Page() {
           Wajib: nama min 3 maks 120 unik, kota min 3, alamat min 10, penanggung jawab min 2.
         </p>
         <div className="sm:col-span-2">
-          <button type="button" className="primary-button" onClick={add}>
+          <button type="button" className="primary-button" onClick={() => void add()}>
             Tambah pesantren
           </button>
         </div>
@@ -141,7 +136,7 @@ export function Page() {
       )}
       <input
         aria-label="Cari pesantren"
-        className="min-h-11 rounded border border-line-soft px-3"
+        className="min-h-11 rounded border border-line-soft bg-white px-3"
         placeholder="Cari kode, nama, lokasi, alamat, atau penanggung jawab…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -181,7 +176,7 @@ export function Page() {
                     aria-label={`Status ${x.name}`}
                     className="min-h-11 rounded border border-line-soft px-2"
                     value={x.status}
-                    onChange={(e) => update(x.code, e.target.value as typeof x.status)}
+                    onChange={(e) => void update(x.code, e.target.value as typeof x.status)}
                   >
                     <option>Persiapan</option>
                     <option>Aktif</option>

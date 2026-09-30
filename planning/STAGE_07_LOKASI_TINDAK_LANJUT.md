@@ -62,6 +62,28 @@ tindak lanjut yang menggerakkan status, dan laporan pimpinan scope sendiri.
 - [x] Editor tingkat risiko per temuan (`Rendah/Sedang/Tinggi/Ekstrem`, teraudit);
   `verifyFinding`/`savePlanVersion` deprecasi lembut; lantai per-gedung; sync kartu.
 
+### 5. Revisi D-34 Dashboard Pesantren (IN PROGRESS 29 Sep 2026)
+
+- [ ] Route `/pesantren/dashboard` (landing Pesantren) + header identitas
+  (nama + kode + kota + status) + 4 kartu rangkuman + antrean terbaru +
+  tindak lanjut + tautan kelola; nav + redirect + test regresi.
+- [ ] Verifikasi: lint + typecheck + test + build + cek visual 3 viewport.
+
+### 6. Revisi D-36 Hasil mandiri detail (IN PROGRESS 29 Sep 2026)
+
+- [ ] Route `/pesantren/hasil-penilaian-mandiri` + menu `Hasil mandiri` +
+  daftar/detail `Terbit` full internal scope sendiri + blokir lintas-scope.
+- [ ] Verifikasi: lint + typecheck + test + build + cek visual 3 viewport.
+
+### 7. Revisi D-41 Pemisahan hasil mandiri dari Laporan (IN PROGRESS 29 Sep 2026)
+
+- [x] `/pesantren/laporan` hanya kanal `lapor-cepat` (`Diterima`, non-arsip);
+  penilaian mandiri `Terbit` hanya di `/pesantren/hasil-penilaian-mandiri`.
+- [x] Notifikasi "Penilaian mandiri <id> telah terbit" (mock + seed + backend)
+  mengarah ke `/pesantren/hasil-penilaian-mandiri`.
+- [x] Verifikasi: lint + typecheck + 292 test + build (web) + lint/typecheck + 111 test API.
+- [ ] Cek visual 3 viewport + alur klik browser (Chromium tidak tersedia di lingkungan ini).
+
 ## Acceptance criteria
 
 - [x] Area/lantai/gedung baru end-to-end terlihat di form publik pesantren yang sama (skenario integrasi).

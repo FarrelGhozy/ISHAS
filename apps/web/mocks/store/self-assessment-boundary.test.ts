@@ -8,7 +8,10 @@ import { storeActions, getState } from "./mock-store";
 import { selectPublicReports, selectValidatedReports } from "./selectors";
 import { pilihSnapshotTerbaruDiterima } from "../processors/dashboard-aggregate";
 import { SEED } from "../seed/seed";
+import { buildInstrumentV2Dimensions, buildSelfAssessmentAnswers } from "../seed/instrument-v2";
 import type { SelfAssessmentDraft } from "../types";
+
+const V2_DIMENSIONS = buildInstrumentV2Dimensions();
 
 const PENGELOLA = {
   id: "USR-003",
@@ -26,37 +29,12 @@ function draftLengkap(
     id,
     institutionCode: "PSN-0018",
     reporterName: "Penguji Mandiri",
-    instrumentVersionId: SEED.activeInstrumentVersionId ?? "INS-v1.1",
-    answers: {
-      "IND-K3L-001": {
-        value: "3",
-        note: "",
-        evidenceName: "",
-        areaId: "AREA-001",
-        planPoint: null,
-      },
-      "IND-K3L-002": {
-        value: "2",
-        note: "",
-        evidenceName: "kabel.jpg",
-        areaId: "AREA-001",
-        planPoint: null,
-      },
-      "IND-K3L-003": { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-004": { value: "3", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-005": {
-        value: "Ya",
-        note: "",
-        evidenceName: "",
-        areaId: "AREA-002",
-        planPoint: null,
-      },
-      "IND-K3L-006": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-007": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-008": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-009": { value: "2", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-010": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-    },
+    instrumentVersionId: SEED.activeInstrumentVersionId ?? "INS-v2.0",
+    // D-44: draft uji memuat seluruh 59 indikator + area/bukti wajib agar lolos kirim.
+    answers: buildSelfAssessmentAnswers(V2_DIMENSIONS, "sedang", {}, {
+      areaId: "AREA-001",
+      evidenceName: "bukti.jpg",
+    }),
     activeIndex: 0,
     updatedAt: new Date().toISOString(),
     ...overrides,
@@ -81,7 +59,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     ]) {
       expect(storeActions.submitSelfAssessment(actor, "SELF-PSN-0018").ok).toBe(false);
     }
-    expect(getState().reports.length).toBe(16);
+    expect(getState().reports.length).toBe(19);
   });
 
   test("publik tanpa login dan pesantren aktif lolos + email akun tersimpan", () => {
@@ -92,9 +70,7 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     );
     expect(publik.ok).toBe(true);
     if (!publik.ok || !publik.id) return;
-    expect(getState().reports.find((r) => r.id === publik.id)?.validationStatus).toBe(
-      "Menunggu validasi",
-    );
+    expect(getState().reports.find((r) => r.id === publik.id)?.validationStatus).toBe("Terbit");
 
     simpan("SELF-PSN-0018");
     const kelola = storeActions.submitSelfAssessment(PENGELOLA, "SELF-PSN-0018");
@@ -103,6 +79,28 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     expect(getState().reports.find((r) => r.id === kelola.id)?.reporterAccountEmail).toBe(
       "pesantren@ishas.demo",
     );
+  });
+
+  test("snapshot kiriman membawa cacah jawabanTerisi (D-35)", () => {
+    simpan("SELF-PSN-0018");
+    const kirim = storeActions.submitSelfAssessment({ name: "Warga", role: "Publik" }, "SELF-PSN-0018");
+    expect(kirim.ok).toBe(true);
+    if (!kirim.ok || !kirim.id) return;
+    const snapshot = getState().selfAssessmentSnapshots.find((s) => s.reportId === kirim.id);
+    // Draft uji mengisi 59 indikator → cacah bawaan 59 untuk proyeksi publik D-02.
+    expect(snapshot?.jawabanTerisi).toBe(59);
+  });
+
+  test("notifikasi 'telah terbit' mengarah ke hasil mandiri, bukan Laporan (D-41)", () => {
+    simpan("SELF-PSN-0018");
+    const kirim = storeActions.submitSelfAssessment({ name: "Warga" }, "SELF-PSN-0018");
+    expect(kirim.ok).toBe(true);
+    if (!kirim.ok || !kirim.id) return;
+    const notes = getState().notifications.filter((n) => n.sourceObjectId === kirim.id);
+    expect(notes.length).toBeGreaterThan(0);
+    expect(
+      notes.every((n) => n.targetUrl === "/pesantren/hasil-penilaian-mandiri"),
+    ).toBe(true);
   });
 });
 
@@ -167,17 +165,42 @@ describe("turunan temuan saat Terima (flow peta/rekomendasi)", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("lapor-cepat Diterima langsung punya 1 temuan + 1 rekomendasi Belum ditindaklanjuti", () => {
-    const r = storeActions.acceptReport(PENGELOLA, "RPT-0001", "Tinggi", "Tinggi");
+    const r = storeActions.acceptReport(
+      PENGELOLA,
+      "RPT-0001",
+      "Tinggi",
+      "Tinggi",
+      undefined,
+      "Amankan kabel dengan pelindung lalu jadwalkan perbaikan instalasi.",
+    );
     expect(r.ok).toBe(true);
     expect(getState().findings.filter((f) => f.reportId === "RPT-0001").length).toBe(1);
     const rec = getState().recommendations.filter((x) => x.reportId === "RPT-0001");
     expect(rec.length).toBe(1);
     expect(rec[0].status).toBe("Belum ditindaklanjuti");
     expect(rec[0].location).toContain("Koridor");
+    expect(rec[0].action).toContain("pelindung");
+  });
+
+  test("lapor-cepat tanpa rekomendasi final ditolak; usulan pendek juga ditolak", () => {
+    expect(storeActions.acceptReport(PENGELOLA, "RPT-0001", "Tinggi", "Tinggi").ok).toBe(false);
+    expect(
+      storeActions.acceptReport(PENGELOLA, "RPT-0001", "Tinggi", "Tinggi", undefined, "pendek").ok,
+    ).toBe(false);
+    expect(getState().reports.find((x) => x.id === "RPT-0001")?.validationStatus).toBe(
+      "Menunggu validasi",
+    );
   });
 
   test("turunan seed tidak digandakan saat transisi lain berjalan", () => {
-    storeActions.acceptReport(PENGELOLA, "RPT-0001", "Sedang", "Sedang");
+    storeActions.acceptReport(
+      PENGELOLA,
+      "RPT-0001",
+      "Sedang",
+      "Sedang",
+      undefined,
+      "Amankan kabel dengan pelindung lalu jadwalkan perbaikan instalasi.",
+    );
     expect(
       storeActions.updateHandlingStatus(PENGELOLA, "RPT-0001", "Proses", {
         owner: "Tim Sarana",
@@ -193,7 +216,14 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
   beforeEach(() => storeActions.resetMockData());
 
   test("rencana tanpa catatan / PIC pendek / tenggat lampau ditolak", () => {
-    storeActions.acceptReport(PENGELOLA, "RPT-0001", "Sedang", "Sedang");
+    storeActions.acceptReport(
+      PENGELOLA,
+      "RPT-0001",
+      "Sedang",
+      "Sedang",
+      undefined,
+      "Amankan kabel dengan pelindung lalu jadwalkan perbaikan instalasi.",
+    );
     const id = getState().recommendations.find((x) => x.reportId === "RPT-0001")!.id;
     expect(
       storeActions.updateRecommendation(PENGELOLA, id, {
@@ -220,20 +250,20 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
 
   test("tindak lanjut laporan yang sudah diarsip ditolak", () => {
     const other = { id: "USR-004", name: "H. Siti Aminah", role: "Pesantren" };
-    // RPT-0007 satu rekomendasi: Belum → Berjalan → 100% → verifikasi → Completed → arsip.
-    const id = "REC-RPT-0007-1"; // RPT-0007 Proses, rekomendasi Belum ditindaklanjuti
+    // RPT-0013 (lapor-cepat) satu rekomendasi: Belum → Berjalan → 100% → verifikasi → Completed → arsip.
+    const id = "REC-RPT-0013-1";
     expect(
       storeActions.updateRecommendation(other, id, {
-        owner: "Tim Sarana",
+        owner: "Tim Kesehatan",
         dueDate: "2099-10-01",
-        note: "Rencana penanganan pasokan air.",
+        note: "Rencana perbaikan ventilasi kamar.",
       }).ok,
     ).toBe(true);
     expect(
       storeActions.updateRecommendation(other, id, {
         note: "Selesai, bukti terlampir.",
         progress: 100,
-        evidenceName: "air.jpg",
+        evidenceName: "ventilasi.jpg",
       }).ok,
     ).toBe(true);
     expect(
@@ -242,12 +272,12 @@ describe("satu sumber syarat PIC/tenggat + guard tindak lanjut", () => {
         verify: true,
       }).ok,
     ).toBe(true);
-    expect(getState().reports.find((report) => report.id === "RPT-0007")?.handlingStatus).toBe(
+    expect(getState().reports.find((report) => report.id === "RPT-0013")?.handlingStatus).toBe(
       "Completed",
     );
-    expect(storeActions.archiveCompletedReport(other, "RPT-0007", "Arsip akhir periode").ok).toBe(
-      true,
-    );
+    expect(
+      storeActions.archiveCompletedReport(other, "RPT-0013", "Arsip akhir periode").ok,
+    ).toBe(true);
     expect(
       storeActions.updateRecommendation(other, id, {
         note: "Cek ulang lagi.",
@@ -333,13 +363,13 @@ describe("bank live + snapshot beku + PDF (D-24)", () => {
     expect(typeof report.scorePercent).toBe("number");
     expect(report.pdfGeneratedAt).toBeTruthy();
     const snapshot = getState().selfAssessmentSnapshots.find((s) => s.reportId === r.id)!;
-    expect(snapshot.frozenIndicators?.length).toBe(10);
+    expect(snapshot.frozenIndicators?.length).toBe(59);
     expect(snapshot.scorePercent).toBe(report.scorePercent);
     // Beku: ubah bank tidak mengubah skor tersimpan.
     expect(storeActions.deleteBankIndicator("IND-K3L-010").ok).toBe(true);
     const sesudah = getState().selfAssessmentSnapshots.find((s) => s.reportId === r.id)!;
     expect(sesudah.scorePercent).toBe(report.scorePercent);
-    expect(sesudah.frozenIndicators?.length).toBe(10);
+    expect(sesudah.frozenIndicators?.length).toBe(59);
   });
 
   test("validator kelola penuh: tambah/edit/hapus dimensi + indikator + atur bobot", () => {

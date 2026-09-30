@@ -1,6 +1,6 @@
-// Form satu langkah lapor-cepat — presentasional murni (FLOWS §2, WIREFRAMES §2, D-19).
+// Form satu langkah lapor-cepat — presentasional murni (FLOWS §2, WIREFRAMES §2, D-19, D-29).
 // Urutan field tetap: Nama → Pesantren → Lokasi/area → Kategori/Aspek → Usulan mandiri
-// → Judul → Deskripsi → Foto → Kontak.
+// (keparahan + prioritas + rekomendasi) → Judul → Deskripsi → Foto → Kontak.
 // Logika (draft, kirim, pesantren terpilih) tinggal di halaman; komponen ini hanya render.
 
 import { AlertTriangle } from "lucide-react";
@@ -305,6 +305,35 @@ export function LaporForm(props: Props) {
             />
           ) : null}
         </div>
+      </div>
+      <div>
+        <label htmlFor="lapor-usulan-rekomendasi" className={LABEL}>
+          Usulan rekomendasi tindakan (opsional)
+        </label>
+        <textarea
+          id="lapor-usulan-rekomendasi"
+          ref={(el) => props.registerField("reporterRecommendation", el)}
+          className={`${INPUT} min-h-20 ${errors.reporterRecommendation ? INPUT_ERROR : ""}`}
+          value={values.reporterRecommendation}
+          disabled={readOnly}
+          rows={3}
+          maxLength={500}
+          placeholder="Contoh: Amankan kabel dengan pelindung lalu jadwalkan perbaikan instalasi."
+          aria-invalid={Boolean(errors.reporterRecommendation)}
+          aria-describedby={`lapor-usulan-rekomendasi-hint${errors.reporterRecommendation ? " lapor-usulan-rekomendasi-error" : ""}`}
+          onChange={(e) => props.onChange("reporterRecommendation", e.target.value)}
+          onBlur={() => props.onBlur("reporterRecommendation")}
+        />
+        <p id="lapor-usulan-rekomendasi-hint" className={HINT}>
+          Opsional · bila diisi minimal 10 karakter. Usulan ini ditinjau Pesantren; yang tampil
+          publik adalah versi final setelah validasi.
+        </p>
+        {errors.reporterRecommendation ? (
+          <FieldError
+            id="lapor-usulan-rekomendasi-error"
+            message={errors.reporterRecommendation}
+          />
+        ) : null}
       </div>
       <div>
         <label htmlFor="lapor-judul" className={LABEL}>

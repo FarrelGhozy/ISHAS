@@ -1,7 +1,8 @@
 // Processor agregat dashboard publik — ATURAN ILUSTRASI D-04 (DECISIONS.md, 8 Sep 2026),
-// bukan rumus final. Sumber skor HANYA snapshot penilaian mandiri dengan laporan `Diterima`;
-// laporan cepat tidak menjadi sumber skor. Per pesantren dipakai SATU snapshot `Diterima`
-// terbaru. Angka selalu tampil dengan periode + versi instrumen + label data ilustrasi.
+// bukan rumus final. Sumber skor HANYA snapshot penilaian mandiri dengan laporan
+// `Diterima`/`Terbit` (D-32); laporan cepat tidak menjadi sumber skor. Per pesantren
+// dipakai SATU snapshot `Diterima`/`Terbit` terbaru. Angka selalu tampil dengan
+// periode + versi instrumen.
 
 import type {
   Area,
@@ -56,13 +57,30 @@ function mean(values: number[]): number {
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
-// Normalisasi jawaban → 0–100: likert 1–5 → 20–100; `Ya` = 100, `Tidak` = 20.
+// Normalisasi jawaban → 0–100: likert 1–5 → 20–100; `Ya` = 100, `Tidak` = 20;
+// skala frekuensi/keparahan (D-24/D-44) dipetakan pada rentang sama.
 // Kosong/N/A dilewati (tidak dihitung nol) — aturan ilustrasi D-04.
+const SKOR_FREKUENSI: Record<string, number> = {
+  "Tidak pernah": 100,
+  Jarang: 80,
+  Kadang: 60,
+  Sering: 40,
+  Selalu: 20,
+};
+const SKOR_KEPARAHAN: Record<string, number> = {
+  Ringan: 80,
+  Sedang: 60,
+  Berat: 40,
+  Kritis: 20,
+};
+
 export function normalisasiJawaban(value: string): number | null {
   const v = value.trim();
   if (!v) return null;
   if (v === "Ya") return 100;
   if (v === "Tidak") return SKOR_LIKERT_TERENDAH;
+  if (v in SKOR_FREKUENSI) return SKOR_FREKUENSI[v];
+  if (v in SKOR_KEPARAHAN) return SKOR_KEPARAHAN[v];
   const numeric = Number(v);
   if (Number.isFinite(numeric) && numeric >= 1 && numeric <= LIKERT_MAX) {
     return (numeric / LIKERT_MAX) * 100;
@@ -122,8 +140,18 @@ export function skorSnapshot(
   };
 }
 
-// Satu snapshot `Diterima` terbaru per pesantren (aturan ilustrasi D-04:
-// kiriman lain tidak menggandakan bobot lembaga).
+// D-35: cacah jawaban terisi satu snapshot. Memakai field `jawabanTerisi` bila
+// ada (proyeksi publik D-02 mengosongkan `answers` tetapi membawa cacah ini,
+// bukan nilai mentah); fallback menghitung nilai terisi untuk data lama/mock.
+export function hitungJawabanTerisi(
+  snapshot: Pick<SelfAssessmentSnapshot, "jawabanTerisi" | "answers">,
+): number {
+  if (typeof snapshot.jawabanTerisi === "number") return snapshot.jawabanTerisi;
+  return Object.values(snapshot.answers).filter((answer) => answer.value.trim()).length;
+}
+
+// Satu snapshot `Diterima`/`Terbit` terbaru per pesantren (aturan ilustrasi D-04:
+// kiriman lain tidak menggandakan bobot lembaga; D-32: penilaian mandiri `Terbit`).
 export function pilihSnapshotTerbaruDiterima(
   reports: Report[],
   snapshots: SelfAssessmentSnapshot[],
@@ -135,7 +163,7 @@ export function pilihSnapshotTerbaruDiterima(
         (r) =>
           r.institutionCode === institutionCode &&
           r.channel === "penilaian-mandiri" &&
-          r.validationStatus === "Diterima" &&
+          (r.validationStatus === "Diterima" || r.validationStatus === "Terbit") &&
           !r.archivedAt,
       )
       .map((r) => r.id),
@@ -477,10 +505,11 @@ export function kategoriOfFinding(
   finding: RiskFinding,
   versions: InstrumentVersion[],
   reportsById?: Map<string, Report>,
+  instrument?: Instrument,
 ): K3CategoryId | null {
   if (finding.categoryId) return finding.categoryId;
   if (finding.indicator && finding.indicator !== "Tidak menggunakan instrumen") {
-    const rel = kategoriOfIndicator(versions, finding.indicator);
+    const rel = kategoriOfIndicator(versions, finding.indicator, instrument);
     if (rel.categoryId) return rel.categoryId;
   }
   const report = reportsById?.get(finding.reportId);
@@ -519,7 +548,7 @@ export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] 
     input.reports
       .filter(
         (report) =>
-          report.validationStatus === "Diterima" &&
+          (report.validationStatus === "Diterima" || report.validationStatus === "Terbit") &&
           !report.archivedAt &&
           report.handlingStatus !== "Completed",
       )
@@ -619,7 +648,7 @@ export function hitungRekapKategori(input: RekapKategoriInput): RekapKategori[] 
   // Temuan + sebaran risiko (satu hitung per ID temuan).
   for (const finding of input.findings) {
     if (!acceptedIds.has(finding.reportId)) continue;
-    const catId = kategoriOfFinding(finding, input.versions, reportsById);
+    const catId = kategoriOfFinding(finding, input.versions, reportsById, input.instrument);
     const row = rows.get(catId ?? KATEGORI_BELUM_DIPETAKAN) ?? rows.get(KATEGORI_BELUM_DIPETAKAN)!;
     row.jumlahTemuan += 1;
     row.risiko[finding.level] += 1;

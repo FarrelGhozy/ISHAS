@@ -5,7 +5,7 @@
 
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePublicState } from "~/shared/api/public-state";
 import {
   selectFindingsByReports,
   selectInstitutionByCode,
@@ -45,7 +45,7 @@ import {
 } from "../components/institution-comparison-panel";
 
 export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode?: string }) {
-  const state = useMockState();
+  const state = usePublicState();
   const [searchParams] = useSearchParams();
 
   const registered = selectRegisteredInstitutions(state);
@@ -175,7 +175,7 @@ export function DashboardPage({ lockedInstitutionCode }: { lockedInstitutionCode
   const periodeNotice = invalidPeriode
     ? `Periode "${invalidPeriode}" tidak tersedia. Menampilkan periode ${summary.periode}.`
     : selectedPeriode && selectedPeriode !== summary.periode
-      ? `Pratinjau periode ${selectedPeriode} (ilustrasi). Rincian filter periode menunggu D-04 final; angka utama tetap periode ${summary.periode}.`
+      ? `Pratinjau periode ${selectedPeriode}. Rincian filter periode menunggu D-04 final; angka utama tetap periode ${summary.periode}.`
       : null;
 
   if (reports.length === 0) {

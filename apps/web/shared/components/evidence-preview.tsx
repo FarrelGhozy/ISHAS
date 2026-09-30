@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getEvidenceAsset } from "~/mocks/adapters/report-evidence";
+import { repository } from "~/shared/api/repository";
 
 export function EvidencePreview({
   assetId,
@@ -27,15 +27,12 @@ export function EvidencePreview({
     let disposed = false,
       url = "";
     setImage({ id: assetId });
-    getEvidenceAsset(assetId)
+    repository
+      .openEvidenceAsset(assetId, institutionCode)
       .then((asset) => {
         if (disposed) return;
-        if (!asset || asset.institutionCode !== institutionCode) {
-          setImage({
-            id: assetId,
-            error:
-              "Gambar bukti tidak tersedia pada perangkat ini. Pilih ulang atau lepas lampiran sebelum mengirim.",
-          });
+        if (!asset.ok) {
+          setImage({ id: assetId, error: asset.error });
           return;
         }
         url = URL.createObjectURL(asset.blob);

@@ -26,8 +26,8 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 | 1 | `/` | tanpa login | dashboard agregat + pemilih pesantren |
 | 2 | `/` | login tiap peran | isi SAMA seperti tanpa login + tombol ruang kerja |
 | 3 | `/lapor` | tanpa login | form aktif bila ada pesantren terdaftar |
-| 4 | `/penilaian-mandiri` | tanpa login | form aktif bila ada Published |
-| 5 | `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan`, `/dokumen` | tanpa login | hanya data `Diterima` (dokumen: Public penuh, Privat hanya nama) |
+| 4 | `/penilaian-mandiri` | tanpa login | form aktif bila bank live punya indikator |
+| 5 | `/hasil`, `/peta-risiko`, `/rekomendasi`, `/tindak-lanjut`, `/laporan/:id`, `/dokumen` | tanpa login | hanya data `Diterima`/`Terbit` (dokumen: Public penuh, Privat hanya nama); `/laporan` publik 404 (D-28) |
 | 6 | `/pesantren/PSN-0018` | tanpa login | filter terkunci ke lembaga itu |
 | 7 | `/pesantren/XXX-tak-dikenal` | tanpa login | empty state, bukan crash |
 | 8 | `/login` | — | tepat 3 kartu akun, tanpa asesor |
@@ -45,7 +45,7 @@ Kasus yang bergantung keputusan terbuka belum mempunyai hasil harapan final.
 - State tidak kompatibel yang dibaca dari key : pemulihan mengikuti aturan versi; tombol reset mengembalikan seed.
 
 Catatan key/reset: aplikasi ISHAS terpisah (D-01) sehingga tidak ada data browser lama pada origin aplikasi;
-key (`ishas-mock-v4` + sesi/draft) murni baru. Uji dua akun Pesantren
+key (`ishas-mock-v14` + sesi/draft) murni baru. Uji dua akun Pesantren
 dengan role sama untuk memastikan sesi menunjuk ID akun, bukan role saja.
 
 ## 3. Alur kritis ujung-ke-ujung (skenario wajib)
@@ -57,7 +57,7 @@ dengan role sama untuk memastikan sesi menunjuk ID akun, bukan role saja.
 5. **Lifecycle:** Pending→Proses tanpa PIC/tenggat DITOLAK → lengkap → Proses→Completed tanpa bukti DITOLAK → lengkap → hapus/arsip hanya sesuai D-07. Audit tidak ikut penghapusan laporan biasa; reset demo adalah tindakan berbeda.
 6. **Scope isolation:** akun Pesantren A tidak melihat laporan pesantren B di antrean, filter, maupun notifikasi.
 7. **Pesantren tak terdaftar:** tidak muncul di pemilih; lapor langsung via URL dengan kode tak valid DITOLAK dengan pesan.
-8. **Self-assessment (D-24, D-25):** bank kosong → form terkunci + pesan; registrasi penilai wajib; kirim tak lengkap DITOLAK; refresh melanjutkan draft (checksum sama); bank berubah → kirim DITOLAK + wajib ulang; kirim → snapshot beku + skor % + PDF → antrean → terima → tampil publik sebagai PDF + agregat %; Scoring/Audit/Dataset membaca beku yang sama + filter terdaftar + ekspor whitelist + impor hanya jadi `Menunggu validasi`.
+8. **Self-assessment (D-24, D-32):** bank kosong → form terkunci + pesan; registrasi penilai wajib; kirim tak lengkap DITOLAK; refresh melanjutkan draft (checksum sama); bank berubah → kirim DITOLAK + wajib ulang; kirim → snapshot beku + skor % + PDF + status `Terbit`/`Tidak berlaku` **langsung tampil publik** tanpa antrean validasi dan **tanpa** temuan/rekomendasi; Scoring/Audit/Dataset membaca beku yang sama + filter terdaftar + ekspor whitelist + impor kanal ini langsung `Terbit`.
 
 ## 4. Visual dan aksesibilitas (3 viewport: 1440×900, 834×1112, 390×844)
 
@@ -102,11 +102,11 @@ Skenario berikut menjadi calon acceptance test setelah keputusan terkait disetuj
 | U-01 | Akun Pesantren A memasukkan ID laporan/area/tindakan pesantren B | Tindakan dan sumber data menolak scope salah, bukan sekadar menyembunyikan menu |
 | U-02 | Nama laporan berbeda dari nama akun login | Audit tetap menunjuk akun pengirim, tampilan nama mengikuti D-02/D-03 |
 | U-03 | Kirim, hapus draft, lalu buka kiriman untuk validasi | Seluruh jawaban/bukti/lokasi yang terkirim masih dapat ditelusuri dari snapshot |
-| U-04 | Kirim dua kali atau ulang setelah respons terputus | Satu kiriman dan satu set temuan/audit kirim; jika gagal, draft tidak hilang |
+| U-04 | Kirim dua kali atau ulang setelah respons terputus | Satu kiriman dan satu set temuan/audit kirim (lapor-cepat); jika gagal, draft tidak hilang |
 | U-05 | Dua akun Pesantren memutuskan laporan sama | Keputusan lama tidak menimpa keputusan yang sudah tersimpan tanpa deteksi |
 | U-06 | Bank berubah saat draft belum dikirim (D-24) | Checksum beda = kirim ditolak + wajib ulang; skor/PDF lama tetap beku (pengganti D-10) |
-| U-07 | Satu penilaian menghasilkan dua temuan, satu selesai | Status induk/progres mengikuti D-05, tidak otomatis menutup seluruh laporan |
-| U-08 | Penilaian diterima tanpa temuan / seluruh jawaban N/A | Tidak memaksakan severity fiktif atau skor nol; kebijakan D-04/D-05 |
+| U-07 | Satu laporan lapor-cepat menghasilkan dua temuan, satu selesai | Status induk/progres mengikuti D-05, tidak otomatis menutup seluruh laporan |
+| U-08 | Penilaian mandiri terkirim seluruh jawaban N/A / tanpa temuan (D-32) | Langsung `Terbit` tanpa temuan; tidak memaksakan severity fiktif atau skor nol; kebijakan D-04 |
 | U-09 | Banyak kiriman untuk pesantren/periode sama, termasuk bobot berbeda (D-24) | Agregat memakai rata-rata skor % beku per pesantren; tiap laporan = satu PDF |
 | U-09b | Validator tambah/edit/hapus indikator + atur bobot (D-24) | Perubahan langsung aktif; validasi kode unik/bobot 0–100; draft basi wajib ulang; snapshot lama tidak berubah |
 | U-10 | Unggah denah baru atau ubah nama area | Titik dan sumber penilaian historis tetap menunjuk versi/ID semula |

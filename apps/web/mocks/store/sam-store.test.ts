@@ -84,6 +84,20 @@ describe("alur pengamatan SAM-iSAFE", () => {
     expect(hasil.ok).toBe(false);
   });
 
+  test("pesantren Aktif tanpa akun Pesantren (tidak terdaftar) ditolak (D-26.c)", () => {
+    const hasil = storeActions.createSamAssessment(
+      { id: VALIDATOR },
+      {
+        institutionCode: "PSN-0020",
+        manualLocation: "Gedung Kelas",
+        observedAt: "2026-09-27",
+        kind: "Pemeriksaan Rutin",
+        observerName: "M. Ridwan",
+      },
+    );
+    expect(hasil.ok).toBe(false);
+  });
+
   test("bukti tanpa ID sah ditolak", () => {
     const id = buatDraft();
     const soal = getState().samQuestions[0].id;
@@ -201,5 +215,91 @@ describe("review dan draft SAM-iSAFE", () => {
     isiPenuh(jadi, 2);
     expect(storeActions.completeSamAssessment({ id: VALIDATOR }, jadi).ok).toBe(true);
     expect(storeActions.deleteSamDraft({ id: VALIDATOR }, jadi).ok).toBe(false);
+  });
+});
+
+describe("pengerasan D-26.h", () => {
+  beforeEach(() => {
+    storeActions.resetMockData();
+  });
+
+  function inputDasar(ubah: Record<string, string> = {}) {
+    return {
+      institutionCode: "PSN-0018",
+      manualLocation: "Asrama Putra Blok A",
+      observedAt: "2026-09-27",
+      kind: "Pemeriksaan Rutin",
+      observerName: "M. Ridwan",
+      ...ubah,
+    };
+  }
+
+  test("jenis di luar SAM_KINDS ditolak", () => {
+    const hasil = storeActions.createSamAssessment(
+      { id: VALIDATOR },
+      inputDasar({ kind: "Jenis Ngawur" }),
+    );
+    expect(hasil.ok).toBe(false);
+    if (!hasil.ok) expect(hasil.error).toBe("Jenis pengamatan tidak dikenal.");
+  });
+
+  test("observedAt ngawur dan 2026-02-30 ditolak", () => {
+    for (const observedAt of ["ngawur", "2026-02-30", "27-09-2026"]) {
+      const hasil = storeActions.createSamAssessment(
+        { id: VALIDATOR },
+        inputDasar({ observedAt }),
+      );
+      expect(hasil.ok).toBe(false);
+      if (!hasil.ok) expect(hasil.error).toBe("Tanggal pengamatan tidak valid.");
+    }
+  });
+
+  test("dueDate ngawur saat buat tindak lanjut ditolak", () => {
+    const id = buatDraft();
+    const soal = getState().samQuestions[0].id;
+    expect(
+      storeActions.saveSamAnswer({ id: VALIDATOR }, { assessmentId: id, questionId: soal, score: 0 })
+        .ok,
+    ).toBe(true);
+    const hasil = storeActions.createSamFollowUp(
+      { id: VALIDATOR },
+      { assessmentId: id, questionId: soal, pic: "Bagian Sarpras", dueDate: "ngawur" },
+    );
+    expect(hasil.ok).toBe(false);
+    if (!hasil.ok) expect(hasil.error).toBe("Tenggat tidak valid.");
+  });
+
+  test("PATCH dueDate mundur dan ngawur ditolak, maju lolos", () => {
+    const id = buatDraft();
+    const soal = getState().samQuestions[0].id;
+    expect(
+      storeActions.saveSamAnswer({ id: VALIDATOR }, { assessmentId: id, questionId: soal, score: 0 })
+        .ok,
+    ).toBe(true);
+    const buat = storeActions.createSamFollowUp(
+      { id: VALIDATOR },
+      { assessmentId: id, questionId: soal, pic: "Bagian Sarpras", dueDate: "2026-09-30" },
+    );
+    if (!buat.ok) throw new Error(buat.error);
+    const tindakId = buat.id as string;
+    const mundur = storeActions.updateSamFollowUp(
+      { id: VALIDATOR },
+      tindakId,
+      { dueDate: "2020-01-01" },
+    );
+    expect(mundur.ok).toBe(false);
+    if (!mundur.ok) {
+      expect(mundur.error).toBe("Tenggat tidak boleh sebelum tanggal pengamatan.");
+    }
+    const ngawur = storeActions.updateSamFollowUp(
+      { id: VALIDATOR },
+      tindakId,
+      { dueDate: "ngawur" },
+    );
+    expect(ngawur.ok).toBe(false);
+    if (!ngawur.ok) expect(ngawur.error).toBe("Tenggat tidak valid.");
+    expect(
+      storeActions.updateSamFollowUp({ id: VALIDATOR }, tindakId, { dueDate: "2026-10-10" }).ok,
+    ).toBe(true);
   });
 });

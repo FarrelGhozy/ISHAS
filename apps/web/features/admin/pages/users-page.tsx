@@ -4,8 +4,9 @@
 
 import { useMemo, useState } from "react";
 import { KeyRound, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
 import type { User } from "~/mocks/types";
+import { repository } from "~/shared/api/repository";
+import { useAdminState } from "~/shared/api/admin-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
@@ -18,8 +19,9 @@ type DialogState =
   | null;
 
 export function Page() {
-  const state = useMockState();
+  const state = useAdminState();
   const saya = useCurrentUser();
+  const actor = { id: saya?.id, name: saya?.name ?? "Super Admin" };
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("Semua");
   const [note, setNote] = useState("");
@@ -47,27 +49,19 @@ export function Page() {
     }
     return map;
   }, [state.users]);
-  const buat = (nilai: { name: string; email: string; roleId: User["roleId"]; institutionCode: string }) => {
-    const n = Math.max(0, ...state.users.map((x) => Number(x.id.replace(/\D/g, "")))) + 1;
-    const lembaga = state.institutions.find((x) => x.code === nilai.institutionCode);
-    const label = nilai.roleId === "admin" ? "Super Admin" : nilai.roleId === "validator" ? "Validator" : "Pesantren";
-    const r = storeActions.addUser({
-      id: `USR-${String(n).padStart(3, "0")}`,
+  const buat = async (nilai: {
+    name: string;
+    email: string;
+    roleId: User["roleId"];
+    institutionCode: string;
+  }) => {
+    const label =
+      nilai.roleId === "admin" ? "Super Admin" : nilai.roleId === "validator" ? "Validator" : "Pesantren";
+    const r = await repository.addUser(actor, {
       name: nilai.name,
       email: nilai.email,
-      initials: nilai.name
-        .split(" ")
-        .filter(Boolean)
-        .map((x) => x[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase(),
-      role: label as User["role"],
       roleId: nilai.roleId,
-      institution: nilai.roleId === "pesantren" ? (lembaga?.name ?? "") : "Seluruh sistem",
-      institutionCodes: nilai.roleId === "pesantren" ? (nilai.institutionCode ? [nilai.institutionCode] : []) : [],
-      status: "Menunggu",
-      lastActive: new Date().toISOString(),
+      institutionCode: nilai.roleId === "pesantren" ? nilai.institutionCode : undefined,
     });
     setNote(
       r.ok
@@ -76,7 +70,7 @@ export function Page() {
     );
     return r.ok ? { ok: true } : { ok: false, error: r.error };
   };
-  const gantiStatus = (target: User, value: User["status"]) => {
+  const gantiStatus = async (target: User, value: User["status"]) => {
     if (target.status === value) return;
     if (saya && target.id === saya.id) {
       setNote("Kamu tidak dapat mengubah status akun sendiri yang sedang login.");
@@ -91,10 +85,10 @@ export function Page() {
     ) {
       return;
     }
-    const r = storeActions.setUserStatus(target.id, value);
+    const r = await repository.setUserStatus(actor, target.id, value);
     setNote(r.ok ? `Status ${target.name} diperbarui menjadi ${value}.` : (r.error ?? "Gagal."));
   };
-  const hapus = (target: User) => {
+  const hapus = async (target: User) => {
     if (saya && target.id === saya.id) {
       setNote("Tidak dapat menghapus akun sendiri yang sedang login.");
       return;
@@ -110,7 +104,7 @@ export function Page() {
     ) {
       return;
     }
-    const r = storeActions.deleteUser(target.id);
+    const r = await repository.deleteUser(actor, target.id);
     setNote(r.ok ? `Akun ${target.name} dihapus.` : (r.error ?? "Gagal menghapus."));
   };
   return (
@@ -146,7 +140,7 @@ export function Page() {
           <Search className="absolute left-3 top-3" size={18} />
           <input
             aria-label="Cari pengguna"
-            className="min-h-11 w-full rounded border border-line-soft pl-10 pr-3"
+            className="min-h-11 w-full rounded border border-line-soft bg-white pl-10 pr-3"
             placeholder="Cari nama, email, peran…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -185,7 +179,7 @@ export function Page() {
                     className="min-h-11 flex-1 rounded border border-line-soft px-2 disabled:opacity-50 sm:flex-none"
                     value={x.status}
                     disabled={milikSendiri}
-                    onChange={(e) => gantiStatus(x, e.target.value as User["status"])}
+                    onChange={(e) => void gantiStatus(x, e.target.value as User["status"])}
                   >
                     <option>Aktif</option>
                     <option>Menunggu</option>
@@ -217,7 +211,7 @@ export function Page() {
                     title={milikSendiri ? "Tidak dapat menghapus akun sendiri" : "Hapus akun"}
                     aria-label={`Hapus akun ${x.name}`}
                     disabled={milikSendiri}
-                    onClick={() => hapus(x)}
+                    onClick={() => void hapus(x)}
                   >
                     <Trash2 size={14} aria-hidden />
                     Hapus
@@ -244,8 +238,8 @@ export function Page() {
         user={dialog?.kind === "ubah" ? dialog.user : null}
         pesantrenAktif={pesantrenAktif}
         onClose={() => setDialog(null)}
-        onSave={(id, nilai) => {
-          const r = storeActions.updateUser(id, nilai);
+        onSave={async (id, nilai) => {
+          const r = await repository.updateUser(actor, id, nilai);
           setNote(r.ok ? "Data akun disimpan." : (r.error ?? "Gagal menyimpan."));
           return r.ok ? { ok: true } : { ok: false, error: r.error };
         }}
@@ -254,8 +248,8 @@ export function Page() {
         open={dialog?.kind === "reset"}
         user={dialog?.kind === "reset" ? dialog.user : null}
         onClose={() => setDialog(null)}
-        onReset={(id) => {
-          const r = storeActions.resetUserPassword(id);
+        onReset={async (id) => {
+          const r = await repository.resetUserPassword(actor, id);
           setNote(
             r.ok
               ? "Kata sandi dikembalikan ke kredensial demo dan tercatat di audit."

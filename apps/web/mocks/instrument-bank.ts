@@ -191,7 +191,16 @@ function optionsDariWarisan(
   legacy: InstrumentAnswerType,
   findingTrigger: string,
 ): InstrumentOption[] {
-  if (legacy === "boolean-ya-tidak" || legacy === "ya-tidak") return defaultOptionsForType("ya-tidak");
+  // Tipe baru D-24 diteruskan apa adanya agar frekuensi/keparahan tidak jatuh
+  // ke opsi kualitas (D-44).
+  if (
+    legacy === "ya-tidak" ||
+    legacy === "kualitas-1-5" ||
+    legacy === "frekuensi" ||
+    legacy === "keparahan"
+  )
+    return defaultOptionsForType(legacy);
+  if (legacy === "boolean-ya-tidak") return defaultOptionsForType("ya-tidak");
   if (legacy === "likert-1-2-tidak")
     return [
       { value: "1", label: "1 — Belum sesuai", weight: 20, isFinding: true },

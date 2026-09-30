@@ -126,7 +126,6 @@ export function researchToJSON(rows: ResearchRow[]): string {
   return JSON.stringify(
     {
       exportedAt: new Date().toISOString(),
-      label: "Data ilustrasi · asumsi seed",
       count: rows.length,
       rows,
     },

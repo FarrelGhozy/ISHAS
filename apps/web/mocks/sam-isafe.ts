@@ -18,6 +18,21 @@ export const SAM_KINDS = [
   "Pemeriksaan Evaluasi",
 ];
 
+// D-26.h.a: tanggal kalender valid `YYYY-MM-DD` (bukan sekadar string terisi).
+// Dipakai mock + backend 1:1 agar format ngawur ditolak 400, bukan 500 DB.
+export function isValidSamDate(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [tahun, bulan, tanggal] = value.split("-").map(Number);
+  if (bulan < 1 || bulan > 12 || tanggal < 1 || tanggal > 31) return false;
+  const kalender = new Date(Date.UTC(tahun, bulan - 1, tanggal));
+  return (
+    kalender.getUTCFullYear() === tahun &&
+    kalender.getUTCMonth() === bulan - 1 &&
+    kalender.getUTCDate() === tanggal
+  );
+}
+
 export const SAM_CATEGORIES_SEED: SamCategory[] = [
   {
     id: "SAM-KAT-01",
@@ -61,7 +76,9 @@ const q = (
   categoryId: string,
   text: string,
   sortOrder: number,
-): SamQuestion => ({ id, categoryId, text, sortOrder, isActive: true });
+  panduan = "",
+  contohBukti = "",
+): SamQuestion => ({ id, categoryId, text, panduan, contohBukti, sortOrder, isActive: true });
 
 export const SAM_QUESTIONS_SEED: SamQuestion[] = [
   q(
@@ -225,6 +242,37 @@ export const SAM_QUESTIONS_SEED: SamQuestion[] = [
 
 export function samActiveQuestions(questions: SamQuestion[]): SamQuestion[] {
   return questions.filter((item) => item.isActive);
+}
+
+// D-26.f: teks yang sama persis (abaikan kapital/tanda baca) antar soal.
+// Dipakai sebagai penanda, bukan penghapusan otomatis.
+export function samDuplicateQuestions(questions: SamQuestion[]): Map<string, string[]> {
+  const normal = (text: string): string =>
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .join(" ");
+  const groups = new Map<string, SamQuestion[]>();
+  for (const item of questions) {
+    const key = normal(item.text);
+    if (!key) continue;
+    const list = groups.get(key) ?? [];
+    list.push(item);
+    groups.set(key, list);
+  }
+  const out = new Map<string, string[]>();
+  for (const list of groups.values()) {
+    if (list.length < 2) continue;
+    for (const item of list) {
+      out.set(
+        item.id,
+        list.filter((other) => other.id !== item.id).map((other) => other.id),
+      );
+    }
+  }
+  return out;
 }
 
 export function samMaxScore(questions: SamQuestion[]): number {

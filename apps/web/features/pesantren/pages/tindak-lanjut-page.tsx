@@ -3,7 +3,7 @@
 // empty state yang menjelaskan penyebab kosong.
 
 import { useMemo, useState } from "react";
-import { useMockState } from "~/mocks/store/mock-store";
+import { usePesantrenState } from "~/shared/api/workspace-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import {
   selectRecommendationsForManager,
@@ -13,7 +13,7 @@ import { EmptyState } from "~/shared/components/empty-state";
 import { TindakLanjutCard } from "../components/tindak-lanjut-card";
 
 export function Page() {
-  const state = useMockState();
+  const state = usePesantrenState();
   const user = useCurrentUser();
   const [status, setStatus] = useState("Semua");
   const [priority, setPriority] = useState("Semua");

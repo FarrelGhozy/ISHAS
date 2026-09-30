@@ -1,5 +1,12 @@
 # Stage Stage 08 — Penilaian Mandiri (Self-Assessment)
 
+**Revisi D-32 — 29 September 2026 — `IN PROGRESS`:** penilaian mandiri **tidak**
+divalidasi Pesantren; kiriman langsung berstatus `Terbit` + `Tidak berlaku`,
+tampil publik, dan **tidak** membentuk temuan/rekomendasi (murni skor berbobot
++ PDF). Hanya `lapor-cepat` yang divalidasi dan menurunkan temuan. Lihat
+`DECISIONS.md` D-32. Scope Stage 08 + sentuhan baca Validasi; status stage lain
+tidak berubah sepihak.
+
 **Revisi D-25 — 28 September 2026 — `IN PROGRESS`:** rapikan Validator
 sekaligus (Scoring + Audit publikasi ex Validasi & publikasi + Data penelitian
 maksimal). Label `Audit publikasi` (route tetap), filter terdaftar + toggle
@@ -31,7 +38,8 @@ kategori. D-04 tetap ilustratif. Stage belum selesai uji penerimaan penuh.
 **Dependensi:** Stage 01 (model), Stage 03 (pola kirim), Stage 05 (antrean penerima) `DONE`;
 Stage 07 disarankan (area tersedia).
 **Tujuan:** memindahkan kemampuan `AssessmentFlow` asesor menjadi penilaian mandiri publik:
-tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
+tanpa penugasan, versi terkunci otomatis, draft lokal, kirim penilaian yang **langsung terbit**
+(tanpa validasi Pesantren — D-32).
 
 ## Ruang lingkup
 
@@ -65,15 +73,16 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 - [x] Draft autosave per perubahan (localStorage per pesantren);
  refresh melanjutkan dari `activeIndex` terakhir; pindah pesantren = draft terpisah (peringatan bila beralih).
 - [ ] Tinjau: 4 kelompok (jawaban/bukti/catatan N/A/lokasi) + lompat ke indikator bermasalah +
- **Kirim untuk validasi** (disabled bila kurang) + dialog konfirmasi final.
-- [x] Kirim → `submitSelfAssessment`: snapshot permanen seluruh jawaban/bukti/lokasi + kunci kiriman + 1 `Report` kanal `penilaian-mandiri` +
- kandidat temuan sesuai konfigurasi ilustratif versi (`1/2/Tidak` hanya contoh seed) + audit + notifikasi pengelola +
- layar sukses bernomor (sama Stage 03). Tidak ada jalur tampil langsung sebelum validasi.
+ **Kirim penilaian** (disabled bila kurang) + dialog konfirmasi final.
+- [x] Kirim → `submitSelfAssessment`: snapshot permanen seluruh jawaban/bukti/lokasi + kunci kiriman + 1 `Report` kanal `penilaian-mandiri` berstatus `Terbit` + `Tidak berlaku` +
+ audit + notifikasi pengelola "telah terbit" +
+ layar sukses bernomor (sama Stage 03). Hasil langsung tampil publik; **tanpa** temuan/rekomendasi (D-32).
 
 ### 3. Hasil yang diterima
 
-- [ ] Laporan penilaian yang `Diterima` membentuk hasil dimensi ilustratif + temuan + rekomendasi
- berlabel kanal `Penilaian mandiri`; hasil skor berasal dari instrumen, sedangkan lapor-cepat menyumbang laporan/temuan tanpa skor instrumen.
+- [ ] Penilaian mandiri `Terbit` membentuk hasil dimensi ilustratif + skor % + PDF
+ berlabel kanal `Penilaian mandiri`; tidak membentuk temuan/rekomendasi. Lapor-cepat
+ menyumbang laporan/temuan tanpa skor instrumen setelah divalidasi Pesantren.
 
 ## Acceptance criteria
 
@@ -83,6 +92,13 @@ tanpa penugasan, versi terkunci otomatis, draft lokal, kirim untuk validasi.
 
 ## Hasil Pemeriksaan
 
+- Revisi D-32 (29 Sep 2026): lint + typecheck + 258 test web + build lulus.
+  Backend: lint + typecheck lulus; `DB_NAME=ishas_test bun test` 98 lulus, 6 gagal
+  **pra-eksisting** yang tidak terkait D-32 (uji unggah/decode gambar + storage +
+  `reset-demo` juga gagal di commit basis pada lingkungan ini). Uji status D-32
+  (submit mandiri → `Terbit`/`Tidak berlaku` tanpa temuan, impor → `Terbit`,
+  publik menerima `Diterima`/`Terbit`, accept mandiri ditolak, rekap/agregat
+  memakai `Terbit`) lulus.
 - Revisi D-25 (28 Sep 2026): lint + typecheck + 175 test + build lulus.
   Render SSR 4 halaman (Scoring, Audit publikasi, Data penelitian, dashboard
   validator) lulus via test. Cek visual 3 viewport + keyboard browser belum

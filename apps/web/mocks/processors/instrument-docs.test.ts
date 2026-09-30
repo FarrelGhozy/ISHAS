@@ -10,8 +10,8 @@ import {
 
 const rows = selectIndicatorDocRows(SEED);
 
-test("baris mencakup seluruh 10 indikator INS-v1.1 beserta dokumen seed", () => {
-  expect(rows.length).toBe(10);
+test("baris mencakup seluruh 59 indikator bank live beserta dokumen seed", () => {
+  expect(rows.length).toBe(59);
   expect(selectPublicDocRows(rows).length).toBe(4);
   expect(selectPublicDocRows(rows).filter((r) => r.doc?.visibility === "Public").length).toBe(2);
 });
@@ -26,11 +26,11 @@ test("aset privat disembunyikan dari pembaca umum", () => {
 
 test("filter mencari kode/judul/nama file + kategori + visibilitas", () => {
   expect(
-    filterDocRows(rows, { q: "beban kerja", categoryId: "Semua", visibility: "Semua" }).length,
+    filterDocRows(rows, { q: "kelaikan bangunan", categoryId: "Semua", visibility: "Semua" }).length,
   ).toBe(1);
   expect(
     filterDocRows(rows, { q: "", categoryId: "KAT-PSIKOSOSIAL", visibility: "Semua" }).length,
-  ).toBe(2);
+  ).toBe(8);
   expect(filterDocRows(rows, { q: "", categoryId: "Semua", visibility: "Public" }).length).toBe(2);
   expect(
     filterDocRows(rows, { q: "detail-air", categoryId: "Semua", visibility: "Semua" }).length,
@@ -58,11 +58,11 @@ test("entri dokumen manual (D-16.g) tampil sebagai baris pustaka", () => {
     ...SEED,
     instrumentDocs: [...SEED.instrumentDocs, manual],
   });
-  expect(withManual.length).toBe(11);
+  expect(withManual.length).toBe(60);
   const row = withManual.find((r) => r.indicatorId === "IND-DOC-001")!;
   expect(row.code).toBe("IND-DOC-001");
   expect(row.title).toBe("Dokumen tambahan validator");
-  expect(row.categoryName).toBe("Keselamatan");
-  expect(row.aspectName).toBe("Instalasi listrik");
+  expect(row.categoryName).toBe("Keselamatan dan Keamanan Gedung & Asrama");
+  expect(row.aspectName).toBe("Struktur & bangunan");
   expect(selectPublicDocRows(withManual).length).toBe(5);
 });

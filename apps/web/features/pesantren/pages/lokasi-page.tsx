@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
+import { refreshPesantrenState, usePesantrenState } from "~/shared/api/workspace-state";
+import { repository } from "~/shared/api/repository";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { CampusPlanManager } from "../components/campus-plan-manager";
 import { EmptyState } from "~/shared/components/empty-state";
@@ -7,7 +8,7 @@ import { EmptyState } from "~/shared/components/empty-state";
 const field = "mt-1 min-h-11 w-full rounded border border-line-soft px-3";
 
 export function Page() {
-  const state = useMockState();
+  const state = usePesantrenState();
   const user = useCurrentUser();
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -21,8 +22,9 @@ export function Page() {
     return <EmptyState title="Halaman ini hanya untuk Pesantren" />;
   const buildings = state.buildings.filter((x) => x.institutionCode === user.institutionCodes[0]);
   const areas = state.areas.filter((x) => x.institutionCode === user.institutionCodes[0]);
-  const run = (action: () => { ok: boolean; error?: string }) => {
-    const r = action();
+  const run = async (action: () => Promise<{ ok: boolean; error?: string }>) => {
+    const r = await action();
+    if (r.ok) refreshPesantrenState();
     setMessage(
       r.ok
         ? "Perubahan tersimpan dan tersedia untuk pesantren ini."
@@ -57,7 +59,7 @@ export function Page() {
           </label>
           <button
             className="primary-button mt-4"
-            onClick={() => run(() => storeActions.addBuilding(user, { code, name }))}
+            onClick={() => void run(() => repository.addBuilding(user, { code, name }))}
           >
             Tambah gedung
           </button>
@@ -94,7 +96,7 @@ export function Page() {
           <button
             className="primary-button mt-4"
             onClick={() =>
-              run(() => storeActions.addArea(user, { buildingId, floor, name: area, zone }))
+              void run(() => repository.addArea(user, { buildingId, floor, name: area, zone }))
             }
           >
             Tambah area
@@ -143,8 +145,8 @@ export function Page() {
                 <button
                   className="secondary-button"
                   onClick={() =>
-                    run(() => {
-                      const result = storeActions.addFloor(
+                    void run(async () => {
+                      const result = await repository.addFloor(
                         user,
                         building.id,
                         newFloorByBuilding[building.id] ?? "",

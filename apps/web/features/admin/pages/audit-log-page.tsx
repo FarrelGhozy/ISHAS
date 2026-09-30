@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { useMockState } from "~/mocks/store/mock-store";
+import { useAdminState } from "~/shared/api/admin-state";
 import { EmptyState } from "~/shared/components/empty-state";
 
 // Audit log global — baca Super Admin. Jejak kronologis terbaru dulu.
 export function Page() {
-  const state = useMockState();
+  const state = useAdminState();
   const [query, setQuery] = useState("");
   const [type, setType] = useState("Semua");
   const [actor, setActor] = useState("Semua");
@@ -41,7 +41,7 @@ export function Page() {
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="Cari audit"
-          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft px-3"
+          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft bg-white px-3"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Cari aksi, pelaku, objek, pesantren, atau catatan…"

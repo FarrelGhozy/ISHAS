@@ -53,7 +53,7 @@ export function PublicOverviewCards({ overview }: { overview: DashboardOverview 
         />
         <OverviewCard
           icon={ClipboardCheck}
-          label="Laporan tervalidasi"
+          label="Laporan terbit"
           value={overview.laporanTervalidasi}
           note="Aman untuk ringkasan publik"
         />

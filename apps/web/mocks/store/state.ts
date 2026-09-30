@@ -7,8 +7,8 @@ import { buildBankLiveDariVersi } from "../instrument-bank";
 import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED } from "../sam-isafe";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 13;
-export const MOCK_STORAGE_KEY = "ishas-mock-v13";
+export const MOCK_SCHEMA_VERSION = 16;
+export const MOCK_STORAGE_KEY = "ishas-mock-v16";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -48,8 +48,8 @@ export function migrateV4(value: unknown): unknown {
 }
 
 // D-15: v5 → v6 mempertahankan seluruh record/ID; hanya menaikkan versi agar seed
-// INS-v1.1 (4 kategori) + field categoryId/aspectId + level Ekstrem berlaku.
-// Snapshot dan temuan lama tetap valid tanpa penulisan ulang.
+// versi terjadwal saat itu (kini INS-v2.0, D-44) + field categoryId/aspectId +
+// level Ekstrem berlaku. Snapshot dan temuan lama tetap valid tanpa penulisan ulang.
 export function migrateV5(value: unknown): unknown {
   if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 5)
     return value;
@@ -195,6 +195,58 @@ export function migrateV12(value: unknown): unknown {
   const migrated = structuredClone(value) as IshasState;
   migrated.schemaVersion = 13;
   if (!Array.isArray(migrated.samFollowUps)) migrated.samFollowUps = [];
+  return migrateV13(migrated);
+}
+
+// D-26.f: v13 → v14 menambah panduan + contoh bukti per soal SAM-iSAFE.
+export function migrateV13(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 13)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 14;
+  for (const item of migrated.samQuestions ?? []) {
+    if (typeof item.panduan !== "string") item.panduan = "";
+    if (typeof item.contohBukti !== "string") item.contohBukti = "";
+  }
+  for (const item of migrated.samCategories ?? []) {
+    if (typeof item.description !== "string") item.description = "";
+  }
+  return migrated;
+}
+
+// D-29: v14 → v15 menambah usulan rekomendasi lapor-cepat tanpa menyentuh data lama.
+export function migrateV14(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 14)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 15;
+  for (const report of migrated.reports ?? []) {
+    if (typeof report.reporterRecommendation !== "string") {
+      delete report.reporterRecommendation;
+      continue;
+    }
+    const trimmed = report.reporterRecommendation.trim();
+    if (!trimmed) delete report.reporterRecommendation;
+    else report.reporterRecommendation = trimmed.slice(0, 500);
+  }
+  return migrateV15(migrated);
+}
+
+// Seed demo: v15 → v16 menambah pesantren contoh UNIDA Gontor tanpa menyentuh
+// data lama. Bila sudah ada (mis. dibuat manual), tidak digandakan.
+export function migrateV15(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 15)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 16;
+  const seedInstitution = SEED.institutions.find((item) => item.code === "PSN-0024");
+  if (
+    Array.isArray(migrated.institutions) &&
+    seedInstitution &&
+    !migrated.institutions.some((item) => item.code === "PSN-0024")
+  ) {
+    migrated.institutions.push(structuredClone(seedInstitution));
+  }
   return migrated;
 }
 
@@ -268,6 +320,9 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v15") ??
+      localStorage.getItem("ishas-mock-v14") ??
+      localStorage.getItem("ishas-mock-v13") ??
       localStorage.getItem("ishas-mock-v12") ??
       localStorage.getItem("ishas-mock-v10") ??
       localStorage.getItem("ishas-mock-v9") ??
@@ -277,10 +332,16 @@ export function loadState(): IshasState {
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV12(
-        migrateV11(
-          migrateV10(
-            migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+      const parsed: unknown = migrateV15(
+        migrateV14(
+          migrateV13(
+            migrateV12(
+              migrateV11(
+                migrateV10(
+                  migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+                ),
+              ),
+            ),
           ),
         ),
       );

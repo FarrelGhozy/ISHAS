@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { repository } from "~/shared/api/repository";
 import type { ReportActor } from "~/mocks/store/mock-store";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
 
@@ -45,8 +45,8 @@ export function CompletionEvidencePicker({
         Bukti penyelesaian (wajib bila 100%)
       </label>
       <p className="mb-2 text-sm text-secondary-text">
-        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Bukti privat,
-        hanya untuk Pesantren.
+        Satu PNG, JPEG atau WebP · maksimal 5 MB dan 20 megapiksel. Gambar besar
+        dikompres otomatis saat diunggah. Bukti privat, hanya untuk Pesantren.
       </p>
       <input
         id={`bukti-selesai-${institutionCode}`}
@@ -63,7 +63,7 @@ export function CompletionEvidencePicker({
           onBusy(true);
           setError("");
           try {
-            const result = await mockRepository.uploadCompletionEvidence(
+            const result = await repository.uploadCompletionEvidence(
               actor,
               institutionCode,
               file,

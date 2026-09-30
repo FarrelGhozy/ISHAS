@@ -6,8 +6,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { usePublicState } from "~/shared/api/public-state";
+import { repository } from "~/shared/api/repository";
 import {
   selectAreasByInstitution,
   selectRegisteredInstitutions,
@@ -27,6 +27,7 @@ import {
   type LaporValues,
 } from "../lib/lapor-validation";
 import { clearLaporDraft, isLaporEmpty, loadLaporDraft, saveLaporDraft } from "../lib/lapor-draft";
+import { paramPesantrenTidakSah, pilihInstitusiAwal } from "../lib/param-pesantren";
 
 const FOCUS_ORDER: (keyof LaporValues)[] = [
   "reporterName",
@@ -37,6 +38,7 @@ const FOCUS_ORDER: (keyof LaporValues)[] = [
   "aspectId",
   "reporterSeverity",
   "reporterPriority",
+  "reporterRecommendation",
   "title",
   "description",
   "contact",
@@ -57,7 +59,7 @@ export function LaporPage() {
 }
 
 function LaporPageContent() {
-  const state = useMockState();
+  const state = usePublicState();
   const user = useCurrentUser();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -69,10 +71,11 @@ function LaporPageContent() {
   const isPrefilledManager = user?.roleId === "pesantren";
 
   const param = searchParams.get("pesantren");
-  const paramValid = param !== null && registeredCodes.includes(param);
-  // ROUTES §1: kode tak dikenal/nonaktif tidak diganti diam-diam — minta pilihan eksplisit.
-  const paramInvalid = param !== null && !paramValid;
-  const initialCode = paramValid && param ? param : "";
+  // ROUTES §1: kode tak dikenal/nonaktif tidak diganti diam-diam — minta pilihan
+  // eksplisit. Pesan ditahan sampai daftar terdaftar termuat agar tautan
+  // `?pesantren=` tetap terpakai pada muat dingin (mode backend).
+  const paramInvalid = paramPesantrenTidakSah(param, registeredCodes);
+  const initialCode = pilihInstitusiAwal({ param, registeredCodes });
 
   const [values, setValues] = useState<LaporValues>(() => {
     if (initialCode) {
@@ -265,6 +268,7 @@ function LaporPageContent() {
       aspectId: true,
       reporterSeverity: true,
       reporterPriority: true,
+      reporterRecommendation: true,
       title: true,
       description: true,
       contact: true,
@@ -279,7 +283,7 @@ function LaporPageContent() {
     // klik ganda lolos sebelum render ulang (store mengembalikan id yang sama).
     submitLock.current = true;
     setSubmitting(true);
-    const result = await mockRepository.submitLaporCepat(
+    const result = await repository.submitLaporCepat(
       {
         id: user?.id,
         name: user?.name ?? values.reporterName.trim(),
@@ -297,6 +301,7 @@ function LaporPageContent() {
         aspectId: values.aspectId || undefined,
         reporterSeverity: values.reporterSeverity,
         reporterPriority: values.reporterPriority,
+        reporterRecommendation: values.reporterRecommendation.trim() || undefined,
         evidenceName: values.evidenceName.trim() || undefined,
         evidenceAssetId: values.evidenceAssetId,
         contact: values.contact.trim() || undefined,

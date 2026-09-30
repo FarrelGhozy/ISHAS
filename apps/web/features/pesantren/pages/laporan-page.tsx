@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
+import { refreshPesantrenState, usePesantrenState } from "~/shared/api/workspace-state";
+import { repository } from "~/shared/api/repository";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
-  const state = useMockState();
+  const state = usePesantrenState();
   const user = useCurrentUser();
   const [notice, setNotice] = useState("");
   const [archiveReason, setArchiveReason] = useState<Record<string, string>>({});
@@ -15,7 +16,13 @@ export function Page() {
       ? user.institutionCodes[0]
       : undefined;
   const reports = state.reports.filter(
-    (x) => x.institutionCode === scope && x.validationStatus === "Diterima" && !x.archivedAt,
+    // D-41: Laporan pesantren hanya kanal lapor-cepat; hasil penilaian mandiri
+    // (Terbit) dibaca di /pesantren/hasil-penilaian-mandiri (D-36).
+    (x) =>
+      x.institutionCode === scope &&
+      x.channel === "lapor-cepat" &&
+      x.validationStatus === "Diterima" &&
+      !x.archivedAt,
   );
   const recommendations = state.recommendations.filter((x) =>
     reports.some((r) => r.id === x.reportId),
@@ -51,11 +58,12 @@ export function Page() {
     : (state.instrumentVersions.find((x) => x.id === state.activeInstrumentVersionId)?.dimensions ??
       []);
   const download = (kind: string) =>
-    setNotice(`Simulasi unduh ${kind}: dokumen dummy tidak dibuat pada prototipe ini.`);
+    setNotice(`Unduh ${kind} belum tersedia pada versi ini.`);
   const archived = state.reports.filter((x) => x.institutionCode === scope && x.archivedAt);
-  const archive = (id: string) => {
+  const archive = async (id: string) => {
     if (!user) return;
-    const r = storeActions.archiveCompletedReport(user, id, archiveReason[id] ?? "");
+    const r = await repository.archiveCompletedReport(user, id, archiveReason[id] ?? "");
+    if (r.ok) refreshPesantrenState();
     setNotice(r.ok ? `${id} diarsipkan dan tidak tampil publik.` : r.error);
     if (r.ok) setArchiveReason((old) => ({ ...old, [id]: "" }));
   };
@@ -78,6 +86,10 @@ export function Page() {
           <Link className="text-button" to="/pesantren/tindak-lanjut">
             Buka Tindak lanjut
           </Link>
+          {" · "}
+          <Link className="text-button" to="/pesantren/hasil-penilaian-mandiri">
+            Hasil penilaian mandiri
+          </Link>
         </p>
       </header>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -95,10 +107,10 @@ export function Page() {
       </p>
       <div className="flex flex-wrap gap-2">
         <button className="secondary-button" onClick={() => download("PDF")}>
-          Unduh PDF dummy
+          Unduh PDF
         </button>
         <button className="secondary-button" onClick={() => download("Excel")}>
-          Unduh Excel dummy
+          Unduh Excel
         </button>
       </div>
       {notice && (
@@ -107,12 +119,12 @@ export function Page() {
         </p>
       )}
       <section className="surface p-4">
-        <h2 className="font-bold">Dimensi instrumen (katalog aktif · ilustrasi)</h2>
+        <h2 className="font-bold">Dimensi instrumen (katalog aktif)</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {dimensions.map((x) => (
             <div key={x.id} className="rounded border border-line-soft p-3 text-sm">
               <strong>{x.name}</strong>
-              <p className="text-secondary-text">{x.indicators.length} indikator · ilustrasi</p>
+              <p className="text-secondary-text">{x.indicators.length} indikator</p>
             </div>
           ))}
         </div>
@@ -139,23 +151,12 @@ export function Page() {
                 {x.id} · {x.title}
               </strong>
               <StatusChip value={x.handlingStatus} />
-              {x.channel === "penilaian-mandiri" &&
-              x.scorePercent !== undefined &&
-              x.scorePercent !== null ? (
-                <span className="text-secondary-text">skor {Math.round(x.scorePercent)}%</span>
-              ) : (
-                <span className="text-secondary-text">
-                  {x.instrumentVersionId ?? "Tanpa instrumen"}
-                </span>
-              )}
+              <span className="text-secondary-text">
+                {x.instrumentVersionId ?? "Tanpa instrumen"}
+              </span>
               <span className="text-secondary-text">
                 {new Date(x.createdAt).toLocaleDateString("id-ID")}
               </span>
-              {x.channel === "penilaian-mandiri" ? (
-                <Link className="text-button" to={`/laporan/${x.id}`}>
-                  Lihat PDF
-                </Link>
-              ) : null}
               {x.handlingStatus === "Completed" ? (
                 <span className="flex w-full flex-wrap items-center gap-2">
                   <input
@@ -167,7 +168,11 @@ export function Page() {
                     }
                     placeholder="Alasan arsip (min 5 karakter)"
                   />
-                  <button type="button" className="secondary-button" onClick={() => archive(x.id)}>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => void archive(x.id)}
+                  >
                     Arsipkan
                   </button>
                 </span>

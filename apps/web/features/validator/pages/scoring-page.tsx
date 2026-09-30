@@ -1,17 +1,17 @@
-// Audit skor beku tiap snapshot (D-24, D-25).
-// Hanya laporan Diterima yang masuk indeks publik; keputusan moderasi milik
-// akun Pesantren, Validator hanya audit.
+// Audit skor beku tiap snapshot (D-24, D-25, D-32).
+// Penilaian mandiri `Terbit` langsung masuk indeks publik; lapor-cepat
+// `Diterima` setelah moderasi Pesantren. Validator hanya audit.
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
-import { useMockState } from "~/mocks/store/mock-store";
-import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
+import { isPublishedStatus, selectRegisteredInstitutions } from "~/mocks/store/selectors";
 import { skorSnapshot } from "~/mocks/processors/dashboard-aggregate";
+import { useValidatorState } from "~/shared/api/validator-state";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
 export function Page() {
-  const state = useMockState();
+  const state = useValidatorState();
   const [query, setQuery] = useState("");
   const [institution, setInstitution] = useState("Semua terdaftar");
   const [status, setStatus] = useState("Semua");
@@ -91,19 +91,18 @@ export function Page() {
         <p className="kicker">Analisis</p>
         <h1 className="text-2xl font-extrabold text-heading">Scoring</h1>
         <p className="text-sm text-secondary-text">
-          Skor % dibekukan saat kirim dari bobot bank. Hanya laporan Diterima
-          yang masuk indeks publik.
+          Skor % dibekukan saat kirim dari bobot bank. Laporan `Terbit`/`Diterima`
+          masuk indeks publik.
         </p>
       </header>
       <div className="scope-banner">
-        Aturan ilustrasi: skor tiap opsi 0–100 sesuai bobot bank; N/A tidak
-        dihitung. Keputusan Terima/Tolak milik akun Pesantren; Validator hanya
-        audit.
+        Skor tiap opsi 0–100 sesuai bobot bank; N/A tidak dihitung. Keputusan
+        Terima/Tolak milik akun Pesantren; Validator hanya audit.
       </div>
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="Cari skor"
-          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft px-3"
+          className="min-h-11 min-w-60 flex-1 rounded border border-line-soft bg-white px-3"
           placeholder="Cari ID atau judul laporan…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -128,6 +127,7 @@ export function Page() {
           onChange={(e) => setStatus(e.target.value)}
         >
           <option>Semua</option>
+          <option>Terbit</option>
           <option>Diterima</option>
           <option>Menunggu validasi</option>
           <option>Ditolak</option>
@@ -181,7 +181,7 @@ export function Page() {
                       {!beku ? " · warisan INS-v1.x" : ""}
                     </td>
                     <td className="p-3 text-xs">
-                      {report?.validationStatus === "Diterima" ? (
+                      {report && isPublishedStatus(report.validationStatus) ? (
                         <Link
                           className="text-button"
                           to={`/laporan/${report.id}`}
@@ -226,7 +226,7 @@ export function Page() {
                     .join(" · ")}
                   {!beku ? " · warisan INS-v1.x" : ""}
                 </p>
-                {report?.validationStatus === "Diterima" ? (
+                {report && isPublishedStatus(report.validationStatus) ? (
                   <Link
                     className="text-button mt-2 inline-block"
                     to={`/laporan/${report.id}`}

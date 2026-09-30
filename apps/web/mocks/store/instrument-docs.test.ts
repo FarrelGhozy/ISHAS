@@ -50,6 +50,33 @@ test("unggah, ubah visibilitas, dan hapus berkas teraudit", () => {
   expect(getState().auditEvents[0].objectType).toBe("InstrumentDoc");
 });
 
+test("unggah dokumen untuk indikator baru dari bank live (D-16/D-24)", () => {
+  const added = storeActions.addBankIndicator("DIM-KES", {
+    code: "IND-UJI-011",
+    title: "Indikator uji bank live",
+    prompt: "Prompt indikator uji minimal sepuluh karakter.",
+    answerType: "ya-tidak",
+    required: true,
+    evidenceRequired: false,
+    locationRequired: false,
+    categoryId: "KAT-KESELAMATAN",
+  });
+  expect(added.ok).toBe(true);
+  if (!added.ok || !added.id) return;
+  expect(
+    storeActions.upsertInstrumentDoc(PENELITI, {
+      indicatorId: added.id,
+      fileName: "indikator-baru.pdf",
+      fileSize: 1024,
+      assetId: "instrument-doc-123e4567-e89b-12d3-a456-426614174010",
+    }).ok,
+  ).toBe(true);
+  expect(
+    getState().instrumentDocs.some((d) => d.indicatorId === added.id) &&
+      getState().auditEvents[0].action === "Mengunggah berkas indikator",
+  ).toBe(true);
+});
+
 const MANUAL_INPUT = {
   code: "IND-DOC-001",
   title: "Dokumen tambahan validator",
@@ -101,7 +128,7 @@ test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () =
   expect(doc.indicatorTitle).toBe("Dokumen tambahan validator");
 });
 
-test("migrasi v6 ke v13 mempertahankan record dan menambah instrumentDocs", () => {
+test("migrasi v6 ke v16 mempertahankan record dan menambah instrumentDocs", () => {
   const v6 = JSON.stringify({
     ...structuredClone(SEED),
     schemaVersion: 6,
@@ -113,10 +140,10 @@ test("migrasi v6 ke v13 mempertahankan record dan menambah instrumentDocs", () =
   });
   try {
     const loaded = loadState();
-    expect(loaded.schemaVersion).toBe(13);
+    expect(loaded.schemaVersion).toBe(16);
     expect(loaded.reports.length).toBe(SEED.reports.length);
     expect(loaded.instrumentDocs.length).toBe(SEED.instrumentDocs.length);
-    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v13");
+    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v16");
   } finally {
     Reflect.deleteProperty(globalThis, "localStorage");
   }

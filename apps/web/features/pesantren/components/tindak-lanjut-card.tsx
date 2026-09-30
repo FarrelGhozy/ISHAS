@@ -2,8 +2,8 @@
 // Panel baca relasi laporan induk dirender lewat TindakLanjutDetail.
 
 import { useEffect, useState } from "react";
-import { storeActions, useMockState } from "~/mocks/store/mock-store";
-import { mockRepository } from "~/mocks/adapters/mock-repository";
+import { refreshPesantrenState, usePesantrenState } from "~/shared/api/workspace-state";
+import { repository } from "~/shared/api/repository";
 import type { Recommendation } from "~/mocks/types";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { selectInstitutionByCode } from "~/mocks/store/selectors";
@@ -16,7 +16,7 @@ import { CompletionEvidencePicker } from "./completion-evidence-picker";
 import { TindakLanjutDetail } from "./tindak-lanjut-detail";
 
 export function TindakLanjutCard({ item }: { item: Recommendation }) {
-  const state = useMockState();
+  const state = usePesantrenState();
   const user = useCurrentUser()!;
   const [pic, setPic] = useState(item.owner);
   const [due, setDue] = useState(item.dueDate);
@@ -56,7 +56,7 @@ export function TindakLanjutCard({ item }: { item: Recommendation }) {
   const save = async (verify = false) => {
     setBusy(true);
     setMessage("");
-    const result = await mockRepository.updateTindakLanjut(
+    const result = await repository.updateTindakLanjut(
       { id: user.id, name: user.name, role: user.role },
       item.id,
       {
@@ -69,12 +69,14 @@ export function TindakLanjutCard({ item }: { item: Recommendation }) {
         verify,
       },
     );
+    if (result.ok) refreshPesantrenState();
     setBusy(false);
     setMessage(result.ok ? "Tindak lanjut tersimpan." : result.error);
   };
-  const cancel = () => {
-    const result = storeActions.cancelRecommendation(user, item.id, cancelReason);
+  const cancel = async () => {
+    const result = await repository.cancelRecommendation(user, item.id, cancelReason);
     if (result.ok) {
+      refreshPesantrenState();
       setCancelOpen(false);
       setCancelReason("");
       setCancelError("");
@@ -123,8 +125,11 @@ export function TindakLanjutCard({ item }: { item: Recommendation }) {
                   className="min-h-10 rounded border border-line-soft px-3"
                   value={finding.level}
                   onChange={(e) => {
-                    const result = storeActions.setFindingLevel(user, finding.id, e.target.value as never);
-                    setMessage(result.ok ? "Tingkat risiko tersimpan." : result.error);
+                    const level = e.target.value as never;
+                    void repository.setFindingLevel(user, finding.id, level).then((result) => {
+                      if (result.ok) refreshPesantrenState();
+                      setMessage(result.ok ? "Tingkat risiko tersimpan." : result.error);
+                    });
                   }}
                 >
                   <option>Rendah</option>
@@ -136,7 +141,7 @@ export function TindakLanjutCard({ item }: { item: Recommendation }) {
             ))}
           </div>
           <p className="mt-2 text-xs text-secondary-text">
-            Termasuk Ekstrem (prototipe D-15); perubahan teraudit.
+            Termasuk Ekstrem (D-15); perubahan teraudit.
           </p>
         </div>
       ) : null}

@@ -42,6 +42,11 @@ Audit ini tidak menganggap setiap rincian turunannya telah disetujui kembali.
 ini diganti terbatas oleh D-14: denah gambaran besar dan titik temuan tervalidasi
 boleh publik setelah memilih satu pesantren. Larangan bidang privat lainnya tetap.
 
+**Amendemen 28 September 2026 (D-27):** foto bukti penilaian mandiri
+dikecualikan dari larangan bukti publik — tampil di PDF `/laporan/:id`
+agar pihak luar dapat melihat buktinya. Larangan bukti publik lainnya
+(bukti lapor-cepat, bukti penyelesaian tindak lanjut) tetap.
+
 - **Keputusan:** **"Ringkasan saja"** + **nama validator/PIC publik**.
  - Publik melihat ringkasan hasil/progres: angka, kategori ilustratif, tren, temuan
  (judul, lokasi/area, severity, status penanganan), rekomendasi, progres tindak lanjut,
@@ -68,22 +73,6 @@ boleh publik setelah memilih satu pesantren. Larangan bidang privat lainnya teta
 - **Status:** DISETUJUI.
 
 ## Bahan diskusi berikutnya — belum diajukan satu per satu
-
-### D-04 — Makna hasil dan agregat penilaian
-
-**Pertanyaan:** jika beberapa orang mengisi instrumen untuk pesantren dan periode yang sama,
-apakah semua kiriman menjadi data responden, atau pengelola memilih satu hasil yang mewakili pesantren?
-Siapa menetapkan periode observasi, dan apakah penilaian individu memang mewakili seluruh lembaga?
-
-**Mengapa perlu:** rata-rata semua kiriman akan memberi bobot lebih besar pada pesantren yang
-memiliki lebih banyak pelapor. Memilih kiriman terakhir juga merupakan keputusan produk, bukan default teknis.
-
-**Rincian yang dibutuhkan:** unit hitung kartu statistik, sumber periode, pemilihan hasil per pesantren,
-kesetaraan versi, penanganan N/A, data kosong, arah tren, dan data yang masuk dataset Peneliti.
-Jumlah laporan cepat tidak mempunyai jawaban instrumen sehingga belum menjadi sumber skor indeks.
-Contoh “jawaban 1/2/Tidak menghasilkan temuan” harus berlabel asumsi seed, bukan aturan semua indikator.
-
-**Terkait:** dashboard, hasil, laporan pimpinan, DATA_MODEL, Peneliti. Rumus ilmiah tetap menunggu tim penelitian.
 
 ### D-04 — Makna hasil dan agregat penilaian
 
@@ -609,6 +598,28 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   DATA_REQUIREMENTS §2/§4, TEST_PLAN, TODO, STAGE_08. Scope Stage 08 +
   sentuhan baca laporan; status stage lain tidak berubah sepihak.
 
+## D-39 — Poles UI/UX bank instrumen Validator — IN PROGRESS 29 September 2026
+
+- Arahan pemilik: rapikan halaman `/validator/instrumen` agar lebih profesional
+  dan nyaman digunakan.
+- Cakupan: hierarki ringkasan bank, penelusuran dimensi/indikator, keterbacaan
+  acuan bobot dan detail indikator, serta form tambah/edit yang responsif.
+- Batas: perubahan presentasi/interaksi pencarian saja; kontrak bank live D-24,
+  bobot/rumus, hak akses, dan persistensi tidak berubah.
+- Pemeriksaan lint, typecheck, test, build, visual desktop/tablet/ponsel, dan
+  keyboard dicatat di TODO sebelum revisi dipindahkan ke REVIEW.
+
+## D-40 — Poles UI/UX Dashboard Validator — IN PROGRESS 29 September 2026
+
+- Arahan pemilik: poles `/validator/dashboard` agar lebih profesional dan nyaman
+  dipakai, mengikuti ringkasan serta alur yang ditunjukkan pemilik.
+- Cakupan: hierarki metrik, akses cepat ke ruang kerja, penjelasan alur/kewenangan,
+  kesiapan publikasi, snapshot terbaru, skor per dimensi, dan ringkasan bank.
+- Batas: angka, sumber data, aturan kesiapan, akses peran, keputusan moderasi,
+  label ilustrasi, serta tautan tujuan tetap; tidak menambah metrik atau kewenangan.
+- Pemeriksaan lint, typecheck, test, build, visual desktop/tablet/ponsel, dan
+  keyboard dicatat di TODO. Status stage lain tidak berubah sepihak.
+
 ## D-26 — SAM-iSAFE khusus Validator (bank dinamis, MVP) — DISETUJUI 28 September 2026
 
 - Arahan pemilik: SAM-iSAFE menjadi halaman baru di ruang Validator
@@ -655,6 +666,286 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `DESIGN_SYSTEM.md` (tanpa kelas `.status`/warna merek baru).
 - Dokumen terdampak: DATA_MODEL schema v13, TODO, stage `STAGE_SAM_ISAFE_FASE2.md`.
 
+## D-38 — Poles UI/UX SAM-iSAFE Validator — IN PROGRESS 29 September 2026
+
+- Arahan pemilik (`ok kerjakan`): perbaiki tampilan dan pengalaman pengisian
+  SAM-iSAFE agar lebih profesional, mudah dipindai, dan nyaman pada desktop
+  maupun ponsel.
+- Cakupan: header konteks, stepper pengamatan, progress dan status simpan,
+  kartu pilihan skor, navigasi kategori, field catatan/bukti, riwayat, detail,
+  dan bank data.
+- Batas: tidak mengubah scope Validator-only, schema, rumus/ambang skor,
+  validasi domain, hak akses, atau kontrak repository. Warna dan komponen tetap
+  mengikuti `DESIGN_SYSTEM.md`.
+- Pemeriksaan visual 3 viewport dan keyboard tetap menjadi bagian verifikasi;
+  status stage SAM-iSAFE tidak dinaikkan sepihak dari `REVIEW`.
+- Revisi lanjutan: dashboard SAM-iSAFE juga dipoles agar ringkasan metrik,
+  pengamatan terakhir, tren, dan rata-rata kategori memiliki hierarki visual
+  yang lebih profesional tanpa mengubah angka atau processor.
+- Arahan pemilik (`buat jadi diagram batang yang normal aja ke atas`): grafik
+  Perkembangan skor memakai batang vertikal yang jelas tumbuh dari baseline
+  bawah ke atas, dengan label nilai dan tanggal mudah dibaca; bukan tampilan
+  batang yang tampak gepeng/ambigu. Data dan makna skor tidak berubah.
+
+## D-26.f — Pematangan bank data SAM-iSAFE (CRUD lengkap + mobile) — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan` atas keluhan bank kurang matang + tampilan HP):
+  lengkapi `/validator/sam-isafe/bank` menyerupai bank instrumen (D-24),
+  tetap Validator-only (D-26.a–D-26.d tidak berubah).
+- **CRUD lengkap:** kategori bisa tambah/ubah/hapus; pertanyaan bisa
+  tambah/ubah/hapus/pindah kategori/geser urutan. Hapus kategori ditolak bila
+  masih berisi pertanyaan; hapus pertanyaan ditolak bila sudah dipakai
+  pengamatan (sarankan nonaktifkan agar riwayat Selesai utuh).
+- **Detail per soal bisa diubah:** tiap pertanyaan punya `panduan` observasi +
+  `contohBukti` opsional yang diisi/diubah Validator (dosen pembimbing sering
+  mengganti); isi 27 soal seed tidak diubah sepihak. Duplikat KAT-03 vs KAT-05
+  (komite/insiden/briefing) hanya ditandai, tidak ditulis ulang.
+- **Bank terpisah:** `SAM-KAT-*` khusus SAM-iSAFE; kategori sistem utama
+  `KAT-*` (`kategori-k3.ts`) tidak terpengaruh perubahan bank ini.
+- **Mobile portrait dulu:** accordion per kategori, tombol min 44px penuh di HP,
+  input 16px, tanpa overflow horizontal (viewport 390×844 acuan).
+- Dokumen terdampak: DATA_MODEL schema v14, TODO, stage `STAGE_SAM_ISAFE.md`.
+
+## D-30 — Stack dan tahapan backend — DISETUJUI 28 September 2026
+
+- Arahan pemilik: backend memakai **TypeScript + runtime Bun + MySQL** (serumpun
+  frontend, tetap kencang). Storage file memakai **disk lokal dulu**; S3/object
+  storage belum butuh dan tidak masuk MVP.
+- **Login/auth server ditunda ke fase akhir** (fase 6): login kartu dummy +
+  sessionStorage tetap dipakai sampai semua modul backend matang.
+- **Seed satu file dua mode** (`scripts/seed.ts --mode=demo|empty`): demo penuh
+  untuk presentasi dosen, kosong tapi valid untuk production. Seed tidak dipecah.
+- Aturan AGENTS ±300 baris dibaca sebagai panduan keterbacaan komponen/logika,
+  bukan kewajiban memecah file data (`seed.ts`) atau sistem yang sedang jalan
+  (`mock-store.ts` dipecah hanya bila dibutuhkan saat migrasi).
+- Rancangan detail: `BACKEND_OVERVIEW.md`, `BACKEND_DATA_MODEL.md`,
+  `BACKEND_API_CONTRACT.md`, `BACKEND_STORAGE.md`, `BACKEND_MIGRATION.md`,
+  `BACKEND_ISSUES.md`. Scope: rancangan dulu; kode backend setelah review.
+
+## D-30.a — Validasi & pendetailan dokumentasi backend — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan`): validasi penulisan dokumentasi backend +
+  database + issue GitHub yang masih terbuka, dan pendetailan item yang kurang.
+  Scope **dokumentasi dan issue saja**; kode `apps/web/` tidak diubah.
+- Sumber kebenaran diperbaiki lebih dulu: `docs/DATA_MODEL.md` disinkronkan ke
+  schema **v15** (sebelumnya masih menyebut v14/v11) agar acuan
+  `BACKEND_DATA_MODEL.md` tidak bertentangan dengan `store/state.ts`.
+- Kolom/entitas DDL yang hilang dilengkapi (pemetaan tipe frontend → kolom),
+  termasuk field snapshot temuan, FK, `sequences`, `index_history`,
+  `lapor_drafts`, `k3_categories/k3_aspects`, dan `instrument_versions` legacy.
+- Kontrak API/storage diperdalam (contoh JSON, pemetaan error→HTTP, `/health`,
+  endpoint legacy, rute blob kanonik, detail auth fase 6).
+- Skrip `scripts/create-backend-issues.sh` dibuat idempoten (cek judul sebelum
+  `gh issue create`); label fase + milestone + relasi `Depends on #` dicatat.
+- Catatan lingkungan: `GITHUB_TOKEN` environment di mesin ini invalid dan
+  menutupi akun keyring yang sah; perintah `gh` dijalankan dengan
+  `env -u GITHUB_TOKEN gh ...`.
+
+## D-30.b — Fase 1 backend + adapter publik — DISETUJUI 28 September 2026
+
+- Arahan pemilik (`ok kerjakan`): kerjakan **Fase 1 backend** (issue #4) dan
+  **swap adapter publik** (issue #10 parsial untuk route publik).
+- Backend `apps/api`: endpoint baca publik, lapor-cepat, penilaian-mandiri
+  (draft/submit), unggah bukti, dan penyajian berkas; penomoran `sequences`
+  transaksional; audit + notifikasi ditulis sejak Fase 1. Processor/selector
+  murni **diimpor** dari `apps/web/mocks` agar paritas 1:1 (seperti seed Fase 0);
+  validasi ditulis ulang di `apps/api/src/domain` dengan pesan Indonesia identik.
+- **Ekstensi kontrak:** `GET /api/v1/public/state` — proyeksi publik `IshasState`
+  (D-02: tanpa identitas pelapor, jawaban mentah, alasan tolak, audit mentah)
+  agar halaman publik dapat beralih tanpa menulis ulang seluruh UI. Endpoint
+  granular §2 tetap ada.
+- Frontend `apps/web`: `shared/api/http-client.ts`, `http-repository.ts`,
+  `repository.ts` (flag `VITE_USE_BACKEND`, default `false`), dan
+  `public-state.ts` (`usePublicState`). Proxy Vite `/api` → `API_PORT`.
+  Modul di luar scope Fase 1 tetap fallback mock.
+- Auth tetap `X-Demo-Account`/kartu dummy (fase 6); production menolak header.
+- Batas terverifikasi: lint + typecheck + 48 test backend (unit + integrasi DB)
+  + 229 test frontend + build lulus; cek visual 3 viewport belum dijalankan.
+
+## D-30.c — Fase 2 backend + adapter ruang Pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 2`): lanjutkan backend issue #5 dan adapter
+  ruang Pesantren (issue #10 lanjutan).
+- Backend `apps/api`: antrean + detail internal, Terima/Tolak, lifecycle
+  `Pending/Proses/Completed` + arsip, `setFindingLevel` (termasuk Ekstrem),
+  lokasi (gedung/lantai/area), denah (unggah + publish `optimistic lock`),
+  tindak lanjut (progres snap 25, verifikasi, pembatalan). Turunan
+  temuan/rekomendasi di `domain/derive.ts` port 1:1 `ensureDerivedWork`.
+- **Ekstensi kontrak:** `GET /api/v1/pesantren/state` — proyeksi internal
+  scope satu lembaga untuk adapter; bukan endpoint publik.
+- Frontend: `usePesantrenState` + `refreshPesantrenState`, method Pesantren di
+  `repository`/`http-repository`. Halaman validasi/lokasi/denah/tindak lanjut/
+  laporan beralih saat `VITE_USE_BACKEND=true`; fallback mock tetap.
+- Batas terverifikasi: lint + typecheck + 55 test backend + 233 test frontend +
+  build lulus; cek visual 3 viewport belum dijalankan.
+
+## D-30.d — Fase 3 backend + adapter ruang Validator — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan semaksimal mungkin kalau frontend perlu disesuaikan`):
+  kerjakan backend issue #6 dan sesuaikan frontend Validator yang diperlukan.
+- Backend `apps/api`: bank instrumen live (CRUD dimensi/indikator/opsi+bobot/pengali,
+  validasi 1:1 mock, tiap ubah → checksum + audit, hapus tak merusak snapshot beku);
+  dokumen indikator (unggah PDF `%PDF-` ≤10 MB, upsert 1 berkas/indikator, entri
+  manual D-16.g, visibilitas Public/Privat, blob Privat hanya Validator); dataset
+  (filter terdaftar + toggle non-terdaftar, ekspor CSV/JSON whitelist D-02, impor
+  ≤200 baris → pratinjau → `Menunggu validasi`); audit publikasi 5 kriteria (D-25.b).
+  Modul baru `domain/bank.ts`, `domain/docs.ts`, `domain/dataset.ts`,
+  `repo/bank.ts`, `repo/docs.ts`, `routes/validator.ts`.
+- **Ekstensi kontrak:** `GET /api/v1/validator/state` (proyeksi penuh untuk adapter;
+  bukan publik) + `GET /api/v1/validator/bank/dimensions` (bank penuh dengan bobot
+  + flag temuan, yang tidak ikut di `/instrument/bank` publik).
+- Frontend `apps/web`: `shared/api/validator-state.ts` (`useValidatorState` +
+  `refreshValidatorState`), method bank/dokumen/dataset di `http-repository`/
+  `repository`, `apiBlob` di `http-client`. Halaman Validator non-SAM (bank,
+  dokumen, dataset, audit publikasi, scoring, dashboard) beralih saat
+  `VITE_USE_BACKEND=true`; SAM-iSAFE (Fase 4) + modul lain tetap fallback mock.
+- Batas terverifikasi: lint + typecheck + 61 test backend + 233 test frontend +
+  build lulus; cek visual 3 viewport belum dijalankan di lingkungan ini.
+
+## D-30.e — Fase 4 backend + adapter SAM-iSAFE — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 4`, jawaban **A** atas pertanyaan unik tindak
+  lanjut): kerjakan backend issue #7 (SAM-iSAFE, Validator-only) sekaligus
+  adapter frontend halaman SAM.
+- Backend `apps/api`: bank SAM (kategori + soal: CRUD, pindah kategori, urutan,
+  aktif/nonaktif, tolak hapus kategori berisi soal / soal terpakai pengamatan,
+  panduan ≤500 + contohBukti ≤280, penanda duplikat); pengamatan (buat Validator
+  atas pesantren terdaftar, jawab 0/1/2 + bukti berpasangan, selesai bila semua
+  aktif terjawab, review `Selesai`, hapus non-`Selesai`); tindak lanjut temuan
+  skor 0/1 (unik aktif per soal, PIC ≥2, tenggat ≥ tanggal pengamatan, batal
+  ≥10); skor dinamis maks = soal aktif × 2, ambang prototipe 80/60. Modul baru
+  `domain/sam.ts`, `repo/sam.ts`; unggah bukti di `domain/uploads.ts` + rute
+  `POST /uploads/sam-evidence` dan cabang `GET /files/:assetId` khusus Validator.
+- **Migrasi `0002_sam_followup_active.sql`:** unique `sam_follow_ups` diganti
+  kolom generated `active_key` (`NULL` saat `Dibatalkan`) agar "satu aktif per
+  temuan" ditegakkan DB tanpa memblokir riwayat batal berganda (setara mock).
+- Perbaikan lintas fase: `repo/state.ts` memetakan kolom DATE (`sam_assessments.
+  observed_at`, `sam_follow_ups.due_date`, `recommendations.due_date`) memakai
+  `toDateOnly` — sebelumnya `Date` mysql2 menjadi teks Inggris sehingga
+  perbandingan tangga/tenggat salah.
+- Frontend `apps/web`: method SAM di `http-repository`/`repository`, `useValidatorState`
+  dipakai halaman/komponen SAM, `EvidencePreview` memuat blob via repository
+  (server saat `VITE_USE_BACKEND=true`); mock tetap default.
+- Batas terverifikasi: lint + typecheck + 65 test backend + 238 test frontend +
+  build lulus; smoke endpoint SAM OK; cek visual 3 viewport belum dijalankan.
+
+## D-30.f — Fase 5 backend + adapter Super Admin, notifikasi, storage — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan fase 5`, "semaksimal mungkin … kalau frontend butuh
+  perbaikan langsung diperbaiki"): kerjakan backend issue #8 sekaligus adapter
+  frontend admin, notifikasi, storage, dan migrasi aset.
+- Backend `apps/api`: Super Admin — `POST/PATCH` pesantren (kode `PSN-XXXX` dari
+  max+1) + status, pengguna (id `USR-NNN`, status awal `Menunggu`, peran tak
+  diubah, proteksi admin terakhir/demo/akun sendiri), reset sandi (audit), audit
+  global + filter pelaku, `POST /admin/reset-demo` (bersihkan storage + seed), dan
+  `GET /admin/state`. Modul `domain/admin.ts`, `repo/admin.ts`, `routes/admin.ts`.
+- Notifikasi: `GET /notifications?account=` + `POST /notifications/read`
+  (aksi `markNotificationsRead` ditambahkan ke store mock agar paritas).
+- Storage penuh: `tmp-uploads/` + rename atomik, `owner_ref` diisi saat submit
+  (lapor/self-assessment/SAM/penyelesaian), job yatim `sweepOrphans` + skrip
+  `bun run sweep` + `POST /admin/storage/sweep`. `sharp` **tidak** dipakai
+  (uji coba install: proses decode menggantung di lingkungan ini); validasi tetap
+  magic-bytes + dimensi (`image.ts`) + header `%PDF-` — dicatat sebagai batas.
+- Migrasi sekali-jalan IndexedDB → server: migrasi `0003_app_settings.sql`
+  (tabel `app_settings`), `POST /admin/migrate/assets` + `GET
+  /admin/migrate/status` (flag `indexeddb_migrated`); frontend mengekspor blob
+  perangkat (`mocks/adapters/device-assets.ts`) lalu membersihkan IndexedDB.
+- Frontend `apps/web`: `useAdminState` + `useWorkspaceState` (shell role-aware),
+  method admin/notifikasi/migrasi di `http-repository`/`repository`, `reset()`
+  beralih ke endpoint + refresh semua cache, tombol "Tandai semua dibaca" di
+  modal notifikasi, dan kartu "Migrasi aset perangkat" di `/admin/pengaturan`.
+- Batas terverifikasi: lint + typecheck + 71 test backend + 242 test frontend +
+  build lulus; smoke endpoint admin/notifikasi/sweep OK; cek visual 3 viewport
+  belum dijalankan.
+
+## D-30.g — Audit + perbaikan Fase 0–5 sebelum auth (issue #6) — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`validasi issues backend yang sudah ditutup fase 0–5 … sebelum
+  lanjut ke #6` lalu `ok kerjakan`): audit menyeluruh #3–#8 + #10, lalu perbaiki
+  semua temuan (A–F) sebelum fase auth. Status stage lain tidak berubah sepihak.
+- **Perbaikan backend:** redaksi D-02 pada `/public/results|recommendations|follow-ups`
+  dan `pdf-data` (foto bukti saja, tanpa jawaban mentah); `DELETE
+  /uploads/report-evidence/:assetId` dibatasi kind + scope Pesantren (Super Admin
+  dilarang); `accept` memeriksa sesi/scope sebelum validasi; pemetaan status HTTP
+  **401** (tanpa sesi) & **413** (ukuran/tipe berkas) selain 403/404/409; idempotensi
+  lapor-cepat membaca header `X-Request-Id`; pagination audit 20/100; route berkas
+  menyajikan blob via `tryReadStoredBlob` (baris seed tanpa blob → 404, bukan 500).
+- **Skema:** migrasi `0004` menambah FK `RESTRICT` `reports.evidence_asset_id`
+  dan `recommendations.completion_evidence_asset_id` → `file_assets`; migrasi
+  `0005` menambah `notifications.legacy_id` agar ID `NOT-*` stabil.
+- **Seed fidelity:** `instrument_version_dimensions.description` disimpan,
+  `instrument_docs.updated_by` memakai nama seed, dan ilustrasi denah seed disalin
+  ke storage agar `GET /api/v1/files/:assetId` menyajikannya (paritas mock).
+- **Adapter #10:** `uploadSelfEvidence` → `POST /uploads/self-evidence` (picker
+  penilaian-mandiri sebelumnya salah endpoint), pustaka dokumen publik memakai
+  `repository`, halaman PDF publik memakai `GET /public/reports/:id/pdf-data`
+  (hook `usePublicReportPdf`) + `openCampusPlanAsset`, dan `refreshPublicState`
+  setelah mutasi/reset. Self-evidence publik hanya bila menempel pada laporan
+  mandiri `Diterima`.
+- **Higiene test:** test integrasi auto-skip bila `DB_NAME` bukan database uji
+  (`*test*`); verifikasi memakai `DB_NAME=ishas_test` (seed `TRUNCATE`).
+- Verifikasi: lint + typecheck + **78 test backend** (DB uji) + **244 test frontend**
+  + build lulus; migrate `--fresh` 5 migrasi + seed demo/empty OK. Cek visual 3
+  viewport adapter tetap pending (tercatat di TODO).
+
+## D-30.h — Fase 6 backend: auth server + RBAC + seed dua mode — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan`): selesaikan Fase 6 backend (issue #9), lalu
+  commit + tutup issue (tanpa push). Selama pengembangan **login tetap satu klik
+  kartu peran** di `/login` (tanpa ketik email/sandi); frontend disambungkan
+  sepenuhnya ke klaim server. Seed harus punya mode data display kaya (demo)
+  dan mode akun inti (awal, isi lain kosong).
+- **Auth server:** `password_hash` bcrypt via `Bun.password` (CHAR(60)),
+  `sessions` (token acak, `token_hash` SHA-256, expiry, cabut sesi lain saat
+  ganti sandi), cookie `ishas_session` (`HttpOnly`, `Secure` di production,
+  `SameSite=Lax`, `Max-Age`) + `ishas_csrf`. Endpoint `/auth/login`,
+  `/auth/demo-login` (dev-only, `404` di production), `/auth/logout`,
+  `/auth/me`, `/auth/password`; rate limit 5/menit per IP+email → `429`; audit
+  masuk/keluar/ubah sandi.
+- **RBAC:** middleware terpusat di `app.ts` per prefix (`/admin/*`,
+  `/validator/*`, `/pesantren/*`, `/notifications*`) → anonim `401`, peran salah
+  `403`; scope lembaga + visibilitas berkas tetap di handler. `X-Demo-Account`
+  hanya fallback non-production.
+- **CSRF:** double-submit `X-CSRF-Token` = cookie `ishas_csrf` untuk mutasi
+  ber-cookie; `/auth/*` dikecualikan.
+- **Frontend (login kartu dipertahankan):** `httpRepository` method auth,
+  `auth-session` cache akun `/auth/me`, `useCurrentUser` memakai akun server di
+  mode backend, `X-CSRF-Token` otomatis dari cookie, Keluar memanggil
+  `/auth/logout`. Mode mock (`VITE_USE_BACKEND=false`) tetap seperti sebelumnya.
+- **Seed:** mode `demo` (kaya, semua user diberi sandi awal) dan mode `empty`
+  berubah menjadi **inti**: 1 pesantren `PSN-0018` `Aktif` + 3 akun inti
+  (`USR-001/002/003`) aktif bersandi, bank minimal; laporan/temuan/SAM/audit/
+  denah/dokumen kosong. Sandi default `SEED_DEFAULT_PASSWORD` (prototipe).
+- **Catatan:** akun baru `POST /admin/users` menerima `password` opsional
+  (default `SEED_DEFAULT_PASSWORD`); reset sandi mengembalikan ke sandi awal.
+  Cookie `Secure` mengandalkan HTTPS di production.
+- Verifikasi: lint + typecheck + 101 test backend (DB uji) + 249 test frontend +
+  build lulus; smoke `demo-login → /auth/me → RBAC 403` OK. Cek visual 3 viewport
+  belum dijalankan (Chromium tidak tersedia).
+
+## D-31 — Pengerasan adapter backend (P0–P2) — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`kerjakan`): backend + MySQL sudah menyala dan `VITE_USE_BACKEND=true`,
+  jadi tuntaskan celah agar mode backend tidak menyajikan data dummy diam-diam.
+- **P0 — Tanpa fallback mock:** keempat sumber state ruang (`public`/`workspace`/
+  `validator`/`admin`) memakai satu factory `shared/api/backend-state.ts`. Saat mode
+  backend dan state server loading/gagal, hook mengembalikan state kosong (bukan seed
+  mock) + status error untuk banner; `refresh()` mereset penanda agar tombol coba lagi
+  bekerja. `useCurrentUser` tidak lagi membaca `useMockState()` untuk nama lembaga.
+- **P1 — Resolver bersih:** `shared/api/repository.ts` tidak lagi spread `...mockRepository`;
+  selector baca mock (`registeredInstitutions`, `validatedReports`, `findingsFor`,
+  `recommendationsFor`) tidak dapat terpanggil di mode backend.
+- **P2a — Tipe proyeksi publik:** proyeksi `/public/state` diberi tipe eksplisit agar
+  field yang sengaja tidak dikirim tidak diam-diam bertipe ada.
+- **P2b — Restore draft penilaian mandiri:** draft `SELF-*` tidak lagi dibaca dari
+  `/public/state` (sengaja dikosongkan, D-02). Ditambah `GET /self-assessments/drafts/:id`
+  (scope pemilik draft) dan halaman penilaian memuat draft dari server saat mode backend.
+- **P2c — Modul domain bersama (utang):** backend masih mengimpor `apps/web/mocks/*`
+  (types/selector/processor). Pemindahan ke modul bersama dicatat sebagai pekerjaan
+  lanjutan tersendiri, bukan bagian perilaku produk.
+- **Batasan:** struktur data, aturan akses (D-02/D-03), copy, dan rumus tidak berubah.
+- Verifikasi: lint + typecheck + test + build FE/BE; smoke browser per peran + 3 viewport.
+
 ## D-25 — Audit publikasi + dataset maksimal Validator — DISETUJUI 28 September 2026
 
 - Arahan pemilik (`ok kerjakan` Opsi B): rapikan tiga halaman Validator
@@ -684,3 +975,389 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   DATA_REQUIREMENTS §9, TEST_PLAN §3/§7, TODO, STAGE_08. Scope Stage 08 +
   sentuhan baca laporan/dashboard validator; status stage lain tidak berubah
   sepihak.
+
+## D-27 — Bukti foto penilaian mandiri diunggah beneran + tampil di PDF publik — DISETUJUI 28 September 2026
+
+- Arahan pemilik: bagian bukti pendukung penilaian mandiri selama ini hanya
+  kolom ketik nama file sehingga tidak bisa mengunggah gambar; pemilik meminta
+  upload beneran agar foto masuk rekapan PDF, dan bukti pada PDF laporan
+  menjadi publik supaya orang luar dapat melihatnya.
+- **Keputusan:**
+  - Kolom ketik nama diganti tombol upload file (PNG/JPEG/WebP, maks 5 MB dan
+    20 megapiksel, pola sama `/lapor` — D-21) hanya pada indikator yang
+    `evidenceRequired` menurut bank instrumen Validator; indikator lain tanpa
+    bagian bukti. Satu pertanyaan = satu foto; pratinjau + lepas/ganti.
+  - Foto tersimpan sebagai blob privat di IndexedDB perangkat pengunggah
+    (bukan localStorage); draft menyimpan `evidenceAssetId` + `evidenceName`;
+    snapshot beku membawa keduanya.
+  - Foto bukti penilaian mandiri tampil publik di PDF `/laporan/:id`
+    (amendemen D-02 terbatas). Tanpa foto = PDF tanpa gambar pada jawaban itu.
+    Bukti lapor-cepat dan bukti penyelesaian tindak lanjut tetap privat.
+  - Keterbatasan prototipe: foto hanya tersedia di perangkat pengunggah;
+    di perangkat lain PDF menampilkan nama file + catatan gambar tidak
+    tersedia di perangkat ini.
+- Dokumen terdampak: FLOWS §3/§6, ROUTES §1, DATA_MODEL §2–§3,
+  DATA_REQUIREMENTS §6, WIREFRAMES §3/§5, STAGE_08. Scope Stage 08;
+  status stage lain tidak berubah sepihak.
+
+## D-28 — Halaman hasil publik digabung; Laporan pimpinan publik dihapus — DISETUJUI 28 September 2026
+
+- Arahan pemilik: `Hasil penilaian` dan `Laporan` di dashboard publik terlalu
+  boros (metrik dan daftar PDF dobel); dashboard publik tidak perlu laporan
+  pimpinan. Semua isi laporan dikumpulkan di hasil penilaian; detail pra-cetak
+  dimatangkan sebagai rekapan.
+- **Keputusan:**
+  - Halaman publik `/laporan` dihapus (jadi 404); menu `Laporan` dihapus dari
+    navigasi publik. Satu-satunya halaman hasil publik adalah `/hasil`:
+    baris metrik (Indeks K3L · Temuan aktif · Terverifikasi) + dimensi hasil +
+    daftar PDF penilaian. Tombol `Unduh simulasi` (alert dummy) dibuang.
+  - Detail `/laporan/:id` tetap sebagai halaman cetak rekapan (opsi a):
+    kop + skor + dimensi + temuan diperkaya (lokasi lengkap, severity/priority
+    final, status/progres/PIC tindak lanjut) + foto bukti (D-27) + metadata
+    (bank, checksum, validator, waktu). Tanpa jawaban mentah per soal (D-02).
+  - `/pesantren/laporan` (workspace internal) tidak berubah.
+- Dokumen terdampak: ROUTES §1, WIREFRAMES §5, FLOWS §6, ROLES §akses publik,
+  DATA_MODEL §3, DATA_REQUIREMENTS §6, TEST_PLAN §3. Scope Stage 08;
+  status stage lain tidak berubah sepihak.
+
+## D-29 — Usulan rekomendasi pelapor + final Pesantren (lapor-cepat) — DISETUJUI 28 September 2026
+
+- Arahan pemilik: rekomendasi di `/rekomendasi` adalah rekomendasi tindakan
+  perbaikan; untuk sekarang dimasukkan sebagai usulan pelapor dari dashboard
+  umum (`/lapor`), divalidasi Pesantren, baru tampil di rekomendasi.
+- **Keputusan:**
+  - Form `/lapor` tambah `Usulan rekomendasi tindakan` opsional (maks 500
+    karakter; bila diisi minimal 10). Tersimpan sebagai `reporterRecommendation`
+    (usulan internal, tidak tampil publik — D-02).
+  - Validasi Pesantren menampilkan usulan sebagai pre-fill; saat `Terima`
+    lapor-cepat wajib isi rekomendasi final (min 10, maks 500, boleh ubah total
+    dari usulan). Yang tampil publik di `/rekomendasi` adalah versi final
+    (`Recommendation.action`).
+  - Scope lapor-cepat dulu; satu laporan = satu rekomendasi. Penilaian-mandiri
+    tetap perilaku turunan otomatis lama sampai diputuskan terpisah.
+  - Migrasi schema mock `v14 → v15` aditif (field baru, tanpa hapus data/ID).
+- Dokumen terdampak: FLOWS §2/§4, WIREFRAMES §2/§4, DATA_MODEL §0/§2/§4, TODO.
+  Scope Stage 03+05 + sentuhan baca Stage 04/07; status stage lain tidak berubah sepihak.
+
+## D-32 — Penilaian mandiri terbit langsung tanpa validasi & tanpa temuan — DISETUJUI 29 September 2026
+
+- Arahan pemilik: alur penilaian mandiri salah karena ikut divalidasi Pesantren.
+  Yang divalidasi hanya pelaporan mandiri (`lapor-cepat`). Penilaian mandiri
+  setelah dinilai harus langsung keluar karena tidak berhubungan dengan
+  pelaporan mandiri.
+- **D-32.a — Kanal terpisah:** `penilaian-mandiri` murni observasi/penilaian
+  kualitas berbobot dari jawaban. Ia tidak melewati antrean validasi Pesantren
+  dan tidak pernah berstatus `Menunggu validasi`/`Ditolak`.
+- **D-32.b — Status `Terbit`:** `ValidationStatus` bertambah nilai `Terbit`,
+  khusus kanal `penilaian-mandiri`. Semua pembacaan publik
+  (`selectValidatedReports`, indeks/dashboard, rekap kategori, PDF
+  `/laporan/:id`) menerima `Terbit` sederajat `Diterima`. `HandlingStatus`
+  bertambah nilai `Tidak berlaku` (terminal) karena kanal ini tidak punya
+  penanganan tindak lanjut.
+- **D-32.c — Tanpa temuan/tindak lanjut:** penilaian mandiri tidak membentuk
+  temuan maupun rekomendasi. Derivasi temuan (`ensureDerivedWork` frontend,
+  `deriveWork` backend) dibatasi hanya untuk `lapor-cepat`. Temuan penilaian
+  mandiri pada seed dihapus. Ini menggantikan aturan turunan per jawaban D-14.b.
+- **D-32.d — Impor dataset:** baris impor kanal `penilaian-mandiri` juga
+  langsung `Terbit` (kanal ini tidak punya moderasi); bagian impor D-25 yang
+  menyatakan "menunggu validasi Pesantren" gugur untuk kanal ini.
+- **D-32.e — Visibilitas:** hasil penilaian mandiri langsung tampil di
+  `/`/`/hasil`/`/laporan/:id`. Akun Pesantren dapat membacanya (skor/PDF)
+  di `/pesantren/hasil-penilaian-mandiri` (dipindah dari `/pesantren/laporan`
+  oleh D-41), tetapi kanal ini tidak muncul di antrean
+  `/pesantren/validasi-laporan` maupun tindak lanjut. Nama pelapor tetap tidak
+  publik (D-02); label "Divalidasi oleh" tidak dipakai kanal ini.
+- **D-32.f — Migrasi:** schema tidak berubah (kolom `validation_status`
+  `VARCHAR`). Seed demo `RPT-0002/0004/0007/0010/0014` menjadi `Terbit` +
+  `Tidak berlaku`, turunannya dihapus, dan komposisi dihitung ulang.
+- Dokumen terdampak: FLOWS §3/§4/§7, ROLES, ROUTES, WIREFRAMES §3/§4,
+  DATA_MODEL, DATA_REQUIREMENTS §2/§6/§9, KATEGORI_K3, TEST_PLAN, TODO,
+  STAGE_08, BACKEND_API_CONTRACT, BACKEND_DATA_MODEL, apps/web/FLOW.md.
+  Scope Stage 08 + sentuhan baca Validasi; status stage lain tidak berubah
+  sepihak.
+
+## D-33 — Kompresi gambar bukti saat unggah — DISETUJUI 29 September 2026
+
+- Arahan pemilik: foto dari ponsel terlalu besar sehingga membebani penyimpanan;
+  gambar perlu dikompres saat diunggah agar lebih ringan.
+- **Keputusan:** seluruh unggah **foto bukti** (lapor-cepat, jawaban penilaian
+  mandiri, SAM-iSAFE, bukti penyelesaian tindak lanjut) dikompres di sisi klien
+  sebelum dikirim/disimpan: sisi terpanjang maksimal **1600 px**, JPEG
+  **kualitas 0,8**, orientasi EXIF dihormati (`imageOrientation: from-image`).
+  Kompresi hanya dijalankan bila gambar melebihi ambang (dimensi > 1600 px atau
+  ukuran > 400 KB) dan hasilnya lebih kecil; bila tidak, berkas asli dipakai.
+- **Batas:** format masuk tetap PNG/JPEG/WebP maks 5 MB/20 MP; berkas yang
+  dikompres dikirim sebagai JPEG. Bila `canvas`/`createImageBitmap` tidak
+  tersedia (SSR/uji), kompresi dilewati dengan aman dan berkas asli dipakai.
+- **Bukan lingkup:** denah kampus (butuh ketajaman peta, tetap apa adanya) dan
+  berkas PDF dokumen indikator.
+- Dokumen terdampak: FLOWS §2/§3/§6, BACKEND_STORAGE, apps/web/README.
+  Tidak mengubah schema maupun hak akses; status stage lain tidak berubah
+  sepihak.
+
+## D-26.h — Pengerasan validasi SAM-iSAFE — DISETUJUI 29 September 2026
+
+- Arahan pemilik (`ok kerjakan perbaikanya`) atas temuan audit API + database
+  SAM-iSAFE: flow data bank → pengamatan → jawaban → selesai → review →
+  tindak lanjut sudah benar dan paritas mock↔backend terjaga; 4 bug validasi
+  diperbaiki, 3 ambiguitas diluruskan di dokumen tanpa mengubah perilaku.
+- **D-26.h.a — Tanggal kalender:** `observedAt` (buat pengamatan) dan `dueDate`
+  (buat/ubah tindak lanjut) wajib tanggal kalender valid `YYYY-MM-DD`.
+  Format tak valid → `400` (`Tanggal pengamatan tidak valid.` /
+  `Tenggat tidak valid.`), bukan `500` DB. Berlaku mock + backend 1:1.
+- **D-26.h.b — Jenis pengamatan:** `kind` wajib salah satu `SAM_KINDS`
+  (`Pemeriksaan Rutin/Khusus/Pasca Insiden/Evaluasi`); selain itu → `400`
+  (`Jenis pengamatan tidak dikenal.`). Berlaku mock + backend 1:1.
+- **D-26.h.c — PATCH ikut cek tenggat:** `PATCH /follow-ups/:fid` memvalidasi
+  `dueDate ≥ observedAt` seperti create (sebelumnya lolos mundur);
+  pesan sama (`Tenggat tidak boleh sebelum tanggal pengamatan.`).
+- **D-26.h.d — Bukti jawaban diverifikasi server:** `saveSamAnswer` backend
+  memeriksa pola + blob ada di `file_assets` + `kind = sam-evidence` +
+  institusi sama dengan pengamatan + nama cocok; tak cocok → `400`
+  (`Gambar bukti tidak tersedia atau tidak sesuai. Pilih ulang atau lepas
+  lampiran.`, sama seperti lapor-cepat). Mock prototipe tetap cek pola saja
+  (tanpa DB, sinkron); frontend menampilkan error server apa adanya.
+- **D-26.h.e — Audit jawaban (disengaja):** simpan jawaban per soal TIDAK
+  diaudit per baris (antisipasi spam 27 baris per pengamatan). Jejak audit
+  detail = lifecycle (buat/selesai/review/hapus) + bank + tindak lanjut
+  (buat/ubah/batal). Bukan bug.
+- **D-26.h.f — Status dan flag mati:** status pengamatan hanya
+  `Berlangsung|Selesai` (nilai `Draft` pada tipe dihapus; tidak pernah dipakai
+  kode/seed). `sam_categories.is_active` selalu `true` (reserved, tanpa toggle;
+  filter UI tetap membaca).
+- **D-26.h.g — Transisi follow-up (disengaja sampai keputusan sebaliknya):**
+  `Selesai` boleh diubah statusnya (termasuk mundur, teraudit) dan tindak lanjut
+  boleh dibuat setelah pengamatan `Selesai`/review. `Dibatalkan` tetap terminal;
+  batal atas `Selesai`/`Dibatalkan` ditolak. Perubahan perilaku butuh keputusan baru.
+- Dokumen terdampak: `BACKEND_API_CONTRACT.md` §11, `BACKEND_DATA_MODEL.md` §7,
+  `apps/web/mocks/types.ts` + `sam-isafe.ts`, TODO, catatan stage SAM
+  (status `REVIEW` tidak berubah sepihak). Tanpa migrasi schema.
+
+## D-35 — Dashboard publik kosong pada mode backend — DISETUJUI 29 September 2026
+
+- Laporan pemilik (mode `VITE_USE_BACKEND=true`, MySQL sudah di-seed demo):
+  dashboard `/` menampilkan `—/100`, `Jawaban diharapkan 38 / terisi 0 /
+  terbit 5`, dan tren `Belum ada hasil tervalidasi untuk digambarkan`.
+- **Root cause (bukan seed hilang):** `buildPublicState` (D-02) mengosongkan
+  `answers` snapshot (`{}`), sedangkan 5 snapshot demo warisan
+  (`INS-v1.0/v1.1`, jawaban saja tanpa `frozenIndicators`/`scorePercent`).
+  Jalur beku mati (tanpa beku) dan jalur warisan mati (tanpa jawaban) sehingga
+  indeks null, dimensi kosong, dan riwayat tren kosong. Mode mock tidak
+  terdampak (jawaban penuh + lookup versi warisan).
+- **D-35.a — Backfill seed backend:** seed demo menghitung `frozenIndicators`
+  (dari dimensi versi asal, `options: []` + fallback aturan `answerType` pada
+  `isJawabanTemuan`), `scorePercent`, dan `byDimension` memakai jalur warisan
+  `skorSnapshot` yang sama dengan mode mock (angka identik, bukan rumus baru).
+  Tanpa migrasi (kolom sudah ada); DB demo lama wajib seed ulang. Snapshot demo
+  tetap `warisan` tanpa checksum (jujur `checksum beda` pada audit, bukan
+  layak publik).
+- **D-35.b — `jawabanTerisi`:** cacah jawaban terisi (bukan isi jawaban,
+  D-02 aman) dibawa pada `SelfAssessmentSnapshot.jawabanTerisi` (opsional):
+  dihitung saat submit (mock + backend baca dari JSON jawaban), dipertahankan
+  proyeksi publik, dibaca `ScoreSummary` (fallback hitung dari `answers` bila
+  field tak ada sehingga mode mock/seed lama tidak berubah).
+- **Batas:** redaksi D-02 tidak berubah (nilai jawaban mentah tetap tidak
+  publik; test `jawaban mentah snapshot dikosongkan` tetap hijau). Kolom
+  rekap `sesuai/tidak sesuai` memakai jawaban mentah sehingga tetap 0 pada
+  mode backend — keterbatasan D-02 yang dicatat, bukan regresi; perpanjangan
+  kontrak agregat rekap menjadi keputusan lanjutan bila diminta.
+- Dokumen terdampak: TODO, `DATA_MODEL.md` (field snapshot), kode + test
+  (di bawah). Status stage lain tidak berubah sepihak.
+
+## D-34 — Dashboard Pesantren + nama pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik: ruang Pesantren tidak punya dashboard dan tidak menampilkan
+  nama pesantren; minta dibuatkan dashboard berisi rangkuman sekaligus nama
+  pesantrennya. Jawaban klarifikasi: dashboard menjadi halaman utama
+  (`/pesantren/dashboard`), isi lengkap sesuai usulan, nama tampil di
+  dashboard saja (bukan banner permanen semua halaman).
+- **D-34.a — Route dan landing:** route baru `/pesantren/dashboard` (workspace
+  Pesantren, guard role `pesantren` + scope satu `institutionCode`). `/pesantren`,
+  `workspaceHome('pesantren')`, dan tombol Ruang kerja akun Pesantren mengarah
+  ke dashboard; `ROUTES.md §5` yang sebelumnya menetapkan Validasi sebagai
+  tujuan diamendemen terbatas untuk peran Pesantren.
+- **D-34.b — Isi:** header identitas pesantren (nama + kode + kota/kabupaten +
+  status, dari `Institution`, tanpa alamat lengkap — D-02) + 4 kartu angka scope
+  sendiri (`Menunggu validasi`, `Pending/Proses`, `Completed` non-arsip,
+  progres tindak lanjut rata-rata non-`Dibatalkan` ala D-23.d) + antrean terbaru
+  (5 laporan `lapor-cepat` terbaru; penilaian mandiri `Terbit` hanya dibaca
+  read-only, D-32) + ringkas tindak lanjut + tautan kelola
+  (Validasi/Lokasi/Tindak lanjut/Laporan). Tanpa logika validasi baru.
+- **D-34.c — Batas:** tanpa perubahan schema, backend (`GET /pesantren/state`
+  D-30.c sudah mencakup data), hak akses, atau dashboard peran lain. Status
+  stage lain tidak berubah sepihak; scope Stage 07 + sentuhan baca Validasi.
+- Dokumen terdampak: ROUTES §2/§5, ROLES §2, WIREFRAMES §6,
+  TODO, STAGE_07.
+
+## D-36 — Hasil penilaian mandiri detail khusus Pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik: bagian Pesantren butuh hasil penilaian mandiri dari
+  dashboard umum, tetapi versi detail dengan semua datanya; Pesantren hanya
+  boleh melihat laporan milik pesantrennya sendiri.
+- **D-36.a — Route dan menu:** route baru `/pesantren/hasil-penilaian-mandiri`
+  (workspace Pesantren, guard role `pesantren` + scope satu `institutionCode`).
+  Menu sidebar Pesantren bertambah `Hasil mandiri`. Tanpa pemilih pesantren;
+  param `?pesantren=` milik pesantren lain diabaikan.
+- **D-36.b — Isi full internal milik scope:** daftar laporan kanal
+  `penilaian-mandiri` berstatus `Terbit` + belum diarsip milik scope
+  (terbaru dulu) + detail per laporan: nama penilai, kontak internal, skor %
+  beku, skor per dimensi, jawaban per indikator (nilai + catatan + bukti +
+  lokasi), waktu kirim, checksum snapshot, tautan PDF. Bidang ini internal
+  pemilik scope; tetap tidak publik (D-02).
+- **D-36.c — Scope ketat:** baca selalu `institutionCode` milik akun aktif.
+  Laporan pesantren lain tidak pernah dibaca; akses langsung via URL ke milik
+  orang lain menampilkan pesan kosong/blokir, bukan redirect silang. Read-only
+  (D-32): tanpa Terima/Tolak, tanpa temuan/tindak lanjut baru.
+- **D-36.d — Batas:** tanpa perubahan schema, tanpa endpoint backend baru
+  (`GET /pesantren/state` D-30.c sudah scope per lembaga + cek scope handler).
+  Status stage lain tidak berubah sepihak; scope Stage 07 + sentuhan baca
+  Validasi/PDF.
+- Dokumen terdampak: ROUTES §2, ROLES §2, WIREFRAMES §6, FLOWS §6,
+  TODO, STAGE_07.
+
+## D-37 — Poles visual hasil mandiri Pesantren — IN PROGRESS 29 September 2026
+
+- Arahan pemilik: halaman hasil penilaian mandiri di ruang Pesantren dibuat lebih
+  baik, rapi, dan profesional.
+- Cakupan: penyempurnaan UI halaman D-36 tanpa mengubah data, hak akses, status,
+  atau aturan privasi. Tampilan memakai ringkasan metrik, kartu hasil yang lebih
+  informatif, panel detail dengan skor dan metadata yang mudah dipindai, serta
+  responsivitas desktop dan ponsel.
+- Batas: tetap read-only, tetap hanya scope Pesantren aktif, dan tidak mengubah
+  tampilan publik `/hasil` atau PDF publik.
+
+## D-41 — Hasil penilaian mandiri dipisah dari Laporan Pesantren — DISETUJUI 29 September 2026
+
+- Arahan pemilik: `/pesantren/laporan` masih menampilkan penilaian mandiri
+  padahal sudah ada halaman khusus `/pesantren/hasil-penilaian-mandiri`; kanal
+  tersebut harus dipisah dan tidak lagi tampil di Laporan.
+- **D-41.a — Laporan hanya lapor-cepat:** daftar, metrik, dan riwayat pada
+  `/pesantren/laporan` dibatasi kanal `lapor-cepat` berstatus `Diterima` + belum
+  diarsip. Hasil `penilaian-mandiri` (`Terbit`) hanya dibaca di
+  `/pesantren/hasil-penilaian-mandiri` (D-36); tautan silang disediakan dari
+  halaman Laporan.
+- **D-41.b — Amendemen D-32.e:** pernyataan bahwa penilaian mandiri dibaca di
+  `/pesantren/laporan` digantikan oleh D-41.a.
+- **D-41.c — Notifikasi:** notifikasi "Penilaian mandiri `<id>` telah terbit"
+  (mock + backend submit & impor dataset) mengarah ke
+  `/pesantren/hasil-penilaian-mandiri`, bukan `/pesantren/laporan`. Notifikasi
+  arsip `Completed` tetap mengarah ke `/pesantren/laporan`.
+- **D-41.d — Batas:** tanpa perubahan schema, hak akses, alur validasi, atau data;
+  murni pemisahan tampilan + tujuan notifikasi. Scope Stage 07 + sentuhan baca
+  Validasi/PDF; status stage lain tidak berubah sepihak.
+- Dokumen terdampak: ROLES, ROUTES, WIREFRAMES, FLOWS, TODO, STAGE_07.
+
+## D-42 — Pemulihan draft/tautan `?pesantren=` pada muat dingin — DISETUJUI 30 September 2026
+
+- Temuan pengujian alur data (E2E browser): pada **muat dingin** mode backend,
+  `selectRegisteredInstitutions` belum termuat sehingga `?pesantren=` dianggap
+  tidak valid. Akibatnya `/penilaian-mandiri` jatuh ke draft `SELF-baru` (draft
+  tersimpan tidak dipulihkan) dan prefill pesantren pada `/lapor` hilang.
+- **D-42.a — Param = sumber kebenaran tautan:** `?pesantren=` dipakai apa adanya
+  saat inisialisasi (ROUTES §1). Pesan "Pesantren tidak tersedia" ditahan sampai
+  daftar terdaftar siap (`registeredCodes.length > 0`) agar tidak muncul keliru
+  saat memuat.
+- **D-42.b — Pesantren terakhir:** tanpa param, pesantren terakhir pada perangkat
+  (`localStorage`) dipulihkan setelah daftar terdaftar tiba, sehingga draft
+  penilaian mandiri tidak hilang saat reload.
+- **D-42.c — Batas:** tanpa perubahan schema, hak akses, rumus, atau kontrak API;
+  hanya perbaikan pemuatan halaman + test regresi `param-pesantren.test.ts`.
+  Memulihkan perilaku yang sudah dimaksudkan ROUTES §1/FLOWS §3.
+- Dokumen terdampak: TODO, DATA_FLOW_API_TEST_REPORT.
+
+## D-43 — Login rilis (form sandi) + koreksi profile `prod` — DISETUJUI 30 September 2026
+
+- Arahan pemilik: profile Docker `prod` harus benar-benar rilis, dan `/login`
+  di sana **bukan** pemilih kartu demo, melainkan halaman masuk email + sandi.
+  Login dev tetap satu klik kartu (D-30.h).
+- **Temuan bug:** build `web-prod` tidak pernah menerima `VITE_USE_BACKEND`
+  (`.env` root di luar build context dan dibuang `.dockerignore`), sehingga rilis
+  terjebak mode mock; service `api` selalu `NODE_ENV=development` dengan CMD
+  watch, sehingga `/auth/demo-login` dan fallback `X-Demo-Account` tetap hidup
+  di prod.
+- **D-43.a — Dua service backend:** `api` (profile `dev`/`api`, `NODE_ENV=development`,
+  watch, demo aktif) dan `api-prod` (profile `prod`, `NODE_ENV=production`,
+  `bun run start`, tanpa bind mount, demo dipaksa mati). `web-prod` memakai
+  `API_HOST=api-prod`.
+- **D-43.b — Build frontend menerima VITE:** `web-prod` meneruskan
+  `VITE_USE_BACKEND`/`VITE_API_BASE` sebagai build arg; Dockerfile builder
+  menanamkannya sebelum `npm run build` (build context `apps/web` tidak memuat
+  `.env` root). Vite mengekspos variabel `process.env` ber-prefix `VITE_`.
+- **D-43.c — Metode login dari server:** endpoint publik `GET /auth/methods`
+  mengembalikan `{ password: true, demo: <demoAuthEnabled> }`. Frontend memilih
+  kartu demo atau form sandi dari respons ini (bukan flag build terpisah), jadi
+  UI selalu sinkron dengan `NODE_ENV` backend. Gagal memuat → form sandi (aman).
+- **D-43.d — Flag auth eksplisit:** `DEMO_AUTH_ENABLED` menimpa default
+  `NODE_ENV!=production`; `COOKIE_SECURE` menimpa default cookie `Secure`.
+  Untuk prototipe lokal via `http://localhost`, `COOKIE_SECURE=false` (bawaan);
+  set `true` bila sudah di balik HTTPS. Compose `api-prod` memaksa
+  `DEMO_AUTH_ENABLED=false` agar nilai `.env` tidak menghidupkan demo di rilis.
+- **D-43.e — Batas:** tanpa perubahan schema, hak akses, atau rumus. Login dev
+  (kartu) dan mode mock tidak berubah. Test: `resolveLoginMode`, `authMethods`
+  adapter, `GET /auth/methods`.
+- Dokumen terdampak: BACKEND_API_CONTRACT §16, README, apps/api/README, .env.example, TODO.
+
+## D-44 — Instrumen penilaian mandiri 6 dimensi / 59 indikator (kategori K3 jadi 6) — DISETUJUI 30 September 2026
+
+- Arahan pemilik: daftar 6 dimensi/59 indikator menggantikan instrumen lama
+  **untuk penilaian mandiri**, dimasukkan ke **seed demo** dan **seed inisiasi**
+  (`empty`). Wording boleh disesuaikan; poin tetap dipertahankan. Nomor 49 yang
+  hilang dinormalkan berurutan (1–59).
+- **Amendemen D-15 & D-13:** frasa "empat kategori dipertahankan" (D-13,
+  DECISIONS:207) dan judul "Empat kategori/aspek K3" (D-15) digantikan:
+  **enam kategori K3** `KAT-KESELAMATAN`, `KAT-DARURAT` (baru), `KAT-KESEHATAN`,
+  `KAT-LINGKUNGAN`, `KAT-PSIKOSOSIAL`, `KAT-AKSESIBILITAS` (baru). Nama kategori
+  lama diperbarui (mis. `KAT-KESELAMATAN` → "Keselamatan dan Keamanan Gedung &
+  Asrama", `KAT-LINGKUNGAN` → "Kesehatan Lingkungan", `KAT-PSIKOSOSIAL` →
+  "Psikososial: Bullying & Kesehatan Mental"); ID stabil dipertahankan.
+- **D-44.a — Sumber tunggal:** kategori/aspek di `apps/web/mocks/kategori-k3.ts`
+  (diimpor backend); soal bank live di `apps/web/mocks/seed/instrument-v2.ts`
+  sebagai versi `INS-v2.0` (Published) dan diturunkan ke bank `INS-LIVE`.
+  `INS-v1.0` tetap arsip; `INS-v1.1` digantikan.
+- **D-44.b — 6 dimensi:** `DIM-KES` (10), `DIM-DARURAT` (10), `DIM-SEH` (10),
+  `DIM-LING` (10), `DIM-PSI` (8), `DIM-AKSES` (11) = **59 indikator**
+  `IND-K3L-001…059`. Tipe jawaban memakai 4 tipe D-24
+  (`ya-tidak`/`kualitas-1-5`/`frekuensi`/`keparahan`). Katalog lengkap
+  (aspek, prompt, bobot, flag bukti/lokasi) ada di `docs/INSTRUMEN_MANDIRI.md`.
+- **D-44.c — Regenerasi demo:** 5 laporan penilaian mandiri (`RPT-0002/0004/0007/
+  0010/0014`) memakai `INS-v2.0` dengan jawaban 59 indikator; `RPT-0010` dan
+  `RPT-0014` adalah snapshot terbaru per pesantren (sumber indeks). Temuan
+  `lapor-cepat` APAR dipindah ke kategori Tanggap Darurat (`ASP-DAR-002`,
+  `IND-K3L-015`) dan air minum ke `ASP-SEH-002` (`IND-K3L-025`).
+- **D-44.d — Seed inisiasi:** mode `empty` memuat bank penuh 6 dimensi/59
+  indikator (data display tetap kosong). Tanpa migrasi DDL; kategori baru masuk
+  lewat seed. `normalisasiJawaban` diperluas menangani skala frekuensi/keparahan.
+- **D-44.e — Batas:** struktur instrumen, jumlah kategori/dimensi/indikator, dan
+  komposisi seed berubah; hak akses, alur validasi, dan rumus ilmiah final tidak
+  berubah. Bobot/ambang tetap dummy ilustratif (D-04/D-13).
+- Dokumen terdampak: KATEGORI_K3, INSTRUMEN_MANDIRI (baru), DATA_MODEL,
+  BACKEND_DATA_MODEL, DATA_REQUIREMENTS, DASHBOARD_DATA_FLOW, FLOWS, ROLES,
+  ROUTES, WIREFRAMES, TEST_PLAN, README, BACKLOG, TODO, BACKEND_API_CONTRACT,
+  BACKEND_MIGRATION, BACKEND_OVERVIEW, STAGE_08.
+
+## D-45 — Hapus penanda data dummy/ilustrasi dari UI (masuk tahap finishing) — DISETUJUI 30 September 2026
+
+- Arahan pemilik: seluruh tulisan di UI yang memberitahu bahwa data adalah dummy/
+  ilustrasi/prototipe dihapus karena aplikasi masuk tahap finishing. Contoh yang
+  disebut pemilik: `Data ilustrasi · prototipe frontend`, `Data publik · ilustrasi`.
+- **D-45.a — Penghapusan, bukan penggantian:** badge, footer, subteks, dan chip
+  penanda dummy di `apps/web` dihapus tanpa teks pengganti (shell workspace &
+  publik, chip status, dashboard publik, halaman baca, PDF, Validator, Pesantren,
+  Admin). Komponen `status-chip` tidak lagi memuat entri `Data publik · ilustrasi`.
+- **D-45.b — Atribusi login:** footer panel login diganti tetap
+  `Dibuat oleh FarrelGhozy · Projek ISHAS 2026`.
+- **D-45.c — Ekspor:** label `Data ilustrasi · asumsi seed` pada ekspor JSON
+  penelitian dihapus.
+- **D-45.d — Batas:** hanya teks UI. Tidak mengubah angka, rumus/ambang, hak
+  akses, alur, atau struktur data. Caveat keilmuan tetap berlaku di dokumen
+  internal; penonjolan label dummy tidak lagi tampil ke pengguna.
+- **D-45.e — Amendemen:** menggantikan ketentuan wajib berlabel `Data ilustrasi`/
+  `data dummy` pada tampilan (README §"Data dummy", DESIGN_SYSTEM §2, ROUTES §4,
+  WIREFRAMES §0–§1, ROLES §7) sepanjang menyangkut penanda yang terlihat pengguna.
+- Dokumen terdampak: DESIGN_SYSTEM, ROUTES, WIREFRAMES, ROLES, DECISIONS, TODO.
+- Kode terdampak: `shared/layout/*-shell.tsx`, `shared/components/status-chip.tsx`,
+  `features/auth/pages/login-page.tsx`, `features/publik/**`, `features/validator/**`,
+  `features/pesantren/**`, `features/admin/**`, `mocks/research-export.ts`,
+  `mocks/adapters/instrument-docs.ts`.
+
+

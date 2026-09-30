@@ -63,7 +63,7 @@ export function ContextBar({
         )}
       </div>
       <span className="text-xs font-semibold text-secondary-text">
-        Periode hasil: {periodeParam || PERIODE_BERJALAN} · ilustrasi
+        Periode hasil: {periodeParam || PERIODE_BERJALAN}
       </span>
       <div className="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto">
         {!adaTerdaftar ? (
