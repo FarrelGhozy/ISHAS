@@ -67,7 +67,7 @@ yang **sudah tertulis**; tidak menetapkan aturan baru untuk kasus tanpa temuan a
 ## 4. Hasil, periode, dan instrumen
 
 Sketsa saat ini belum memuat `InstrumentVersion`, konfigurasi indikator, periode, atau hasil per dimensi.
-Enam indikator seed adalah contoh demo, bukan jumlah indikator ilmiah final.
+Bank live seed memuat 6 dimensi/59 indikator (D-44) sebagai contoh demo, bukan jumlah indikator ilmiah final.
 
 Kebutuhan sebelum kontrak dapat dianggap lengkap:
 

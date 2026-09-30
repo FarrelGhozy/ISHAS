@@ -11,6 +11,7 @@ import {
   clearSessionCookies,
   parseCookies,
 } from "../src/auth/cookie";
+import { buildAuthRoutes } from "../src/routes/auth";
 
 describe("password", () => {
   test("hash bcrypt 60 karakter + verify benar/salah", async () => {
@@ -131,5 +132,40 @@ describe("RBAC prefix + CSRF", () => {
       },
     });
     expect(response.status).toBe(200);
+  });
+});
+
+describe("GET /auth/methods", () => {
+  const app = createApp({
+    ping: async () => {},
+    routes: buildAuthRoutes(),
+    loadActor: async () => null,
+  });
+  const getMethods = async () => {
+    const response = await app(new Request("http://localhost/api/v1/auth/methods"));
+    return (await response.json()) as { data: { password: boolean; demo: boolean } };
+  };
+  const withDemoEnv = async (value: string | undefined, run: () => Promise<void>) => {
+    const prev = process.env.DEMO_AUTH_ENABLED;
+    if (value === undefined) delete process.env.DEMO_AUTH_ENABLED;
+    else process.env.DEMO_AUTH_ENABLED = value;
+    try {
+      await run();
+    } finally {
+      if (prev === undefined) delete process.env.DEMO_AUTH_ENABLED;
+      else process.env.DEMO_AUTH_ENABLED = prev;
+    }
+  };
+
+  test("demo aktif → { password:true, demo:true }", async () => {
+    await withDemoEnv("true", async () => {
+      expect((await getMethods()).data).toEqual({ password: true, demo: true });
+    });
+  });
+
+  test("demo mati (production) → { password:true, demo:false }", async () => {
+    await withDemoEnv("false", async () => {
+      expect((await getMethods()).data).toEqual({ password: true, demo: false });
+    });
   });
 });

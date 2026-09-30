@@ -8,7 +8,10 @@ import { storeActions, getState } from "./mock-store";
 import { selectPublicReports, selectValidatedReports } from "./selectors";
 import { pilihSnapshotTerbaruDiterima } from "../processors/dashboard-aggregate";
 import { SEED } from "../seed/seed";
+import { buildInstrumentV2Dimensions, buildSelfAssessmentAnswers } from "../seed/instrument-v2";
 import type { SelfAssessmentDraft } from "../types";
+
+const V2_DIMENSIONS = buildInstrumentV2Dimensions();
 
 const PENGELOLA = {
   id: "USR-003",
@@ -26,37 +29,12 @@ function draftLengkap(
     id,
     institutionCode: "PSN-0018",
     reporterName: "Penguji Mandiri",
-    instrumentVersionId: SEED.activeInstrumentVersionId ?? "INS-v1.1",
-    answers: {
-      "IND-K3L-001": {
-        value: "3",
-        note: "",
-        evidenceName: "",
-        areaId: "AREA-001",
-        planPoint: null,
-      },
-      "IND-K3L-002": {
-        value: "2",
-        note: "",
-        evidenceName: "kabel.jpg",
-        areaId: "AREA-001",
-        planPoint: null,
-      },
-      "IND-K3L-003": { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-004": { value: "3", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-005": {
-        value: "Ya",
-        note: "",
-        evidenceName: "",
-        areaId: "AREA-002",
-        planPoint: null,
-      },
-      "IND-K3L-006": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-007": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-008": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-009": { value: "2", note: "", evidenceName: "", areaId: "", planPoint: null },
-      "IND-K3L-010": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-    },
+    instrumentVersionId: SEED.activeInstrumentVersionId ?? "INS-v2.0",
+    // D-44: draft uji memuat seluruh 59 indikator + area/bukti wajib agar lolos kirim.
+    answers: buildSelfAssessmentAnswers(V2_DIMENSIONS, "sedang", {}, {
+      areaId: "AREA-001",
+      evidenceName: "bukti.jpg",
+    }),
     activeIndex: 0,
     updatedAt: new Date().toISOString(),
     ...overrides,
@@ -109,8 +87,8 @@ describe("boundary pengirim penilaian-mandiri (D-03)", () => {
     expect(kirim.ok).toBe(true);
     if (!kirim.ok || !kirim.id) return;
     const snapshot = getState().selfAssessmentSnapshots.find((s) => s.reportId === kirim.id);
-    // Draft uji mengisi 10 jawaban → cacah bawaan 10 untuk proyeksi publik D-02.
-    expect(snapshot?.jawabanTerisi).toBe(10);
+    // Draft uji mengisi 59 indikator → cacah bawaan 59 untuk proyeksi publik D-02.
+    expect(snapshot?.jawabanTerisi).toBe(59);
   });
 
   test("notifikasi 'telah terbit' mengarah ke hasil mandiri, bukan Laporan (D-41)", () => {
@@ -385,13 +363,13 @@ describe("bank live + snapshot beku + PDF (D-24)", () => {
     expect(typeof report.scorePercent).toBe("number");
     expect(report.pdfGeneratedAt).toBeTruthy();
     const snapshot = getState().selfAssessmentSnapshots.find((s) => s.reportId === r.id)!;
-    expect(snapshot.frozenIndicators?.length).toBe(10);
+    expect(snapshot.frozenIndicators?.length).toBe(59);
     expect(snapshot.scorePercent).toBe(report.scorePercent);
     // Beku: ubah bank tidak mengubah skor tersimpan.
     expect(storeActions.deleteBankIndicator("IND-K3L-010").ok).toBe(true);
     const sesudah = getState().selfAssessmentSnapshots.find((s) => s.reportId === r.id)!;
     expect(sesudah.scorePercent).toBe(report.scorePercent);
-    expect(sesudah.frozenIndicators?.length).toBe(10);
+    expect(sesudah.frozenIndicators?.length).toBe(59);
   });
 
   test("validator kelola penuh: tambah/edit/hapus dimensi + indikator + atur bobot", () => {

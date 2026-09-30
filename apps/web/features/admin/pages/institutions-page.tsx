@@ -136,7 +136,7 @@ export function Page() {
       )}
       <input
         aria-label="Cari pesantren"
-        className="min-h-11 rounded border border-line-soft px-3"
+        className="min-h-11 rounded border border-line-soft bg-white px-3"
         placeholder="Cari kode, nama, lokasi, alamat, atau penanggung jawab…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}

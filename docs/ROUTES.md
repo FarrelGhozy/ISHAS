@@ -90,7 +90,7 @@ Pemeriksaan scope juga berlaku pada aksi simpan berdasarkan ID, bukan hanya menu
 ## 4. Navigasi dan shell
 
 - Satu shared workspace shell untuk route workspace (sidebar, header, akun aktif kanan atas, notifikasi, menu mobile, konten).
-- Route publik memakai shell publik ringan: logo + nama ISHAS + penanda `Data publik · ilustrasi` + pemilih pesantren (di `/`) + tombol **Masuk** / jalan ke workspace bila sudah login.
+- Route publik memakai shell publik ringan: logo + nama ISHAS + tombol **Masuk** / jalan ke workspace bila sudah login + pemilih pesantren (di `/`). Penanda data dummy/ilustrasi dihapus dari UI (D-45).
 - Menu aktif selalu diturunkan dari URL. Tidak ada state navigasi kedua.
 - Notifikasi: target path publik (`/hasil`, `/peta-risiko`) untuk info umum; target `/pesantren/validasi-laporan` hanya untuk Pesantren pemilik scope; target `/admin/pengguna` dan `/admin/pesantren` untuk super admin.
 

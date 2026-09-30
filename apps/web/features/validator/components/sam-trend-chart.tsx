@@ -55,7 +55,7 @@ export function SamTrendChart({ items }: { items: SamAssessment[] }) {
         </div>
       </div>
       <figcaption className="mt-2 text-xs text-faint">
-        Sumbu persen 0–{maks}. Arah naik berarti kondisi membaik. Data ilustrasi.
+        Sumbu persen 0–{maks}. Arah naik berarti kondisi membaik.
       </figcaption>
     </figure>
   );

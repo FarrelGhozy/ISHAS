@@ -56,8 +56,9 @@ Cookie sesi `ishas_session` (HttpOnly) adalah sumber utama; header
 
 | Metode | Path | Akses |
 |---|---|---|
+| GET | `/auth/methods` | publik; `{ password, demo }` untuk `/login` |
 | POST | `/auth/login` | email + sandi (rate limit 5/menit) |
-| POST | `/auth/demo-login` | kartu dev (hanya non-production) |
+| POST | `/auth/demo-login` | kartu dev (hanya non-production / `DEMO_AUTH_ENABLED`) |
 | POST | `/auth/logout` | cookie sesi |
 | GET | `/auth/me` | cookie sesi |
 | POST | `/auth/password` | cookie sesi (sandi lama + baru ≥8) |

@@ -67,7 +67,7 @@ tetap menunggu penelitian.
 type InstrumentDocVisibility = 'Public' | 'Privat';
 type InstrumentDoc = {
   id: string; // 'DOC-IND-K3L-001' stabil per indicatorId
-  indicatorId: string; // FK indikator INS-v1.1 ('IND-K3L-*')
+  indicatorId: string; // FK indikator bank live ('IND-K3L-*', D-44)
   categoryId?: string; // denormalisasi untuk filter (KAT-*)
   aspectId?: string; // denormalisasi (ASP-*)
   fileName: string; // 'detail-xxx.pdf'
@@ -104,7 +104,7 @@ type HandlingStatus =
 // 'Dihapus' (FLOWS §5) bukan nilai tersimpan: record dihapus beserta temuan + audit tetap ada;
 // alternatif arsip alih-alih hapus menunggu D-07.
 type InstrumentStatus = 'Draft' | 'Published' | 'Archived';
-type KategoriK3Id = 'KAT-KESELAMATAN' | 'KAT-KESEHATAN' | 'KAT-LINGKUNGAN' | 'KAT-PSIKOSOSIAL';
+type KategoriK3Id = 'KAT-KESELAMATAN' | 'KAT-DARURAT' | 'KAT-KESEHATAN' | 'KAT-LINGKUNGAN' | 'KAT-PSIKOSOSIAL' | 'KAT-AKSESIBILITAS'; // D-44
 type RiskLevel = 'Rendah' | 'Sedang' | 'Tinggi' | 'Ekstrem'; // D-15.b, asumsi prototipe
 type RecommendationStatus =
   | 'Belum ditindaklanjuti' | 'Berjalan' | 'Menunggu verifikasi' | 'Terverifikasi' | 'Dibatalkan'; // D-21: terminal per rekomendasi, wajib alasan
@@ -305,7 +305,7 @@ D-26.f + D-29). Angka di bawah dikunci `seed-composition.test.ts`.
   validasi`, 5 `Terbit` (penilaian mandiri, D-32), 2 `Ditolak` (alasan ≥10), dan
   10 `Diterima` (termasuk `RPT-0017` arsip `Completed` D-07 yang tidak tampil
   publik).
-- **9 temuan + 9 rekomendasi:** seluruh 4 kategori K3 + baris `Belum
+- **9 temuan + 9 rekomendasi:** seluruh 6 kategori K3 + baris `Belum
   dipetakan`; level risiko `Rendah/Sedang/Tinggi/Ekstrem` (satu `Ekstrem`
   demo D-15.b); satu temuan tanpa titik; satu temuan `Terverifikasi` di laporan
   `Proses` (D-05 satu laporan banyak temuan); satu `Dibatalkan` (D-21).
@@ -317,11 +317,12 @@ D-26.f + D-29). Angka di bawah dikunci `seed-composition.test.ts`.
   lanjut `SMF-0001/0002`.
 - **Audit + notifikasi:** 18 `audit_events` + 4 `notifications`.
 - **Lokasi:** denah ilustrasi + titik untuk kedua pesantren terdaftar, 4 gedung,
-  12 area (2 snapshot `INS-v1.1` sebagai sumber indeks + tren 6 periode
+  12 area (snapshot `INS-v2.0` sebagai sumber indeks + tren 6 periode
   ilustratif Mar–Agu 2026).
-- **Bank:** `INS-v1.1` (4 kategori K3, 10 indikator termasuk Psikososial) →
-  bank live `INS-LIVE` turunan (D-24); `INS-v1.0` diarsipkan untuk reproduksi
-  snapshot lama. Mapping lama→baru di `KATEGORI_K3.md` §4.
+- **Bank:** `INS-v2.0` (6 kategori K3, 6 dimensi, 59 indikator) →
+  bank live `INS-LIVE` turunan (D-24/D-44); `INS-v1.0` diarsipkan untuk reproduksi
+  snapshot lama. Katalog di `INSTRUMEN_MANDIRI.md`; mapping lama→baru di
+  `KATEGORI_K3.md` §4.
 - **Counter seed:** `counters.report = 20`, `counters.institution = 23` (nomor
   berikutnya; `> 0` adalah syarat validator lama).
 

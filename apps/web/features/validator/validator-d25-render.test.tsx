@@ -126,5 +126,5 @@ test("Bank instrumen live menampilkan ringkasan, acuan bobot, dan pencarian", ()
   expect(html).toContain("Bangun struktur instrumen");
   expect(html).toContain("Cari indikator");
   expect(html).toContain("Acuan bobot jawaban");
-  expect(html).toContain("10<!-- --> indikator ditampilkan");
+  expect(html).toContain("59<!-- --> indikator ditampilkan");
 });

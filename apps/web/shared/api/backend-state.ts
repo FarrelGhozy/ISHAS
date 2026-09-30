@@ -16,7 +16,7 @@ export type BackendSnapshot = {
 
 export function emptyIshasState(): IshasState {
   return {
-    schemaVersion: 15,
+    schemaVersion: 16,
     institutions: [],
     users: [],
     reports: [],

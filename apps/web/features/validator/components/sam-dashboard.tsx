@@ -1,5 +1,5 @@
 // Dashboard SAM-iSAFE: ringkasan + tren + rata-rata kategori (D-26.e).
-// Murni baca pengamatan Selesai; angka berlabel ilustrasi.
+// Murni baca pengamatan Selesai.
 
 import { useMemo } from "react";
 import { Activity, ArrowUpRight, ClipboardCheck, Database, ShieldAlert } from "lucide-react";
@@ -88,7 +88,6 @@ export function SamDashboard(props: Props) {
             </h2>
             <p className="mt-2 max-w-lg text-sm leading-6 text-blue-100">
               Ringkasan ini menggunakan pengamatan Selesai dari seluruh pesantren terdaftar.
-              Angka dan ambang pada modul ini masih berupa ilustrasi prototipe.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-white px-4 text-sm font-bold text-primary shadow-sm hover:bg-blue-50" to="/validator/sam-isafe/baru">

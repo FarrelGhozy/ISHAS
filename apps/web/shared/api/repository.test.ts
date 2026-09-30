@@ -314,6 +314,14 @@ describe("httpRepository Super Admin (Fase 5)", () => {
 });
 
 describe("auth (fase 6)", () => {
+  test("authMethods → GET /auth/methods", async () => {
+    stubFetch({ ok: true, data: { password: true, demo: false } });
+    const result = await httpRepository.authMethods();
+    expect(result).toEqual({ ok: true, data: { password: true, demo: false } });
+    expect(calls[0].url).toContain("/api/v1/auth/methods");
+    expect(calls[0].init.method ?? "GET").toBe("GET");
+  });
+
   test("demoLogin → POST /auth/demo-login", async () => {
     stubFetch({ ok: true, data: { account: { id: "USR-003" }, csrfToken: "c1" } });
     const result = await httpRepository.demoLogin("USR-003");

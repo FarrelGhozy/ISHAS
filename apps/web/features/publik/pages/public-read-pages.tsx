@@ -31,7 +31,7 @@ const TITLES: Record<PublicReadKind, string> = {
 function PublicHeader({ kind }: { kind: PublicReadKind }) {
   return (
     <header>
-      <p className="kicker">Data publik · ilustrasi</p>
+      <p className="kicker">Data publik</p>
       <h1 className="text-2xl font-extrabold text-heading">{TITLES[kind]}</h1>
       <p className="mt-1 text-sm text-secondary-text">
         Ringkasan data tervalidasi; nama pelapor, kontak, denah rinci, dan jawaban mentah
@@ -135,7 +135,7 @@ function Results({
         <p className="mt-2 text-4xl font-extrabold text-heading">
           {summary.currentIndex === null ? "—" : Math.round(summary.currentIndex)}
         </p>
-        <p className="mt-2 text-sm text-secondary-text">Kategori ilustratif · {summary.periode}</p>
+        <p className="mt-2 text-sm text-secondary-text">Kategori · {summary.periode}</p>
       </article>
       <article className="stat-card">
         <p className="text-sm font-bold text-secondary-text">Temuan aktif</p>
@@ -150,7 +150,7 @@ function Results({
       <article className="surface p-4 lg:col-span-3">
         <h2 className="font-extrabold text-heading">Dimensi hasil</h2>
         <p className="mt-1 text-sm text-secondary-text">
-          Bank instrumen dan kategori adalah data ilustrasi.
+          Sebaran nilai tiap dimensi instrumen.
         </p>
         <ul className="mt-4 space-y-3">
           {summary.dimensions.map((dimension) => (

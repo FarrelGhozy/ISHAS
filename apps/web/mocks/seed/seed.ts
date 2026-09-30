@@ -12,33 +12,43 @@
 //   9 temuan (Ekstrem 1, Tinggi 1, Sedang 3, Rendah 4; 1 Dibatalkan demo D-21),
 //   9 rekomendasi (Belum 3, Berjalan 2, Menunggu verifikasi 1, Terverifikasi 2,
 //   Dibatalkan 1 demo D-21),
-//   seluruh 4 kategori K3 + baris Belum dipetakan, snapshot INS-v1.1 terbaru
-//   sebagai sumber indeks (kontras 58 vs 70), tren 6 periode + periode berjalan,
+//   seluruh 6 kategori K3 + baris Belum dipetakan, snapshot INS-v2.0 terbaru
+//   sebagai sumber indeks, tren 6 periode + periode berjalan,
 //   denah + titik untuk kedua pesantren terdaftar.
 // - Pesantren: + 2 Menunggu (antrean 1 vs 2), 2 Completed internal (demo arsip
 //   D-07), 2 Ditolak (demo arsip penolakan), 1 Pending prioritas Rendah
 //   (RPT-0018 + bukti), lokasi 5 gedung/13 area.
-// - Admin: 5 pesantren (Aktif/Persiapan + Aktif-tanpa-akun + Nonaktif demo D-08),
+// - Admin: 6 pesantren (Aktif/Persiapan + Aktif-tanpa-akun + Nonaktif demo D-08 +
+//   UNIDA Gontor Aktif-tanpa-akun untuk demo pencarian),
 //   6 pengguna (1 Pesantren Menunggu demo aktivasi).
-// - Validator: INS-v1.0 arsip (riwayat) + INS-v1.1 Published aktif (10 indikator).
+// - Validator: INS-v1.0 arsip (riwayat) + INS-v2.0 Published aktif (6 dimensi/59 indikator).
 // - SAM: 3 Selesai (1 Ditinjau) + 1 Berlangsung (demo filter + progres).
 // - Publik internal D-08: RPT-0019 milik PSN-0023 Nonaktif (tidak tampil publik).
-
+//
 import type { Instrument, IshasState, SamAnswer, SamAssessment } from "../types";
 import { buildBankLiveDariVersi } from "../instrument-bank";
 import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED, samCompute } from "../sam-isafe";
+import {
+  buildInstrumentV2Dimensions,
+  buildSelfAssessmentAnswers,
+  INSTRUMEN_V2_ID,
+  INSTRUMEN_V2_LABEL,
+} from "./instrument-v2";
 
 const T = {
   now: "2026-09-08T09:00:00.000Z",
 };
 
+// D-44: 6 dimensi / 59 indikator penilaian mandiri (single source di instrument-v2.ts).
+const V2_DIMENSIONS = buildInstrumentV2Dimensions();
+
 export const SEED: IshasState = {
-  schemaVersion: 15,
+  schemaVersion: 16,
   samCategories: structuredClone(SAM_CATEGORIES_SEED),
   samQuestions: structuredClone(SAM_QUESTIONS_SEED),
   samAssessments: [],
   samFollowUps: [],
-  // D-24: bank live diisi setelah objek (diturunkan dari INS-v1.1, tanpa duplikasi).
+  // D-24: bank live diisi setelah objek (diturunkan dari INS-v2.0, tanpa duplikasi).
   instrument: {} as Instrument,
   campusPlans: [
     {
@@ -102,6 +112,15 @@ export const SEED: IshasState = {
       manager: "Ust. Syaiful Bahri",
       assessment: "Belum dimulai",
       status: "Persiapan",
+    },
+    {
+      code: "PSN-0024",
+      name: "UNIDA Gontor",
+      location: "Kabupaten Ponorogo",
+      address: "Jl. Raya Siman, Kabupaten Ponorogo",
+      manager: "Ust. Prof. Dr. K.H. Syamsul Hadi",
+      assessment: "Belum dimulai",
+      status: "Aktif",
     },
     {
       code: "PSN-0023",
@@ -220,7 +239,7 @@ export const SEED: IshasState = {
       title: "Penilaian mandiri K3L — PP Nurul Iman Batu",
       description:
         "Ringkasan: beberapa indikator sanitasi dan kelistrikan berisiko; skor beku langsung terbit (D-32).",
-      instrumentVersionId: "INS-v1.0",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       validationStatus: "Terbit",
       severity: "Belum ditentukan",
       priority: "Belum ditentukan",
@@ -262,7 +281,7 @@ export const SEED: IshasState = {
       title: "Penilaian mandiri K3L — PP Al-Hikmah Malang",
       description:
         "Ringkasan: indikator proteksi listrik dan jalur evakuasi bernilai rendah; hasil dimensi ilustratif tersedia.",
-      instrumentVersionId: "INS-v1.0",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       validationStatus: "Terbit",
       severity: "Belum ditentukan",
       priority: "Belum ditentukan",
@@ -322,7 +341,7 @@ export const SEED: IshasState = {
       title: "Penilaian mandiri K3L — PP Nurul Iman Batu",
       description:
         "Ringkasan: ketersediaan air bersih menurun di dapur utama; indikator lain terjaga.",
-      instrumentVersionId: "INS-v1.0",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       validationStatus: "Terbit",
       severity: "Belum ditentukan",
       priority: "Belum ditentukan",
@@ -335,9 +354,9 @@ export const SEED: IshasState = {
       id: "RPT-0008",
       channel: "lapor-cepat",
       institutionCode: "PSN-0018",
-      categoryId: "KAT-KESELAMATAN",
-      aspectId: "ASP-KES-002",
-      indicatorId: "IND-K3L-003",
+      categoryId: "KAT-DARURAT",
+      aspectId: "ASP-DAR-002",
+      indicatorId: "IND-K3L-015",
       reporterSeverity: "Tinggi",
       reporterPriority: "Tinggi",
       reporterName: "Takmir Musala",
@@ -393,10 +412,10 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0018",
       reporterName: "Ust. K.H. Mustofa Kamal",
       reporterAccountEmail: "pesantren@ishas.demo",
-      title: "Penilaian mandiri K3L — PP Al-Hikmah Malang (INS-v1.1)",
+      title: "Penilaian mandiri K3L — PP Al-Hikmah Malang (INS-v2.0)",
       description:
         "Ringkasan: instalasi listrik, jalur evakuasi, dan pengelolaan sampah belum sesuai; ventilasi dan dukungan sosial terjaga.",
-      instrumentVersionId: "INS-v1.1",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       validationStatus: "Terbit",
       severity: "Belum ditentukan",
       priority: "Belum ditentukan",
@@ -488,10 +507,10 @@ export const SEED: IshasState = {
       institutionCode: "PSN-0019",
       reporterName: "H. Siti Aminah",
       reporterAccountEmail: "pesantren2@ishas.demo",
-      title: "Penilaian mandiri K3L — PP Nurul Iman Batu (INS-v1.1)",
+      title: "Penilaian mandiri K3L — PP Nurul Iman Batu (INS-v2.0)",
       description:
         "Ringkasan: drainase sisi dapur tergenang saat hujan dan jadwal piket santri terlalu padat; indikator lain terjaga baik.",
-      instrumentVersionId: "INS-v1.1",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       validationStatus: "Terbit",
       severity: "Belum ditentukan",
       priority: "Belum ditentukan",
@@ -505,8 +524,8 @@ export const SEED: IshasState = {
       channel: "lapor-cepat",
       institutionCode: "PSN-0019",
       categoryId: "KAT-KESEHATAN",
-      aspectId: "ASP-SEH-001",
-      indicatorId: "IND-K3L-004",
+      aspectId: "ASP-SEH-002",
+      indicatorId: "IND-K3L-025",
       reporterSeverity: "Tinggi",
       reporterPriority: "Tinggi",
       reporterName: "Petugas Dapur Utama",
@@ -638,13 +657,6 @@ export const SEED: IshasState = {
       contact: "0813-1111-2222",
       instrumentVersionId: "INS-LIVE",
       answers: {
-        "IND-K3L-001": {
-          value: "3",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-001",
-          planPoint: null,
-        },
         "IND-K3L-002": {
           value: "2",
           note: "Sebagian kabel masih terbuka.",
@@ -652,7 +664,14 @@ export const SEED: IshasState = {
           areaId: "AREA-001",
           planPoint: null,
         },
-        "IND-K3L-003": {
+        "IND-K3L-005": {
+          value: "3",
+          note: "",
+          evidenceName: "",
+          areaId: "AREA-001",
+          planPoint: null,
+        },
+        "IND-K3L-015": {
           value: "Ya",
           note: "",
           evidenceName: "",
@@ -667,16 +686,9 @@ export const SEED: IshasState = {
   selfAssessmentSnapshots: [
     {
       reportId: "RPT-0002",
-      instrumentVersionId: "INS-v1.0",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       submittedAt: "2026-09-04T10:30:00.000Z",
-      answers: {
-        "IND-K3L-001": {
-          value: "3",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
+      answers: buildSelfAssessmentAnswers(V2_DIMENSIONS, "sedang", {
         "IND-K3L-002": {
           value: "2",
           note: "Beberapa kabel masih terbuka di dapur",
@@ -684,221 +696,80 @@ export const SEED: IshasState = {
           areaId: "AREA-005",
           planPoint: { x: 35, y: 45 },
         },
-        "IND-K3L-003": {
-          value: "Ya",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-        "IND-K3L-004": {
-          value: "2",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-        "IND-K3L-005": {
-          value: "Ya",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-        "IND-K3L-006": {
-          value: "2",
-          note: "Sampah sering menumpuk",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-      },
+      }),
     },
     {
       reportId: "RPT-0004",
-      instrumentVersionId: "INS-v1.0",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       submittedAt: "2026-09-02T09:40:00.000Z",
-      answers: {
-        "IND-K3L-001": {
-          value: "1",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-001",
-          planPoint: null,
-        },
-        "IND-K3L-002": {
+      answers: buildSelfAssessmentAnswers(V2_DIMENSIONS, "buruk", {
+        "IND-K3L-005": {
           value: "2",
-          note: "",
+          note: "Sambungan listrik terbuka dekat dapur",
           evidenceName: "instalasi.jpg",
           areaId: "AREA-001",
           planPoint: { x: 40, y: 55 },
         },
-        "IND-K3L-003": {
-          value: "Ya",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-002",
-          planPoint: null,
-        },
-        "IND-K3L-004": {
-          value: "3",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-003",
-          planPoint: null,
-        },
-        "IND-K3L-005": {
+        "IND-K3L-011": {
           value: "Tidak",
           note: "Jalur evakuasi terhalang rak baru",
-          evidenceName: "",
           areaId: "AREA-004",
           planPoint: { x: 60, y: 30 },
         },
-        "IND-K3L-006": {
-          value: "4",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-004",
-          planPoint: null,
-        },
-      },
+      }),
     },
     {
       reportId: "RPT-0007",
-      instrumentVersionId: "INS-v1.0",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       submittedAt: "2026-09-05T14:00:00.000Z",
-      answers: {
-        "IND-K3L-001": {
-          value: "3",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-        "IND-K3L-002": {
-          value: "3",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-        "IND-K3L-003": {
-          value: "Ya",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-        "IND-K3L-004": {
-          value: "1",
+      answers: buildSelfAssessmentAnswers(V2_DIMENSIONS, "baik", {
+        "IND-K3L-034": {
+          value: "2",
           note: "Air keran sering tidak mengalir pagi hari",
           evidenceName: "tandon-air.jpg",
           areaId: "AREA-005",
           planPoint: { x: 25, y: 35 },
         },
-        "IND-K3L-005": {
-          value: "Ya",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-        "IND-K3L-006": {
-          value: "3",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-005",
-          planPoint: null,
-        },
-      },
+      }),
     },
     {
       reportId: "RPT-0010",
-      instrumentVersionId: "INS-v1.1",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       submittedAt: "2026-09-06T15:00:00.000Z",
-      answers: {
-        "IND-K3L-001": {
+      answers: buildSelfAssessmentAnswers(V2_DIMENSIONS, "buruk", {
+        "IND-K3L-005": {
           value: "2",
           note: "Sambungan terbuka di koridor lantai 2",
-          evidenceName: "",
-          areaId: "AREA-001",
-          planPoint: { x: 40, y: 55 },
-        },
-        "IND-K3L-002": {
-          value: "1",
-          note: "Kabel belum tersalur rapi",
           evidenceName: "kabel-koridor.jpg",
           areaId: "AREA-001",
           planPoint: { x: 42, y: 57 },
         },
-        "IND-K3L-003": { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-004": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-005": {
+        "IND-K3L-011": {
           value: "Tidak",
           note: "Rak menghalangi pintu darurat ruang belajar",
-          evidenceName: "",
           areaId: "AREA-004",
           planPoint: { x: 60, y: 30 },
         },
-        "IND-K3L-006": {
+        "IND-K3L-031": {
           value: "2",
           note: "Sampah menumpuk di sisi perpustakaan",
-          evidenceName: "",
           areaId: "AREA-007",
           planPoint: null,
         },
-        "IND-K3L-007": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-008": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-009": { value: "2", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-010": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      },
+      }),
     },
     {
       reportId: "RPT-0014",
-      instrumentVersionId: "INS-v1.1",
+      instrumentVersionId: INSTRUMEN_V2_ID,
       submittedAt: "2026-09-07T10:00:00.000Z",
-      answers: {
-        "IND-K3L-001": {
-          value: "4",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-010",
-          planPoint: null,
-        },
-        "IND-K3L-002": {
-          value: "2",
-          note: "Kabel dapur sudah tersalur",
-          evidenceName: "kabel-dapur-rapi.jpg",
-          areaId: "AREA-012",
-          planPoint: null,
-        },
-        "IND-K3L-003": { value: "Ya", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-004": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-005": {
-          value: "Ya",
-          note: "",
-          evidenceName: "",
-          areaId: "AREA-009",
-          planPoint: null,
-        },
-        "IND-K3L-006": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-007": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-        "IND-K3L-008": {
+      answers: buildSelfAssessmentAnswers(V2_DIMENSIONS, "baik", {
+        "IND-K3L-033": {
           value: "2",
           note: "Genangan di selokan sisi dapur saat hujan",
-          evidenceName: "",
           areaId: "AREA-005",
           planPoint: { x: 28, y: 38 },
         },
-        "IND-K3L-009": {
-          value: "Tidak",
-          note: "Santri piket bergilir tanpa jeda istirahat cukup",
-          evidenceName: "",
-          areaId: "AREA-009",
-          planPoint: null,
-        },
-        "IND-K3L-010": { value: "4", note: "", evidenceName: "", areaId: "", planPoint: null },
-      },
+      }),
     },
   ],
   findings: [
@@ -980,8 +851,8 @@ export const SEED: IshasState = {
       areaId: "AREA-003",
       buildingId: "BLD-001",
       instrumentVersion: "Tidak menggunakan instrumen",
-      categoryId: "KAT-KESELAMATAN",
-      aspectId: "ASP-KES-002",
+      categoryId: "KAT-DARURAT",
+      aspectId: "ASP-DAR-002",
       recommendationId: "REC-RPT-0008-1",
       location: "Asrama Putra · Lantai 1 · Musala",
       building: "Asrama Putra",
@@ -991,7 +862,7 @@ export const SEED: IshasState = {
       y: 42,
       level: "Ekstrem",
       issue: "APAR kedaluwarsa dan kabel terkelupas di musala",
-      indicator: "IND-K3L-003",
+      indicator: "IND-K3L-015",
       recommendation: "Ganti APAR kedaluwarsa dan perbaiki kabel pengeras suara segera.",
       status: "Berjalan",
       hazard: "Kebakaran tak tertangani di ruang padat",
@@ -1131,7 +1002,7 @@ export const SEED: IshasState = {
       buildingId: "BLD-002",
       instrumentVersion: "Tidak menggunakan instrumen",
       categoryId: "KAT-KESEHATAN",
-      aspectId: "ASP-SEH-001",
+      aspectId: "ASP-SEH-002",
       recommendationId: "REC-RPT-0015-1",
       location: "Dapur Utama · Lantai 1 · Sisi Belakang",
       building: "Dapur Utama",
@@ -1141,7 +1012,7 @@ export const SEED: IshasState = {
       y: 50,
       level: "Tinggi",
       issue: "Air keran dapur keruh dan berbau sejak dua hari",
-      indicator: "IND-K3L-004",
+      indicator: "IND-K3L-025",
       recommendation: "Kuras tandon dan pastikan pasokan PDAM normal kembali.",
       status: "Berjalan",
       hazard: "Air terkontaminasi untuk masak",
@@ -1268,7 +1139,7 @@ export const SEED: IshasState = {
       priority: "Tinggi",
       title: "Penggantian APAR dan perbaikan kabel musala",
       location: "Asrama Putra · Lantai 1 · Musala",
-      source: "IND-K3L-003 · RPT-0008",
+      source: "IND-K3L-015 · RPT-0008",
       action: "Ganti 2 tabung APAR kedaluwarsa dan rapikan kabel pengeras suara.",
       status: "Berjalan",
       owner: "Ust. K.H. Mustofa Kamal",
@@ -1327,7 +1198,7 @@ export const SEED: IshasState = {
       priority: "Tinggi",
       title: "Penjernihan air keran dapur utama",
       location: "Dapur Utama · Lantai 1 · Sisi Belakang",
-      source: "IND-K3L-004 · RPT-0015",
+      source: "IND-K3L-025 · RPT-0015",
       action: "Kuras tandon dan pastikan pasokan PDAM normal kembali.",
       status: "Menunggu verifikasi",
       owner: "H. Siti Aminah",
@@ -1729,198 +1600,15 @@ export const SEED: IshasState = {
       ],
     },
     {
-      // D-15: versi aktif 4 kategori K3 (Keselamatan, Kesehatan, Lingkungan, Psikososial).
-      // Snapshot lama tetap merujuk INS-v1.0 dan tidak dihitung ulang.
-      id: "INS-v1.1",
-      label: "ISHAS v1.1",
+      // D-44: versi aktif 6 kategori/aspek K3, 6 dimensi, 59 indikator penilaian mandiri.
+      id: INSTRUMEN_V2_ID,
+      label: INSTRUMEN_V2_LABEL,
       status: "Published",
-      publishedAt: "2026-09-19T00:00:00.000Z",
-      dimensions: [
-        {
-          id: "DIM-KES",
-          name: "Keselamatan",
-          categoryId: "KAT-KESELAMATAN",
-          description:
-            "Keselamatan fisik, fasilitas, dan kondisi lingkungan kerja/tempat kegiatan.",
-          aspects: [
-            { id: "ASP-KES-001", name: "Instalasi listrik" },
-            { id: "ASP-KES-002", name: "Proteksi kebakaran & APAR" },
-            { id: "ASP-KES-003", name: "Jalur evakuasi & pintu darurat" },
-            { id: "ASP-KES-004", name: "Bangunan, tangga & lantai" },
-          ],
-          indicators: [
-            {
-              id: "IND-K3L-001",
-              code: "IND-K3L-001",
-              title: "Instalasi listrik dalam kondisi aman",
-              prompt: "Nilai kondisi instalasi listrik gedung.",
-              answerType: "likert-1-5",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: true,
-              findingTrigger: "1",
-              categoryId: "KAT-KESELAMATAN",
-              aspectId: "ASP-KES-001",
-            },
-            {
-              id: "IND-K3L-002",
-              code: "IND-K3L-002",
-              title: "Kabel tertata dan tersalur",
-              prompt: "Apakah kabel tertata dan tidak terbuka?",
-              answerType: "likert-1-2-tidak",
-              required: true,
-              evidenceRequired: true,
-              locationRequired: true,
-              findingTrigger: "1",
-              categoryId: "KAT-KESELAMATAN",
-              aspectId: "ASP-KES-001",
-            },
-            {
-              id: "IND-K3L-003",
-              code: "IND-K3L-003",
-              title: "APAR tersedia dan tidak kedaluwarsa",
-              prompt: "Apakah APAR tersedia dan tidak kedaluwarsa?",
-              answerType: "boolean-ya-tidak",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: false,
-              findingTrigger: "Tidak",
-              categoryId: "KAT-KESELAMATAN",
-              aspectId: "ASP-KES-002",
-            },
-            {
-              id: "IND-K3L-005",
-              code: "IND-K3L-005",
-              title: "Jalur evakuasi tidak terhalang",
-              prompt: "Apakah jalur evakuasi bebas hambatan?",
-              answerType: "boolean-ya-tidak",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: true,
-              findingTrigger: "Tidak",
-              categoryId: "KAT-KESELAMATAN",
-              aspectId: "ASP-KES-003",
-            },
-          ],
-        },
-        {
-          id: "DIM-SEH",
-          name: "Kesehatan",
-          categoryId: "KAT-KESEHATAN",
-          description: "Kesehatan penghuni/pengguna lingkungan pesantren.",
-          aspects: [
-            { id: "ASP-SEH-001", name: "Air bersih & sanitasi" },
-            { id: "ASP-SEH-003", name: "Ventilasi & sirkulasi udara" },
-          ],
-          indicators: [
-            {
-              id: "IND-K3L-004",
-              code: "IND-K3L-004",
-              title: "Air bersih memadai",
-              prompt: "Nilai ketersediaan air bersih.",
-              answerType: "likert-1-5",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: false,
-              findingTrigger: "1",
-              categoryId: "KAT-KESEHATAN",
-              aspectId: "ASP-SEH-001",
-            },
-            {
-              id: "IND-K3L-007",
-              code: "IND-K3L-007",
-              title: "Ventilasi dan sirkulasi udara memadai",
-              prompt: "Nilai ventilasi dan sirkulasi udara ruangan.",
-              answerType: "likert-1-5",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: false,
-              findingTrigger: "1",
-              categoryId: "KAT-KESEHATAN",
-              aspectId: "ASP-SEH-003",
-            },
-          ],
-        },
-        {
-          id: "DIM-LING",
-          name: "Lingkungan",
-          categoryId: "KAT-LINGKUNGAN",
-          description: "Kondisi dan pengelolaan lingkungan pesantren.",
-          aspects: [
-            { id: "ASP-LING-001", name: "Pengelolaan sampah" },
-            { id: "ASP-LING-002", name: "Drainase, limbah & kualitas air" },
-          ],
-          indicators: [
-            {
-              id: "IND-K3L-006",
-              code: "IND-K3L-006",
-              title: "Pengelolaan sampah harian",
-              prompt: "Nilai pengelolaan sampah.",
-              answerType: "likert-1-5",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: false,
-              findingTrigger: "1",
-              categoryId: "KAT-LINGKUNGAN",
-              aspectId: "ASP-LING-001",
-            },
-            {
-              id: "IND-K3L-008",
-              code: "IND-K3L-008",
-              title: "Drainase dan limbah terkelola",
-              prompt: "Nilai kondisi drainase dan pengelolaan limbah.",
-              answerType: "likert-1-5",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: false,
-              findingTrigger: "1",
-              categoryId: "KAT-LINGKUNGAN",
-              aspectId: "ASP-LING-002",
-            },
-          ],
-        },
-        {
-          id: "DIM-PSI",
-          name: "Psikososial",
-          categoryId: "KAT-PSIKOSOSIAL",
-          description: "Kondisi psikologis, sosial, beban aktivitas, dan interaksi antar individu.",
-          aspects: [
-            { id: "ASP-PSI-001", name: "Beban kerja & aktivitas" },
-            { id: "ASP-PSI-002", name: "Dukungan sosial & hubungan" },
-          ],
-          indicators: [
-            {
-              id: "IND-K3L-009",
-              code: "IND-K3L-009",
-              title: "Beban kerja sesuai kapasitas dan standar",
-              prompt: "Apakah beban kerja sesuai dengan kapasitas dan standar?",
-              answerType: "likert-1-2-tidak",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: false,
-              findingTrigger: "1",
-              categoryId: "KAT-PSIKOSOSIAL",
-              aspectId: "ASP-PSI-001",
-            },
-            {
-              id: "IND-K3L-010",
-              code: "IND-K3L-010",
-              title: "Dukungan sosial dan hubungan antar individu baik",
-              prompt: "Nilai dukungan sosial dan hubungan antar individu.",
-              answerType: "likert-1-5",
-              required: true,
-              evidenceRequired: false,
-              locationRequired: false,
-              findingTrigger: "1",
-              categoryId: "KAT-PSIKOSOSIAL",
-              aspectId: "ASP-PSI-002",
-            },
-          ],
-        },
-      ],
+      publishedAt: "2026-09-30T00:00:00.000Z",
+      dimensions: V2_DIMENSIONS,
     },
   ],
-  activeInstrumentVersionId: "INS-v1.1",
+  activeInstrumentVersionId: INSTRUMEN_V2_ID,
   // D-16: pustaka detail indikator (ilustrasi). Blob PDF contoh dibuat otomatis
   // di browser (buildSeedPdfBlob); bukan biner bawaan. 2 Public + 2 Privat.
   instrumentDocs: [
@@ -1929,7 +1617,7 @@ export const SEED: IshasState = {
       indicatorId: "IND-K3L-001",
       categoryId: "KAT-KESELAMATAN",
       aspectId: "ASP-KES-001",
-      fileName: "detail-instalasi-listrik.pdf",
+      fileName: "detail-kelaikan-bangunan.pdf",
       fileSize: 124000,
       mime: "application/pdf",
       assetId: "seed-instrument-doc-IND-K3L-001",
@@ -1938,40 +1626,40 @@ export const SEED: IshasState = {
       updatedAt: "2026-09-20T08:00:00.000Z",
     },
     {
-      id: "DOC-IND-K3L-004",
-      indicatorId: "IND-K3L-004",
+      id: "DOC-IND-K3L-025",
+      indicatorId: "IND-K3L-025",
       categoryId: "KAT-KESEHATAN",
-      aspectId: "ASP-SEH-001",
-      fileName: "detail-air-bersih.pdf",
+      aspectId: "ASP-SEH-002",
+      fileName: "detail-air-minum.pdf",
       fileSize: 98000,
       mime: "application/pdf",
-      assetId: "seed-instrument-doc-IND-K3L-004",
+      assetId: "seed-instrument-doc-IND-K3L-025",
       visibility: "Public",
       updatedBy: "Dr. M. Ridwan",
       updatedAt: "2026-09-20T08:10:00.000Z",
     },
     {
-      id: "DOC-IND-K3L-009",
-      indicatorId: "IND-K3L-009",
+      id: "DOC-IND-K3L-041",
+      indicatorId: "IND-K3L-041",
       categoryId: "KAT-PSIKOSOSIAL",
       aspectId: "ASP-PSI-001",
-      fileName: "detail-beban-kerja.pdf",
+      fileName: "detail-kebijakan-anti-bullying.pdf",
       fileSize: 112000,
       mime: "application/pdf",
-      assetId: "seed-instrument-doc-IND-K3L-009",
+      assetId: "seed-instrument-doc-IND-K3L-041",
       visibility: "Privat",
       updatedBy: "Dr. M. Ridwan",
       updatedAt: "2026-09-21T09:00:00.000Z",
     },
     {
-      id: "DOC-IND-K3L-010",
-      indicatorId: "IND-K3L-010",
+      id: "DOC-IND-K3L-044",
+      indicatorId: "IND-K3L-044",
       categoryId: "KAT-PSIKOSOSIAL",
       aspectId: "ASP-PSI-002",
-      fileName: "detail-dukungan-sosial.pdf",
+      fileName: "detail-fasilitas-konseling.pdf",
       fileSize: 105000,
       mime: "application/pdf",
-      assetId: "seed-instrument-doc-IND-K3L-010",
+      assetId: "seed-instrument-doc-IND-K3L-044",
       visibility: "Privat",
       updatedBy: "Dr. M. Ridwan",
       updatedAt: "2026-09-21T09:15:00.000Z",
@@ -2205,9 +1893,9 @@ export const SEED: IshasState = {
   counters: { report: 20, institution: 23 },
 };
 
-// D-24: bank instrumen live = turunan INS-v1.1 (sumber tunggal soal + bobot bawaan).
+// D-24/D-44: bank instrumen live = turunan INS-v2.0 (sumber tunggal soal + bobot bawaan).
 SEED.instrument = buildBankLiveDariVersi(
-  SEED.instrumentVersions.find((v) => v.id === "INS-v1.1") ?? SEED.instrumentVersions[0],
+  SEED.instrumentVersions.find((v) => v.id === INSTRUMEN_V2_ID) ?? SEED.instrumentVersions[0],
 );
 
 // D-24: draft demo dibekali checksum bank saat seed agar jalur "soal berubah =

@@ -52,7 +52,7 @@ test("unggah, ubah visibilitas, dan hapus berkas teraudit", () => {
 
 test("unggah dokumen untuk indikator baru dari bank live (D-16/D-24)", () => {
   const added = storeActions.addBankIndicator("DIM-KES", {
-    code: "IND-K3L-011",
+    code: "IND-UJI-011",
     title: "Indikator uji bank live",
     prompt: "Prompt indikator uji minimal sepuluh karakter.",
     answerType: "ya-tidak",
@@ -128,7 +128,7 @@ test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () =
   expect(doc.indicatorTitle).toBe("Dokumen tambahan validator");
 });
 
-test("migrasi v6 ke v15 mempertahankan record dan menambah instrumentDocs", () => {
+test("migrasi v6 ke v16 mempertahankan record dan menambah instrumentDocs", () => {
   const v6 = JSON.stringify({
     ...structuredClone(SEED),
     schemaVersion: 6,
@@ -140,10 +140,10 @@ test("migrasi v6 ke v15 mempertahankan record dan menambah instrumentDocs", () =
   });
   try {
     const loaded = loadState();
-    expect(loaded.schemaVersion).toBe(15);
+    expect(loaded.schemaVersion).toBe(16);
     expect(loaded.reports.length).toBe(SEED.reports.length);
     expect(loaded.instrumentDocs.length).toBe(SEED.instrumentDocs.length);
-    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v15");
+    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v16");
   } finally {
     Reflect.deleteProperty(globalThis, "localStorage");
   }

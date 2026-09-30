@@ -27,20 +27,20 @@ describe("opsi bawaan per tipe", () => {
 });
 
 describe("bank dari versi warisan", () => {
-  test("INS-v1.1 menjadi 10 indikator dengan nilai lama tetap sah", () => {
+  test("INS-v2.0 menjadi 59 indikator dengan nilai baru tetap sah", () => {
     const bank = buildBankLiveDariVersi(
-      SEED.instrumentVersions.find((v) => v.id === "INS-v1.1"),
+      SEED.instrumentVersions.find((v) => v.id === "INS-v2.0"),
     );
     const all = bank.dimensions.flatMap((d) => d.indicators);
-    expect(all.length).toBe(10);
-    const kabel = all.find((i) => i.id === "IND-K3L-002")!;
-    expect(kabel.options.map((o) => o.value)).toContain("2");
-    expect(bobotJawaban(kabel, "2")).not.toBeNull();
+    expect(all.length).toBe(59);
+    const tangga = all.find((i) => i.id === "IND-K3L-002")!;
+    expect(tangga.options.map((o) => o.value)).toContain("2");
+    expect(bobotJawaban(tangga, "2")).not.toBeNull();
   });
 
   test("checksum berubah saat opsi/bobot diubah", () => {
     const bank = buildBankLiveDariVersi(
-      SEED.instrumentVersions.find((v) => v.id === "INS-v1.1"),
+      SEED.instrumentVersions.find((v) => v.id === "INS-v2.0"),
     );
     const before = bank.checksum;
     bank.dimensions[0].indicators[0].options[0].weight = 99;

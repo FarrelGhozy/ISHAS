@@ -43,6 +43,12 @@ export const repository = {
   // `mockRepository`/`storeActions` saat mock dan `httpRepository` saat backend.
 
   // --- Auth Fase 6 (kartu dev tetap; cookie sesi di mode backend) ---
+  // Metode login yang disediakan backend; mock selalu demo (tanpa sandi).
+  async authMethods(): Promise<{ password: boolean; demo: boolean }> {
+    if (!USE_BACKEND) return { password: false, demo: true };
+    const result = await httpRepository.authMethods();
+    return result.ok ? result.data : { password: true, demo: false };
+  },
   async demoLogin(accountId: string): Promise<ActionResult> {
     if (!USE_BACKEND) {
       sessionStore.login(accountId);

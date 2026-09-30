@@ -140,7 +140,7 @@ export function Page() {
           <Search className="absolute left-3 top-3" size={18} />
           <input
             aria-label="Cari pengguna"
-            className="min-h-11 w-full rounded border border-line-soft pl-10 pr-3"
+            className="min-h-11 w-full rounded border border-line-soft bg-white pl-10 pr-3"
             placeholder="Cari nama, email, peran…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

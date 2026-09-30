@@ -69,9 +69,9 @@ DJB2 dari `JSON.stringify` bentuk kanonik:
 ```
 
 Keluaran `ck-<hex>` (32-bit unsigned, `hash >>> 0`). Backend **wajib** memakai
-urutan kunci & normalisasi identik. Simpan minimal satu fixture (bank 10
-indikator seed) dan bandingkan checksum mock vs server pada test; draft/snapshot
-yang checksum-nya beda berarti "bank berubah".
+urutan kunci & normalisasi identik. Simpan minimal satu fixture (bank 59
+indikator seed `INS-v2.0`, D-44) dan bandingkan checksum mock vs server pada test;
+draft/snapshot yang checksum-nya beda berarti "bank berubah".
 
 ### 5.b Urutan dependensi fase
 

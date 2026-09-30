@@ -215,8 +215,8 @@ describe.skipIf(!dbReady)("seed empty (inti)", () => {
     expect(await countRows("findings")).toBe(0);
     expect(await countRows("recommendations")).toBe(0);
     expect(await countRows("sam_questions")).toBe(0);
-    expect(await countRows("bank_indicators")).toBe(1);
-    expect(await countRows("bank_options")).toBe(2);
+    expect(await countRows("bank_indicators")).toBe(59);
+    expect(await countRows("bank_options")).toBe(268);
     expect(await countRows("k3_categories")).toBe(K3_CATEGORIES.length);
   });
 

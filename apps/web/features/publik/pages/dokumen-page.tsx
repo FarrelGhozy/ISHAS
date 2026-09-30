@@ -1,7 +1,6 @@
 // D-16: halaman publik /dokumen — pustaka PDF per indikator (global).
 
 import { PublicInstrumentDocs } from "../components/public-instrument-docs";
-import { StatusChip } from "~/shared/components/status-chip";
 
 export function DokumenPage() {
   return (
@@ -13,9 +12,6 @@ export function DokumenPage() {
           Penjelasan PDF per indikator instrumen. Berkas Public dapat dilihat dan diunduh; berkas
           Privat hanya tampil nama.
         </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <StatusChip value="Data publik · ilustrasi" />
       </div>
       <PublicInstrumentDocs />
     </section>

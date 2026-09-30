@@ -30,6 +30,15 @@ describe("normalisasiJawaban", () => {
     expect(normalisasiJawaban("0")).toBeNull();
     expect(normalisasiJawaban("6")).toBeNull();
   });
+
+  test("skala frekuensi/keparahan dipetakan 20–100 (D-44)", () => {
+    expect(normalisasiJawaban("Tidak pernah")).toBe(100);
+    expect(normalisasiJawaban("Jarang")).toBe(80);
+    expect(normalisasiJawaban("Kadang")).toBe(60);
+    expect(normalisasiJawaban("Sering")).toBe(40);
+    expect(normalisasiJawaban("Selalu")).toBe(20);
+    expect(normalisasiJawaban("Kritis")).toBe(20);
+  });
 });
 
 describe("hitungIndexSummary dengan seed", () => {
@@ -42,10 +51,10 @@ describe("hitungIndexSummary dengan seed", () => {
 
   test("satu pesantren: snapshot Diterima terbaru menjadi sumber", () => {
     const summary = hitungIndexSummary(input, ["PSN-0018"]);
-    // RPT-0010 (Diterima, INS-v1.1): 2,1,Ya,4,Tidak,2,4,4,2,4 → (40+20+100+80+20+40+80+80+40+80)/10 = 58
-    expect(summary.currentIndex).toBeCloseTo(58, 6);
+    // RPT-0010 (Terbit, INS-v2.0) profil buruk → indeks 37.29 (ilustrasi D-04).
+    expect(summary.currentIndex).toBeCloseTo(37.28813559322034, 6);
     expect(summary.series.at(-1)?.period).toBe("Sep 2026");
-    expect(summary.instrumentVersionIds).toEqual(["INS-v1.1"]);
+    expect(summary.instrumentVersionIds).toEqual(["INS-v2.0"]);
   });
 
   test("laporan Menunggu validasi tidak memengaruhi angka dalam kondisi apa pun", () => {
@@ -111,9 +120,11 @@ describe("hitungIndexSummary dengan seed", () => {
     const summary = hitungIndexSummary(input, ["PSN-0018", "PSN-0019"]);
     expect(summary.dimensions.map((d) => d.id)).toEqual([
       "DIM-KES",
+      "DIM-DARURAT",
       "DIM-SEH",
       "DIM-LING",
       "DIM-PSI",
+      "DIM-AKSES",
     ]);
     expect(summary.dimensions.every((d) => d.score !== null)).toBe(true);
   });

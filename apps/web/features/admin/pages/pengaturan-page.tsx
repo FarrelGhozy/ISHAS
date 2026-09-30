@@ -67,9 +67,9 @@ export function AdminPengaturanPage() {
     <section className="flex max-w-2xl flex-col gap-4">
       <header>
         <p className="kicker">Pengaturan</p>
-        <h1 className="text-lg font-extrabold text-heading">Pengaturan sistem (demo)</h1>
+        <h1 className="text-lg font-extrabold text-heading">Pengaturan sistem</h1>
         <p className="mt-1 text-xs text-secondary-text">
-          Preferensi non-ilmiah prototipe + tindakan berisiko. Pengaturan ilmiah
+          Preferensi non-ilmiah + tindakan berisiko. Pengaturan ilmiah
           (bobot, ambang, rumus) milik Validator dan menunggu keputusan ilmiah final.
         </p>
       </header>

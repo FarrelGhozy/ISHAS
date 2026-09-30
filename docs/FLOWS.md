@@ -5,7 +5,7 @@
 Kontrak alur lintas kanal/validasi/publik/arsip dan unit metrik terkini ada di
 [DASHBOARD_DATA_FLOW.md](DASHBOARD_DATA_FLOW.md). Periode URL masih pratinjau;
 filter operasional utama adalah pesantren. Risiko tetap keputusan akun Pesantren,
-empat kategori mengikuti D-15, snapshot lama memakai versi asal.
+enam kategori mengikuti D-15/D-44, snapshot lama memakai versi asal.
 
 
 
@@ -202,7 +202,7 @@ whitelist D-02, impor kanal `penilaian-mandiri` → `Terbit`).
 (tidak dikunci `Published`) dan tidak memengaruhi `penilaian-mandiri`.
 
 1. Buka `/validator/dokumen-instrumen` (menu `Dokumen instrumen`) → pilih
-   indikator (`INS-v1.1`) → **Unggah PDF** (hanya `.pdf`/`application/pdf` +
+   indikator (bank live `INS-LIVE`) → **Unggah PDF** (hanya `.pdf`/`application/pdf` +
    header `%PDF`, maks 10 MB; default `Privat`) → simpan blob lokal + metadata
    + audit `Mengunggah berkas indikator`.
    → D-16.g: tombol **Tambah dokumen** untuk entri baru (kode, judul, kategori

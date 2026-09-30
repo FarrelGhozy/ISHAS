@@ -184,7 +184,7 @@ Dibutuhkan agar snapshot `INS-v1.0/v1.1` lama tetap dapat dirender. Endpoint tul
 
 ```sql
 CREATE TABLE instrument_versions (
-  id VARCHAR(16) PRIMARY KEY,            -- INS-v1.0 / INS-v1.1
+  id VARCHAR(16) PRIMARY KEY,            -- INS-v1.0 / INS-v2.0
   label VARCHAR(120) NOT NULL,
   status VARCHAR(16) NOT NULL,           -- Draft|Published|Archived
   published_at DATETIME(3) NULL,
@@ -584,7 +584,7 @@ Di-seed dari `KATEGORI_K3.md` dan **tidak** diubah oleh bank SAM
 
 ```sql
 CREATE TABLE k3_categories (
-  id VARCHAR(32) PRIMARY KEY,            -- KAT-KESELAMATAN|KAT-KESEHATAN|KAT-LINGKUNGAN|KAT-PSIKOSOSIAL
+  id VARCHAR(32) PRIMARY KEY,            -- KAT-KESELAMATAN|KAT-DARURAT|KAT-KESEHATAN|KAT-LINGKUNGAN|KAT-PSIKOSOSIAL|KAT-AKSESIBILITAS (D-44)
   name VARCHAR(120) NOT NULL UNIQUE,
   sort_order INT NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -677,7 +677,7 @@ bun scripts/seed.ts --mode=empty  # production: struktur kosong tapi valid
   2 Menunggu, 5 Terbit, 2 Ditolak, 10 Diterima), **9 temuan + 9 rekomendasi**
   (penilaian-mandiri tidak menyumbang temuan, D-32), **5
   kategori + 27 soal SAM + 4 pengamatan SAM + 2 follow-up**, **18 audit + 4
-  notifikasi**, denah ilustrasi, bank live 10 indikator (dari `INS-v1.1`).
+  notifikasi**, denah ilustrasi, bank live 59 indikator (6 dimensi, dari `INS-v2.0`, D-44).
   Counter awal `report=20`, `institution=23`. Setiap akun diberi `password_hash`
   dari `SEED_DEFAULT_PASSWORD` (prototipe) agar `/auth/login` dapat diuji.
 - Mode `empty` (inti, minimal valid): **1 pesantren `PSN-0018` status `Aktif`** +
@@ -685,7 +685,7 @@ bun scripts/seed.ts --mode=empty  # production: struktur kosong tapi valid
   scope `PSN-0018`) — semua `Aktif` dan punya `password_hash` (`SEED_DEFAULT_PASSWORD`,
   default `ishas-demo`). `reports/findings/recommendations/sam_*/campus_plans/
   instrument_docs/audit_events/notifications=[]`, `drafts={}`, `index_history={}`,
-  bank instrumen valid (≥1 dimensi ≥1 indikator ≥1 opsi),
+  bank instrumen penuh (6 kategori, 59 indikator, D-44),
   `sequences={report:1, institution:19, ...}`, `sam_categories/questions` kosong
   (maks dinamis = 0, UI terkunci). Cocok untuk onboarding dari nol maupun login
   kartu dev di mode backend.

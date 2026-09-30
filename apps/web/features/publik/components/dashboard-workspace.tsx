@@ -1,4 +1,4 @@
-import { Brain, Building2, HeartPulse, Leaf, Minus, ShieldCheck } from "lucide-react";
+import { Accessibility, Brain, Building2, HeartPulse, Leaf, Minus, ShieldCheck, Siren } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import type {
   DashboardDistribution,
@@ -18,7 +18,7 @@ import type {
 } from "~/mocks/types";
 import { StatusChip } from "~/shared/components/status-chip";
 
-const KATEGORI_ICONS = { ShieldCheck, HeartPulse, Leaf, Brain } as const;
+const KATEGORI_ICONS = { ShieldCheck, Siren, HeartPulse, Leaf, Brain, Accessibility } as const;
 
 export function ScoreSummary({
   summary,
@@ -66,7 +66,7 @@ export function ScoreSummary({
               <strong className="block text-3xl text-heading">
                 {summary.currentIndex === null ? "—" : percentage}
               </strong>
-              <span className="text-xs font-bold text-secondary-text">/100 · ilustrasi</span>
+              <span className="text-xs font-bold text-secondary-text">/100</span>
             </span>
           </span>
         </div>
@@ -164,75 +164,30 @@ export function AspectAndRecap({
             </div>
           ))}
         </div>
-        <div className="mt-4 hidden sm:block xl:mt-auto">
-          <svg
-            viewBox={`0 0 ${aspectItems.length * 100} 220`}
-            className="block h-56 w-full"
-            role="img"
-            aria-label={aspectItems
-              .map((row) => `${row.name}: ${row.jumlahTemuan} temuan`)
-              .join(", ")}
-          >
-            {[0, 0.5, 1].map((ratio) => (
-              <line
-                key={ratio}
-                x1="0"
-                x2={aspectItems.length * 100}
-                y1={170 - ratio * 140}
-                y2={170 - ratio * 140}
-                stroke="#e2e8f0"
-                strokeDasharray={ratio ? "4 4" : undefined}
-              />
-            ))}
-            {aspectItems.map((row, index) => {
-              const height = (row.jumlahTemuan / maxAspect) * 140;
-              return (
-                <g key={row.name}>
-                  <title>
-                    {row.name}: {row.jumlahTemuan} temuan
-                  </title>
-                  <rect
-                    x={index * 100 + 25}
-                    y={170 - height}
-                    width="50"
-                    height={height}
-                    rx="3"
-                    fill={row.categoryId ? "#007EFF" : "#94a3b8"}
-                  />
-                  <text
-                    x={index * 100 + 50}
-                    y={160 - height}
-                    textAnchor="middle"
-                    fontSize="14"
-                    fontWeight="800"
-                    fill="#102a35"
-                  >
-                    {row.jumlahTemuan}
-                  </text>
-                  <text
-                    x={index * 100 + 50}
-                    y="193"
-                    textAnchor="middle"
-                    fontSize="11"
-                    fill="#334155"
-                  >
-                    {row.categoryId ? row.name : "Belum"}
-                  </text>
-                  {!row.categoryId ? (
-                    <text
-                      x={index * 100 + 50}
-                      y="208"
-                      textAnchor="middle"
-                      fontSize="11"
-                      fill="#334155"
-                    >
-                      dipetakan
-                    </text>
-                  ) : null}
-                </g>
-              );
-            })}
-          </svg>
+        <div
+          className="mt-4 hidden space-y-2.5 sm:block xl:mt-auto"
+          role="img"
+          aria-label={aspectItems
+            .map((row) => `${row.name}: ${row.jumlahTemuan} temuan`)
+            .join(", ")}
+        >
+          {aspectItems.map((row) => (
+            <div
+              key={row.name}
+              className="grid grid-cols-[minmax(9rem,1.35fr)_minmax(7rem,2fr)_1.5rem] items-center gap-2"
+            >
+              <span className="min-w-0 text-[11px] font-semibold leading-tight text-body-text">
+                {row.categoryId ? row.name : "Belum dipetakan"}
+              </span>
+              <div className="h-3 rounded-sm bg-strip" aria-hidden="true">
+                <div
+                  className={`h-full rounded-sm ${row.categoryId ? "bg-primary" : "bg-[#94a3b8]"}`}
+                  style={{ width: `${(row.jumlahTemuan / maxAspect) * 100}%` }}
+                />
+              </div>
+              <strong className="text-right text-sm text-heading">{row.jumlahTemuan}</strong>
+            </div>
+          ))}
         </div>
       </article>
       <article className="surface flex min-w-0 flex-col overflow-hidden xl:h-[22rem]">
@@ -339,7 +294,7 @@ export function RekapKategoriPanel({
         <h2 className="text-sm font-extrabold text-heading">Rekapitulasi per kategori</h2>
         <p className="mt-0.5 text-xs text-secondary-text">
           Indikator (katalog) · sesuai/tidak sesuai (snapshot Diterima/Terbit) · temuan · sebaran risiko.
-          Jawaban kosong, N/A, atau di luar skala versi asal tidak diklasifikasi. Data ilustrasi.
+          Jawaban kosong, N/A, atau di luar skala versi asal tidak diklasifikasi.
         </p>
         <p className="mt-1.5 text-xs font-semibold text-secondary-text xl:hidden">
           Geser tabel ke kanan untuk melihat semua kolom →
@@ -514,7 +469,7 @@ export function CategoryGuide() {
   return (
     <article className="surface min-w-0 p-4" aria-label="Kategori K3">
       <h2 className="text-sm font-extrabold text-heading">Kategori K3</h2>
-      <p className="mt-1 text-xs text-secondary-text">Empat kategori pada instrumen prototipe.</p>
+      <p className="mt-1 text-xs text-secondary-text">Enam kategori pada instrumen.</p>
       <ul className="mt-3 grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
         {K3_CATEGORIES.map((category) => {
           const Icon = KATEGORI_ICONS[category.icon];

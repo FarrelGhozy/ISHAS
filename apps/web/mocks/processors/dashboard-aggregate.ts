@@ -2,7 +2,7 @@
 // bukan rumus final. Sumber skor HANYA snapshot penilaian mandiri dengan laporan
 // `Diterima`/`Terbit` (D-32); laporan cepat tidak menjadi sumber skor. Per pesantren
 // dipakai SATU snapshot `Diterima`/`Terbit` terbaru. Angka selalu tampil dengan
-// periode + versi instrumen + label data ilustrasi.
+// periode + versi instrumen.
 
 import type {
   Area,
@@ -57,13 +57,30 @@ function mean(values: number[]): number {
   return values.reduce((a, b) => a + b, 0) / values.length;
 }
 
-// Normalisasi jawaban → 0–100: likert 1–5 → 20–100; `Ya` = 100, `Tidak` = 20.
+// Normalisasi jawaban → 0–100: likert 1–5 → 20–100; `Ya` = 100, `Tidak` = 20;
+// skala frekuensi/keparahan (D-24/D-44) dipetakan pada rentang sama.
 // Kosong/N/A dilewati (tidak dihitung nol) — aturan ilustrasi D-04.
+const SKOR_FREKUENSI: Record<string, number> = {
+  "Tidak pernah": 100,
+  Jarang: 80,
+  Kadang: 60,
+  Sering: 40,
+  Selalu: 20,
+};
+const SKOR_KEPARAHAN: Record<string, number> = {
+  Ringan: 80,
+  Sedang: 60,
+  Berat: 40,
+  Kritis: 20,
+};
+
 export function normalisasiJawaban(value: string): number | null {
   const v = value.trim();
   if (!v) return null;
   if (v === "Ya") return 100;
   if (v === "Tidak") return SKOR_LIKERT_TERENDAH;
+  if (v in SKOR_FREKUENSI) return SKOR_FREKUENSI[v];
+  if (v in SKOR_KEPARAHAN) return SKOR_KEPARAHAN[v];
   const numeric = Number(v);
   if (Number.isFinite(numeric) && numeric >= 1 && numeric <= LIKERT_MAX) {
     return (numeric / LIKERT_MAX) * 100;

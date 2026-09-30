@@ -1,16 +1,23 @@
 // Seed "inti" (mode `empty`): akun inti untuk inisial awal + satu pesantren
-// terdaftar + bank instrumen minimal valid. Seluruh data display (laporan,
-// temuan, rekomendasi, SAM, denah, dokumen, audit, notifikasi) sengaja KOSONG.
-// Lihat BACKEND_DATA_MODEL §10.
+// terdaftar + bank instrumen penilaian mandiri penuh (6 dimensi/59 indikator,
+// D-44). Seluruh data display (laporan, temuan, rekomendasi, SAM, denah, dokumen,
+// audit, notifikasi) sengaja KOSONG. Lihat BACKEND_DATA_MODEL §10.
 
 import { K3_CATEGORIES } from "../../../web/mocks/kategori-k3";
-import { hitungChecksumInstrument, type ChecksumDimension } from "../checksum";
+import { BANK_ID, buildBankLiveDariVersi } from "../../../web/mocks/instrument-bank";
+import { buildInstrumentV2Dimensions, INSTRUMEN_V2_ID } from "../../../web/mocks/seed/instrument-v2";
 import { hashPassword } from "../auth/password";
 import { seedDefaultPassword } from "../config";
-import { insertRows, json, truncateAll } from "./helpers";
+import { insertRows, json, truncateAll, type SqlValue } from "./helpers";
 
-const BANK_ID = "INS-LIVE";
-const BANK_LABEL = "Bank Instrumen Live";
+// D-44: bank live penuh diturunkan dari instrumen v2 (soal + opsi + bobot bawaan).
+const liveInstrument = buildBankLiveDariVersi({
+  id: INSTRUMEN_V2_ID,
+  label: "ISHAS v2.0",
+  status: "Published",
+  publishedAt: "2026-09-30T00:00:00.000Z",
+  dimensions: buildInstrumentV2Dimensions(),
+});
 
 export async function seedEmpty(): Promise<void> {
   await truncateAll();
@@ -62,34 +69,40 @@ export async function seedEmpty(): Promise<void> {
     ],
   );
 
-  const dimensions: ChecksumDimension[] = [
-    {
-      id: "DIM-001",
-      indicators: [
-        {
-          id: "IND-K3L-001",
-          answerType: "ya-tidak",
-          weight: 1,
-          required: true,
-          evidenceRequired: false,
-          locationRequired: false,
-          options: [
-            { value: "Ya", weight: 100, isFinding: false },
-            { value: "Tidak", weight: 20, isFinding: true },
-          ],
-        },
-      ],
-    },
-  ];
-  const checksum = hitungChecksumInstrument(dimensions);
-
   await insertRows("instrument_meta", ["id", "label", "checksum"], [
-    [BANK_ID, BANK_LABEL, checksum],
+    [BANK_ID, liveInstrument.label, liveInstrument.checksum],
   ]);
+
+  const dimRows: SqlValue[][] = [];
+  const indRows: SqlValue[][] = [];
+  const optRows: SqlValue[][] = [];
+  liveInstrument.dimensions.forEach((dim, di) => {
+    dimRows.push([dim.id, dim.name, dim.categoryId ?? null, json(dim.aspects), di + 1]);
+    dim.indicators.forEach((ind, ii) => {
+      indRows.push([
+        ind.id,
+        dim.id,
+        ind.code,
+        ind.title,
+        ind.prompt,
+        ind.answerType,
+        ind.required,
+        ind.evidenceRequired,
+        ind.locationRequired,
+        ind.weight,
+        ind.categoryId ?? null,
+        ind.aspectId ?? null,
+        ii + 1,
+      ]);
+      ind.options.forEach((opt, oi) => {
+        optRows.push([ind.id, opt.value, opt.label, opt.weight, opt.isFinding, oi + 1]);
+      });
+    });
+  });
   await insertRows(
     "bank_dimensions",
     ["id", "name", "category_id", "aspects", "sort_order"],
-    [["DIM-001", "Keselamatan", "KAT-KESELAMATAN", json([]), 1]],
+    dimRows,
   );
   await insertRows(
     "bank_indicators",
@@ -108,31 +121,12 @@ export async function seedEmpty(): Promise<void> {
       "aspect_id",
       "sort_order",
     ],
-    [
-      [
-        "IND-K3L-001",
-        "DIM-001",
-        "K3L-001",
-        "Instalasi listrik aman",
-        "Apakah instalasi listrik dalam kondisi aman?",
-        "ya-tidak",
-        true,
-        false,
-        false,
-        1,
-        "KAT-KESELAMATAN",
-        "ASP-KES-001",
-        1,
-      ],
-    ],
+    indRows,
   );
   await insertRows(
     "bank_options",
     ["indicator_id", "value", "label", "weight", "is_finding", "sort_order"],
-    [
-      ["IND-K3L-001", "Ya", "Ya", 100, false, 1],
-      ["IND-K3L-001", "Tidak", "Tidak", 20, true, 2],
-    ],
+    optRows,
   );
 
   await insertRows("sequences", ["seq_name", "value"], [

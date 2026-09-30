@@ -68,7 +68,6 @@ Aksen kartu statistik: atas merah `#dc2626` (`stat-red`), ambar `#d97706` (`stat
 | Kanal `penilaian-mandiri` | `status-blue` | `ClipboardCheck` | `Penilaian mandiri` |
 | Visibilitas `Public` (D-16) | `status-green` | `CheckCircle2` | `Public` |
 | Visibilitas `Privat` (D-16) | `status-neutral` | `Lock` | `Privat` |
-| `Data publik · ilustrasi` | `status-blue` | `Info` | teks persis itu |
 
 ## 3. Komponen (gaya yang ditetapkan, dipakai ulang tanpa redesign)
 

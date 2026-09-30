@@ -1264,3 +1264,100 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   hanya perbaikan pemuatan halaman + test regresi `param-pesantren.test.ts`.
   Memulihkan perilaku yang sudah dimaksudkan ROUTES §1/FLOWS §3.
 - Dokumen terdampak: TODO, DATA_FLOW_API_TEST_REPORT.
+
+## D-43 — Login rilis (form sandi) + koreksi profile `prod` — DISETUJUI 30 September 2026
+
+- Arahan pemilik: profile Docker `prod` harus benar-benar rilis, dan `/login`
+  di sana **bukan** pemilih kartu demo, melainkan halaman masuk email + sandi.
+  Login dev tetap satu klik kartu (D-30.h).
+- **Temuan bug:** build `web-prod` tidak pernah menerima `VITE_USE_BACKEND`
+  (`.env` root di luar build context dan dibuang `.dockerignore`), sehingga rilis
+  terjebak mode mock; service `api` selalu `NODE_ENV=development` dengan CMD
+  watch, sehingga `/auth/demo-login` dan fallback `X-Demo-Account` tetap hidup
+  di prod.
+- **D-43.a — Dua service backend:** `api` (profile `dev`/`api`, `NODE_ENV=development`,
+  watch, demo aktif) dan `api-prod` (profile `prod`, `NODE_ENV=production`,
+  `bun run start`, tanpa bind mount, demo dipaksa mati). `web-prod` memakai
+  `API_HOST=api-prod`.
+- **D-43.b — Build frontend menerima VITE:** `web-prod` meneruskan
+  `VITE_USE_BACKEND`/`VITE_API_BASE` sebagai build arg; Dockerfile builder
+  menanamkannya sebelum `npm run build` (build context `apps/web` tidak memuat
+  `.env` root). Vite mengekspos variabel `process.env` ber-prefix `VITE_`.
+- **D-43.c — Metode login dari server:** endpoint publik `GET /auth/methods`
+  mengembalikan `{ password: true, demo: <demoAuthEnabled> }`. Frontend memilih
+  kartu demo atau form sandi dari respons ini (bukan flag build terpisah), jadi
+  UI selalu sinkron dengan `NODE_ENV` backend. Gagal memuat → form sandi (aman).
+- **D-43.d — Flag auth eksplisit:** `DEMO_AUTH_ENABLED` menimpa default
+  `NODE_ENV!=production`; `COOKIE_SECURE` menimpa default cookie `Secure`.
+  Untuk prototipe lokal via `http://localhost`, `COOKIE_SECURE=false` (bawaan);
+  set `true` bila sudah di balik HTTPS. Compose `api-prod` memaksa
+  `DEMO_AUTH_ENABLED=false` agar nilai `.env` tidak menghidupkan demo di rilis.
+- **D-43.e — Batas:** tanpa perubahan schema, hak akses, atau rumus. Login dev
+  (kartu) dan mode mock tidak berubah. Test: `resolveLoginMode`, `authMethods`
+  adapter, `GET /auth/methods`.
+- Dokumen terdampak: BACKEND_API_CONTRACT §16, README, apps/api/README, .env.example, TODO.
+
+## D-44 — Instrumen penilaian mandiri 6 dimensi / 59 indikator (kategori K3 jadi 6) — DISETUJUI 30 September 2026
+
+- Arahan pemilik: daftar 6 dimensi/59 indikator menggantikan instrumen lama
+  **untuk penilaian mandiri**, dimasukkan ke **seed demo** dan **seed inisiasi**
+  (`empty`). Wording boleh disesuaikan; poin tetap dipertahankan. Nomor 49 yang
+  hilang dinormalkan berurutan (1–59).
+- **Amendemen D-15 & D-13:** frasa "empat kategori dipertahankan" (D-13,
+  DECISIONS:207) dan judul "Empat kategori/aspek K3" (D-15) digantikan:
+  **enam kategori K3** `KAT-KESELAMATAN`, `KAT-DARURAT` (baru), `KAT-KESEHATAN`,
+  `KAT-LINGKUNGAN`, `KAT-PSIKOSOSIAL`, `KAT-AKSESIBILITAS` (baru). Nama kategori
+  lama diperbarui (mis. `KAT-KESELAMATAN` → "Keselamatan dan Keamanan Gedung &
+  Asrama", `KAT-LINGKUNGAN` → "Kesehatan Lingkungan", `KAT-PSIKOSOSIAL` →
+  "Psikososial: Bullying & Kesehatan Mental"); ID stabil dipertahankan.
+- **D-44.a — Sumber tunggal:** kategori/aspek di `apps/web/mocks/kategori-k3.ts`
+  (diimpor backend); soal bank live di `apps/web/mocks/seed/instrument-v2.ts`
+  sebagai versi `INS-v2.0` (Published) dan diturunkan ke bank `INS-LIVE`.
+  `INS-v1.0` tetap arsip; `INS-v1.1` digantikan.
+- **D-44.b — 6 dimensi:** `DIM-KES` (10), `DIM-DARURAT` (10), `DIM-SEH` (10),
+  `DIM-LING` (10), `DIM-PSI` (8), `DIM-AKSES` (11) = **59 indikator**
+  `IND-K3L-001…059`. Tipe jawaban memakai 4 tipe D-24
+  (`ya-tidak`/`kualitas-1-5`/`frekuensi`/`keparahan`). Katalog lengkap
+  (aspek, prompt, bobot, flag bukti/lokasi) ada di `docs/INSTRUMEN_MANDIRI.md`.
+- **D-44.c — Regenerasi demo:** 5 laporan penilaian mandiri (`RPT-0002/0004/0007/
+  0010/0014`) memakai `INS-v2.0` dengan jawaban 59 indikator; `RPT-0010` dan
+  `RPT-0014` adalah snapshot terbaru per pesantren (sumber indeks). Temuan
+  `lapor-cepat` APAR dipindah ke kategori Tanggap Darurat (`ASP-DAR-002`,
+  `IND-K3L-015`) dan air minum ke `ASP-SEH-002` (`IND-K3L-025`).
+- **D-44.d — Seed inisiasi:** mode `empty` memuat bank penuh 6 dimensi/59
+  indikator (data display tetap kosong). Tanpa migrasi DDL; kategori baru masuk
+  lewat seed. `normalisasiJawaban` diperluas menangani skala frekuensi/keparahan.
+- **D-44.e — Batas:** struktur instrumen, jumlah kategori/dimensi/indikator, dan
+  komposisi seed berubah; hak akses, alur validasi, dan rumus ilmiah final tidak
+  berubah. Bobot/ambang tetap dummy ilustratif (D-04/D-13).
+- Dokumen terdampak: KATEGORI_K3, INSTRUMEN_MANDIRI (baru), DATA_MODEL,
+  BACKEND_DATA_MODEL, DATA_REQUIREMENTS, DASHBOARD_DATA_FLOW, FLOWS, ROLES,
+  ROUTES, WIREFRAMES, TEST_PLAN, README, BACKLOG, TODO, BACKEND_API_CONTRACT,
+  BACKEND_MIGRATION, BACKEND_OVERVIEW, STAGE_08.
+
+## D-45 — Hapus penanda data dummy/ilustrasi dari UI (masuk tahap finishing) — DISETUJUI 30 September 2026
+
+- Arahan pemilik: seluruh tulisan di UI yang memberitahu bahwa data adalah dummy/
+  ilustrasi/prototipe dihapus karena aplikasi masuk tahap finishing. Contoh yang
+  disebut pemilik: `Data ilustrasi · prototipe frontend`, `Data publik · ilustrasi`.
+- **D-45.a — Penghapusan, bukan penggantian:** badge, footer, subteks, dan chip
+  penanda dummy di `apps/web` dihapus tanpa teks pengganti (shell workspace &
+  publik, chip status, dashboard publik, halaman baca, PDF, Validator, Pesantren,
+  Admin). Komponen `status-chip` tidak lagi memuat entri `Data publik · ilustrasi`.
+- **D-45.b — Atribusi login:** footer panel login diganti tetap
+  `Dibuat oleh FarrelGhozy · Projek ISHAS 2026`.
+- **D-45.c — Ekspor:** label `Data ilustrasi · asumsi seed` pada ekspor JSON
+  penelitian dihapus.
+- **D-45.d — Batas:** hanya teks UI. Tidak mengubah angka, rumus/ambang, hak
+  akses, alur, atau struktur data. Caveat keilmuan tetap berlaku di dokumen
+  internal; penonjolan label dummy tidak lagi tampil ke pengguna.
+- **D-45.e — Amendemen:** menggantikan ketentuan wajib berlabel `Data ilustrasi`/
+  `data dummy` pada tampilan (README §"Data dummy", DESIGN_SYSTEM §2, ROUTES §4,
+  WIREFRAMES §0–§1, ROLES §7) sepanjang menyangkut penanda yang terlihat pengguna.
+- Dokumen terdampak: DESIGN_SYSTEM, ROUTES, WIREFRAMES, ROLES, DECISIONS, TODO.
+- Kode terdampak: `shared/layout/*-shell.tsx`, `shared/components/status-chip.tsx`,
+  `features/auth/pages/login-page.tsx`, `features/publik/**`, `features/validator/**`,
+  `features/pesantren/**`, `features/admin/**`, `mocks/research-export.ts`,
+  `mocks/adapters/instrument-docs.ts`.
+
+

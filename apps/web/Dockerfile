@@ -22,6 +22,12 @@ CMD ["bun", "run", "dev"]
 # Bun dipasang dari npm agar `bun.lock` tetap menjadi sumber kebenaran dependensi.
 FROM node:${NODE_IMAGE_TAG} AS builder
 ARG BUN_IMAGE_TAG=1
+# `.env` root tidak ikut build context `apps/web`, jadi variabel Vite harus
+# diteruskan sebagai build arg (docker-compose.yml) agar tertanam saat build.
+ARG VITE_USE_BACKEND=false
+ARG VITE_API_BASE=/api/v1
+ENV VITE_USE_BACKEND=${VITE_USE_BACKEND}
+ENV VITE_API_BASE=${VITE_API_BASE}
 RUN npm install -g bun@${BUN_IMAGE_TAG}
 WORKDIR /app
 COPY package.json bun.lock ./

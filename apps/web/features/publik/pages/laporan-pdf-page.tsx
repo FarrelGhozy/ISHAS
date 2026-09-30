@@ -175,7 +175,7 @@ export function LaporanPdfPage() {
                 ? "—"
                 : Math.round(report.scorePercent)}
             </p>
-            <p className="text-xs text-secondary-text">dari 100 · ilustrasi</p>
+            <p className="text-xs text-secondary-text">dari 100</p>
           </div>
           <div className="rounded-lg bg-strip p-4 text-center">
             <p className="text-xs font-bold text-secondary-text">Indikator dinilai</p>
@@ -214,8 +214,8 @@ export function LaporanPdfPage() {
           Penilaian mandiri · tidak memerlukan validasi Pesantren.
         </p>
         <p className="mt-2 text-xs text-faint">
-          Data ilustrasi prototipe · nama pelapor, kontak, dan jawaban mentah tidak
-          ditampilkan publik (D-02); foto bukti tampil publik (D-27).
+          Nama pelapor, kontak, dan jawaban mentah tidak ditampilkan publik (D-02); foto bukti
+          tampil publik (D-27).
         </p>
       </article>
     </section>

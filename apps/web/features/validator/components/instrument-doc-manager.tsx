@@ -412,7 +412,7 @@ export function InstrumentDocManager() {
         </div>
       )}
       <p className="text-xs text-faint">
-        Hanya PDF · maksimal 10 MB · prototipe lokal tersimpan di browser perangkat ini.
+        Hanya PDF · maksimal 10 MB · tersimpan lokal di browser perangkat ini.
       </p>
 
       <Modal

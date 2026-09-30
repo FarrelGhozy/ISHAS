@@ -69,7 +69,7 @@ export function IndexTrendPanel({ summary }: { summary: IndexSummary }) {
         {trend}
       </div>
       <p className="mt-0.5 text-xs text-secondary-text">
-        Perbandingan enam periode terakhir · skala indeks 0–100 · data ilustrasi
+        Perbandingan enam periode terakhir · skala indeks 0–100
       </p>
       <div
         ref={ref}

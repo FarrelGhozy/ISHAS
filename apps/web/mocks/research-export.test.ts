@@ -29,7 +29,8 @@ describe("dataset penelitian D-25/D-32", () => {
       expect(csv.toLowerCase()).not.toContain(kolomTerlarang.toLowerCase());
     }
     const json = researchToJSON(rows);
-    expect(json).toContain("Data ilustrasi");
+    expect(json).toContain("exportedAt");
+    expect(json).not.toContain("ilustrasi");
   });
 
   test("parser menerima template dan menolak baris bermasalah", () => {

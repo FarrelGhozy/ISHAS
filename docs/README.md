@@ -10,7 +10,7 @@ Identitas biru D-18 menggantikan batas tema/warna pada catatan ini. Kontrak:
 [planning/README.md](../planning/README.md); DONE hanya setelah persetujuan.
 
 Bagian audit/persiapan lama di bawah adalah historis. D-13 telah diamendemen;
-D-14 berlaku untuk denah publik terbatas, D-15 untuk empat kategori dan Ekstrem.
+D-14 berlaku untuk denah publik terbatas, D-15/D-44 untuk enam kategori (59 indikator) dan Ekstrem.
 Skala ilmiah/bobot/ambang final tetap menunggu penelitian. Tanggal 19 September
 pada perubahan pengguna dipertahankan sebagai catatan asal, bukan hasil uji baru
 sesi 18 September ini.

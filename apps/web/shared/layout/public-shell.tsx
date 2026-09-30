@@ -1,5 +1,5 @@
 // Shell publik ringan — docs ROUTES.md §4 dan WIREFRAMES.md §0.
-// Header: logo ISHAS + subteks | penanda `Data publik · ilustrasi` | Masuk / identitas + Ruang kerja.
+// Header: logo ISHAS + subteks | Masuk / identitas + Ruang kerja.
 // Sesi login TIDAK mengubah isi halaman publik (aturan `/`).
 
 import { useEffect, useState } from "react";
@@ -10,7 +10,6 @@ import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { refreshServerSession } from "~/shared/auth/auth-session";
 import { workspaceHome } from "~/shared/auth/access-policy";
 import { IshasMark } from "~/shared/components/ishas-mark";
-import { StatusChip } from "~/shared/components/status-chip";
 import { PublicNavigation } from "~/shared/navigation/public-navigation";
 import { Modal } from "~/shared/components/modal";
 import { BackendNotice } from "~/shared/components/backend-notice";
@@ -50,9 +49,6 @@ export default function PublicLayout() {
           </Link>
         </div>
         <PublicNavigation />
-        <p className="border-t border-line p-4 text-xs text-secondary-text">
-          Data ilustrasi · prototipe frontend
-        </p>
       </aside>
       <Modal open={mobileOpen} onClose={() => setMobileOpen(false)} label="Menu publik">
         <div className="flex items-center justify-between gap-3">
@@ -85,7 +81,6 @@ export default function PublicLayout() {
             Publik / Pelapor
           </span>
           <div className="ms-auto flex min-w-0 flex-1 flex-wrap justify-end items-center gap-2">
-            <StatusChip value="Data publik · ilustrasi" />
             {user ? (
               <>
                 <span className="flex min-h-11 min-w-0 items-center gap-2 rounded-[7px] border border-line-soft bg-white px-2">
@@ -123,9 +118,6 @@ export default function PublicLayout() {
           <BackendNotice error={error} onRetry={refreshPublicState} />
           <Outlet />
         </main>
-        <footer className="border-t border-line py-4 text-center text-xs font-semibold text-secondary-text">
-          ISHAS · prototipe frontend · seluruh angka adalah data ilustrasi
-        </footer>
       </div>
     </div>
   );

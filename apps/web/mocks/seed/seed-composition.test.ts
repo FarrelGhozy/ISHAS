@@ -10,9 +10,9 @@ import {
 } from "../store/selectors";
 
 describe("komposisi seed demo", () => {
-  test("19 laporan, 5 pesantren, 6 pengguna", () => {
+  test("19 laporan, 6 pesantren, 6 pengguna", () => {
     expect(SEED.reports).toHaveLength(19);
-    expect(SEED.institutions).toHaveLength(5);
+    expect(SEED.institutions).toHaveLength(6);
     expect(SEED.users).toHaveLength(6);
   });
 

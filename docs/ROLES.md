@@ -134,7 +134,7 @@ Daftar hapus eksplisit (agar tidak ada sisa tafsir "asesor masih ada di balik la
 
 1. Pergantian peran = keluar lalu masuk sebagai akun lain. Tidak ada pemilih peran di dalam aplikasi.
 2. Akun aktif tampil di kanan atas seluruh halaman setelah login (nama + label peran + inisial).
-3. Pada halaman publik: tanpa sesi tampil **Masuk**; dengan sesi tampil identitas akun aktif (nama + label peran + inisial) dan tombol **Ruang kerja**. Penanda `Data publik · ilustrasi` tetap ada. Ini identitas pengguna yang sedang memakai perangkat, bukan publikasi identitas pelapor pada suatu laporan.
+3. Pada halaman publik: tanpa sesi tampil **Masuk**; dengan sesi tampil identitas akun aktif (nama + label peran + inisial) dan tombol **Ruang kerja**. Ini identitas pengguna yang sedang memakai perangkat, bukan publikasi identitas pelapor pada suatu laporan.
 4. Refresh tidak boleh mengeluarkan sesi login (sessionStorage; mode backend memakai cookie sesi `ishas_session` + `/auth/me`, Fase 6 D-30.h) dan tidak boleh menghapus draft laporan (localStorage) — keduanya dipulihkan diam-diam.
 5. Logout membersihkan sesi (`/auth/logout` di mode backend) dan mengarah ke `/` (dashboard publik), bukan ke halaman kosong.
 6. Sesi perlu membedakan ID akun, bukan role saja, agar dua akun Pesantren memiliki scope yang benar. Cara login akun tambahan dan aktivasi menunggu D-09; draft saat berganti akun menunggu D-10.

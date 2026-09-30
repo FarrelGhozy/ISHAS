@@ -28,6 +28,13 @@ function clientIp(request: Request): string {
 
 export function buildAuthRoutes(): Route[] {
   return [
+    // Metode login yang tersedia untuk frontend (tanpa autentikasi). Dipakai
+    // `/login` memilih kartu demo (dev) atau form email+sandi (production).
+    {
+      method: "GET",
+      pattern: "/api/v1/auth/methods",
+      handler: async () => ok({ password: true, demo: demoAuthEnabled() }),
+    },
     {
       method: "POST",
       pattern: "/api/v1/auth/login",

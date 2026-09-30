@@ -17,6 +17,14 @@ function intEnv(name: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function boolEnv(name: string, fallback: boolean): boolean {
+  const raw = process.env[name]?.trim().toLowerCase();
+  if (!raw) return fallback;
+  if (["true", "1", "ya", "yes", "on"].includes(raw)) return true;
+  if (["false", "0", "tidak", "no", "off"].includes(raw)) return false;
+  return fallback;
+}
+
 export const dbConfig: DbConfig = {
   host: process.env.DB_HOST ?? "127.0.0.1",
   port: intEnv("DB_PORT", 3306),
@@ -36,12 +44,15 @@ export const CSRF_HEADER = "x-csrf-token";
 // Masa berlaku sesi; default 7 hari.
 export const sessionTtlMs = intEnv("SESSION_TTL_MS", 7 * 24 * 60 * 60 * 1000);
 
-// Cookie `Secure` hanya pada production (butuh HTTPS).
-export const cookieSecure = process.env.NODE_ENV === "production";
+// Cookie `Secure` (butuh HTTPS). Dapat diatur lewat `COOKIE_SECURE`; default
+// nonaktif agar prototipe lokal via http://localhost tetap bisa login, dan
+// diaktifkan saat sudah di balik HTTPS.
+export const cookieSecure = boolEnv("COOKIE_SECURE", false);
 
-// Kartu login dev + endpoint demo hanya di luar production.
+// Kartu login dev + endpoint demo. Default mengikuti NODE_ENV (mati di
+// production); `DEMO_AUTH_ENABLED` menimpanya secara eksplisit.
 export function demoAuthEnabled(): boolean {
-  return process.env.NODE_ENV !== "production";
+  return boolEnv("DEMO_AUTH_ENABLED", process.env.NODE_ENV !== "production");
 }
 
 // Sandi awal akun seed / akun baru; hanya prototipe, wajib diganti lewat /auth/password.

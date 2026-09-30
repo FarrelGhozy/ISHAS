@@ -132,9 +132,6 @@ export default function WorkspaceLayout() {
           </Link>
         </div>
         {navigation}
-        <p className="border-t border-line p-4 text-xs text-secondary-text">
-          Data ilustrasi · prototipe frontend
-        </p>
       </aside>
       <Modal open={mobileOpen} onClose={() => setMobileOpen(false)} label="Menu ruang kerja">
         <div className="flex items-center justify-between gap-3">

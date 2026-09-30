@@ -7,7 +7,6 @@ import {
   ClipboardCheck,
   Clock3,
   Flame,
-  Info,
   Lock,
   Megaphone,
   Minus,
@@ -57,7 +56,6 @@ const MAP: Record<string, Chip> = {
   "penilaian-mandiri": { className: BLUE, icon: ClipboardCheck, label: "Penilaian mandiri" },
   Public: { className: GREEN, icon: CheckCircle2, label: "Public" },
   Privat: { className: NEUTRAL, icon: Lock, label: "Privat" },
-  "Data publik · ilustrasi": { className: BLUE, icon: Info, label: "Data publik · ilustrasi" },
 };
 
 export function statusChip(value: string): Chip {

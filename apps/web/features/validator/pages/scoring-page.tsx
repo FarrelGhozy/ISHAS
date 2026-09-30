@@ -96,9 +96,8 @@ export function Page() {
         </p>
       </header>
       <div className="scope-banner">
-        Aturan ilustrasi: skor tiap opsi 0–100 sesuai bobot bank; N/A tidak
-        dihitung. Keputusan Terima/Tolak milik akun Pesantren; Validator hanya
-        audit.
+        Skor tiap opsi 0–100 sesuai bobot bank; N/A tidak dihitung. Keputusan
+        Terima/Tolak milik akun Pesantren; Validator hanya audit.
       </div>
       <div className="flex flex-wrap gap-2">
         <input

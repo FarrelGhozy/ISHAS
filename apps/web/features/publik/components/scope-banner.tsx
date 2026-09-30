@@ -1,7 +1,7 @@
 // Banner scope dashboard — WIREFRAMES.md §1 region 1.
-// Ikon gedung + Pesantren aktif + Periode hasil + versi instrumen + chip Data ilustrasi.
+// Ikon gedung + Pesantren aktif + Periode hasil + versi instrumen.
 
-import { Building2, ShieldCheck } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 export function ScopeBanner({
   scopeLabel,
@@ -22,10 +22,6 @@ export function ScopeBanner({
       <span>
         Periode hasil: {periode}
         {instrumentLabel ? ` · ${instrumentLabel}` : ""}
-      </span>
-      <span className="status status-blue ms-auto">
-        <ShieldCheck size={11} aria-hidden />
-        Data ilustrasi
       </span>
     </div>
   );

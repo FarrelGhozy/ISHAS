@@ -273,8 +273,9 @@ Rate-limit login in-memory 5/menit per IP+email → `429`.
 
 | Method + Path | Validasi | Efek |
 |---|---|---|
-| `POST /auth/login` | email + sandi; rate-limit per IP+email | Set cookie `ishas_session` (`HttpOnly`, `Secure` bila production, `SameSite=Lax`, `Max-Age`) + `ishas_csrf` (terbaca JS), simpan `token_hash` SHA-256, audit login |
-| `POST /auth/demo-login` | `{accountId}`; **hanya** `NODE_ENV!=production`, kalau production `404` | Set cookie sesi untuk kartu login dev (satu klik, tanpa sandi) |
+| `GET /auth/methods` | publik | `{ password: true, demo: <demoAuthEnabled> }`; dipakai `/login` memilih kartu demo atau form sandi |
+| `POST /auth/login` | email + sandi; rate-limit per IP+email | Set cookie `ishas_session` (`HttpOnly`, `Secure` bila `COOKIE_SECURE`, `SameSite=Lax`, `Max-Age`) + `ishas_csrf` (terbaca JS), simpan `token_hash` SHA-256, audit login |
+| `POST /auth/demo-login` | `{accountId}`; **hanya** saat `demoAuthEnabled()` (`NODE_ENV!=production` dan `DEMO_AUTH_ENABLED` tidak `false`), kalau tidak `404` | Set cookie sesi untuk kartu login dev (satu klik, tanpa sandi) |
 | `POST /auth/logout` | cookie sesi | Hapus baris `sessions` + clear cookie + audit |
 | `GET /auth/me` | cookie valid | Akun aktif + peran + scope (pengganti kartu dummy) |
 | `POST /auth/password` | sandi lama benar, sandi baru ≥8 | `password_hash` baru + cabut sesi lain + audit |
@@ -286,8 +287,12 @@ Rate-limit login in-memory 5/menit per IP+email → `429`.
 - CSRF: cookie `SameSite=Lax` + mutasi → header `X-CSRF-Token` wajib sama dengan
   cookie `ishas_csrf` (double-submit) saat aktor berasal dari cookie; endpoint
   `/auth/*` dikecualikan.
-- `X-Demo-Account` hanya aktif bila `NODE_ENV!=production` (fallback pengembangan);
+- `X-Demo-Account` hanya aktif bila `demoAuthEnabled()` (fallback pengembangan);
   production menolak tanpa cookie (401).
+- Login rilis memakai `POST /auth/login` (email + sandi); `/auth/methods` memberi
+  tahu frontend apakah kartu demo tersedia (D-43). Password seed akun inti:
+  `admin@ishas.demo`, `validator@ishas.demo`, `pesantren@ishas.demo` dengan
+  `SEED_DEFAULT_PASSWORD`.
 - Akun baru (`POST /admin/users`) menerima `password` opsional; default
   `SEED_DEFAULT_PASSWORD`. Reset sandi mengembalikan ke sandi awal prototipe.
 

@@ -52,12 +52,13 @@ Sesuai pada rekap adalah klasifikasi ilustratif pemicu temuan; bukan sertifikasi
 
 ### Data legacy yang tidak diklasifikasi
 
-Seed RPT-0007 / IND-K3L-002 memiliki nilai `3` pada tipe `likert-1-2-tidak`.
-Snapshot historis dipertahankan; nilai itu tidak dihitung sebagai Sesuai maupun
-Tidak sesuai. Seed memiliki 32 jawaban terisi dan 31 jawaban yang diklasifikasi.
-Indeks tetap memakai normalisasi ilustratif D-04 yang ada; revisi ini tidak
-mengubah rumus atau menulis ulang hasil lama. Perbedaan denominator dijelaskan
-pada panel dan kontrak ini.
+Snapshot penilaian mandiri seed kini memakai instrumen `INS-v2.0` (6 dimensi/59
+indikator, D-44) dengan seluruh jawaban dapat diklasifikasi: 5 snapshot × 59 =
+**295 jawaban** Sesuai/Tidak sesuai. Snapshot `INS-v1.0` lama tetap disimpan hanya
+untuk reproduksi histori; nilai di luar skala tidak dihitung Sesuai maupun Tidak
+sesuai. Indeks tetap memakai normalisasi ilustratif D-04 (skala frekuensi dan
+keparahan dipetakan 20–100); revisi ini tidak mengubah rumus inti atau menulis
+ulang hasil lama.
 
 ## Konteks URL dan periode
 

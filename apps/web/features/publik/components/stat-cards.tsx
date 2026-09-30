@@ -1,5 +1,5 @@
 // 4 kartu statistik dashboard — WIREFRAMES.md §1 region 2 + DESIGN_SYSTEM.md §1/§3.
-// Indeks memakai aturan ilustrasi D-04 (label ilustrasi di banner/grafik, bukan rumus final).
+// Indeks memakai aturan D-04 (bukan rumus final).
 
 import {
   Activity,

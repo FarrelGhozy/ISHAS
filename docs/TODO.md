@@ -1,5 +1,57 @@
 # TODO — Kontrol Kerja Aktif
 
+## Hapus penanda data dummy/ilustrasi dari UI (D-45) — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: aplikasi masuk tahap finishing, seluruh penanda dummy/
+ilustrasi/prototipe di UI dihapus (tanpa pengganti). Footer login diganti atribusi
+`Dibuat oleh FarrelGhozy · Projek ISHAS 2026`. Hanya teks UI; tanpa perubahan
+angka, rumus, hak akses, alur, atau struktur data.
+
+- [x] Shell workspace & publik: hapus footer sidebar + chip `Data publik · ilustrasi` + footer publik.
+- [x] Footer panel login → atribusi; hapus kalimat data ilustrasi.
+- [x] Hapus penanda dummy di halaman/komponen publik, Validator, Pesantren, Admin.
+- [x] `status-chip` entri `Data publik · ilustrasi` dihapus; ekspor JSON + PDF seed dibersihkan.
+- [x] Sinkronkan DESIGN_SYSTEM, ROUTES, WIREFRAMES, ROLES + catat D-45.
+- [x] Verifikasi: web lint/typecheck/312 test/build; API lint/typecheck/120 test hijau.
+- [ ] Cek visual browser belum dijalankan (Chrome Playwright tidak tersedia di lingkungan ini).
+- [ ] Review pemilik.
+
+## Login rilis + koreksi profile `prod` (D-43) — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: pastikan Docker Compose profile `prod` benar dan
+halaman `/login` di sana berupa form email + kata sandi, bukan pemilih akun demo.
+Cakupan: compose (service `api-prod`), Dockerfile web (build arg VITE), config
+auth (`DEMO_AUTH_ENABLED`/`COOKIE_SECURE`), endpoint `GET /auth/methods`, halaman
+`/login`. Tanpa perubahan schema, hak akses, atau rumus; mode mock dan login
+kartu dev tidak berubah.
+
+- [x] Backend: `DEMO_AUTH_ENABLED` + `COOKIE_SECURE` (config) dan `GET /auth/methods`.
+- [x] Frontend: `repository.authMethods`, halaman `/login` memilih form sandi
+      atau kartu demo dari respons server (`resolveLoginMode`).
+- [x] Docker: `api-prod` (`NODE_ENV=production`, `bun run start`, tanpa bind
+      mount), `web-prod` menerima build arg `VITE_USE_BACKEND`/`VITE_API_BASE`
+      (sebelumnya rilis terjebak mode mock), `api-prod` memaksa `DEMO_AUTH_ENABLED=false`.
+- [x] Test: `login-mode.test`, `authMethods` adapter, `GET /auth/methods` backend.
+- [ ] Cek visual `/login` mode prod di browser (belum dijalankan di sesi ini).
+- [ ] Review pemilik.
+
+## Instrumen penilaian mandiri 6 dimensi / 59 indikator (D-44) — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: ganti instrumen penilaian mandiri lama dengan 6 dimensi/
+59 indikator, masukkan ke seed demo dan seed inisiasi (`empty`). Kategori K3
+menjadi 6 (tambah Tanggap Darurat + Aksesibilitas). Regenerasi data demo ke
+instrumen baru; wording disesuaikan pemilik.
+
+- [x] Dokumen: D-44, `KATEGORI_K3.md` (tulis ulang), `INSTRUMEN_MANDIRI.md` (katalog baru).
+- [x] Kode: `kategori-k3.ts` 6 kategori + aspek; ikon `Siren`/`Accessibility`; tipe `K3CategoryId`.
+- [x] Bank: `instrument-v2.ts` (`INS-v2.0`, 6 dimensi/59 indikator) → bank live `INS-LIVE`.
+- [x] Seed demo: snapshot/draft/temuan/docs diregenerasi ke `INS-v2.0`.
+- [x] Seed inisiasi: `empty.ts` memuat bank penuh.
+- [x] `normalisasiJawaban` menangani skala frekuensi/keparahan; opsi frekuensi bank benar.
+- [x] Test web (312) + API (120) hijau; lint/typecheck hijau.
+- [ ] Cek browser desktop/tablet/ponsel (`/penilaian-mandiri`, `/hasil`, `/`, `/lapor`, `/validator/instrumen`).
+- [ ] Review pemilik.
+
 ## Pengujian alur data + API tulis per fitur — 30 September 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik (`ok kerjakan`): uji alur data dan API, terutama bagian
@@ -647,7 +699,7 @@ IN PROGRESS karena pemeriksaan penerimaannya belum lengkap, bukan dinyatakan DON
 - [x] Patokan dokumen: `KATEGORI_K3.md` + D-15 (struktur Kategori→Aspek→Indikator, Ekstrem prototipe, risiko tetap pengelola).
 - [x] Sinkronisasi: DATA_MODEL (schema v6, RiskLevel, category/aspect), FLOWS (cascading opsional lapor-cepat), DESIGN_SYSTEM (Ekstrem → status-red + Flame).
 - [ ] Review dokumen bersama pemilik/dosen sebelum implementasi dianggap final.
-- [x] Implementasi kode mengikuti patokan ini (seed INS-v1.1, migrasi v6, rekap per kategori, form cascading, test).
+- [x] Implementasi kode mengikuti patokan ini (seed INS-v1.1, migrasi v6, rekap per kategori, form cascading, test). **Digantikan D-44** (6 kategori/59 indikator).
 - [x] Verifikasi: lint + typecheck + 103 test + build lulus (19 Sep 2026). Cek visual 3 viewport browser menyusul (Chromium tak tersedia di lingkungan ini).
 
 ## Gambar bukti Pelaporan — 18 September 2026

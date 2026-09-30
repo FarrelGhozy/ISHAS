@@ -33,7 +33,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 ## 0. Pola umum semua halaman publik
 
-- Header publik: logo ISHAS + teks `ISHAS` + subteks `Penilaian K3L Pesantren` | kanan: penanda `Data publik · ilustrasi` (`status-blue`) + tombol **Masuk** (`secondary-button`; bila sudah login menjadi tombol **Ruang kerja** + nama akun).
+- Header publik: logo ISHAS + teks `ISHAS` + subteks `Penilaian K3L Pesantren` | kanan: tombol **Masuk** (`secondary-button`; bila sudah login menjadi tombol **Ruang kerja** + nama akun).
 - Di bawah header pada `/`: bar konteks berisi **Pemilih pesantren** (dropdown, opsi pertama `Semua pesantren terdaftar`) + info periode + tombol **Laporkan temuan** (`primary-button`, ikon plus) + tombol **Penilaian mandiri** (`secondary-button`, ikon clipboard).
 - Setiap angka indeks/skor selalu disertai: kategori + periode + versi instrumen + status data. Tidak ada angka telanjang.
 - State halaman: `loading` ("Menyiapkan halaman…"), `empty` (pesan + aksi), `error` (pesan + tombol muat ulang). Tabel lebar di ponsel boleh scroll horizontal; halaman tidak boleh overflow.
@@ -42,7 +42,7 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
 
 **Region (atas → bawah):**
 
-1. Bar konteks (lihat §0) + banner scope: ikon gedung + `Pesantren aktif: [Semua terdaftar | nama]` + `Periode hasil: [periode]` + chip `Data ilustrasi` (`status-blue`).
+1. Bar konteks (lihat §0) + banner scope: ikon gedung + `Pesantren aktif: [Semua terdaftar | nama]` + `Periode hasil: [periode]` + versi instrumen.
 2. Kartu statistik (4, `stats-grid`): Indeks K3L (nilai + "Naik/turun X dari periode lalu" + ikon perisai), Risiko tinggi (`stat-red`, "Perlu tindakan segera"), Tindak lanjut (`stat-amber`, rata-rata progres + "N pekerjaan"), Terverifikasi (`stat-blue`, count + "Oleh akun Pesantren").
 3. Panel grafik: `Perkembangan indeks` (sub: "Perbandingan enam periode terakhir") + tren `+X periode ini` (`trend-up` hijau) + grafik area biru (identitas D-18); panel samping `Hasil per dimensi` (bar per dimensi + "Area nilai terendah diprioritaskan").
 4. Panel `Temuan yang perlu ditindaklanjuti` (sub: "Peta risiko awal memakai lokasi/area pesantren, bukan peta geografis") + link `Buka peta bahaya →` + kartu temuan (chip severity + zona + lokasi + isu + tombol `Kelola tindak lanjut →`). Nama validator tampil pada kartu; nama pelapor tidak tampil (D-02).

@@ -84,7 +84,7 @@ export function CampusPlanManager({ user }: { user: User }) {
             terpisah.
           </p>
         </div>
-        <span className="text-xs text-secondary-text">Simulasi prototipe · perangkat ini</span>
+        <span className="text-xs text-secondary-text">Tersimpan di perangkat ini</span>
       </div>
       <div
         role="note"

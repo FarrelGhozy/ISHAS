@@ -11,7 +11,7 @@ export function DimensionPanel({ dimensions }: { dimensions: DimensiSkor[] }) {
     <div className="surface p-4">
       <h2 className="text-sm font-extrabold text-heading">Hasil per dimensi</h2>
       <p className="mt-0.5 text-xs text-secondary-text">
-        Area nilai terendah diprioritaskan · skala 0–100 · data ilustrasi
+        Area nilai terendah diprioritaskan · skala 0–100
       </p>
       {terurut.length === 0 ? (
         <p className="mt-3 text-sm text-secondary-text">

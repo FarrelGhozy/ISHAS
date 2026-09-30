@@ -103,7 +103,7 @@ export function Page() {
           <p className="mt-3 text-4xl font-extrabold leading-none text-heading">
             {summary.currentIndex === null ? "—" : Math.round(summary.currentIndex)}
           </p>
-          <p className="mt-2 text-xs text-faint">{summary.periode} · ilustrasi</p>
+          <p className="mt-2 text-xs text-faint">{summary.periode}</p>
         </article>
         <article className="stat-card flex min-h-32 flex-col justify-between">
           <div className="flex items-center justify-between gap-2">

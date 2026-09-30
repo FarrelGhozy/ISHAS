@@ -29,12 +29,25 @@ Environment Compose diambil dari file `.env` di root (tidak di-commit; contoh di
 ```bash
 cp .env.example .env
 docker compose --profile dev up --build    # dev + hot reload di localhost:3003
-docker compose --profile prod up --build   # hasil build statis (nginx) di localhost:3003
+docker compose --profile prod up --build   # rilis statis (nginx) di localhost:3003
 ```
 
-Service Docker: `db` (MySQL), `api` (backend Bun), `web-dev` (frontend hot reload),
+Service Docker: `db` (MySQL), `api` (backend Bun mode ngoding), `api-prod`
+(backend rilis, `NODE_ENV=production`), `web-dev` (frontend hot reload), dan
 `web-prod` (frontend nginx statis). Profile `dev` menyalakan db + backend + frontend
 sekaligus, jadi cukup satu perintah untuk menjalankan semuanya.
+
+Perbedaan penting profile `prod`: backend berjalan sebagai rilis, endpoint dan
+kartu demo **dimatikan**, dan `/login` menampilkan **form email + kata sandi**
+(bukan pemilih akun demo). Kata sandi awal akun seed = `SEED_DEFAULT_PASSWORD`
+di `.env`. Untuk akses via HTTPS, set `COOKIE_SECURE=true`.
+
+Menyiapkan data pada profile `prod` (dari image rilis):
+
+```bash
+docker compose --profile prod run --rm api-prod bun run migrate --fresh
+docker compose --profile prod run --rm api-prod bun run seed --mode=demo   # atau --mode=empty
+```
 
 ### Memilih container yang dinyalakan
 
@@ -45,7 +58,7 @@ sekaligus, jadi cukup satu perintah untuk menjalankan semuanya.
 | Database + backend (tanpa web) | `docker compose --profile api up -d` |
 | Hanya web dev | `docker compose --profile dev up -d web-dev` |
 | Hanya backend | `docker compose --profile api up -d api` |
-| Versi rilis (nginx statis) | `docker compose --profile prod up -d web-prod` |
+| Versi rilis (backend + nginx statis) | `docker compose --profile prod up -d` |
 
 Dev dan prod memakai port host yang sama (`WEB_PORT`), jadi jalankan bergantian.
 Ubah port/tag image cukup lewat `.env`; `docker compose config` untuk memeriksa hasil interpolasi.
@@ -84,13 +97,14 @@ Alamat utama `/` membuka dashboard publik tanpa login: agregat semua pesantren t
 
 ## Akun demo frontend
 
-Login demo memakai kartu akun, tanpa kata sandi. Tidak ada peran Asesor.
+Mode ngoding memakai kartu akun (satu klik, tanpa kata sandi); mode rilis
+memakai email + kata sandi (`SEED_DEFAULT_PASSWORD`). Tidak ada peran Asesor.
 
 | Peran | Email | Fokus |
 | --- | --- | --- |
-| Super Admin | `admin@ishas.demo` | Pesantren, akun pengelola, audit |
-| Peneliti | `peneliti@ishas.demo` | Instrumen, versi, dan konfigurasi penilaian |
-| Pengelola Pesantren | `pengelola@ishas.demo` | Validasi laporan, lokasi, dan tindak lanjut |
+| Super Admin | `admin@ishas.demo` | Pesantren, akun, audit |
+| Validator | `validator@ishas.demo` | Instrumen, versi, dan konfigurasi penilaian |
+| Pesantren | `pesantren@ishas.demo` | Validasi laporan, lokasi, dan tindak lanjut (PSN-0018) |
 
 ## Status data
 

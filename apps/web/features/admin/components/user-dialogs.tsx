@@ -123,7 +123,7 @@ export function DialogBuatAkun({
             onChange={(e) => setEmail(e.target.value)}
           />
         </Field>
-        <Field label="Kata sandi* (tidak disimpan di prototipe)">
+        <Field label="Kata sandi*">
           <input
             type={tampil ? "text" : "password"}
             className={inputCls}

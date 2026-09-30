@@ -58,7 +58,7 @@ export function Page() {
     : (state.instrumentVersions.find((x) => x.id === state.activeInstrumentVersionId)?.dimensions ??
       []);
   const download = (kind: string) =>
-    setNotice(`Simulasi unduh ${kind}: dokumen dummy tidak dibuat pada prototipe ini.`);
+    setNotice(`Unduh ${kind} belum tersedia pada versi ini.`);
   const archived = state.reports.filter((x) => x.institutionCode === scope && x.archivedAt);
   const archive = async (id: string) => {
     if (!user) return;
@@ -107,10 +107,10 @@ export function Page() {
       </p>
       <div className="flex flex-wrap gap-2">
         <button className="secondary-button" onClick={() => download("PDF")}>
-          Unduh PDF dummy
+          Unduh PDF
         </button>
         <button className="secondary-button" onClick={() => download("Excel")}>
-          Unduh Excel dummy
+          Unduh Excel
         </button>
       </div>
       {notice && (
@@ -119,12 +119,12 @@ export function Page() {
         </p>
       )}
       <section className="surface p-4">
-        <h2 className="font-bold">Dimensi instrumen (katalog aktif · ilustrasi)</h2>
+        <h2 className="font-bold">Dimensi instrumen (katalog aktif)</h2>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {dimensions.map((x) => (
             <div key={x.id} className="rounded border border-line-soft p-3 text-sm">
               <strong>{x.name}</strong>
-              <p className="text-secondary-text">{x.indicators.length} indikator · ilustrasi</p>
+              <p className="text-secondary-text">{x.indicators.length} indikator</p>
             </div>
           ))}
         </div>

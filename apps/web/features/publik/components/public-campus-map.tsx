@@ -85,7 +85,6 @@ function MapContent({ institutionCode, compact }: { institutionCode?: string; co
             {institution?.name ?? "Gambaran lokasi temuan tervalidasi"}
           </p>
         </div>
-        <span className="text-xs text-secondary-text">Data publik · ilustrasi</span>
       </header>
       <div className="space-y-3 p-4">
         {!institutionCode || (!plans.length && !institution) ? (

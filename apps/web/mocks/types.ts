@@ -26,7 +26,7 @@ export type InstrumentDocVisibility = "Public" | "Privat";
 // versioning instrumen. Blob PDF di IndexedDB perangkat-lokal.
 export type InstrumentDoc = {
   id: string; // 'DOC-IND-K3L-001' stabil per indicatorId
-  indicatorId: string; // FK indikator INS-v1.1 ('IND-K3L-*')
+  indicatorId: string; // FK indikator bank live ('IND-K3L-*', D-44)
   categoryId?: string; // denormalisasi untuk filter (KAT-*)
   aspectId?: string; // denormalisasi (ASP-*)
   fileName: string;

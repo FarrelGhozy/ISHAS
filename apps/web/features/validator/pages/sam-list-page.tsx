@@ -52,7 +52,7 @@ export function Page() {
             SAM-iSAFE
           </h1>
           <p className="mt-1 text-sm text-secondary-text">
-            Pengamatan keselamatan oleh Validator. Data ilustrasi, bukan ketentuan ilmiah final.
+            Pengamatan keselamatan oleh Validator.
           </p>
         </div>
         <Link

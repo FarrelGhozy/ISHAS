@@ -95,6 +95,9 @@ function toAction(result: { ok: true; data: { id?: string } } | { ok: false; err
 
 export const httpRepository = {
   // --- Auth Fase 6 ---
+  async authMethods(): Promise<ApiResult<{ password: boolean; demo: boolean }>> {
+    return apiRequest<{ password: boolean; demo: boolean }>("/auth/methods");
+  },
   async demoLogin(accountId: string): Promise<ApiResult<AuthPayload>> {
     return apiRequest<AuthPayload>("/auth/demo-login", { method: "POST", json: { accountId } });
   },

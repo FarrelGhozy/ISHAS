@@ -141,7 +141,7 @@ export function TindakLanjutCard({ item }: { item: Recommendation }) {
             ))}
           </div>
           <p className="mt-2 text-xs text-secondary-text">
-            Termasuk Ekstrem (prototipe D-15); perubahan teraudit.
+            Termasuk Ekstrem (D-15); perubahan teraudit.
           </p>
         </div>
       ) : null}
