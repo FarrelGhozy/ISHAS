@@ -360,6 +360,125 @@ describe("auth (fase 6)", () => {
   });
 });
 
+describe("httpRepository kontrak payload tulis (L3)", () => {
+  const pesantren = { name: "Mustofa", role: "Pesantren" as const };
+  const validator = { id: "USR-002", name: "M. Ridwan", role: "Validator" as const };
+
+  test("rejectReport / archiveCompletedReport / setFindingLevel", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.rejectReport(pesantren, "RPT-0002", "Tidak sesuai kriteria pelaporan.");
+    expect(calls[0].url).toContain("/api/v1/pesantren/reports/RPT-0002/reject");
+    expect((JSON.parse(String(calls[0].init.body)) as { reason: string }).reason).toBe(
+      "Tidak sesuai kriteria pelaporan.",
+    );
+
+    calls = [];
+    await httpRepository.archiveCompletedReport(pesantren, "RPT-0001", "Selesai terverifikasi.");
+    expect(calls[0].url).toContain("/api/v1/pesantren/reports/RPT-0001/archive");
+
+    calls = [];
+    await httpRepository.setFindingLevel(pesantren, "FND-001", "Ekstrem");
+    expect(calls[0].url).toContain("/api/v1/pesantren/findings/FND-001/level");
+    expect(calls[0].init.method).toBe("PATCH");
+    expect((JSON.parse(String(calls[0].init.body)) as { level: string }).level).toBe("Ekstrem");
+  });
+
+  test("updateHandlingStatus mengirim next + detail penanganan", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.updateHandlingStatus(pesantren, "RPT-0001", "Proses", {
+      owner: "Tim Listrik",
+      dueDate: "2026-12-31",
+      note: "Rencana disusun.",
+    });
+    expect(calls[0].url).toContain("/api/v1/pesantren/reports/RPT-0001/status");
+    const body = JSON.parse(String(calls[0].init.body)) as Record<string, unknown>;
+    expect(body.next).toBe("Proses");
+    expect(body.owner).toBe("Tim Listrik");
+    expect(body.dueDate).toBe("2026-12-31");
+    expect(body.note).toBe("Rencana disusun.");
+  });
+
+  test("setBankIndicatorOptions mengirim { options, weight }", async () => {
+    stubFetch({ ok: true, data: {} });
+    const options = [
+      { value: "Ya", label: "Ya", weight: 100, isFinding: false },
+      { value: "Tidak", label: "Tidak", weight: 10, isFinding: true },
+    ];
+    await httpRepository.setBankIndicatorOptions("IND-TEST", options, 2);
+    expect(calls[0].url).toContain("/api/v1/validator/bank/indicators/IND-TEST/options");
+    expect(calls[0].init.method).toBe("PUT");
+    const body = JSON.parse(String(calls[0].init.body)) as { options: unknown[]; weight: number };
+    expect(body.options).toEqual(options);
+    expect(body.weight).toBe(2);
+  });
+
+  test("uploadInstrumentDoc dua langkah (FormData lalu PUT metadata)", async () => {
+    calls = [];
+    let step = 0;
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      calls.push({ url: String(input), init: init ?? {} });
+      step += 1;
+      return new Response(
+        JSON.stringify({ ok: true, data: step === 1 ? { id: "instrument-doc-x" } : {} }),
+        { status: step === 1 ? 201 : 200, headers: { "Content-Type": "application/json" } },
+      );
+    }) as typeof fetch;
+    await httpRepository.uploadInstrumentDoc(
+      validator,
+      "IND-K3L-002",
+      new File([new TextEncoder().encode("%PDF-1.4")], "acuan.pdf", { type: "application/pdf" }),
+      "Privat",
+    );
+    expect(calls[0].url).toContain("/api/v1/uploads/instrument-doc");
+    expect(calls[0].init.body instanceof FormData).toBe(true);
+    expect(calls[1].url).toContain("/api/v1/validator/docs/IND-K3L-002");
+    expect(calls[1].init.method).toBe("PUT");
+    const body = JSON.parse(String(calls[1].init.body)) as Record<string, unknown>;
+    expect(body.assetId).toBe("instrument-doc-x");
+    expect(body.visibility).toBe("Privat");
+  });
+
+  test("importResearchDataset mengirim { rows, apply:true }", async () => {
+    stubFetch({ ok: true, data: { applied: 1, id: "RPT-0099" } }, 201);
+    const rows = [
+      { institutionCode: "PSN-0018", reporterName: "Tim impor", scorePercent: 65, title: "Uji" },
+    ];
+    await httpRepository.importResearchDataset(validator, rows);
+    expect(calls[0].url).toContain("/api/v1/validator/dataset/import");
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ rows, apply: true });
+  });
+
+  test("SAM: active + follow-up memakai kunci payload kontrak", async () => {
+    stubFetch({ ok: true, data: {} });
+    await httpRepository.setSamQuestionActive(validator, "SAM-Q-001", false);
+    expect(calls[0].url).toContain("/validator/sam/questions/SAM-Q-001/active");
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ active: false });
+
+    calls = [];
+    await httpRepository.createSamFollowUp(validator, {
+      assessmentId: "SAM-0001",
+      questionId: "SAM-Q-001",
+      pic: "Tim K3L",
+      dueDate: "2026-12-31",
+      note: "Perbaiki.",
+    });
+    expect(calls[0].url).toContain("/validator/sam/follow-ups");
+    const followUp = JSON.parse(String(calls[0].init.body)) as Record<string, unknown>;
+    expect(followUp.assessmentId).toBe("SAM-0001");
+    expect(followUp.questionId).toBe("SAM-Q-001");
+
+    calls = [];
+    await httpRepository.updateSamFollowUp(validator, "SMF-0001", {
+      status: "Selesai",
+      pic: "Tim K3L",
+      note: "Selesai.",
+    });
+    expect(calls[0].url).toContain("/validator/sam/follow-ups/SMF-0001");
+    expect(calls[0].init.method).toBe("PATCH");
+    expect((JSON.parse(String(calls[0].init.body)) as { status: string }).status).toBe("Selesai");
+  });
+});
+
 describe("apiRequest", () => {
   test("kegagalan jaringan → pesan ramah", async () => {
     globalThis.fetch = (async () => {
