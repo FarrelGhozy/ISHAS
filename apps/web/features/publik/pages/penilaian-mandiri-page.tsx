@@ -29,6 +29,7 @@ import {
   ingatPesantren,
   kurangApa,
 } from "../lib/penilaian-draft";
+import { paramPesantrenTidakSah, pilihInstitusiAwal } from "../lib/param-pesantren";
 
 type Indicator = InstrumentIndicator;
 
@@ -53,16 +54,18 @@ export function PenilaianMandiriPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const registeredCodes = selectRegisteredInstitutions(state).map((i) => i.code);
   const param = searchParams.get("pesantren");
-  const paramValid = param !== null && registeredCodes.includes(param);
-  const paramInvalid = param !== null && !paramValid;
-  // ROUTES §1: preset ?pesantren= dihormati bila terdaftar; kode tak dikenal tidak
-  // diganti diam-diam — minta pilihan eksplisit (seperti /lapor).
+  // ROUTES §1: preset ?pesantren= dihormati; kode tak dikenal tidak diganti
+  // diam-diam. Pesan "tidak sah" ditahan sampai daftar terdaftar termuat karena
+  // muat dingin mode backend belum punya `registeredCodes`.
+  const paramInvalid = paramPesantrenTidakSah(param, registeredCodes);
   // Tanpa param dan tanpa login, pakai pesantren terakhir pada perangkat ini
   // agar draft tidak hilang saat reload.
-  const initialInstitution =
-    paramValid && param
-      ? param
-      : (user?.institutionCodes[0] ?? bacaPesantrenTerakhir(registeredCodes));
+  const initialInstitution = pilihInstitusiAwal({
+    param,
+    kodeAkun: user?.institutionCodes[0],
+    ingatan: bacaPesantrenTerakhir(registeredCodes),
+    registeredCodes,
+  });
   const initialDraft = state.selfAssessmentDrafts[`SELF-${initialInstitution}`];
   const [institutionCode, setInstitutionCode] = useState(initialInstitution);
   const [reporterName, setReporterName] = useState(initialDraft?.reporterName ?? user?.name ?? "");
@@ -117,6 +120,16 @@ export function PenilaianMandiriPage() {
       alive = false;
     };
   }, [draftId]);
+  // Muat dingin tanpa param: daftar terdaftar baru siap setelah `/public/state`.
+  // Pulihkan pesantren terakhir pada perangkat saat daftar sudah tersedia agar
+  // draft tersimpan tidak hilang.
+  useEffect(() => {
+    if (institutionCode || param !== null || registeredCodes.length === 0) return;
+    const ingatan = bacaPesantrenTerakhir(registeredCodes);
+    if (!ingatan) return;
+    setInstitutionCode(ingatan);
+    ingatPesantren(ingatan);
+  }, [institutionCode, param, registeredCodes.length]);
   const storedDraft = USE_BACKEND ? (serverDraft ?? undefined) : state.selfAssessmentDrafts[draftId];
   const effectiveChecksum =
     draftChecksum || storedDraft?.instrumentChecksum || instrument?.checksum || "";

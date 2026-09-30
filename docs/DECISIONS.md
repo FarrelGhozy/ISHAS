@@ -1246,3 +1246,21 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   murni pemisahan tampilan + tujuan notifikasi. Scope Stage 07 + sentuhan baca
   Validasi/PDF; status stage lain tidak berubah sepihak.
 - Dokumen terdampak: ROLES, ROUTES, WIREFRAMES, FLOWS, TODO, STAGE_07.
+
+## D-42 — Pemulihan draft/tautan `?pesantren=` pada muat dingin — DISETUJUI 30 September 2026
+
+- Temuan pengujian alur data (E2E browser): pada **muat dingin** mode backend,
+  `selectRegisteredInstitutions` belum termuat sehingga `?pesantren=` dianggap
+  tidak valid. Akibatnya `/penilaian-mandiri` jatuh ke draft `SELF-baru` (draft
+  tersimpan tidak dipulihkan) dan prefill pesantren pada `/lapor` hilang.
+- **D-42.a — Param = sumber kebenaran tautan:** `?pesantren=` dipakai apa adanya
+  saat inisialisasi (ROUTES §1). Pesan "Pesantren tidak tersedia" ditahan sampai
+  daftar terdaftar siap (`registeredCodes.length > 0`) agar tidak muncul keliru
+  saat memuat.
+- **D-42.b — Pesantren terakhir:** tanpa param, pesantren terakhir pada perangkat
+  (`localStorage`) dipulihkan setelah daftar terdaftar tiba, sehingga draft
+  penilaian mandiri tidak hilang saat reload.
+- **D-42.c — Batas:** tanpa perubahan schema, hak akses, rumus, atau kontrak API;
+  hanya perbaikan pemuatan halaman + test regresi `param-pesantren.test.ts`.
+  Memulihkan perilaku yang sudah dimaksudkan ROUTES §1/FLOWS §3.
+- Dokumen terdampak: TODO, DATA_FLOW_API_TEST_REPORT.

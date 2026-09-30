@@ -27,6 +27,7 @@ import {
   type LaporValues,
 } from "../lib/lapor-validation";
 import { clearLaporDraft, isLaporEmpty, loadLaporDraft, saveLaporDraft } from "../lib/lapor-draft";
+import { paramPesantrenTidakSah, pilihInstitusiAwal } from "../lib/param-pesantren";
 
 const FOCUS_ORDER: (keyof LaporValues)[] = [
   "reporterName",
@@ -70,10 +71,11 @@ function LaporPageContent() {
   const isPrefilledManager = user?.roleId === "pesantren";
 
   const param = searchParams.get("pesantren");
-  const paramValid = param !== null && registeredCodes.includes(param);
-  // ROUTES §1: kode tak dikenal/nonaktif tidak diganti diam-diam — minta pilihan eksplisit.
-  const paramInvalid = param !== null && !paramValid;
-  const initialCode = paramValid && param ? param : "";
+  // ROUTES §1: kode tak dikenal/nonaktif tidak diganti diam-diam — minta pilihan
+  // eksplisit. Pesan ditahan sampai daftar terdaftar termuat agar tautan
+  // `?pesantren=` tetap terpakai pada muat dingin (mode backend).
+  const paramInvalid = paramPesantrenTidakSah(param, registeredCodes);
+  const initialCode = pilihInstitusiAwal({ param, registeredCodes });
 
   const [values, setValues] = useState<LaporValues>(() => {
     if (initialCode) {
