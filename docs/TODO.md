@@ -1,5 +1,45 @@
 # TODO — Kontrol Kerja Aktif
 
+## Pengujian alur data + API tulis per fitur — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik (`ok kerjakan`): uji alur data dan API, terutama bagian
+yang menginputkan data, serta pastikan API berfungsi di setiap fitur. Cakupan:
+`apps/api/tests` (integrasi scope/rollback/idempotensi/upload), kontrak payload
+`apps/web/shared/api/http-repository` vs backend asli, dan E2E browser per peran.
+Tanpa mengubah perilaku produk/hak akses/rumus; perbaikan hanya untuk bug yang
+ditemukan + test regresi. Operasi destruktif hanya pada DB uji `ishas_test`.
+
+- [x] Baseline lint + typecheck + test (API 111, web 292) serta siapkan `ishas_test`.
+- [x] Tambah test L2 (isolasi scope tulis Pesantren, rollback `sequences`, unggah
+      bukti penyelesaian, detail laporan lintas-scope) + L3 kontrak payload
+      `http-repository` (opsi bank, dokumen, impor dataset, SAM, penanganan).
+- [x] Verifikasi temuan: impor dataset via `rows` **tetap divalidasi** server
+      (`dataset.ts:144`) + test regresi.
+- [x] Perbaikan bug (D-42) + test regresi + E2E: `?pesantren=` diabaikan pada
+      muat dingin sehingga draft penilaian mandiri tak dipulihkan dan prefill
+      `/lapor` hilang.
+- [x] E2E browser per peran (13/13 lulus: login 3 kartu, lapor, draft mandiri,
+      bank Validator, antrean Pesantren).
+- [x] Verifikasi akhir: API lint/typecheck/118 test; web lint/typecheck/305 test/build.
+- [x] Laporan hasil: [DATA_FLOW_API_TEST_REPORT.md](DATA_FLOW_API_TEST_REPORT.md).
+- [ ] Review pemilik.
+
+## Pemulihan draft/tautan `?pesantren=` pada muat dingin (D-42) — 30 September 2026 — `IN PROGRESS`
+
+Temuan pengujian alur data (L4/E2E): pada muat dingin mode backend, daftar
+pesantren terdaftar belum termuat sehingga `?pesantren=` dianggap tidak valid:
+`/penilaian-mandiri` jatuh ke draft `SELF-baru` (draft tersimpan tak dipulihkan)
+dan prefill `/lapor` hilang. Perbaikan: helper `pilihInstitusiAwal` +
+`paramPesantrenTidakSah` (`features/publik/lib/param-pesantren.ts`) dipakai kedua
+halaman; pesan "tidak sah" ditahan sampai daftar siap; pesantren terakhir
+dipulihkan saat daftar tiba. Memulihkan perilaku ROUTES §1 (param = sumber
+kebenaran tautan), tanpa mengubah hak akses/rumus.
+
+- [x] Catat temuan + akar masalah + cakupan.
+- [x] Kode perbaikan + 7 test regresi (`param-pesantren.test.ts`).
+- [x] Verifikasi: web lint/typecheck/305 test/build + E2E deep link & alur (13/13).
+- [ ] Review pemilik.
+
 ## Pemisahan hasil penilaian mandiri dari Laporan Pesantren (D-41) — 29 September 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik: `/pesantren/laporan` masih memuat penilaian mandiri
