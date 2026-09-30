@@ -1,5 +1,20 @@
 # TODO — Kontrol Kerja Aktif
 
+## Hosting Cloudflare Tunnel + CORS opsional (D-46) — 30 September 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: host via Cloudflare Tunnel, perbaikan bila perlu,
+dokumentasi jelas. Arsitektur default satu domain (`ishas.utc.web.id` →
+`localhost:3003`); opsi domain API terpisah didukung lewat konfigurasi.
+
+- [x] Backend: `CORS_ALLOWED_ORIGINS` + preflight OPTIONS; `COOKIE_DOMAIN` opsional.
+- [x] Test unit: `apps/api/tests/cors.test.ts` + cookie domain di `auth.test.ts`.
+- [x] Nginx: `Cache-Control: no-store` untuk `index.html`.
+- [x] Konfigurasi `.env` prod (COOKIE_SECURE=true, VITE_ALLOWED_HOSTS) + `.env.example`.
+- [x] Dokumentasi: `docs/DEPLOYMENT_CLOUDFLARE_TUNNEL.md` + tautan README + D-46.
+- [x] Verifikasi: web 200, `/api/v1/health` db ok, login sets cookie `Secure`, OPTIONS 204, `index.html` `no-store`, deep link OK. Lint/typecheck/test web 314 + API 126 hijau. Seed `demo` termuat.
+- [ ] Cek via domain Cloudflare Tunnel (setelah public hostname diisi pemilik).
+- [ ] Review pemilik.
+
 ## Hapus penanda data dummy/ilustrasi dari UI (D-45) — 30 September 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik: aplikasi masuk tahap finishing, seluruh penanda dummy/

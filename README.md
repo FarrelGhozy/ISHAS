@@ -49,6 +49,16 @@ docker compose --profile prod run --rm api-prod bun run migrate --fresh
 docker compose --profile prod run --rm api-prod bun run seed --mode=demo   # atau --mode=empty
 ```
 
+### Hosting lewat Cloudflare Tunnel
+
+Cara ringkas: jalankan profile `prod`, lalu arahkan **satu** public hostname
+Cloudflare Tunnel ke `http://localhost:3003` — `web-prod` (nginx) melayani
+frontend sekaligus mem-proxy `/api` ke backend. Set `COOKIE_SECURE=true` di
+`.env` karena diakses via HTTPS. Tidak perlu domain API terpisah.
+
+Panduan lengkap (termasuk opsi domain API terpisah, verifikasi, dan
+troubleshooting): [docs/DEPLOYMENT_CLOUDFLARE_TUNNEL.md](docs/DEPLOYMENT_CLOUDFLARE_TUNNEL.md).
+
 ### Memilih container yang dinyalakan
 
 | Mau menyalakan | Perintah |

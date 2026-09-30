@@ -63,3 +63,23 @@ export const loginRateLimit = {
   max: intEnv("LOGIN_RATE_LIMIT", 5),
   windowMs: intEnv("LOGIN_RATE_WINDOW_MS", 60_000),
 };
+
+// --- Hosting (Cloudflare Tunnel / reverse proxy) ---
+
+// Origin yang diizinkan untuk CORS (dipisah koma), mis.
+// `CORS_ALLOWED_ORIGINS=https://ishas.utc.web.id`. Kosong (bawaan) = tanpa
+// header CORS, sesuai arsitektur satu domain lewat proxy nginx. Isi hanya bila
+// backend dipisah ke subdomain lain. Dibaca saat request agar dapat diuji.
+export function corsAllowedOrigins(): string[] {
+  return (process.env.CORS_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+// Domain cookie opsional, mis. `COOKIE_DOMAIN=.utc.web.id`. Kosong (bawaan) =
+// cookie host-only. Perlu diisi agar cookie CSRF dapat dibaca JavaScript
+// frontend saat backend berada di subdomain berbeda (domain API terpisah).
+export function cookieDomain(): string {
+  return process.env.COOKIE_DOMAIN?.trim() ?? "";
+}

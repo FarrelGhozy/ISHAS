@@ -7,7 +7,7 @@ import { HttpError, fail, jsonResponse } from "./http";
 import { matchRoute, type Actor, type Route } from "./router";
 import { buildRoutes } from "./routes";
 import { loadIshasState } from "./repo/state";
-import { CSRF_HEADER } from "./config";
+import { CSRF_HEADER, corsAllowedOrigins } from "./config";
 import { csrfCookieFrom, sessionTokenFrom } from "./auth/cookie";
 import type { IshasState } from "../../web/mocks/types";
 
@@ -15,6 +15,29 @@ export const API_VERSION = "0.3.0";
 const startedAt = Date.now();
 
 const MUTATING = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+// CORS untuk hosting backend di subdomain terpisah (mis. api-ishas.utc.web.id).
+// Default tanpa `CORS_ALLOWED_ORIGINS` → tidak ada header CORS (satu domain).
+function corsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get("Origin");
+  if (!origin || !corsAllowedOrigins().includes(origin)) return {};
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-CSRF-Token, X-Demo-Account",
+    Vary: "Origin",
+  };
+}
+
+// Lampirkan header CORS tanpa mengubah status/body (termasuk respons blob/berkas).
+function withCors(request: Request, response: Response): Response {
+  const headers = corsHeaders(request);
+  if (Object.keys(headers).length === 0) return response;
+  const merged = new Headers(response.headers);
+  for (const [key, value] of Object.entries(headers)) merged.set(key, value);
+  return new Response(response.body, { status: response.status, headers: merged });
+}
 
 // RBAC terpusat per prefix rute (BACKEND_API_CONTRACT §1). Pemeriksaan scope
 // halus (lembaga sendiri, visibilitas berkas) tetap di handler masing-masing.
@@ -66,47 +89,63 @@ export function createApp(deps: AppDeps) {
     (deps.loadState ? buildRoutes({ loadState: deps.loadState }) : []);
   return async function handleRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    // Preflight CORS (hanya relevan bila backend di origin terpisah).
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders(request) });
+    }
     if (url.pathname === "/health" || url.pathname === "/api/v1/health") {
       try {
         await deps.ping();
-        return jsonResponse({
-          ok: true,
-          data: {
-            status: "ok",
-            db: "ok",
-            version: API_VERSION,
-            uptime: Math.round((Date.now() - startedAt) / 1000),
-          },
-        });
+        return withCors(
+          request,
+          jsonResponse({
+            ok: true,
+            data: {
+              status: "ok",
+              db: "ok",
+              version: API_VERSION,
+              uptime: Math.round((Date.now() - startedAt) / 1000),
+            },
+          }),
+        );
       } catch (error) {
-        return jsonResponse(
-          {
-            ok: false,
-            error: error instanceof Error ? error.message : "Koneksi database gagal.",
-          },
-          503,
+        return withCors(
+          request,
+          jsonResponse(
+            {
+              ok: false,
+              error: error instanceof Error ? error.message : "Koneksi database gagal.",
+            },
+            503,
+          ),
         );
       }
     }
     const match = matchRoute(request.method, url.pathname, routes);
     if (!match) {
-      return fail("Endpoint tidak ditemukan.", 404);
+      return withCors(request, fail("Endpoint tidak ditemukan.", 404));
     }
     try {
       const actor = deps.loadActor ? await deps.loadActor(request) : null;
       authorize(actor, url);
       checkCsrf(request, url);
-      return await match.route.handler({
+      return withCors(
         request,
-        url,
-        params: match.params,
-        actor,
-      });
+        await match.route.handler({
+          request,
+          url,
+          params: match.params,
+          actor,
+        }),
+      );
     } catch (error) {
-      if (error instanceof HttpError) return fail(error.message, error.status);
-      return fail(
-        error instanceof Error ? error.message : "Terjadi kesalahan pada server.",
-        500,
+      if (error instanceof HttpError) return withCors(request, fail(error.message, error.status));
+      return withCors(
+        request,
+        fail(
+          error instanceof Error ? error.message : "Terjadi kesalahan pada server.",
+          500,
+        ),
       );
     }
   };

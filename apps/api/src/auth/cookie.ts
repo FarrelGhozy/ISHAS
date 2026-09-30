@@ -1,7 +1,7 @@
 // Cookie sesi + CSRF Fase 6 (BACKEND_API_CONTRACT §16).
 // `ishas_session` HttpOnly; `ishas_csrf` dibaca JS untuk double-submit header.
 
-import { CSRF_COOKIE, SESSION_COOKIE, cookieSecure, sessionTtlMs } from "../config";
+import { CSRF_COOKIE, SESSION_COOKIE, cookieDomain, cookieSecure, sessionTtlMs } from "../config";
 
 export function parseCookies(header: string | null): Record<string, string> {
   const out: Record<string, string> = {};
@@ -25,6 +25,10 @@ function serialize(name: string, value: string, httpOnly: boolean, maxAge: numbe
   ];
   if (httpOnly) parts.push("HttpOnly");
   if (cookieSecure) parts.push("Secure");
+  // Hosting subdomain terpisah: samakan domain agar cookie CSRF terbaca JS
+  // frontend. Kosong = host-only (bawaan, satu domain).
+  const domain = cookieDomain();
+  if (domain) parts.push(`Domain=${domain}`);
   return parts.join("; ");
 }
 

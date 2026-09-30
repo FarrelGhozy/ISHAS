@@ -76,6 +76,29 @@ describe("cookie", () => {
   test("clear cookie berumur 0", () => {
     expect(clearSessionCookies().every((c) => c.includes("Max-Age=0"))).toBe(true);
   });
+
+  test("COOKIE_DOMAIN → cookie memakai Domain (subdomain terpisah)", () => {
+    const prev = process.env.COOKIE_DOMAIN;
+    process.env.COOKIE_DOMAIN = ".utc.web.id";
+    try {
+      const cookies = buildSessionCookies("tok", "csrf");
+      expect(cookies.every((c) => c.includes("Domain=.utc.web.id"))).toBe(true);
+    } finally {
+      if (prev === undefined) delete process.env.COOKIE_DOMAIN;
+      else process.env.COOKIE_DOMAIN = prev;
+    }
+  });
+
+  test("tanpa COOKIE_DOMAIN → cookie host-only", () => {
+    const prev = process.env.COOKIE_DOMAIN;
+    delete process.env.COOKIE_DOMAIN;
+    try {
+      expect(buildSessionCookies("tok", "csrf").some((c) => c.includes("Domain="))).toBe(false);
+    } finally {
+      if (prev === undefined) delete process.env.COOKIE_DOMAIN;
+      else process.env.COOKIE_DOMAIN = prev;
+    }
+  });
 });
 
 describe("RBAC prefix + CSRF", () => {

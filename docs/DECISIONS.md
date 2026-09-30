@@ -1360,4 +1360,29 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `features/pesantren/**`, `features/admin/**`, `mocks/research-export.ts`,
   `mocks/adapters/instrument-docs.ts`.
 
+## D-46 — Hosting Cloudflare Tunnel + dukungan CORS opsional — DISETUJUI 30 September 2026
 
+- Arahan pemilik: aplikasi akan dihosting memakai **Cloudflare Tunnel**; pemilik
+  sudah menyiapkan domain frontend `ishas.utc.web.id` dan mempertimbangkan
+  subdomain API `api-ishas.utc.web.id`. Minta perbaikan bila perlu + dokumentasi jelas.
+- **D-46.a — Arsitektur default satu domain:** satu public hostname
+  (`ishas.utc.web.id`) diarahkan ke `http://localhost:3003` (`web-prod` nginx),
+  yang melayani SPA dan mem-proxy `/api/` ke `api-prod` (`apps/web/nginx.conf`).
+  Satu origin → tanpa CORS, cookie `SameSite=Lax` tetap sah. `VITE_API_BASE`
+  relatif `/api/v1`.
+- **D-46.b — Dukungan CORS opsional (default off):** `CORS_ALLOWED_ORIGINS`
+  (daftar origin dipisah koma) memicu header `Access-Control-Allow-*` +
+  penanganan preflight di `apps/api/src/app.ts`. Kosong = perilaku lama (tanpa
+  header). Dibaca per-request agar mudah diuji.
+- **D-46.c — `COOKIE_DOMAIN` opsional:** bila backend di subdomain terpisah,
+  cookie dipasang dengan `Domain` (mis. `.utc.web.id`) agar cookie CSRF terbaca
+  JS frontend. Kosong = host-only (bawaan).
+- **D-46.d — Nginx:** `index.html` diberi `Cache-Control: no-store` agar rilis
+  baru tidak tertahan cache CDN; aset ber-hash tetap `immutable`.
+- **D-46.e — Batas:** tanpa perubahan alur, hak akses, rumus, atau struktur data.
+  Fitur CORS/cookie-domain bersifat opt-in dan tidak mengubah perilaku default
+  (test lama tetap hijau).
+- Dokumen terdampak: DECISIONS, TODO, README, `.env.example`,
+  `docs/DEPLOYMENT_CLOUDFLARE_TUNNEL.md` (baru).
+- Kode terdampak: `apps/api/src/config.ts`, `apps/api/src/app.ts`,
+  `apps/api/src/auth/cookie.ts`, `apps/web/nginx.conf`, `apps/api/tests/cors.test.ts`.
