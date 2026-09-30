@@ -8,7 +8,7 @@ import {
   refreshServerSession,
   useServerAccount,
 } from "~/shared/auth/auth-session";
-import { resolveWorkspaceAccess, workspaceRoleFor } from "~/shared/auth/access-policy";
+import { resolveWorkspaceAccess, workspaceHome, workspaceRoleFor } from "~/shared/auth/access-policy";
 import { IshasMark } from "~/shared/components/ishas-mark";
 import { Modal } from "~/shared/components/modal";
 import { ROLE_NAVIGATION } from "~/shared/navigation/workspace-config";
@@ -123,7 +123,13 @@ export default function WorkspaceLayout() {
       </a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
         <div className="border-b border-line px-4 py-4">
-          <IshasMark variant="compact" />
+          <Link
+            to={workspaceHome(user.roleId)}
+            aria-label="ISHAS — dashboard"
+            className="inline-flex"
+          >
+            <IshasMark variant="compact" wordmark />
+          </Link>
         </div>
         {navigation}
         <p className="border-t border-line p-4 text-xs text-secondary-text">
@@ -132,7 +138,13 @@ export default function WorkspaceLayout() {
       </aside>
       <Modal open={mobileOpen} onClose={() => setMobileOpen(false)} label="Menu ruang kerja">
         <div className="flex items-center justify-between gap-3">
-          <IshasMark variant="compact" />
+          <Link
+            to={workspaceHome(user.roleId)}
+            aria-label="ISHAS — dashboard"
+            onClick={() => setMobileOpen(false)}
+          >
+            <IshasMark variant="compact" wordmark />
+          </Link>
           <button
             type="button"
             className="secondary-button px-3"

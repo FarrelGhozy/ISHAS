@@ -45,8 +45,8 @@ export default function PublicLayout() {
       </a>
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
         <div className="border-b border-line px-4 py-4">
-          <Link to="/" aria-label="ISHAS — beranda">
-            <IshasMark variant="compact" />
+          <Link to="/" aria-label="ISHAS — beranda" className="inline-flex">
+            <IshasMark variant="compact" wordmark />
           </Link>
         </div>
         <PublicNavigation />
@@ -56,7 +56,9 @@ export default function PublicLayout() {
       </aside>
       <Modal open={mobileOpen} onClose={() => setMobileOpen(false)} label="Menu publik">
         <div className="flex items-center justify-between gap-3">
-          <IshasMark variant="compact" />
+          <Link to="/" aria-label="ISHAS — beranda" onClick={() => setMobileOpen(false)}>
+            <IshasMark variant="compact" wordmark />
+          </Link>
           <button
             type="button"
             className="secondary-button px-3"

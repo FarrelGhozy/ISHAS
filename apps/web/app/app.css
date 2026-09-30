@@ -138,9 +138,19 @@ body {
     width: 44px;
     height: 44px;
     object-fit: contain;
-    /* Aset logo asli dipertahankan; aksennya mengikuti identitas biru D-18. */
-    filter: hue-rotate(210deg) saturate(1.15);
-    transform: translateX(-4%);
+    /* Aset logo baru sudah memakai identitas biru D-18; tanpa filter warna. */
+  }
+  .brand-wordmark {
+    display: block;
+    width: auto;
+    height: 22px;
+    object-fit: contain;
+  }
+  .brand-lockup-login .brand-wordmark {
+    height: 26px;
+  }
+  .brand-lockup-compact .brand-wordmark {
+    height: 21px;
   }
   .brand-lockup-login {
     gap: 12px;

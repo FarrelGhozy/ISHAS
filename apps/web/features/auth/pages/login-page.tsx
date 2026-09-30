@@ -6,7 +6,6 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { ArrowLeft, ArrowRight, ShieldCheck } from "lucide-react";
 import { DEMO_ACCOUNTS } from "~/shared/auth/demo-accounts";
 import { repository } from "~/shared/api/repository";
-import { IshasMark } from "~/shared/components/ishas-mark";
 import { resolveLoginRedirect } from "~/shared/auth/access-policy";
 
 export function LoginPage() {
@@ -41,7 +40,14 @@ export function LoginPage() {
         className="hidden flex-col justify-between p-10 text-white lg:flex"
         style={{ background: "linear-gradient(145deg, #063A73, #0066CC, #007EFF)" }}
       >
-        <IshasMark inverse variant="login" />
+        <div className="w-[min(180px,55%)] rounded-xl bg-white p-3 shadow-2xl shadow-black/20">
+          <img
+            src="/brand/ishas-full-logo.png"
+            alt="ISHAS — Integrated Safety and Health Assessment System"
+            className="h-auto w-full"
+            loading="eager"
+          />
+        </div>
         <div>
           <h1 className="text-2xl font-extrabold leading-snug">
             Penilaian Keselamatan, Kesehatan
