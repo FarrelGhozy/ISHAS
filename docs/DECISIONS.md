@@ -575,11 +575,19 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `instrumentChecksum`; checksum beda = draft basi: kirim dikunci, autosave
   berhenti, pelapor wajib buang draft dan mulai baru. Default ter-record di
   browser; reload normal tidak menghilangkan draft yang checksum-nya sama.
+  *Amendemen 3 Oktober 2026:* di mode backend, id draft diacak per perangkat
+  (`SELF-<acak>`, dipetakan per pesantren di localStorage) agar dua penilai
+  untuk pesantren yang sama tidak saling menimpa/melihat draft; mode mock tetap
+  deterministik per browser.
 - **D-24.c — Tipe + bobot:** tiap indikator punya `options[]` (`value, label,
   weight 0–100, isFinding`) + `weight` pengali indikator (default 1). Skor
   laporan = persentase rata-rata terbobot (N/A dilewati, bukan nol). Opsi lama
   (`likert-1-5`, `boolean-ya-tidak`, `likert-1-2-tidak`) hanya dibaca untuk
   snapshot lama; indikator baru memakai 4 tipe D-24.
+  *Amendemen 3 Oktober 2026:* rumus rata-rata terbobot = Σ(skor × pengali) /
+  Σ(pengali), sehingga hasil selalu 0–100 berapa pun pengali indikator; N/A dan
+  jawaban tak dikenal dilewati dari pembilang **dan** penyebut. Berlaku sama
+  untuk skor total dan skor per dimensi.
 - **D-24.d — Snapshot beku + PDF:** tiap kirim membekukan copy soal + opsi +
   bobot + jawaban + `scorePercent` + `byDimension` pada snapshot; `Report`
   menyimpan `scorePercent` + `pdfGeneratedAt`. PDF laporan dibuat saat kirim
@@ -1132,6 +1140,22 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
 - Dokumen terdampak: `BACKEND_API_CONTRACT.md` §11, `BACKEND_DATA_MODEL.md` §7,
   `apps/web/mocks/types.ts` + `sam-isafe.ts`, TODO, catatan stage SAM
   (status `REVIEW` tidak berubah sepihak). Tanpa migrasi schema.
+
+## D-26.i — Lanjut draft pengamatan SAM-iSAFE setelah reload — DISETUJUI 3 Oktober 2026
+
+- Arahan pemilik: saat mengisi pengamatan SAM-iSAFE, reload harus tetap di
+  halaman pengisian dengan pilihan utuh; hanya tombol reset (Hapus draft) yang
+  mengulang pengisian. Pelaporan mandiri (`/lapor`) dan penilaian mandiri tidak
+  diubah — keduanya sudah persisten.
+- **Keputusan:** penunjuk draft aktif disimpan per Validator pada perangkat
+  (`localStorage: ishas-sam-draft`). Membuka `/validator/sam-isafe/baru`
+  melanjutkan pengamatan `Berlangsung` yang ditunjuk bila masih milik Validator
+  tersebut (cocok `observerAccountId`); penunjuk dihapus saat pengamatan
+  `Selesai` atau draft dihapus. Menggantikan perilaku lama yang selalu memulai
+  dari langkah "Informasi". Tanpa perubahan schema/backend — draft tetap
+  pengamatan `Berlangsung` (D-26.h.f).
+- Dokumen terdampak: ROUTES (SAM), WIREFRAMES (SAM), TODO. Scope stage SAM
+  (status `REVIEW` tidak berubah sepihak).
 
 ## D-35 — Dashboard publik kosong pada mode backend — DISETUJUI 29 September 2026
 

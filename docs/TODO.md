@@ -1,5 +1,100 @@
 # TODO — Kontrol Kerja Aktif
 
+## Lanjut draft pengamatan SAM-iSAFE setelah reload (D-26.i) — 3 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: pengisian SAM-iSAFE harus tetap di halaman pengisian
+saat reload dengan pilihan utuh, kecuali ditekan tombol reset (Hapus draft).
+Pelaporan mandiri (`/lapor`) dan penilaian mandiri tidak diubah (sudah persisten).
+
+- [x] Penunjuk draft per Validator (`features/validator/lib/sam-draft.ts`,
+      localStorage `ishas-sam-draft`).
+- [x] `/validator/sam-isafe/baru` melanjutkan pengamatan `Berlangsung` milik
+      Validator yang ditunjuk; penunjuk dihapus saat `Selesai`/Hapus draft.
+- [x] Test helper penunjuk draft; web lint/typecheck/327 test hijau.
+- [x] Browser: mulai → jawab → reload tetap di step penilaian dengan 2 jawaban
+      utuh; Hapus draft → penunjuk kosong → kembali step 1.
+- [ ] Review pemilik.
+
+## Evaluasi + perbaikan logika penilaian mandiri & pencetakan PDF — 3 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: evaluasi kematangan logika penilaian mandiri dan cetak
+PDF, lalu perbaiki yang kurang. Keputusan rumus (D-24.c amendemen): rata-rata
+terbobot Σ(skor×pengali)/Σ(pengali).
+
+- [x] Rumus skor: `skorLaporanBeku` tak lagi `mean(skor×pengali)` yang bisa >100 →
+      Σ(skor×pengali)/Σ(pengali) (total + per dimensi) + test pengali.
+- [x] Aturan kelengkapan disatukan ke `mocks/self-assessment-completeness.ts`
+      (dipakai form, hint, store mock, backend) + test; menghapus 4 salinan.
+- [x] Identitas draft per penilai: id acak per perangkat di mode backend
+      (`features/publik/lib/self-draft-id.ts`) agar dua penilai satu pesantren
+      tidak saling menimpa; mock tetap deterministik + test.
+- [x] Cetak: shell publik (`aside`/`header`/skip-link) `print:hidden`, main
+      `print:p-0`, dan `@page { size:A4; margin:14mm }` + warna ikut tercetak.
+- [x] PDF: `usePublicReportPdf` mengembalikan status loading/ready/missing/error;
+      halaman menampilkan pesan yang tepat (bukan "tidak tersedia" saat memuat) +
+      test render halaman.
+- [x] Cetak PDF: urutkan dimensi sesuai urutan instrumen (`frozenIndicators`),
+      bukan urutan key JSON MySQL yang tak terjaga.
+- [x] Isolasi storage test API: `tests/preload.ts` + `bunfig.toml` mengarahkan
+      `STORAGE_DIR` ke direktori sementara. Sebelumnya `sweep` uji menghapus blob
+      demo di `apps/api/storage` (temuan saat verifikasi).
+- [x] Amendemen D-24.b/D-24.c dicatat.
+- [x] Verifikasi: web lint/typecheck/325 test; API lint/typecheck/126 test (DB uji,
+      storage terisolasi); browser: id draft acak per perangkat, shell tersembunyi
+      saat media cetak, status PDF (valid/missing), urutan dimensi benar.
+- [ ] Review pemilik.
+
+## Simulasi input data lewat frontend (E2E UI → backend) — 3 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: simulasikan pengisian data dari frontend dan pastikan
+tersimpan ke backend. Dilakukan lewat UI (Playwright), bukan API langsung; setiap
+langkah diverifikasi di MySQL + `/public/state`.
+
+- [x] Lapor cepat `/lapor` (anonim): isi form → `POST /reports/lapor-cepat` **201**,
+      `RPT-0020` tersimpan (`Menunggu validasi`, `severity/priority` final
+      `Belum ditentukan`, usulan & kategori/aspek benar); belum tampil publik.
+- [x] Validasi Pesantren `/pesantren/validasi-laporan`: `TERIMA` → `POST
+      /pesantren/reports/RPT-0020/accept` **200** → finding + rekomendasi terbentuk,
+      `severity/priority` = Tinggi, tampil di beranda publik & `/tindak-lanjut`.
+- [x] Jalur `TOLAK` pada `RPT-0001`: alasan <10 karakter ditolak (inline + server
+      **400**), alasan valid → **200**; `Ditolak` + alasan tersimpan, tidak tampil publik.
+- [x] Penilaian mandiri `/penilaian-mandiri` (anonim): autosave draft
+      (`POST /self-assessments/drafts` **200**, `SELF-PSN-0018`), pulih setelah reload;
+      isi 59 indikator + area + 11 bukti → tombol kirim aktif.
+- [x] Kirim penilaian → `RPT-0021` (`penilaian-mandiri`, `Terbit`, skor **75.59**,
+      snapshot 59 jawaban/59 frozen, 11 aset bukti, `INS-LIVE`, PDF), tampil di
+      `/public/state`.
+- [x] **Perbaikan temuan preview bukti `401`:** pratinjau bukti dibaca dari blob
+      lokal perangkat (`shared/components/evidence-preview-cache.ts`) alih-alih
+      meminta ulang ke server, sesuai D-27 (foto hanya di perangkat pengunggah).
+      Otorisasi server tidak diubah (anonim tetap `401` untuk aset belum terbit).
+      Berlaku untuk `/lapor` dan `/penilaian-mandiri`; pratinjau hilang setelah
+      reload (batasan prototipe D-27). +2 test regresi; web lint/typecheck/316 test hijau.
+- [ ] Data demo saat ini sudah berubah (RPT-0001 Ditolak, RPT-0020 Diterima,
+      RPT-0021 Terbit); `bun run seed:demo` untuk mengembalikan kondisi awal.
+
+## Verifikasi visual browser lintas viewport + perbaikan overflow SAM-iSAFE (D-38) — 3 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: nyalakan seluruh stack (MySQL Docker + backend Bun + web
+dev) lalu pastikan tampilan di browser. Lingkungan kini punya Playwright,
+sehingga checklist "Cek visual … Chromium tidak tersedia" pada stage-stage lama
+dapat dijalankan.
+
+- [x] Stack: MySQL (Docker `db`), API `:3104` (dev, kartu demo aktif), web `:3003`; seed `demo`.
+- [x] Publik 9 route × 3 viewport (1440/768/390): 200, tanpa overflow-X, tanpa
+      temuan `Menunggu validasi`/`Ditolak` di halaman publik.
+- [x] Workspace 3 peran × 3 viewport: Super Admin 7 route, Validator 10 route,
+      Pesantren 7 route — semua render; tanpa error konsol di luar 401 `/auth/me`
+      anonim dan 404 draft kosong.
+- [x] Alur klik: login kartu 3 peran, detail validasi `RPT-0001` (TERIMA/TOLAK,
+      severity/priority awal tanpa default).
+- [x] Temuan + perbaikan: `/validator/sam-isafe` overflow horizontal di ponsel
+      (grafik tren `min-w-[28rem]` berada di item grid tanpa `min-w-0`). Fix
+      `min-w-0` pada dua item grid + test regresi render; verifikasi ulang
+      `scrollWidth` = lebar viewport.
+- [x] Verifikasi: web lint + typecheck + 314 test hijau.
+- [ ] Pemeriksaan keyboard/a11y terarah + review pemilik.
+
 ## Hosting Cloudflare Tunnel + CORS opsional (D-46) — 30 September 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik: host via Cloudflare Tunnel, perbaikan bila perlu,
