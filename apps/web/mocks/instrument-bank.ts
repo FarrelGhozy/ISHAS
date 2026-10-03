@@ -106,32 +106,38 @@ export function isJawabanTemuan(
   return v === "Tidak";
 }
 
-// Skor % laporan dari indikator beku + jawaban (rata-rata terbobot).
+// Skor % laporan dari indikator beku + jawaban.
+// D-24.c: persentase rata-rata terbobot — Σ(skor × pengali) / Σ(pengali), sehingga
+// pengali indikator menggeser porsi tanpa membuat skor melebihi 100. N/A dan
+// jawaban tak dikenal dilewati (bukan nol).
 export function skorLaporanBeku(
   frozen: FrozenIndicator[],
   answers: Record<string, Partial<IndicatorAnswer>>,
 ): { scorePercent: number | null; byDimension: Record<string, number | null> } {
   const byDimension: Record<string, number | null> = {};
-  const grouped = new Map<string, { name: string; scores: number[] }>();
-  const all: number[] = [];
+  const grouped = new Map<string, { name: string; weighted: number; weight: number }>();
+  let weightedTotal = 0;
+  let weightTotal = 0;
   for (const ind of frozen) {
     const answer = answers[ind.id];
     if (!answer?.value) continue;
     const base = bobotJawaban(ind, answer.value);
     if (base === null) continue;
-    const score = base * (ind.weight || 1);
-    all.push(score);
-    const entry = grouped.get(ind.dimensionId) ?? { name: ind.dimensionName, scores: [] };
-    entry.scores.push(score);
+    const weight = ind.weight || 1;
+    weightedTotal += base * weight;
+    weightTotal += weight;
+    const entry = grouped.get(ind.dimensionId) ?? {
+      name: ind.dimensionName,
+      weighted: 0,
+      weight: 0,
+    };
+    entry.weighted += base * weight;
+    entry.weight += weight;
     grouped.set(ind.dimensionId, entry);
   }
   for (const [id, entry] of grouped)
-    byDimension[id] = entry.scores.length ? mean(entry.scores) : null;
-  return { scorePercent: all.length ? mean(all) : null, byDimension };
-}
-
-function mean(values: number[]): number {
-  return values.reduce((a, b) => a + b, 0) / values.length;
+    byDimension[id] = entry.weight ? entry.weighted / entry.weight : null;
+  return { scorePercent: weightTotal ? weightedTotal / weightTotal : null, byDimension };
 }
 
 // Nilai opsi yang sah untuk validasi + render form (termasuk N/A bila ada).

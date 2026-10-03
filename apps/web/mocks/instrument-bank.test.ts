@@ -10,6 +10,7 @@ import {
   skorLaporanBeku,
 } from "./instrument-bank";
 import { SEED } from "./seed/seed";
+import type { FrozenIndicator } from "./types";
 
 describe("opsi bawaan per tipe", () => {
   test("empat tipe baru punya bobot 0–100 + flag temuan", () => {
@@ -76,6 +77,32 @@ describe("skor beku + temuan", () => {
     answers[frozen[0].id] = { value: "N/A" };
     const { scorePercent: after } = skorLaporanBeku(frozen, answers);
     expect(after).toBe(100);
+  });
+
+  test("pengali indikator menggeser porsi tanpa melebihi 100 (D-24.c)", () => {
+    const opt = (weight: number) => ({ value: "x", label: "x", weight, isFinding: false });
+    const mk = (id: string, weight: number, baseWeight: number): FrozenIndicator => ({
+      id,
+      code: id,
+      title: id,
+      prompt: "",
+      dimensionId: "DIM-1",
+      dimensionName: "Dimensi 1",
+      categoryId: "KAT-KESEHATAN",
+      aspectId: "ASP-1",
+      answerType: "kualitas-1-5",
+      weight,
+      options: [opt(baseWeight)],
+    });
+    const answers = { I1: { value: "x" }, I2: { value: "x" } };
+    const { scorePercent, byDimension } = skorLaporanBeku(
+      [mk("I1", 2, 100), mk("I2", 1, 0)],
+      answers,
+    );
+    expect(scorePercent).toBeCloseTo(200 / 3, 5);
+    expect(byDimension["DIM-1"]).toBeCloseTo(200 / 3, 5);
+    const all100 = skorLaporanBeku([mk("I1", 2, 100), mk("I2", 5, 100)], answers);
+    expect(all100.scorePercent).toBe(100);
   });
 
   test("flag temuan mengikuti opsi bank", () => {
