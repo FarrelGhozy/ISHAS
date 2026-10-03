@@ -8,6 +8,10 @@ import { Upload } from "lucide-react";
 import { repository } from "~/shared/api/repository";
 import type { ReportActor } from "~/mocks/store/mock-store";
 import { EvidencePreview } from "~/shared/components/evidence-preview";
+import {
+  forgetEvidencePreview,
+  rememberEvidencePreview,
+} from "~/shared/components/evidence-preview-cache";
 
 export function SelfAssessmentEvidencePicker({
   institutionCode,
@@ -63,8 +67,10 @@ export function SelfAssessmentEvidencePicker({
           try {
             const result = await repository.uploadSelfEvidence(actor, institutionCode, file);
             if (!alive.current) return;
-            if (result.ok && result.id) onChange(result.id, file.name.trim());
-            else if (!result.ok) setError(result.error);
+            if (result.ok && result.id) {
+              rememberEvidencePreview(result.id, file);
+              onChange(result.id, file.name.trim());
+            } else if (!result.ok) setError(result.error);
           } finally {
             lock.current = false;
             if (alive.current) {
@@ -101,6 +107,7 @@ export function SelfAssessmentEvidencePicker({
           disabled={disabled || busy}
           onClick={() => {
             setError("");
+            forgetEvidencePreview(assetId);
             onChange();
           }}
         >

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { repository } from "~/shared/api/repository";
+import { getEvidencePreview } from "~/shared/components/evidence-preview-cache";
 
 export function EvidencePreview({
   assetId,
@@ -22,6 +23,11 @@ export function EvidencePreview({
   useEffect(() => {
     if (!assetId) {
       setImage({ id: "" });
+      return;
+    }
+    const local = getEvidencePreview(assetId);
+    if (local) {
+      setImage({ id: assetId, url: local, loaded: true });
       return;
     }
     let disposed = false,
@@ -50,7 +56,12 @@ export function EvidencePreview({
       if (url) URL.revokeObjectURL(url);
     };
   }, [assetId, institutionCode, attempt]);
-  const current = image.id === assetId ? image : undefined;
+  const localPreview = getEvidencePreview(assetId);
+  const current = localPreview
+    ? { id: assetId ?? "", url: localPreview, loaded: true }
+    : image.id === assetId
+      ? image
+      : undefined;
   const ready = !assetId || Boolean(current?.loaded && !current.error);
   useEffect(() => {
     onAvailability?.(ready);
