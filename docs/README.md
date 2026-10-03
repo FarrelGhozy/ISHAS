@@ -1,5 +1,7 @@
 # ISHAS — Dokumentasi Utama (Frontend-Only)
 
+> **ISHAS** = *Integrated Safety and Health Assessment System For Boarding School*.
+
 ## Status kerja terkini — penyempurnaan 18 September 2026
 
 Frontend tersedia di `apps/web/`. Revisi utama untuk REVIEW:

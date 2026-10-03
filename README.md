@@ -1,6 +1,6 @@
 # ISHAS
 
-Integrated Safety and Health Assessment System adalah prototipe sistem penilaian K3L untuk pesantren. Tahap saat ini berfokus pada validasi tampilan dan fitur menggunakan data dummy. Backend mulai dibangun (Fase 0: skema MySQL, seed, health check); formula ilmiah final belum ditetapkan.
+ISHAS (*Integrated Safety and Health Assessment System For Boarding School*) adalah prototipe sistem penilaian K3L untuk pesantren. Tahap saat ini berfokus pada validasi tampilan dan fitur menggunakan data dummy. Backend mulai dibangun (Fase 0: skema MySQL, seed, health check); formula ilmiah final belum ditetapkan.
 
 ## Struktur repository
 

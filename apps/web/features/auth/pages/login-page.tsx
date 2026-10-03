@@ -156,7 +156,7 @@ function BrandPanel() {
         <div className="w-[min(160px,50%)] rounded-lg bg-white p-2 shadow-2xl shadow-black/20 sm:w-[180px] sm:p-3">
           <img
             src="/brand/ishas-full-logo.png"
-            alt="ISHAS — Integrated Safety and Health Assessment System"
+            alt="ISHAS — Integrated Safety and Health Assessment System For Boarding School"
             className="h-auto w-full"
             loading="eager"
           />
