@@ -1,7 +1,7 @@
 // SAM-iSAFE pengamatan baru: info dulu, lalu kuesioner (D-26, D-26.e).
 // Validator memilih pesantren terdaftar mana pun (general, tidak terikat scope).
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { ArrowLeft, Check, ClipboardCheck, Save, ShieldCheck } from "lucide-react";
 import { selectRegisteredInstitutions } from "~/mocks/store/selectors";
@@ -10,6 +10,7 @@ import { repository } from "~/shared/api/repository";
 import { refreshValidatorState, useValidatorState } from "~/shared/api/validator-state";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { SamQuestionList } from "../components/sam-question-list";
+import { bacaSamDraftId, ingatSamDraft, lupakanSamDraft } from "../lib/sam-draft";
 
 export function Page() {
   const state = useValidatorState();
@@ -37,6 +38,22 @@ export function Page() {
     ? aktif.filter((item) => assessment.answers[item.id]).length
     : 0;
 
+  // Lanjutkan draft Berlangsung milik Validator ini setelah reload. Penunjuk
+  // hanya dihapus saat selesai/hapus draft; di sini cukup coba resume agar state
+  // yang belum termuat tidak menghapus penunjuk.
+  useEffect(() => {
+    if (idBaru || !user?.id) return;
+    const pointer = bacaSamDraftId(user.id);
+    if (!pointer) return;
+    const draft = state.samAssessments.find(
+      (item) =>
+        item.id === pointer &&
+        item.status === "Berlangsung" &&
+        item.observerAccountId === user.id,
+    );
+    if (draft) setIdBaru(draft.id);
+  }, [idBaru, user?.id, state.samAssessments]);
+
   const mulai = async () => {
     const hasil = await repository.createSamAssessment(
       { id: user?.id, name: user?.name ?? "Validator" },
@@ -56,6 +73,7 @@ export function Page() {
       return;
     }
     setPesan("");
+    ingatSamDraft(user?.id, hasil.id);
     refreshValidatorState();
     setIdBaru(hasil.id);
   };
@@ -70,6 +88,7 @@ export function Page() {
       setPesan(hasil.error);
       return;
     }
+    lupakanSamDraft(user?.id);
     refreshValidatorState();
     navigate(`/validator/sam-isafe/${assessment.id}`);
   };
@@ -85,6 +104,7 @@ export function Page() {
       setPesan(hasil.error);
       return;
     }
+    lupakanSamDraft(user?.id);
     refreshValidatorState();
     navigate("/validator/sam-isafe");
   };
