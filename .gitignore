@@ -27,3 +27,9 @@ tmp/
 
 # Storage blob backend lokal (Fase 1+)
 apps/api/storage/
+
+# Nota/penawaran internal (tidak untuk dipublikasikan)
+docs/NOTA_*
+
+# Artefak sesi Playwright MCP (screenshot/snapshot/log)
+.playwright-mcp/
