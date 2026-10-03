@@ -173,7 +173,7 @@ export function SamDashboard(props: Props) {
       ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="surface p-5 sm:p-6">
+        <section className="surface min-w-0 p-5 sm:p-6">
           <div className="flex flex-wrap items-start gap-2">
             <div className="mr-auto">
               <h2 className="font-bold text-heading">Perkembangan skor</h2>
@@ -185,7 +185,7 @@ export function SamDashboard(props: Props) {
             {tren.length > 0 ? <SamTrendChart items={tren} /> : <EmptyChart />}
           </div>
         </section>
-        <section className="surface p-5 sm:p-6">
+        <section className="surface min-w-0 p-5 sm:p-6">
           <div className="flex flex-wrap items-start gap-2">
             <div className="mr-auto">
               <h2 className="font-bold text-heading">Rata-rata per kategori</h2>

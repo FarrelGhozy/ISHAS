@@ -103,6 +103,9 @@ test("Dashboard SAM-iSAFE menampilkan ringkasan profesional", () => {
   expect(html).toContain("Pantau kesiapan keselamatan secara terukur");
   expect(html).toContain("Perkembangan skor");
   expect(html).toContain("Rata-rata per kategori");
+  // Regresi overflow ponsel: grafik tren ber-min-width 28rem harus di dalam
+  // item grid ber-min-w-0 agar `overflow-x-auto` menggeser chart, bukan halaman.
+  expect(html).toContain("surface min-w-0 p-5 sm:p-6");
 });
 
 test("Bank SAM-iSAFE menampilkan editor kategori dan pencarian", () => {
