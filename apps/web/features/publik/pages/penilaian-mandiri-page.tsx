@@ -27,9 +27,11 @@ import {
   bacaPesantrenTerakhir,
   draftPenilaianSama,
   ingatPesantren,
+  jawabanLengkap,
   kurangApa,
 } from "../lib/penilaian-draft";
 import { paramPesantrenTidakSah, pilihInstitusiAwal } from "../lib/param-pesantren";
+import { deviceDraftId } from "../lib/self-draft-id";
 
 type Indicator = InstrumentIndicator;
 
@@ -37,15 +39,7 @@ const fieldClass =
   "mt-1.5 min-h-11 w-full rounded-lg border border-line-soft bg-white px-3 text-sm text-heading";
 
 function answerIsComplete(indicator: Indicator, answer?: Partial<IndicatorAnswer>) {
-  const hasLocation = Boolean(answer?.areaId) || (answer?.manualLocation?.trim().length ?? 0) >= 3;
-  const nilaiSah = indicator.options.map((o) => o.value);
-  return Boolean(
-    answer?.value &&
-    (indicator.required === false || nilaiSah.includes(answer.value)) &&
-    (!indicator.evidenceRequired || answer.evidenceName?.trim()) &&
-    (!indicator.locationRequired || hasLocation) &&
-    (answer.value !== "N/A" || (answer.note?.trim().length ?? 0) >= 10),
-  );
+  return jawabanLengkap(indicator, answer);
 }
 
 export function PenilaianMandiriPage() {
@@ -94,7 +88,12 @@ export function PenilaianMandiriPage() {
   const mapError = Object.values(answers)
     .map((entry) => validateMapLocation(state, institutionCode, entry.locationSnapshot))
     .find(Boolean);
-  const draftId = `SELF-${institutionCode || "baru"}`;
+  // Mode backend: id unik per perangkat agar dua penilai satu pesantren tidak
+  // saling menimpa draft. Mode mock tetap deterministik (draft per browser).
+  const draftId = useMemo(
+    () => (USE_BACKEND ? deviceDraftId(institutionCode) : `SELF-${institutionCode || "baru"}`),
+    [institutionCode],
+  );
   // D-31: mode backend memuat draft dari server (bukan `/public/state` yang
   // sengaja dikosongkan). `draftLoading` menahan autosave agar draft server
   // tidak tertimpa payload kosong sebelum selesai dimuat.

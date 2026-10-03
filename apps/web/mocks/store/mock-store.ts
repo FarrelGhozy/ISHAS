@@ -33,6 +33,7 @@ import { selectRegisteredInstitutions } from "./selectors";
 import { K3_ASPECT_MAP, K3_CATEGORY_MAP } from "../kategori-k3";
 import type { IshasState } from "../types";
 import { snapshotLocation, validateMapLocation } from "../processors/campus-map";
+import { kurangJawaban } from "../self-assessment-completeness";
 import {
   BANK_ID,
   defaultOptionsForType,
@@ -1199,16 +1200,7 @@ export const storeActions = {
       const indicators = instrument.dimensions.flatMap((dimension) => dimension.indicators);
       for (const indicator of indicators) {
         const answer = d.answers[indicator.id];
-        const manualLocation = answer?.manualLocation?.trim() ?? "";
-        const hasLocation = Boolean(answer?.areaId) || manualLocation.length >= 3;
-        const nilaiSah = indicator.options.map((o) => o.value);
-        if (
-          !answer?.value ||
-          (indicator.required !== false && !nilaiSah.includes(answer.value)) ||
-          (indicator.evidenceRequired && !answer.evidenceName?.trim()) ||
-          (indicator.locationRequired && !hasLocation) ||
-          (answer.value === "N/A" && (answer.note?.trim().length ?? 0) < 10)
-        ) {
+        if (kurangJawaban(indicator, answer).length) {
           result = {
             ok: false,
             error: "Lengkapi seluruh jawaban, bukti, catatan N/A, dan lokasi yang wajib.",

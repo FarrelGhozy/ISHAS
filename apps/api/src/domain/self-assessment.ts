@@ -3,6 +3,7 @@
 import { selectRegisteredInstitutions } from "../../../web/mocks/store/selectors";
 import { snapshotLocation, validateMapLocation } from "../../../web/mocks/processors/campus-map";
 import { BANK_ID, skorLaporanBeku } from "../../../web/mocks/instrument-bank";
+import { kurangJawaban } from "../../../web/mocks/self-assessment-completeness";
 import type {
   FrozenIndicator,
   IndicatorAnswer,
@@ -131,16 +132,7 @@ export async function submitSelfAssessment(
   const indicators = instrument.dimensions.flatMap((dimension) => dimension.indicators);
   for (const indicator of indicators) {
     const answer = merged.answers[indicator.id];
-    const manualLocation = answer?.manualLocation?.trim() ?? "";
-    const hasLocation = Boolean(answer?.areaId) || manualLocation.length >= 3;
-    const nilaiSah = indicator.options.map((o) => o.value);
-    if (
-      !answer?.value ||
-      (indicator.required !== false && !nilaiSah.includes(answer.value)) ||
-      (indicator.evidenceRequired && !answer.evidenceName?.trim()) ||
-      (indicator.locationRequired && !hasLocation) ||
-      (answer.value === "N/A" && (answer.note?.trim().length ?? 0) < 10)
-    ) {
+    if (kurangJawaban(indicator, answer).length) {
       return {
         ok: false,
         error: "Lengkapi seluruh jawaban, bukti, catatan N/A, dan lokasi yang wajib.",

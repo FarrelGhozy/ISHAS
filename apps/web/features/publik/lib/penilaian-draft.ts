@@ -74,25 +74,6 @@ function jawabanSama(
   return true;
 }
 
-// Daftar field yang kurang agar satu jawaban dinilai lengkap (untuk hint UI).
-export function kurangApa(
-  indicator: {
-    options: { value: string }[];
-    required?: boolean;
-    evidenceRequired?: boolean;
-    locationRequired?: boolean;
-  },
-  answer?: Partial<IndicatorAnswer>,
-): string[] {
-  const kurang: string[] = [];
-  const nilaiSah = indicator.options.map((o) => o.value);
-  if (!answer?.value || (indicator.required !== false && !nilaiSah.includes(answer.value)))
-    kurang.push("jawaban");
-  if (indicator.evidenceRequired && !answer?.evidenceName?.trim()) kurang.push("bukti");
-  const adaLokasi =
-    Boolean(answer?.areaId) || (answer?.manualLocation?.trim().length ?? 0) >= 3;
-  if (indicator.locationRequired && !adaLokasi) kurang.push("area/lokasi");
-  if (answer?.value === "N/A" && (answer?.note?.trim().length ?? 0) < 10)
-    kurang.push("catatan N/A (min 10 karakter)");
-  return kurang;
-}
+// Aturan kelengkapan tinggal satu di `~/mocks/self-assessment-completeness`
+// (dipakai form, hint, store mock, dan backend).
+export { jawabanLengkap, kurangJawaban as kurangApa } from "~/mocks/self-assessment-completeness";
