@@ -12,6 +12,29 @@ import type { SelfAssessmentSnapshot } from "~/mocks/types";
 import { EmptyState } from "~/shared/components/empty-state";
 import { StatusChip } from "~/shared/components/status-chip";
 
+// Urutkan dimensi sesuai urutan instrumen (frozenIndicators), bukan urutan key
+// objek JSON yang bisa berubah saat snapshot dibaca dari MySQL.
+function urutanDimensi(
+  snapshot: SelfAssessmentSnapshot,
+): [string, number | null][] {
+  const byDim = snapshot.byDimension ?? {};
+  const urut: string[] = [];
+  const seen = new Set<string>();
+  for (const item of snapshot.frozenIndicators ?? []) {
+    if (!seen.has(item.dimensionId)) {
+      seen.add(item.dimensionId);
+      urut.push(item.dimensionId);
+    }
+  }
+  for (const id of Object.keys(byDim)) {
+    if (!seen.has(id)) {
+      seen.add(id);
+      urut.push(id);
+    }
+  }
+  return urut.map((id) => [id, byDim[id] ?? null]);
+}
+
 // D-27: foto bukti per jawaban tampil publik di PDF.
 // Blob hanya ada di perangkat pengunggah; perangkat lain menampilkan
 // nama file + catatan.
@@ -119,9 +142,13 @@ function BuktiFoto({
 
 export function LaporanPdfPage() {
   const { id } = useParams();
-  const data = usePublicReportPdf(id);
+  const result = usePublicReportPdf(id);
 
-  if (!data)
+  if (result.status === "loading")
+    return <EmptyState title="Memuat laporan…" description="Menyiapkan data laporan." />;
+  if (result.status === "error")
+    return <EmptyState title="Gagal memuat laporan" description={result.message} />;
+  if (result.status === "missing")
     return (
       <EmptyState
         title="Laporan tidak tersedia"
@@ -129,7 +156,7 @@ export function LaporanPdfPage() {
       />
     );
 
-  const { report, snapshot, institution } = data;
+  const { report, snapshot, institution } = result.data;
   const checksumPendek = snapshot?.instrumentChecksum
     ? snapshot.instrumentChecksum.slice(0, 8)
     : "";
@@ -158,7 +185,7 @@ export function LaporanPdfPage() {
           {new Date(tanggalKirim).toLocaleDateString("id-ID")}
         </p>
         <p className="mt-1 text-xs text-secondary-text">
-          {data.instrumentLabel}
+          {result.data.instrumentLabel}
           {checksumPendek ? ` · checksum ${checksumPendek}` : ""}
           {report.pdfGeneratedAt
             ? ` · PDF dibuat ${new Date(report.pdfGeneratedAt).toLocaleDateString("id-ID")}`
@@ -189,7 +216,7 @@ export function LaporanPdfPage() {
           <div className="mt-5">
             <h2 className="font-extrabold text-heading">Skor per dimensi</h2>
             <ul className="mt-2 space-y-2">
-              {Object.entries(snapshot.byDimension).map(([dimId, value]) => {
+              {urutanDimensi(snapshot).map(([dimId, value]) => {
                 const name =
                   snapshot.frozenIndicators?.find((f) => f.dimensionId === dimId)
                     ?.dimensionName ?? dimId;

@@ -255,3 +255,17 @@ svg {
     scroll-behavior: auto !important;
   }
 }
+
+/* Cetak laporan (D-24.d/D-28): margin halaman + warna latar/bilah ikut tercetak
+   agar kartu skor dan bar dimensi tidak hilang saat "Save as PDF". */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+@media print {
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

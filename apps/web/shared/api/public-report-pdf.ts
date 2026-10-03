@@ -46,24 +46,37 @@ function deriveFromState(
   };
 }
 
-export function usePublicReportPdf(reportId: string | undefined): PublicReportPdfData | null {
+// Status terpisah agar halaman tidak menampilkan "tidak tersedia" saat masih
+// memuat atau saat gagal koneksi.
+export type PublicReportPdfState =
+  | { status: "loading" }
+  | { status: "ready"; data: PublicReportPdfData }
+  | { status: "missing" }
+  | { status: "error"; message: string };
+
+export function usePublicReportPdf(reportId: string | undefined): PublicReportPdfState {
   const state = usePublicState();
-  const [remote, setRemote] = useState<PublicReportPdfData | null>(null);
+  const [remote, setRemote] = useState<PublicReportPdfState>({ status: "loading" });
   useEffect(() => {
-    if (!USE_BACKEND || !reportId) {
-      setRemote(null);
-      return;
-    }
+    if (!USE_BACKEND || !reportId) return;
     let alive = true;
+    setRemote({ status: "loading" });
     apiRequest<PublicReportPdfData>(
       `/public/reports/${encodeURIComponent(reportId)}/pdf-data`,
     ).then((result) => {
-      if (alive && result.ok) setRemote(result.data);
+      if (!alive) return;
+      if (result.ok) setRemote({ status: "ready", data: result.data });
+      else if (result.status === 404) setRemote({ status: "missing" });
+      else setRemote({ status: "error", message: result.error });
     });
     return () => {
       alive = false;
     };
   }, [reportId]);
-  if (USE_BACKEND) return remote;
-  return reportId ? deriveFromState(state, reportId) : null;
+  if (!reportId) return { status: "missing" };
+  if (!USE_BACKEND) {
+    const data = deriveFromState(state, reportId);
+    return data ? { status: "ready", data } : { status: "missing" };
+  }
+  return remote;
 }

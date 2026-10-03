@@ -39,10 +39,10 @@ export default function PublicLayout() {
 
   return (
     <div className="flex min-h-dvh min-w-0">
-      <a className="skip-link primary-button" href="#main-content">
+      <a className="skip-link primary-button print:hidden" href="#main-content">
         Lewati ke konten
       </a>
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block print:hidden">
         <div className="border-b border-line px-4 py-4">
           <Link to="/" aria-label="ISHAS — beranda" className="inline-flex">
             <IshasMark variant="compact" wordmark />
@@ -67,7 +67,7 @@ export default function PublicLayout() {
         <PublicNavigation onNavigate={() => setMobileOpen(false)} />
       </Modal>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex min-h-[68px] flex-wrap items-center gap-2 border-b border-line bg-white px-3 py-2 sm:px-4">
+        <header className="flex min-h-[68px] flex-wrap items-center gap-2 border-b border-line bg-white px-3 py-2 sm:px-4 print:hidden">
           <button
             type="button"
             className="secondary-button px-3 lg:hidden"
@@ -113,7 +113,7 @@ export default function PublicLayout() {
         <main
           id="main-content"
           tabIndex={-1}
-          className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-6"
+          className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-6 print:p-0"
         >
           <BackendNotice error={error} onRetry={refreshPublicState} />
           <Outlet />
