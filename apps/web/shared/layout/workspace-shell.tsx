@@ -1,6 +1,6 @@
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { useEffect, useRef, useState } from "react";
-import { Bell, BriefcaseBusiness, ChevronDown, LogOut, Menu, X } from "lucide-react";
+import { Bell, BriefcaseBusiness, ChevronDown, KeyRound, LogOut, Menu, X } from "lucide-react";
 import { useCurrentUser } from "~/shared/auth/use-current-user";
 import { useSession } from "~/shared/auth/session";
 import {
@@ -11,6 +11,7 @@ import {
 import { resolveWorkspaceAccess, workspaceHome, workspaceRoleFor } from "~/shared/auth/access-policy";
 import { IshasMark } from "~/shared/components/ishas-mark";
 import { Modal } from "~/shared/components/modal";
+import { ChangePasswordDialog } from "~/features/auth/components/change-password-dialog";
 import { ROLE_NAVIGATION } from "~/shared/navigation/workspace-config";
 import { repository, USE_BACKEND } from "~/shared/api/repository";
 import { useWorkspaceState, useWorkspaceStatus } from "~/shared/api/workspace-state";
@@ -26,6 +27,7 @@ export default function WorkspaceLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [sandiOpen, setSandiOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Tab baru: cookie ada tapi cache sesi kosong → pulihkan sebelum guard menilai.
   const [restoring, setRestoring] = useState(
@@ -46,6 +48,7 @@ export default function WorkspaceLayout() {
     setMobileOpen(false);
     setNotifOpen(false);
     setProfileOpen(false);
+    setSandiOpen(false);
   }, [location.pathname]);
   useEffect(() => {
     const close = (event: PointerEvent) => {
@@ -215,6 +218,20 @@ export default function WorkspaceLayout() {
                     <BriefcaseBusiness size={14} className="text-primary" aria-hidden />
                     Akses aktif: {user.role}
                   </div>
+                  {USE_BACKEND ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="flex min-h-14 w-full items-center gap-2 border-b border-line px-4 text-left text-xs font-bold text-heading hover:bg-strip"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        setSandiOpen(true);
+                      }}
+                    >
+                      <KeyRound size={15} className="text-primary" aria-hidden />
+                      Ganti kata sandi
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     role="menuitem"
@@ -297,6 +314,11 @@ export default function WorkspaceLayout() {
           </ul>
         )}
       </Modal>
+      <ChangePasswordDialog
+        open={sandiOpen}
+        onClose={() => setSandiOpen(false)}
+        onSubmit={(sandiLama, sandiBaru) => repository.changePassword(sandiLama, sandiBaru)}
+      />
     </div>
   );
 }
