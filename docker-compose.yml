@@ -15,6 +15,9 @@
 #   docker compose --profile prod up --build   # frontend hasil build statis + backend rilis
 # Verifikasi interpolasi: `docker compose config`
 
+# Nama project Compose (nama container mengikuti ini, bukan nama folder repo).
+name: ishas
+
 # Konfigurasi bersama service backend (dipakai `api` dan `api-prod`).
 x-api-build: &api-build
   # Context ROOT repo: seed backend mengimpor `apps/web/mocks/` (lihat Dockerfile).
