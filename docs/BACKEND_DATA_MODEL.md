@@ -672,7 +672,7 @@ bun scripts/seed.ts --mode=empty  # production: struktur kosong tapi valid
 ```
 
 - Mode `demo`: port 1:1 dari `apps/web/mocks/seed/seed.ts`. Komposisi terverifikasi
-  (dikunci `seed-composition.test.ts`): **5 pesantren** (2 terdaftar: PSN-0018,
+  (dikunci `seed-composition.test.ts`): **6 pesantren** (2 terdaftar: PSN-0018,
   PSN-0019), **6 user**, **19 laporan** (14 lapor-cepat + 5 penilaian-mandiri:
   2 Menunggu, 5 Terbit, 2 Ditolak, 10 Diterima), **9 temuan + 9 rekomendasi**
   (penilaian-mandiri tidak menyumbang temuan, D-32), **5

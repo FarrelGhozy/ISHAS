@@ -1,0 +1,262 @@
+% Panduan Operasional ISHAS — sumber LaTeX.
+% Kompilasi: latexmk -pdf panduan-operasional.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{underscore}
+\usepackage[english,indonesian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.4cm,footskip=1cm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{ishas}{HTML}{9F1239}
+\definecolor{ishaslight}{HTML}{FCE7F3}
+\definecolor{codebg}{HTML}{F6F7F9}
+\definecolor{codeframe}{HTML}{D1D5DB}
+
+\titleformat{\section}{\color{ishas}\Large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{ishas}\large\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\bfseries}{\thesubsubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{ishas}{Panduan Operasional ISHAS}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  frame=single,
+  rulecolor=\color{codeframe},
+  backgroundcolor=\color{codebg},
+  keepspaces=true,
+  showstringspaces=false,
+  xleftmargin=0.6em,
+  xrightmargin=0.2em,
+  aboveskip=0.6em,
+  belowskip=0.6em
+}
+
+\setlist{topsep=2pt,itemsep=2pt,parsep=0pt}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\color{ishas}Panduan Operasional ISHAS}
+\author{Integrated Safety and Health Assessment System}
+\date{\today}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{3cm}
+  {\color{ishas}\Huge\bfseries Panduan Operasional ISHAS\par}
+  \vspace{0.6cm}
+  {\large Integrated Safety and Health Assessment System\par}
+  \vspace{0.4cm}
+  {\large Pemasangan, data, cadangan, pembaruan, dan serah terima\par}
+  \vspace{2cm}
+  {\large Versi dokumen: \today\par}
+  \vfill
+  \begin{minipage}{0.86\textwidth}
+    \colorbox{ishaslight}{%
+      \parbox{\dimexpr\linewidth-2\fboxsep}{%
+        \textbf{Untuk siapa:} operator/teknisi yang memasang dan merawat aplikasi.
+        Bukan untuk pengguna harian --- lihat \emph{Panduan Pengguna}.
+        \textbf{Status:} prototipe; data contoh, rumus/ambang ilmiah final belum
+        ditetapkan.%
+      }%
+    }
+  \end{minipage}
+  \vspace{1.2cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Prasyarat}
+\begin{itemize}
+  \item Mesin dengan \textbf{Docker + Docker Compose}.
+  \item Salinan repository ISHAS.
+  \item (Opsional, tanpa Docker) \textbf{Bun} dan \textbf{MySQL 8} langsung di mesin.
+  \item File \code{.env} di root (salin dari contoh lalu isi).
+\end{itemize}
+
+\begin{lstlisting}
+cp .env.example .env
+\end{lstlisting}
+
+\noindent Nilai penting di \code{.env}: \code{DB_NAME}, \code{DB_USER},
+\code{DB_PASSWORD}, \code{DB_ROOT_PASSWORD}, \code{WEB_PORT}, \code{API_PORT},
+\code{SEED_DEFAULT_PASSWORD}, \code{VITE_USE_BACKEND}, dan \code{COOKIE_SECURE}
+(isi \code{true} bila sudah di balik HTTPS). Periksa hasil pembacaan:
+\code{docker compose config}.
+
+\section{Menjalankan aplikasi}
+
+\subsection{Mode ngoding (dev) --- satu perintah}
+\begin{lstlisting}
+docker compose --profile dev up --build
+\end{lstlisting}
+Menyalakan \textbf{database + backend + frontend} sekaligus. Buka
+\code{http://localhost:3003} (login memakai kartu akun contoh).
+
+\subsection{Mode rilis (prod)}
+\begin{lstlisting}
+docker compose --profile prod up --build
+\end{lstlisting}
+Frontend statis (nginx) + backend rilis; halaman login memakai \textbf{email +
+kata sandi}, tombol akun demo dimatikan.
+
+\subsection{Tanpa Docker (khusus backend)}
+\begin{lstlisting}
+cd apps/api
+bun install
+bun run migrate
+bun run seed --mode=demo     # atau --mode=empty
+bun run dev                  # http://localhost:3004
+\end{lstlisting}
+
+\section{Menyiapkan / mengulang data}
+
+Urutan yang disarankan: migrasi schema, lalu isi data.
+
+\begin{lstlisting}
+# via Docker (container rilis)
+docker compose --profile prod run --rm api-prod bun run migrate --fresh
+docker compose --profile prod run --rm api-prod bun run seed --mode=demo   # atau --mode=empty
+
+# via host
+cd apps/api
+bun run migrate              # tambah/tambahkan migrasi
+bun run migrate --fresh      # bangun ulang schema dari nol (menghapus data)
+bun run seed --mode=demo     # data contoh lengkap untuk demo
+bun run seed --mode=empty    # data inti/kosong untuk mulai bersih
+\end{lstlisting}
+
+\begin{itemize}
+  \item \code{--mode=demo}: mengisi data contoh (pesantren, laporan, instrumen, dsb).
+  \item \code{--mode=empty}: hanya data inti (akun dasar + bank instrumen) untuk
+        mulai bersih.
+  \item \textbf{Reset data demo} juga tersedia dari UI: \code{/admin/pengaturan}
+        $\rightarrow$ \emph{Reset data demo} (memuat ulang data contoh).
+\end{itemize}
+
+\section{Akun \& kata sandi}
+\begin{itemize}
+  \item Kata sandi awal akun seed = \code{SEED_DEFAULT_PASSWORD} di \code{.env}.
+  \item Pengguna mengganti sandi sendiri lewat menu akun $\rightarrow$
+        \emph{Ganti kata sandi}.
+  \item Super Admin dapat \textbf{reset sandi} akun lain di
+        \code{/admin/pengaturan} pengguna.
+  \item Jangan menaruh sandi/token produksi di dalam kode atau di browser.
+\end{itemize}
+
+\section{Pemeriksaan kesehatan}
+\begin{itemize}
+  \item Backend: \code{GET http://localhost:3004/health} (juga tersedia di
+        \code{/api/v1/health}).
+  \item Lewat web (di balik nginx): \code{GET http://localhost:3003/api/v1/health}.
+  \item Uji cepat setelah pasang: halaman \code{/} terbuka, \code{/login} tampil,
+        dan login akun contoh berhasil.
+\end{itemize}
+
+\section{Pencadangan (backup) \& pemulihan}
+
+Cadangkan \textbf{dua hal}: basis data dan berkas unggahan.
+
+\subsection{Basis data}
+\begin{lstlisting}
+# dump ke file di host
+docker compose exec db sh -c \
+  'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' \
+  > ishas-db-$(date +%F).sql
+\end{lstlisting}
+Pemulihan:
+\begin{lstlisting}
+cat ishas-db-YYYY-MM-DD.sql | docker compose exec -T db sh -c \
+  'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"'
+\end{lstlisting}
+
+\subsection{Berkas unggahan (volume \code{api-storage})}
+Nama volume mengikuti nama proyek Compose; temukan dulu:
+\begin{lstlisting}
+docker volume ls | grep api-storage
+\end{lstlisting}
+Cadangkan:
+\begin{lstlisting}
+docker run --rm \
+  -v <nama_volume_api-storage>:/data \
+  -v "$PWD:/backup" \
+  alpine tar czf /backup/ishas-storage-$(date +%F).tar.gz -C /data .
+\end{lstlisting}
+Pemulihan:
+\begin{lstlisting}
+docker run --rm \
+  -v <nama_volume_api-storage>:/data \
+  -v "$PWD:/backup" \
+  alpine sh -c 'tar xzf /backup/ishas-storage-YYYY-MM-DD.tar.gz -C /data'
+\end{lstlisting}
+Jadwalkan backup berkala (cron / \code{systemd timer}) untuk DB dan volume storage.
+
+\section{Pembaruan (upgrade) \& rollback}
+Pembaruan:
+\begin{lstlisting}
+git pull
+docker compose --profile prod build
+docker compose --profile prod run --rm api-prod bun run migrate
+docker compose --profile prod up -d
+\end{lstlisting}
+
+\noindent Rencana rollback (uji asap pasca-pasang --- D4):
+\begin{enumerate}
+  \item Hentikan layanan: \code{docker compose --profile prod down}.
+  \item Pulihkan basis data + volume dari backup terakhir (\S6).
+  \item Kembalikan kode ke versi/tag sebelumnya (\code{git checkout <tag>}), lalu
+        \code{docker compose --profile prod up --build}.
+  \item Uji asap: \code{/health}, \code{/login}, dan alur utama (lihat \S5 dan
+        \emph{Panduan Pengguna}). Catat hasilnya.
+\end{enumerate}
+
+\section{Pemeliharaan rutin}
+\begin{itemize}
+  \item Periksa kesehatan API dan ruang disk.
+  \item Bersihkan berkas yatim (staging $>$24 jam) bila perlu:
+        \code{cd apps/api \&\& bun run sweep}.
+  \item Perbarui image dasar (\code{docker compose build --pull}) secara berkala.
+  \item Pantau log: \code{docker compose logs -f api-prod web-prod}.
+\end{itemize}
+
+\section{Serah terima \& pelatihan (checklist)}
+
+Dipakai saat menyerahkan aplikasi ke pemilik:
+\begin{itemize}
+  \item[$\square$] Berikan akses: alamat aplikasi, akun contoh, dan \emph{Panduan
+        Pengguna}.
+  \item[$\square$] Serahkan dokumen: \code{README.md} (root), folder \code{docs/},
+        \code{.env.example}.
+  \item[$\square$] Latih tiap peran: publik/pelapor, Pesantren, Validator, Super
+        Admin.
+  \item[$\square$] Jelaskan cara reset data demo dan mengganti kata sandi.
+  \item[$\square$] Buka data pada server, lakukan uji asap, dan catat hasil (D4).
+  \item[$\square$] Tandatangani berita acara serah terima (nama, peran, tanggal).
+\end{itemize}
+
+\vfill
+\noindent Dukungan dokumen: \code{DEPLOYMENT\_CLOUDFLARE\_TUNNEL.md},
+\code{BACKEND\_MIGRATION.md}, \code{BACKEND\_STORAGE.md}, \code{README.md} (root),
+\code{apps/api/README.md}.
+
+\end{document}

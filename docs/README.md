@@ -109,6 +109,10 @@ Perubahan arah produk tidak mengesahkan rumus, skala, atau kategori ilmiah.
 | `BACKLOG.md` | Urutan pembangunan + dependensi + yang ditunda ke backend |
 | `TODO.md` | Kontrol validasi rencana dan antrean pembangunan yang belum diaktifkan |
 | `TEST_PLAN.md` | Matriks route/guard/E2E/visual/teknis + template hasil |
+| `PANDUAN_PENGGUNA.md` | Panduan pemakaian per peran (publik, Pesantren, Validator, Super Admin) |
+| `panduan-pengguna/` | Sumber LaTeX (`panduan-pengguna.tex`) + PDF (`panduan-pengguna.pdf`) panduan pengguna |
+| `panduan-operasional/` | Sumber LaTeX (`panduan-operasional.tex`) + PDF (`panduan-operasional.pdf`) panduan operasional |
+| `PANDUAN_OPERASIONAL.md` | Pemasangan, migrasi/seed, cadangan, reset, pembaruan, serah terima |
 | `BACKEND_OVERVIEW.md` | Stack, arsitektur, prinsip, fase backend (D-30) |
 | `BACKEND_DATA_MODEL.md` | Tabel MySQL + DDL + indeks + seed demo/kosong |
 | `BACKEND_API_CONTRACT.md` | Endpoint REST + matriks otorisasi + validasi |

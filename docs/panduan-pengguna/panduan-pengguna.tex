@@ -1,0 +1,295 @@
+% Panduan Pengguna ISHAS — sumber LaTeX.
+% Kompilasi: latexmk -pdf panduan-pengguna.tex   (atau: pdflatex 2x)
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,indonesian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.4cm,footskip=1cm]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{ishas}{HTML}{9F1239}
+\definecolor{ishaslight}{HTML}{FCE7F3}
+\definecolor{headgrey}{HTML}{F3F4F6}
+
+\titleformat{\section}{\color{ishas}\Large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\color{ishas}\large\bfseries}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\bfseries}{\thesubsubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{ishas}{Panduan Pengguna ISHAS}}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\setlist{topsep=2pt,itemsep=2pt,parsep=0pt}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\color{ishas}Panduan Pengguna ISHAS}
+\author{Integrated Safety and Health Assessment System}
+\date{\today}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{3cm}
+  {\color{ishas}\Huge\bfseries Panduan Pengguna ISHAS\par}
+  \vspace{0.6cm}
+  {\large Integrated Safety and Health Assessment System\par}
+  \vspace{0.4cm}
+  {\large Sistem Penilaian K3L Pesantren\par}
+  \vspace{2cm}
+  {\large Versi dokumen: \today\par}
+  \vfill
+  \begin{minipage}{0.86\textwidth}
+    \colorbox{ishaslight}{%
+      \parbox{\dimexpr\linewidth-2\fboxsep}{%
+        \textbf{Catatan status:} aplikasi masih \textbf{prototipe}. Semua angka,
+        skor, kategori, dan isi penilaian adalah \textbf{data contoh}, bukan hasil
+        penelitian atau rumus final. Sebagian data dapat hilang saat halaman
+        di-refresh sesuai batas prototipe.%
+      }%
+    }
+  \end{minipage}
+  \vspace{1.2cm}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Memulai}
+
+\begin{itemize}
+  \item Alamat aplikasi \code{/} (beranda) langsung menampilkan \textbf{dashboard publik} ---
+        tidak ada halaman perkenalan.
+  \item \textbf{Mode ngoding (dev):} halaman \code{/login} menampilkan
+        \textbf{3 kartu akun contoh} --- cukup satu klik, tanpa kata sandi.
+  \item \textbf{Mode rilis (prod):} halaman \code{/login} memakai
+        \textbf{email + kata sandi}.
+  \item Akun contoh (mode dev):
+        \begin{itemize}
+          \item Super Admin: \code{admin@ishas.demo}
+          \item Validator: \code{validator@ishas.demo}
+          \item Pesantren: \code{pesantren@ishas.demo}
+        \end{itemize}
+  \item Ingin berpindah peran? \textbf{Keluar} dulu, lalu masuk dengan akun lain.
+        Tidak ada pemilih peran di dalam aplikasi.
+\end{itemize}
+
+\section{Publik / Pelapor (tanpa login)}
+
+Siapa pun boleh membuka beranda dan halaman baca. Tidak perlu akun.
+
+\subsection{Membaca dashboard publik (\code{/})}
+\begin{itemize}
+  \item Dashboard menampilkan ringkasan \textbf{semua pesantren terdaftar}
+        (Aktif dan memiliki akun Pesantren aktif).
+  \item Gunakan \textbf{pemilih pesantren} untuk memfilter seluruh angka/grafik ke
+        satu pesantren. Pilihan ini juga tersimpan pada alamat
+        (\code{?pesantren=PSN-0018}).
+  \item Ada \textbf{pratinjau periode}; angka utama masih memakai periode berjalan
+        (filter periode penuh menunggu keputusan D-04).
+  \item Hanya laporan berstatus \textbf{Diterima/Terbit} yang tampil. Laporan
+        \code{Menunggu validasi} dan \code{Ditolak} \textbf{tidak pernah} muncul di
+        beranda.
+\end{itemize}
+
+\subsection{Mengirim laporan cepat (\code{/lapor})}
+\begin{enumerate}
+  \item Buka \code{/} atau \code{/lapor}, pilih pesantren pada pemilih.
+  \item Isi satu formulir ringkas: nama pelapor, pesantren, area/lokasi, judul,
+        deskripsi; kategori/aspek, usulan tingkat keparahan/prioritas/rekomendasi,
+        foto bukti, dan kontak bersifat \textbf{opsional}.
+  \item Tekan \textbf{Kirim laporan}. Anda menerima \textbf{nomor laporan}
+        (\code{RPT-XXXX}) dan status \code{Menunggu validasi} --- laporan belum
+        tampil publik sampai akun Pesantren menerimanya.
+  \item Draf isian tersimpan di perangkat; jika keluar aplikasi, isian dapat lanjut.
+\end{enumerate}
+
+\noindent Catatan: laporan \textbf{tidak bisa} dikirim saat login sebagai Super
+Admin/Validator --- keluar dulu untuk melapor sebagai publik. Akun Pesantren boleh
+melapor (termasuk ke pesantren lain sebagai pelapor umum).
+
+\subsection{Mengisi penilaian mandiri (\code{/penilaian-mandiri})}
+\begin{enumerate}
+  \item Daftarkan \textbf{nama penilai} dan pilih pesantren (kontak opsional).
+  \item Jawab semua butir penilaian (6 bidang, 59 butir). Beberapa butir mewajibkan
+        \textbf{bukti foto} dan/atau \textbf{lokasi}.
+  \item \textbf{Draf} otomatis tersimpan; Anda bisa menutup halaman lalu melanjutkan.
+  \item Setelah lengkap, tekan \textbf{Kirim penilaian}. Hasil \textbf{langsung
+        terbit} tanpa validasi Pesantren dan skor/PDF langsung tampil publik.
+        Kiriman yang sudah dikirim tidak dapat diubah.
+\end{enumerate}
+
+\subsection{Halaman baca publik}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{11.2cm}@{}}
+\toprule
+\textbf{Halaman} & \textbf{Isi} \\
+\midrule
+\endhead
+\code{/hasil} & Ringkasan nilai, nilai per bidang, dan daftar laporan PDF \\
+\code{/peta-risiko} & Denah pesantren + titik temuan yang sudah sah, dengan filter \\
+\code{/rekomendasi} & Daftar saran perbaikan: prioritas, penanggung jawab, kemajuan
+                    (tenggat tidak ditampilkan publik) \\
+\code{/tindak-lanjut} & Kemajuan perbaikan, status, nama penanggung jawab
+                       (bukti penyelesaian tidak publik) \\
+\code{/dokumen} & Kumpulan PDF tiap butir: yang \textbf{Umum} bisa dilihat/diunduh;
+                 yang \textbf{Privat} terkunci \\
+\code{/laporan/:id} & Laporan penilaian siap cetak: judul, nilai tetap, foto bukti,
+                     tombol cetak/simpan PDF (tanpa temuan) \\
+\code{/pesantren/\allowbreak PSN-XXXX} & Profil singkat satu pesantren (beranda terkunci ke
+                            pesantren itu) \\
+\bottomrule
+\end{longtable}
+
+\noindent Catatan privasi: nama pelapor, kontak, dan jawaban mentah tidak
+ditampilkan publik. Kode pesantren yang tidak dikenal menampilkan pesan ``tidak
+ditemukan'', bukan error.
+
+\section{Pesantren (login)}
+
+Akun admin lokal satu pondok. Setelah login, identitas akun tampil di kanan atas.
+
+\subsection{Beranda (\code{/pesantren/dashboard})}
+Ringkasan khusus pesantren Anda: jumlah antrean, status penanganan, dan kemajuan
+tindak lanjut, beserta nama dan kode pesantren.
+
+\subsection{Memeriksa laporan (\code{/pesantren/validasi-laporan})}
+\begin{enumerate}
+  \item Buka antrean laporan \textbf{lapor-cepat} milik pesantren Anda (penilaian
+        mandiri tidak masuk antrean --- langsung terbit).
+  \item Pilih laporan \code{Menunggu validasi}, lalu:
+        \begin{itemize}
+          \item \textbf{Terima} --- wajib menetapkan \textbf{Tingkat bahaya
+                (severity)} dan \textbf{Prioritas (priority)} tanpa nilai bawaan,
+                serta menulis rekomendasi final. Setelah diterima, laporan tampil di
+                beranda publik dan \code{/tindak-lanjut}.
+          \item \textbf{Tolak} --- wajib menulis \textbf{alasan minimal 10 karakter}.
+                Laporan ditolak tidak tampil publik.
+        \end{itemize}
+  \item Anda \textbf{tidak boleh} mengubah isi laporan pelapor
+        (deskripsi/jawaban/bukti); yang boleh diisi hanya keputusan, catatan
+        validasi, atau alasan tolak.
+\end{enumerate}
+
+\subsection{Mengelola status penanganan (\code{/pesantren/tindak-lanjut})}
+\begin{itemize}
+  \item Alur status: \code{Pending} $\rightarrow$ \code{Proses} $\rightarrow$
+        \code{Completed} (dan bisa dikembalikan dengan alasan). Laporan
+        \code{Completed} dapat \textbf{diarsipkan} dengan alasan.
+  \item Buat rencana tindakan: \textbf{PIC}, \textbf{tenggat}, dan catatan
+        $\rightarrow$ status menjadi \code{Proses}.
+  \item Perbarui \textbf{progres} (pilihan 0/25/50/75/100), unggah \textbf{bukti
+        penyelesaian}, lalu ajukan verifikasi.
+  \item Bisa \textbf{membatalkan perbaikan} dengan alasan minimal 10 karakter.
+\end{itemize}
+
+\subsection{Lokasi \& denah (\code{/pesantren/lokasi})}
+Kelola gedung, area, dan \textbf{denah} (campus plan): unggah gambar lalu terbitkan.
+Denah aktif dipakai untuk titik pelaporan dan peta risiko publik.
+
+\subsection{Laporan \& hasil penilaian mandiri}
+\begin{itemize}
+  \item \code{/pesantren/laporan} --- daftar laporan cepat milik pesantren Anda.
+  \item \code{/pesantren/hasil-penilaian-mandiri} --- daftar + rincian hasil
+        penilaian mandiri milik pesantren Anda (hanya status \code{Terbit}).
+\end{itemize}
+
+\section{Validator (login)}
+
+Mengelola instrumen/penilaian. Tidak memvalidasi laporan (itu tugas akun Pesantren).
+\begin{itemize}
+  \item \code{/validator/dashboard} --- ringkasan.
+  \item \code{/validator/instrumen} --- \textbf{Bank instrumen}: tambah/ubah butir,
+        tipe jawaban, pilihan + bobot, dan pengali. Perubahan langsung dipakai
+        penilaian mandiri.
+  \item \code{/validator/dokumen-instrumen} --- pustaka PDF per butir (Umum/Privat).
+  \item \code{/validator/scoring} --- meninjau nilai akhir yang tersimpan; tautan
+        ke laporan PDF.
+  \item \code{/validator/validasi-publikasi} --- daftar periksa \textbf{5 syarat}
+        sebelum hasil tampil ke umum.
+  \item \code{/validator/data-penelitian} --- data penelitian, unduh CSV/JSON, dan
+        impor bertahap (periksa $\rightarrow$ pratinjau $\rightarrow$ terapkan).
+  \item \code{/validator/sam-isafe} (dan sub-halamannya) --- modul \textbf{SAM-iSAFE}:
+        riwayat pengamatan + bank pertanyaan, formulir pengamatan baru (jawaban
+        0/1/2), rincian skor per kategori, grafik perkembangan, riwayat perubahan,
+        dan tindak lanjut temuan.
+\end{itemize}
+
+\noindent Catatan: pengisian SAM-iSAFE dapat dilanjutkan setelah halaman
+di-refresh; tombol \textbf{Hapus draft} mengosongkan isian yang berjalan.
+
+\section{Super Admin (login)}
+
+Operator sistem pusat. Satu-satunya peran yang membuat pesantren dan akun.
+\begin{itemize}
+  \item \code{/admin/dashboard} --- ringkasan sistem.
+  \item \code{/admin/pesantren} --- direktori pesantren: tambah, ubah status
+        \code{Persiapan} $\rightarrow$ \code{Aktif} $\rightarrow$ \code{Nonaktif}.
+        Hanya pesantren \code{Aktif} yang punya akun Pesantren aktif yang muncul di
+        pemilih publik.
+  \item \code{/admin/pengguna} --- kelola akun: buat (nama, email, sandi, peran,
+        scope), ubah data, \textbf{reset sandi}, aktif/nonaktif, dan hapus (dengan
+        konfirmasi).
+  \item \code{/admin/hak-akses} --- tabel hak akses tiap peran (hanya baca).
+  \item \code{/admin/audit-log} --- catatan aktivitas seluruh sistem (hanya baca).
+  \item \code{/admin/pengaturan} --- \textbf{Reset data demo} dan pemindahan aset
+        dari perangkat.
+\end{itemize}
+
+\section{Akun \& sesi}
+\begin{itemize}
+  \item \textbf{Akun aktif} selalu tampil di kanan atas (nama + peran + inisial).
+  \item \textbf{Ganti kata sandi} (mode rilis): klik nama akun di kanan atas
+        $\rightarrow$ \emph{Ganti kata sandi} $\rightarrow$ isi sandi lama + sandi
+        baru (minimal 8 karakter) + konfirmasi. Setelah berhasil, sesi di perangkat
+        lain keluar; perangkat ini tetap aktif.
+  \item \textbf{Keluar}: klik nama akun $\rightarrow$ \emph{Keluar dari akun}.
+        Anda diarahkan ke beranda publik (\code{/}).
+  \item Refresh tidak mengeluarkan Anda dari sesi dan tidak menghapus draf isian.
+\end{itemize}
+
+\section{Warna \& label status}
+
+Status selalu dibedakan dengan \textbf{label teks + ikon}, bukan warna saja.
+
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{6.6cm}@{}}
+\toprule
+\textbf{Status} & \textbf{Keterangan} \\
+\midrule
+\cellcolor{headgrey}Menunggu validasi & Netral (ikon jam) \\
+\cellcolor{yellow!25}Pending & Kuning (ikon jam) \\
+\cellcolor{blue!15}Proses & Biru (sedang berjalan) \\
+\cellcolor{green!15}Completed / Terverifikasi & Hijau (ikon centang) \\
+\cellcolor{headgrey}Ditolak & Netral (silang; hanya terlihat di antrean Pesantren) \\
+\cellcolor{headgrey}Dibatalkan & Netral (silang; tampil publik beserta alasannya) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent Tingkat bahaya/prioritas: \textcolor{red!70!black}{\textbf{Tinggi}},
+\textcolor{orange!80!black}{\textbf{Sedang}},
+\textcolor{green!50!black}{\textbf{Rendah}}, dan \textbf{Belum ditentukan} (netral).
+
+\section{Batasan prototipe}
+\begin{itemize}
+  \item Semua angka/skor/kategori adalah \textbf{ilustrasi}, bukan rumus ilmiah final.
+  \item Beberapa data (mis. foto bukti) hanya tersedia di perangkat pengunggah;
+        setelah berpindah perangkat, foto bisa tidak tampil.
+  \item Biaya, domain, dan hosting pada nota terpisah tidak memengaruhi cara pakai
+        aplikasi ini.
+\end{itemize}
+
+\end{document}

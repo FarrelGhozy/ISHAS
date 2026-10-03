@@ -24,7 +24,7 @@ Kode/schema belum diubah; jangan membuat titik tengah sebagai fallback lokasi.
 Semua relasi memakai **ID stabil**; label tampilan tidak pernah menjadi kunci.
 Persistensi browser berversi + reset seed. Dilarang menyimpan kata sandi/token.
 
-**Status: kontrak aktif frontend (schema v15).** Temuan audit 8 September
+**Status: kontrak aktif frontend (schema v16).** Temuan audit 8 September
 sudah ditindaklanjuti lewat D-05–D-11 (9 September 2026), D-24, D-26, dan D-29.
 Baca `DATA_REQUIREMENTS.md` bersama skema di bawah; rumus/skala ilmiah final
 tetap menunggu penelitian.
@@ -49,10 +49,14 @@ tetap menunggu penelitian.
   opsional, maks 500; usulan mentah tidak publik). Migrasi v14→v15
   menormalisasi field baru tanpa menghapus record/ID.
 
-- **Versi aktif sekarang:** `MOCK_SCHEMA_VERSION: 15`
-  (`MOCK_STORAGE_KEY: ishas-mock-v15`, lihat `store/state.ts`). Pemeriksaan
-  state: bila `schemaVersion !== 15`, pulihkan seed.
-- **Rantai migrasi yang dipertahankan kode:** v4→v5→v6→…→v14→v15. Semua
+- **Amendemen seed v16 (3 Oktober 2026):** schema `v16`
+  (`MOCK_STORAGE_KEY: ishas-mock-v16`): menambah pesantren contoh `PSN-0024`
+  (UNIDA Gontor, `Aktif` tanpa akun Pesantren → belum terdaftar). Migrasi
+  v15→v16 hanya menambah record baru tanpa menyentuh data lama.
+- **Versi aktif sekarang:** `MOCK_SCHEMA_VERSION: 16`
+  (`MOCK_STORAGE_KEY: ishas-mock-v16`, lihat `store/state.ts`). Pemeriksaan
+  state: bila `schemaVersion !== 16`, pulihkan seed.
+- **Rantai migrasi yang dipertahankan kode:** v4→…→v15→v16. Semua
   langkah mempertahankan record/ID; snapshot/temuan lama tidak dihitung ulang.
   - v10→v11: bank live `INS-LIVE` (D-24) — `instrument`, `instrumentChecksum`,
     opsi/bobot per jawaban, snapshot beku, skor %, artefak PDF;
@@ -289,14 +293,15 @@ Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAsse
 ## 5. Seed kaya demo (agar setiap halaman dapat didemo ke dosen)
 
 Komposisi minimum §5 lama telah diperkaya (September 2026) menjadi data demo
-penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v15, D-24 +
+penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v16, D-24 +
 D-26.f + D-29). Angka di bawah dikunci `seed-composition.test.ts`.
 
-- **5 pesantren:** `PSN-0018` PP Al-Hikmah Malang (`Aktif`, terdaftar),
+- **6 pesantren:** `PSN-0018` PP Al-Hikmah Malang (`Aktif`, terdaftar),
   `PSN-0019` PP Nurul Iman Batu (`Aktif`, terdaftar), `PSN-0020` PP Darussalam
   Kediri (`Aktif` tetapi **tanpa akun Pesantren aktif** → tidak terdaftar, kasus
   batas D-08/D-09), `PSN-0021` (`Persiapan`, tidak tampil di pemilih),
-  `PSN-0023` (`Nonaktif`, arsip internal D-08).
+  `PSN-0023` (`Nonaktif`, arsip internal D-08), `PSN-0024` UNIDA Gontor
+  (`Aktif` tanpa akun Pesantren → belum terdaftar).
 - **6 akun:** `USR-001` Super Admin, `USR-002` + `USR-005` Validator,
   `USR-003` + `USR-004` Pesantren (satu per pesantren terdaftar), `USR-006`
   Pesantren `Menunggu` (belum membuat pesantrennya terdaftar). Kartu login demo
