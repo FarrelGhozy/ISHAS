@@ -1,6 +1,7 @@
-// Form satu langkah lapor-cepat — presentasional murni (FLOWS §2, WIREFRAMES §2, D-19, D-29).
-// Urutan field tetap: Nama → Pesantren → Lokasi/area → Kategori/Aspek → Usulan mandiri
-// (keparahan + prioritas + rekomendasi) → Judul → Deskripsi → Foto → Kontak.
+// Form satu langkah lapor-cepat — presentasional murni (FLOWS §2, WIREFRAMES §2, D-19, D-29, D-47).
+// Urutan field tetap: Nama → Pesantren → Lokasi/area → Kategori/Aspek → Deskripsi temuan
+// (opsional) → Usulan mandiri (keparahan + prioritas + rekomendasi) → Foto → Kontak.
+// Tanpa field Judul (otomatis dari deskripsi/lokasi).
 // Logika (draft, kirim, pesantren terpilih) tinggal di halaman; komponen ini hanya render.
 
 import { AlertTriangle } from "lucide-react";
@@ -246,6 +247,29 @@ export function LaporForm(props: Props) {
         Opsional: memilih kategori memfilter aspek. Usulan di bawah ini membantu akun Pesantren;
         keputusan final tetap ditentukan saat validasi.
       </p>
+      <div>
+        <label htmlFor="lapor-deskripsi" className={LABEL}>
+          Deskripsi temuan
+        </label>
+        <textarea
+          id="lapor-deskripsi"
+          ref={(el) => props.registerField("description", el)}
+          className={`${INPUT} min-h-24 ${errors.description ? INPUT_ERROR : ""}`}
+          value={values.description}
+          disabled={readOnly}
+          rows={4}
+          aria-invalid={Boolean(errors.description)}
+          aria-describedby={`lapor-deskripsi-hint${errors.description ? " lapor-deskripsi-error" : ""}`}
+          onChange={(e) => props.onChange("description", e.target.value)}
+          onBlur={() => props.onBlur("description")}
+        />
+        <p id="lapor-deskripsi-hint" className={HINT}>
+          Opsional · tulis apa, di mana tepatnya, sejak kapan, siapa terdampak.
+        </p>
+        {errors.description ? (
+          <FieldError id="lapor-deskripsi-error" message={errors.description} />
+        ) : null}
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="lapor-usulan-severity" className={LABEL}>
@@ -335,52 +359,6 @@ export function LaporForm(props: Props) {
           />
         ) : null}
       </div>
-      <div>
-        <label htmlFor="lapor-judul" className={LABEL}>
-          Judul temuan*
-        </label>
-        <input
-          id="lapor-judul"
-          required
-          ref={(el) => props.registerField("title", el)}
-          className={`${INPUT} ${errors.title ? INPUT_ERROR : ""}`}
-          value={values.title}
-          disabled={readOnly}
-          maxLength={140}
-          placeholder="Contoh: Kabel terbuka di koridor lantai 2"
-          aria-invalid={Boolean(errors.title)}
-          aria-describedby={errors.title ? "lapor-judul-error" : undefined}
-          onChange={(e) => props.onChange("title", e.target.value)}
-          onBlur={() => props.onBlur("title")}
-        />
-        {errors.title ? <FieldError id="lapor-judul-error" message={errors.title} /> : null}
-      </div>
-
-      <div>
-        <label htmlFor="lapor-deskripsi" className={LABEL}>
-          Deskripsi*
-        </label>
-        <textarea
-          id="lapor-deskripsi"
-          required
-          ref={(el) => props.registerField("description", el)}
-          className={`${INPUT} min-h-24 ${errors.description ? INPUT_ERROR : ""}`}
-          value={values.description}
-          disabled={readOnly}
-          rows={4}
-          aria-invalid={Boolean(errors.description)}
-          aria-describedby={`lapor-deskripsi-hint${errors.description ? " lapor-deskripsi-error" : ""}`}
-          onChange={(e) => props.onChange("description", e.target.value)}
-          onBlur={() => props.onBlur("description")}
-        />
-        <p id="lapor-deskripsi-hint" className={HINT}>
-          Tulis apa, di mana tepatnya, sejak kapan, siapa terdampak.
-        </p>
-        {errors.description ? (
-          <FieldError id="lapor-deskripsi-error" message={errors.description} />
-        ) : null}
-      </div>
-
       {props.evidencePicker}
 
       <div>
@@ -407,8 +385,7 @@ export function LaporForm(props: Props) {
 
       {!readOnly && submitDisabled ? (
         <p className="text-sm text-secondary-text">
-          Lengkapi nama (minimal 2 karakter), pesantren, area, judul (minimal 10 karakter), dan
-          deskripsi (minimal 20 karakter) untuk mengirim.
+          Lengkapi nama (minimal 2 karakter), pesantren, dan area/lokasi untuk mengirim.
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-2 pt-1">

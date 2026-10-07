@@ -23,7 +23,6 @@ const input = {
   institutionCode: "PSN-0018",
   reporterName: "Penguji",
   areaId: "AREA-001",
-  title: "Bukti kabel koridor terbuka",
   description: "Kabel listrik terlihat terbuka di koridor asrama.",
 };
 const file = () => new File(["bytes-gambar-uji"], "bukti.png", { type: "image/png" });
@@ -150,7 +149,7 @@ test("upload → draft → kirim → validasi menjaga blob/id dan tidak publik",
   ).toBe(true);
   expect((await getEvidenceAsset(uploaded.id))?.name).toBe("bukti.png");
   const publicItem = selectPublicCampusMap(getState(), input.institutionCode).items.find(
-    (item) => item.issue === input.title,
+    (item) => item.issue === input.description,
   )!;
   expect("evidenceAssetId" in publicItem).toBe(false);
   expect("evidenceName" in publicItem).toBe(false);

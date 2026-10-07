@@ -1,4 +1,4 @@
-// Test validasi murni form lapor-cepat (V2-03) — pesan persis WIREFRAMES §2 / FLOWS §2.
+// Test validasi murni form lapor-cepat (V2-03 + D-47) — pesan persis WIREFRAMES §2 / FLOWS §2.
 
 import { describe, expect, test } from "bun:test";
 import { isLaporValid, validateLapor, type LaporValues } from "./lapor-validation";
@@ -13,7 +13,6 @@ const BASE: LaporValues = {
   reporterSeverity: "Belum ditentukan",
   reporterPriority: "Belum ditentukan",
   reporterRecommendation: "",
-  title: "Kabel terbuka di koridor lantai 2",
   description: "Kabel listrik menggantung di koridor lantai 2 asrama sejak kemarin.",
   evidenceName: "",
   contact: "",
@@ -51,13 +50,10 @@ describe("validateLapor", () => {
     expect(errors.areaId).toBe("Lokasi/area tidak sah untuk pesantren ini.");
   });
 
-  test("judul pendek + deskripsi pendek + kontak panjang", () => {
-    const errors = validateLapor(
-      { ...BASE, title: "Rusak", description: "Terlalu pendek", contact: "x".repeat(101) },
-      CTX,
-    );
-    expect(errors.title).toBe("Judul minimal 10 karakter.");
-    expect(errors.description).toBe("Deskripsi minimal 20 karakter.");
+  test("D-47: deskripsi temuan opsional — kosong/pendek tetap sah; kontak panjang ditolak", () => {
+    expect(validateLapor({ ...BASE, description: "" }, CTX)).toEqual({});
+    expect(validateLapor({ ...BASE, description: "Rusak" }, CTX)).toEqual({});
+    const errors = validateLapor({ ...BASE, contact: "x".repeat(101) }, CTX);
     expect(errors.contact).toBe("Kontak maksimal 100 karakter.");
   });
 

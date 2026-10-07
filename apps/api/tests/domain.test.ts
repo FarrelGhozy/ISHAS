@@ -4,6 +4,7 @@ import { SEED } from "../../web/mocks/seed/seed";
 import { buildPublicState } from "../src/domain/public-state";
 import { getDraft } from "../src/domain/self-assessment";
 import { validateLapor } from "../src/domain/lapor";
+import { buatJudulLaporanOtomatis } from "../../web/mocks/processors/laporan-title";
 import { httpStatusForError, paginate } from "../src/http";
 import { imageInfo } from "../src/image";
 
@@ -13,7 +14,6 @@ const area = SEED.areas.find((a) => a.institutionCode === "PSN-0018")!;
 const baseInput = {
   institutionCode: registered.code,
   reporterName: "Ahmad",
-  title: "Kabel terkelupas di dapur",
   description: "Kabel dekat kompor terkelupas dan berisiko tersengat.",
   areaId: area.id,
 };
@@ -29,16 +29,17 @@ describe("validateLapor", () => {
     );
   });
 
-  test("judul < 10 → pesan mock", () => {
-    expect(validateLapor(SEED, { ...baseInput, title: "pendek" }, null)).toBe(
-      "Judul minimal 10 karakter.",
-    );
+  test("D-47: tanpa judul + deskripsi kosong/pendek → tetap sah (judul otomatis)", () => {
+    expect(validateLapor(SEED, { ...baseInput, description: "" }, null)).toBeNull();
+    expect(validateLapor(SEED, { ...baseInput, description: "pendek" }, null)).toBeNull();
+    expect(validateLapor(SEED, { ...baseInput, title: "Judul lama diabaikan" }, null)).toBeNull();
   });
 
-  test("deskripsi < 20 → pesan mock", () => {
-    expect(validateLapor(SEED, { ...baseInput, description: "pendek" }, null)).toBe(
-      "Deskripsi minimal 20 karakter.",
+  test("D-47: judul otomatis paritas dengan mock (potongan + fallback)", () => {
+    expect(buatJudulLaporanOtomatis("Kabel dekat kompor terkelupas dan berisiko tersengat.")).toBe(
+      "Kabel dekat kompor terkelupas dan berisiko tersengat.",
     );
+    expect(buatJudulLaporanOtomatis("", { labelLokasi: "Dapur" })).toBe("Temuan di Dapur");
   });
 
   test("pesantren tak terdaftar → pesan mock", () => {
@@ -139,7 +140,7 @@ describe("httpStatusForError", () => {
     ).toBe(409);
   });
   test("validasi umum → 400", () => {
-    expect(httpStatusForError("Judul minimal 10 karakter.")).toBe(400);
+    expect(httpStatusForError("Usulan rekomendasi minimal 10 karakter.")).toBe(400);
   });
 });
 

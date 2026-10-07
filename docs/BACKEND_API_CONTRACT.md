@@ -35,7 +35,7 @@ frontend tetap hijau; kode HTTP mengikuti tabel 0.b.
 
 | Kelas validasi (contoh pesan) | HTTP |
 |---|---|
-| Field tidak sah: "Nama minimal 2 karakter.", "Judul minimal 10 karakter.", "Usulan rekomendasi minimal 10 karakter." | 400 |
+| Field tidak sah: "Nama minimal 2 karakter.", "Usulan rekomendasi minimal 10 karakter." | 400 |
 | Relasi tidak sah: "Kategori/aspek tidak konsisten.", "Lokasi/area tidak sah untuk pesantren ini.", "Pesantren tidak tersedia untuk pelaporan.", "Lampiran bukti tidak sah. Pilih gambar kembali." | 400 |
 | Tanpa sesi fase 6 / cookie kedaluwarsa | 401 |
 | Peran/scope: "Hanya publik tanpa login dan Pesantren aktif yang dapat mengirim laporan.", "Anda tidak berwenang mengubah laporan pesantren ini.", "Hanya Validator aktif yang dapat mengunggah bukti." | 403 |
@@ -82,7 +82,7 @@ Pengecualian: foto bukti penilaian-mandiri tampil di PDF (D-27);
 
 | Method + Path | Validasi (mock-store.ts:287-373) | Efek |
 |---|---|---|
-| `POST /reports/lapor-cepat` | Aktor publik/Pesantren aktif. `reporterName` 2–100, `title` 10–140, `description` ≥20, `contact` ≤100. `institutionCode` terdaftar. `areaId` milik pesantren ATAU `manualLocation` ≥3. `categoryId/aspectId` konsisten (aspek tanpa kategori ditolak). `reporterSeverity/Priority` ∈ daftar. `reporterRecommendation` 10–500 bila diisi (D-29). `evidenceAssetId` pola + nama cocok + blob ada + `institutionCode` sama | `RPT-XXXX`, `Menunggu validasi`, severity/priority `Belum ditentukan` + audit + notifikasi ke Pesantren pemilik scope |
+| `POST /reports/lapor-cepat` | Aktor publik/Pesantren aktif. `reporterName` 2–100, `description` opsional (boleh kosong, tanpa min; D-47), `title` opsional dan selalu diabaikan (judul diturunkan otomatis dari deskripsi/lokasi), `contact` ≤100. `institutionCode` terdaftar. `areaId` milik pesantren ATAU `manualLocation` ≥3. `categoryId/aspectId` konsisten (aspek tanpa kategori ditolak). `reporterSeverity/Priority` ∈ daftar. `reporterRecommendation` 10–500 bila diisi (D-29). `evidenceAssetId` pola + nama cocok + blob ada + `institutionCode` sama | `RPT-XXXX`, `Menunggu validasi`, severity/priority `Belum ditentukan` + audit + notifikasi ke Pesantren pemilik scope |
 | `POST /uploads/report-evidence` | PNG/JPEG/WebP, 0–5 MB, nama ≤200, decode ok, ≤20 MP (report-evidence.ts) | `evidence-asset-<uuid>` (lihat `BACKEND_STORAGE.md`) |
 | `DELETE /uploads/report-evidence/:assetId` | Pemilik upload / scope sama | Hapus blob yatim |
 

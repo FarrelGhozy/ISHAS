@@ -36,11 +36,10 @@ const FOCUS_ORDER: (keyof LaporValues)[] = [
   "manualLocation",
   "categoryId",
   "aspectId",
+  "description",
   "reporterSeverity",
   "reporterPriority",
   "reporterRecommendation",
-  "title",
-  "description",
   "contact",
 ];
 
@@ -266,11 +265,10 @@ function LaporPageContent() {
       manualLocation: true,
       categoryId: true,
       aspectId: true,
+      description: true,
       reporterSeverity: true,
       reporterPriority: true,
       reporterRecommendation: true,
-      title: true,
-      description: true,
       contact: true,
     });
     if (!isLaporValid(errors)) {
@@ -293,7 +291,6 @@ function LaporPageContent() {
       {
         institutionCode: values.institutionCode,
         reporterName: values.reporterName.trim(),
-        title: values.title.trim(),
         description: values.description.trim(),
         areaId: values.areaId,
         manualLocation: values.manualLocation.trim() || undefined,

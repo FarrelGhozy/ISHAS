@@ -21,7 +21,6 @@ const input = {
   institutionCode: "PSN-0018",
   reporterName: "Penguji",
   areaId: "AREA-001",
-  title: "Kabel terbuka di koridor",
   description: "Terlihat kabel terbuka di dekat tangga asrama.",
 };
 beforeEach(() => storeActions.resetMockData());
@@ -92,8 +91,9 @@ test("laporan tanpa titik tidak menggunakan centroid area atau 50/50", () => {
     getState().findings.find((item) => item.reportId === result.id)?.locationSnapshot?.point,
   ).toBeNull();
   expect(
-    selectPublicCampusMap(getState(), "PSN-0018").items.find((item) => item.issue === input.title)
-      ?.point,
+    selectPublicCampusMap(getState(), "PSN-0018").items.find(
+      (item) => item.issue === input.description,
+    )?.point,
   ).toBeNull();
 });
 

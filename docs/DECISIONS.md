@@ -1410,3 +1410,25 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   `docs/DEPLOYMENT_CLOUDFLARE_TUNNEL.md` (baru).
 - Kode terdampak: `apps/api/src/config.ts`, `apps/api/src/app.ts`,
   `apps/api/src/auth/cookie.ts`, `apps/web/nginx.conf`, `apps/api/tests/cors.test.ts`.
+
+## D-47 — Form lapor tanpa Judul; Deskripsi temuan opsional di bawah Kategori — DISETUJUI 7 Oktober 2026
+
+- Arahan pemilik: pada `/lapor`, tepat di bawah blok `Kategori K3 / Aspek`
+  ditambah field `Deskripsi temuan`; blok bawah `Judul temuan*` + `Deskripsi*`
+  dihapus total.
+- **D-47.a — Tanpa field Judul:** pelapor tidak lagi mengisi judul. `Report.title`
+  tetap ada sebagai kolom turunan (daftar antrean, laporan, PDF, pencarian
+  tidak berubah) dan selalu dibentuk otomatis: ±10 kata pertama deskripsi
+  (rapikan whitespace, potong batas kata, maks 140 karakter). Deskripsi kosong →
+  fallback `Temuan di [label area / lokasi manual]` (dengan nama kategori bila
+  dipilih); terakhir `Temuan tanpa deskripsi`. Tanpa migrasi schema.
+- **D-47.b — Deskripsi temuan opsional:** boleh kosong; bila diisi tanpa batas
+  minimal. Posisi baru: tepat di bawah Kategori/Aspek (sebelum usulan mandiri).
+  Hint tetap `Tulis apa, di mana tepatnya, sejak kapan, siapa terdampak.`
+  dengan penanda `Opsional`.
+- **D-47.c — Kontrak:** input `title` menjadi opsional dan selalu diabaikan
+  server (selalu diturunkan dari deskripsi); error `Judul minimal …` dan
+  `Deskripsi minimal …` dihapus dari validasi lapor-cepat. Draft lokal
+  menoleransi key `title` warisan.
+- Dokumen terdampak: FLOWS §2, WIREFRAMES §2, DATA_MODEL §Report,
+  BACKEND_API_CONTRACT §0.b/§3, BACKEND_DATA_MODEL §reports (komentar).

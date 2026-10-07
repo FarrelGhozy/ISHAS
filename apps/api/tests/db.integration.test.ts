@@ -361,10 +361,7 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
   test("POST /reports/lapor-cepat: validasi 1:1 + idempotensi", async () => {
     const invalid = await call(
       "/api/v1/reports/lapor-cepat",
-      json(
-        { institutionCode: "PSN-0018", reporterName: "A", title: "x", description: "y" },
-        { method: "POST" },
-      ),
+      json({ institutionCode: "PSN-0018", reporterName: "A" }, { method: "POST" }),
     );
     expect(invalid.status).toBe(400);
     expect(((await invalid.json()) as { error: string }).error).toBe("Nama minimal 2 karakter.");
@@ -373,7 +370,6 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     const payload = {
       institutionCode: "PSN-0018",
       reporterName: "Ahmad",
-      title: "Kabel terkelupas di dapur",
       description: "Kabel dekat kompor terkelupas dan berisiko tersengat.",
       areaId: area.id,
       clientRequestId: "it-request-1",
@@ -386,11 +382,14 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     expect(second.data.id).toBe(first.data.id);
 
     const [rows] = await pool.query<RowDataPacket[]>(
-      "SELECT validation_status, handling_status FROM reports WHERE id = ?",
+      "SELECT validation_status, handling_status, title, description FROM reports WHERE id = ?",
       [first.data.id],
     );
     expect(rows[0]?.validation_status).toBe("Menunggu validasi");
     expect(rows[0]?.handling_status).toBe("Menunggu validasi");
+    // D-47: judul diturunkan otomatis dari deskripsi (≤10 kata, ≤140 karakter).
+    expect(rows[0]?.title).toBe("Kabel dekat kompor terkelupas dan berisiko tersengat.");
+    expect(rows[0]?.description).toBe("Kabel dekat kompor terkelupas dan berisiko tersengat.");
     const audits = await scalar(
       "SELECT COUNT(*) AS c FROM audit_events WHERE object_id = ? AND action = 'Mengirim laporan publik'",
       [first.data.id],
@@ -408,7 +407,6 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     const payload = {
       institutionCode: "PSN-0018",
       reporterName: "Siti",
-      title: "Lantai musholla licin saat hujan",
       description: "Lantai musholla menjadi licin setiap hujan dan berbahaya bagi jamaah.",
       areaId: area.id,
     };
@@ -875,7 +873,6 @@ describe.skipIf(!dbReady)("Fase 2 HTTP (validasi + lifecycle + lokasi + tindak l
         {
           institutionCode: "PSN-0018",
           reporterName: "Ahmad",
-          title: "Kabel terkelupas di dapur",
           description: "Kabel dekat kompor terkelupas dan berisiko tersengat.",
           manualLocation: "Dapur utama",
         },
@@ -906,7 +903,6 @@ describe.skipIf(!dbReady)("Fase 2 HTTP (validasi + lifecycle + lokasi + tindak l
         {
           institutionCode: "PSN-0018",
           reporterName: "Ahmad",
-          title: "Pintu darurat terhalang kursi",
           description: "Akses pintu darurat tertutup tumpukan kursi di koridor.",
           manualLocation: "Koridor lantai 1",
         },
@@ -2073,7 +2069,6 @@ describe.skipIf(!dbReady)("Fase 5 HTTP (admin + notifikasi + storage + migrasi)"
         {
           institutionCode: "PSN-0018",
           reporterName: "Penguji Storage",
-          title: "Kabel uji penyimpanan",
           description: "Menguji owner_ref pada bukti lapor-cepat fase lima.",
           manualLocation: "Koridor uji",
           evidenceName: "bukti-sah.png",
@@ -2391,7 +2386,6 @@ describe.skipIf(!dbReady)("Fase 2 tulis: isolasi scope antar-pesantren", () => {
         {
           institutionCode: "PSN-0018",
           reporterName: "Ahmad",
-          title: "Kabel terkelupas di area isolasi",
           description: "Kabel dekat kompor terkelupas dan berisiko tersengat listrik.",
           manualLocation: "Dapur utama",
         },

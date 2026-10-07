@@ -33,6 +33,7 @@ import { selectRegisteredInstitutions } from "./selectors";
 import { K3_ASPECT_MAP, K3_CATEGORY_MAP } from "../kategori-k3";
 import type { IshasState } from "../types";
 import { snapshotLocation, validateMapLocation } from "../processors/campus-map";
+import { buatJudulLaporanOtomatis } from "../processors/laporan-title";
 import { kurangJawaban } from "../self-assessment-completeness";
 import {
   BANK_ID,
@@ -251,7 +252,7 @@ export const storeActions = {
     input: {
       institutionCode: string;
       reporterName: string;
-      title: string;
+      title?: string; // D-47: opsional, selalu diabaikan (judul diturunkan otomatis)
       description: string;
       areaId?: string;
       manualLocation?: string;
@@ -293,7 +294,6 @@ export const storeActions = {
 
     // Validasi ketat (FLOWS §2; pesan selaras dengan error inline form):
     const reporterName = input.reporterName?.trim() ?? "";
-    const title = input.title?.trim() ?? "";
     const description = input.description?.trim() ?? "";
     const contact = input.contact?.trim() ?? "";
     const evidenceName = input.evidenceName?.trim() || undefined;
@@ -372,18 +372,27 @@ export const storeActions = {
       input.locationSnapshot,
     );
     if (mapError) return { ok: false, error: mapError };
-    if (title.length < 10) {
-      return { ok: false, error: "Judul minimal 10 karakter." };
-    }
-    if (title.length > 140) {
-      return { ok: false, error: "Judul maksimal 140 karakter." };
-    }
-    if (description.length < 20) {
-      return { ok: false, error: "Deskripsi minimal 20 karakter." };
-    }
+    // D-47: tanpa judul isian; deskripsi temuan opsional tanpa batas minimal.
+    // Judul diturunkan otomatis dari deskripsi/lokasi agar daftar tetap bermakna.
     if (contact.length > 100) {
       return { ok: false, error: "Kontak maksimal 100 karakter." };
     }
+    const areaDirujuk = input.areaId
+      ? currentState.areas.find(
+          (a) => a.id === input.areaId && a.institutionCode === input.institutionCode,
+        )
+      : undefined;
+    const namaGedung = areaDirujuk
+      ? (currentState.buildings.find((b) => b.id === areaDirujuk.buildingId)?.name ??
+        "Gedung")
+      : undefined;
+    const labelLokasi =
+      manualLocation ||
+      (areaDirujuk ? `${namaGedung} · ${areaDirujuk.floor} · ${areaDirujuk.name}` : undefined);
+    const namaKategori = refDims.find(
+      (d) => (d.categoryId ?? d.id) === categoryId,
+    )?.name;
+    const title = buatJudulLaporanOtomatis(description, { namaKategori, labelLokasi });
 
     let createdId = "";
     try {

@@ -244,8 +244,8 @@ CREATE TABLE reports (
   category_id VARCHAR(32) NULL,
   aspect_id VARCHAR(48) NULL,
   indicator_id VARCHAR(24) NULL,         -- warisan lapor-cepat lama
-  title VARCHAR(140) NOT NULL,
-  description TEXT NOT NULL,
+  title VARCHAR(140) NOT NULL,         -- D-47: turunan otomatis dari deskripsi/lokasi (bukan isian)
+  description TEXT NOT NULL,             -- D-47: boleh string kosong (lapor-cepat opsional)
   evidence_asset_id VARCHAR(64) NULL,    -- lapor-cepat (privat)
   evidence_name VARCHAR(200) NULL,
   location_snapshot JSON NULL,           -- LocationSnapshot beku (areaId/locationText/floorNote/campusPlanVersionId/point)

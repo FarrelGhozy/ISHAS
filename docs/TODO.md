@@ -1,5 +1,20 @@
 # TODO — Kontrol Kerja Aktif
 
+## Form lapor tanpa Judul; Deskripsi temuan opsional di bawah Kategori (D-47) — 7 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: di `/lapor`, tepat di bawah blok Kategori K3/Aspek
+ditambah field `Deskripsi temuan`; blok bawah `Judul temuan*` + `Deskripsi*`
+dihapus total. Judul dihapus total (otomatis ±10 kata pertama deskripsi,
+fallback lokasi), deskripsi opsional (boleh kosong, tanpa min).
+
+- [x] Catat D-47 + sinkron FLOWS §2, WIREFRAMES §2, DATA_MODEL, BACKEND_API_CONTRACT §0.b/§3, BACKEND_DATA_MODEL.
+- [x] Helper `mocks/processors/laporan-title.ts` + vektor uji (dipakai mock-store dan backend).
+- [x] Frontend: validasi/draft/form/page tanpa `title`; `Deskripsi temuan` opsional pindah ke bawah Kategori/Aspek.
+- [x] Store/repository/backend: input `title` opsional dan diabaikan; judul selalu diturunkan otomatis; tanpa migrasi schema.
+- [x] Sesuaikan test (validasi, draft+warisan, store, evidence, campus-map, domain, integrasi) + regresi judul otomatis.
+- [x] Verifikasi: web lint/typecheck/340 test/build; API lint/typecheck/126 test (DB uji `ishas_test`, integrasi jalan); browser: `/lapor` 3 viewport tanpa overflow, kirim isi + kosong lolos, judul otomatis tampil di antrean Pesantren. DB demo di-seed ulang.
+- [ ] Review pemilik.
+
 ## Lanjut draft pengamatan SAM-iSAFE setelah reload (D-26.i) — 3 Oktober 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik: pengisian SAM-iSAFE harus tetap di halaman pengisian

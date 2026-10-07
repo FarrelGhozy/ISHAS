@@ -153,8 +153,8 @@ type Report = {
   reporterName: string; // 2-100 karakter, wajib; selalu tampil apa adanya secara internal (tanpa opsi anonim, D-02)
   reporterUserId?: string; // FK User.id bila dikirim saat login (bukan email)
   reporterAccountEmail?: string; // terisi bila dikirim saat login (Pesantren)
-  title: string; // 10-140 (lapor-cepat) / judul otomatis (penilaian-mandiri)
-  description: string; // min 20 (lapor-cepat) / ringkasan otomatis dari jawaban terkirim (penilaian-mandiri; aturan penyusunannya belum ditetapkan, D-04/D-05)
+  title: string; // D-47: selalu turunan otomatis (±10 kata pertama deskripsi, maks 140; fallback lokasi) / judul otomatis (penilaian-mandiri)
+  description: string; // D-47: opsional, boleh kosong, tanpa min (lapor-cepat) / ringkasan otomatis dari jawaban terkirim (penilaian-mandiri; aturan penyusunannya belum ditetapkan, D-04/D-05)
   areaId?: string; // FK Area.id; kebijakan tanpa area menunggu D-11
   manualLocation?: string; // lokasi manual bila area belum tersedia (D-11)
   locationSnapshot?: LocationSnapshot; // beku: { areaId?, locationText, floorNote, campusPlanVersionId, point }

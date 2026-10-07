@@ -55,7 +55,6 @@ export function loadLaporDraft(institutionCode: string | null): LaporValues | nu
         typeof parsed.reporterRecommendation === "string"
           ? parsed.reporterRecommendation.slice(0, 500)
           : "",
-      title: typeof parsed.title === "string" ? parsed.title : "",
       description: typeof parsed.description === "string" ? parsed.description : "",
       evidenceName: typeof parsed.evidenceName === "string" ? parsed.evidenceName : "",
       evidenceAssetId: isEvidenceAssetId(parsed.evidenceAssetId)
@@ -94,7 +93,6 @@ export function clearLaporDraft(institutionCode: string | null): boolean {
 export function isLaporEmpty(values: LaporValues): boolean {
   return (
     values.reporterName.trim() === "" &&
-    values.title.trim() === "" &&
     values.description.trim() === "" &&
     values.evidenceName.trim() === "" &&
     !values.evidenceAssetId &&

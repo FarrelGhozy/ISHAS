@@ -445,7 +445,7 @@ export const mockRepository = {
     input: {
       institutionCode: string;
       reporterName: string;
-      title: string;
+      title?: string; // D-47: opsional, diabaikan (judul diturunkan otomatis)
       description: string;
       areaId?: string;
       manualLocation?: string;

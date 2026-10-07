@@ -3,6 +3,7 @@
 
 import { selectRegisteredInstitutions } from "../../../web/mocks/store/selectors";
 import { snapshotLocation, validateMapLocation } from "../../../web/mocks/processors/campus-map";
+import { buatJudulLaporanOtomatis } from "../../../web/mocks/processors/laporan-title";
 import type { IshasState, LocationSnapshot, Report } from "../../../web/mocks/types";
 import type { Actor } from "../router";
 import { getFileAsset, setFileAssetOwner } from "../repo/files";
@@ -19,7 +20,7 @@ import {
 export type LaporInput = {
   institutionCode: string;
   reporterName: string;
-  title: string;
+  title?: string; // D-47: opsional, selalu diabaikan (judul diturunkan otomatis)
   description: string;
   areaId?: string;
   manualLocation?: string;
@@ -86,8 +87,6 @@ export function validateLapor(
   evidenceError: string | null,
 ): string | null {
   const reporterName = input.reporterName?.trim() ?? "";
-  const title = input.title?.trim() ?? "";
-  const description = input.description?.trim() ?? "";
   const contact = input.contact?.trim() ?? "";
   if (evidenceError) return evidenceError;
   if (reporterName.length < 2) return "Nama minimal 2 karakter.";
@@ -137,9 +136,7 @@ export function validateLapor(
   }
   const mapError = validateMapLocation(state, input.institutionCode, input.locationSnapshot);
   if (mapError) return mapError;
-  if (title.length < 10) return "Judul minimal 10 karakter.";
-  if (title.length > 140) return "Judul maksimal 140 karakter.";
-  if (description.length < 20) return "Deskripsi minimal 20 karakter.";
+  // D-47: tanpa judul isian; deskripsi temuan opsional tanpa batas minimal.
   if (contact.length > 100) return "Kontak maksimal 100 karakter.";
   return null;
 }
@@ -157,13 +154,32 @@ export async function submitLaporCepat(
         if (existing) return { ok: true as const, id: existing };
       }
       const reporterName = input.reporterName?.trim() ?? "";
-      const title = input.title?.trim() ?? "";
       const description = input.description?.trim() ?? "";
       const contact = input.contact?.trim() ?? "";
       const manualLocation = input.manualLocation?.trim() || undefined;
       const categoryId = input.categoryId?.trim() || undefined;
       const aspectId = input.aspectId?.trim() || undefined;
       const reporterRecommendation = input.reporterRecommendation?.trim() || undefined;
+      // D-47: judul selalu diturunkan otomatis (input title diabaikan).
+      const bankDims = state.instrument?.dimensions ?? [];
+      const legacyDims =
+        state.instrumentVersions.find(
+          (v) => v.id === state.activeInstrumentVersionId && v.status === "Published",
+        )?.dimensions ?? [];
+      const refDims = bankDims.length ? bankDims : legacyDims;
+      const areaDirujuk = input.areaId
+        ? state.areas.find(
+            (a) => a.id === input.areaId && a.institutionCode === input.institutionCode,
+          )
+        : undefined;
+      const namaGedung = areaDirujuk
+        ? (state.buildings.find((b) => b.id === areaDirujuk.buildingId)?.name ?? "Gedung")
+        : undefined;
+      const labelLokasi =
+        manualLocation ||
+        (areaDirujuk ? `${namaGedung} · ${areaDirujuk.floor} · ${areaDirujuk.name}` : undefined);
+      const namaKategori = refDims.find((d) => (d.categoryId ?? d.id) === categoryId)?.name;
+      const title = buatJudulLaporanOtomatis(description, { namaKategori, labelLokasi });
       const n = await nextSequence(conn, "report");
       const id = reportIdFrom(n);
       const stampedAt = new Date().toISOString();

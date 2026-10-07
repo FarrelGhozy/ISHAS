@@ -374,7 +374,6 @@ describe("lapor-cepat V2-03", () => {
   const VALID = {
     institutionCode: "PSN-0018",
     reporterName: "Santri Blok B",
-    title: "Kabel terbuka di koridor lantai 2",
     description: "Kabel listrik menggantung di koridor lantai 2 asrama sejak kemarin.",
     areaId: "AREA-001",
     evidenceName: "koridor.jpg",
@@ -418,16 +417,28 @@ describe("lapor-cepat V2-03", () => {
     expect(validated.some((r) => r.id === result.id)).toBe(false);
   });
 
-  test("nama/judul/deskripsi tak memenuhi syarat → ditolak dengan pesan persis", () => {
+  test("D-47: judul otomatis dari deskripsi; deskripsi kosong → fallback lokasi", () => {
+    const result = storeActions.submitPublicReport({ name: "Santri Blok B" }, VALID);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(getState().reports.find((r) => r.id === result.id)?.title).toBe(
+      "Kabel listrik menggantung di koridor lantai 2 asrama sejak kemarin.",
+    );
+    const kosong = storeActions.submitPublicReport(
+      { name: "Santri Blok B" },
+      { ...VALID, description: "" },
+    );
+    expect(kosong.ok).toBe(true);
+    if (!kosong.ok) return;
+    const judulKosong = getState().reports.find((r) => r.id === kosong.id)?.title ?? "";
+    expect(judulKosong.startsWith("Temuan di ")).toBe(true);
+    expect(judulKosong.length).toBeLessThanOrEqual(140);
+  });
+
+  test("nama tak memenuhi syarat → ditolak dengan pesan persis", () => {
     expect(storeActions.submitPublicReport({ name: "x" }, { ...VALID, reporterName: "A" }).ok).toBe(
       false,
     );
-    const short = storeActions.submitPublicReport(
-      { name: "x" },
-      { ...VALID, title: "Rusak", description: "pendek" },
-    );
-    expect(short.ok).toBe(false);
-    if (!short.ok) expect(short.error).toBe("Judul minimal 10 karakter.");
   });
 
   test("pesantren tak dikenal/nonaktif → Pesantren tidak tersedia untuk pelaporan.", () => {
@@ -601,7 +612,6 @@ describe("regresi review frontend", () => {
   const input = {
     institutionCode: "PSN-0018",
     reporterName: "Pelapor uji",
-    title: "Lantai koridor licin",
     description: "Lantai koridor licin sejak pagi dan dilalui para santri.",
     areaId: "AREA-001",
   };

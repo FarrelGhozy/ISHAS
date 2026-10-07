@@ -1,4 +1,4 @@
-// Validasi murni form lapor-cepat — FLOWS §2 + WIREFRAMES §2 + D-19.
+// Validasi murni form lapor-cepat — FLOWS §2 + WIREFRAMES §2 + D-19 + D-47.
 // Dipakai halaman `/lapor` untuk error inline; store mengulang pemeriksaan yang sama
 // di sisi data (bukan pengganti). Pesan error memakai kalimat persis dokumen.
 
@@ -15,8 +15,7 @@ export type LaporValues = {
   reporterSeverity: string; // D-19: usulan mandiri opsional ("Belum ditentukan" = kosong)
   reporterPriority: string; // D-19: usulan mandiri opsional ("Belum ditentukan" = kosong)
   reporterRecommendation: string; // D-29: usulan rekomendasi tindakan (opsional; bila diisi min 10, maks 500)
-  title: string;
-  description: string;
+  description: string; // D-47: deskripsi temuan opsional (boleh kosong, tanpa min)
   evidenceName: string;
   evidenceAssetId?: string;
   contact: string;
@@ -32,7 +31,6 @@ export const EMPTY_LAPOR_VALUES: LaporValues = {
   reporterSeverity: "Belum ditentukan",
   reporterPriority: "Belum ditentukan",
   reporterRecommendation: "",
-  title: "",
   description: "",
   evidenceName: "",
   contact: "",
@@ -69,14 +67,7 @@ export function validateLapor(
     }
   }
 
-  const judul = values.title.trim();
-  if (judul.length < 10) errors.title = "Judul minimal 10 karakter.";
-  else if (judul.length > 140) errors.title = "Judul maksimal 140 karakter.";
-
-  if (values.description.trim().length < 20) {
-    errors.description = "Deskripsi minimal 20 karakter.";
-  }
-
+  // D-47: tanpa judul (otomatis dari deskripsi); deskripsi temuan opsional.
   if (values.contact.trim().length > 100) {
     errors.contact = "Kontak maksimal 100 karakter.";
   }

@@ -23,14 +23,38 @@ afterEach(() => {
   else Reflect.deleteProperty(globalThis, "localStorage");
 });
 test("draft tersimpan terpisah dan membatalkan A tidak menghapus B", () => {
-  const a = { ...EMPTY_LAPOR_VALUES, institutionCode: "PSN-0018", title: "Draft A" };
-  const b = { ...EMPTY_LAPOR_VALUES, institutionCode: "PSN-0019", title: "Draft B" };
+  const a = { ...EMPTY_LAPOR_VALUES, institutionCode: "PSN-0018", description: "Draft A" };
+  const b = { ...EMPTY_LAPOR_VALUES, institutionCode: "PSN-0019", description: "Draft B" };
   expect(saveLaporDraft(a.institutionCode, a)).toBe(true);
   expect(saveLaporDraft(b.institutionCode, b)).toBe(true);
   expect(loadLaporDraft(a.institutionCode)).toEqual(a);
   expect(clearLaporDraft(a.institutionCode)).toBe(true);
   expect(loadLaporDraft(a.institutionCode)).toBeNull();
   expect(loadLaporDraft(b.institutionCode)).toEqual(b);
+});
+test("draft warisan berkey title tetap terbaca (title diabaikan, D-47)", () => {
+  const entries = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem(key: string) {
+        return entries.get(key) ?? null;
+      },
+      setItem(key: string, value: string) {
+        entries.set(key, value);
+      },
+      removeItem(key: string) {
+        entries.delete(key);
+      },
+    },
+  });
+  entries.set(
+    "ishas-draft-v2:lapor:PSN-0018",
+    JSON.stringify({ ...EMPTY_LAPOR_VALUES, title: "Judul lama", description: "" }),
+  );
+  const loaded = loadLaporDraft("PSN-0018");
+  expect(loaded?.description).toBe("");
+  expect("title" in (loaded ?? {})).toBe(false);
 });
 test("kuota/izin penyimpanan gagal dilaporkan, bukan sukses diam-diam", () => {
   Object.defineProperty(globalThis, "localStorage", {

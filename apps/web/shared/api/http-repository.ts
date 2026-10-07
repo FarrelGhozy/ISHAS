@@ -73,7 +73,7 @@ export type SamAssessmentInput = {
 export type LaporInput = {
   institutionCode: string;
   reporterName: string;
-  title: string;
+  title?: string; // D-47: opsional, selalu diabaikan (judul diturunkan otomatis)
   description: string;
   areaId?: string;
   manualLocation?: string;
