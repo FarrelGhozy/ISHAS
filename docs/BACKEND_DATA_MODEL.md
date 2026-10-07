@@ -672,18 +672,21 @@ bun scripts/seed.ts --mode=empty  # production: struktur kosong tapi valid
 ```
 
 - Mode `demo`: port 1:1 dari `apps/web/mocks/seed/seed.ts`. Komposisi terverifikasi
-  (dikunci `seed-composition.test.ts`): **6 pesantren** (2 terdaftar: PSN-0018,
-  PSN-0019), **6 user**, **19 laporan** (14 lapor-cepat + 5 penilaian-mandiri:
-  2 Menunggu, 5 Terbit, 2 Ditolak, 10 Diterima), **9 temuan + 9 rekomendasi**
-  (penilaian-mandiri tidak menyumbang temuan, D-32), **5
-  kategori + 27 soal SAM + 4 pengamatan SAM + 2 follow-up**, **18 audit + 4
-  notifikasi**, denah ilustrasi, bank live 59 indikator (6 dimensi, dari `INS-v2.0`, D-44).
-  Counter awal `report=20`, `institution=23`. Setiap akun diberi `password_hash`
+  (dikunci `seed-composition.test.ts`): **6 pesantren** (3 terdaftar: PSN-0024
+  UNIDA Gontor, PSN-0018, PSN-0019), **7 user**, **29 laporan** (22 lapor-cepat +
+  7 penilaian-mandiri: 3 Menunggu, 7 Terbit, 3 Ditolak, 16 Diterima),
+  **16 temuan + 16 rekomendasi** (penilaian-mandiri tidak menyumbang temuan,
+  D-32), **5 kategori + 27 soal SAM + 6 pengamatan SAM + 4 follow-up**,
+  **20 audit + 6 notifikasi**, denah ilustrasi (PSN-0018/PSN-0019; PSN-0024
+  belum ada denah), bank live 59 indikator (6 dimensi, dari `INS-v2.0`, D-44).
+  Counter awal `report=30`, `institution=23`. Setiap akun diberi `password_hash`
   dari `SEED_DEFAULT_PASSWORD` (prototipe) agar `/auth/login` dapat diuji.
-- Mode `empty` (inti, minimal valid): **1 pesantren `PSN-0018` status `Aktif`** +
-  **3 akun inti** (`USR-001` Super Admin, `USR-002` Validator, `USR-003` Pesantren
-  scope `PSN-0018`) — semua `Aktif` dan punya `password_hash` (`SEED_DEFAULT_PASSWORD`,
-  default `ishas-demo`). `reports/findings/recommendations/sam_*/campus_plans/
+- Mode `empty` (inti, minimal valid): **2 pesantren `Aktif`** (`PSN-0024` UNIDA
+  Gontor + `PSN-0018` PP Al-Hikmah Malang, D-48) + **4 akun inti**
+  (`USR-001` Super Admin, `USR-002` Validator, `USR-003` Pesantren
+  scope `PSN-0018`, `USR-007` Pesantren scope `PSN-0024`) — semua `Aktif` dan
+  punya `password_hash` (`SEED_DEFAULT_PASSWORD`, default `ishas-demo`).
+  `reports/findings/recommendations/sam_*/campus_plans/
   instrument_docs/audit_events/notifications=[]`, `drafts={}`, `index_history={}`,
   bank instrumen penuh (6 kategori, 59 indikator, D-44),
   `sequences={report:1, institution:19, ...}`, `sam_categories/questions` kosong

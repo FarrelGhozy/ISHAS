@@ -128,7 +128,7 @@ test("entri dokumen manual (D-16.g): izin, validasi, pembuatan, dan ganti", () =
   expect(doc.indicatorTitle).toBe("Dokumen tambahan validator");
 });
 
-test("migrasi v6 ke v16 mempertahankan record dan menambah instrumentDocs", () => {
+test("migrasi v6 ke v17 mempertahankan record dan menambah instrumentDocs", () => {
   const v6 = JSON.stringify({
     ...structuredClone(SEED),
     schemaVersion: 6,
@@ -140,10 +140,10 @@ test("migrasi v6 ke v16 mempertahankan record dan menambah instrumentDocs", () =
   });
   try {
     const loaded = loadState();
-    expect(loaded.schemaVersion).toBe(16);
+    expect(loaded.schemaVersion).toBe(17);
     expect(loaded.reports.length).toBe(SEED.reports.length);
     expect(loaded.instrumentDocs.length).toBe(SEED.instrumentDocs.length);
-    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v16");
+    expect(MOCK_STORAGE_KEY).toBe("ishas-mock-v17");
   } finally {
     Reflect.deleteProperty(globalThis, "localStorage");
   }

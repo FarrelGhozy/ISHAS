@@ -24,7 +24,7 @@ Kode/schema belum diubah; jangan membuat titik tengah sebagai fallback lokasi.
 Semua relasi memakai **ID stabil**; label tampilan tidak pernah menjadi kunci.
 Persistensi browser berversi + reset seed. Dilarang menyimpan kata sandi/token.
 
-**Status: kontrak aktif frontend (schema v16).** Temuan audit 8 September
+**Status: kontrak aktif frontend (schema v17).** Temuan audit 8 September
 sudah ditindaklanjuti lewat D-05–D-11 (9 September 2026), D-24, D-26, dan D-29.
 Baca `DATA_REQUIREMENTS.md` bersama skema di bawah; rumus/skala ilmiah final
 tetap menunggu penelitian.
@@ -53,16 +53,27 @@ tetap menunggu penelitian.
   (`MOCK_STORAGE_KEY: ishas-mock-v16`): menambah pesantren contoh `PSN-0024`
   (UNIDA Gontor, `Aktif` tanpa akun Pesantren → belum terdaftar). Migrasi
   v15→v16 hanya menambah record baru tanpa menyentuh data lama.
-- **Versi aktif sekarang:** `MOCK_SCHEMA_VERSION: 16`
-  (`MOCK_STORAGE_KEY: ishas-mock-v16`, lihat `store/state.ts`). Pemeriksaan
-  state: bila `schemaVersion !== 16`, pulihkan seed.
-- **Rantai migrasi yang dipertahankan kode:** v4→…→v15→v16. Semua
+
+- **Amendemen seed v17 (7 Oktober 2026):** schema `v17`
+  (`MOCK_STORAGE_KEY: ishas-mock-v17`): melengkapi `PSN-0024` UNIDA Gontor
+  sebagai pesantren demo utama — akun Pesantren `USR-007` (aktif → terdaftar),
+  23 gedung + 23 area kampus, laporan/temuan/rekomendasi, penilaian mandiri,
+  SAM-iSAFE, riwayat indeks, audit, dan notifikasi. Institusi diposisikan
+  paling atas; belum ada denah (diunggah pemilik menyusul). Migrasi v16→v17
+  hanya menambah rekam UNIDA yang belum ada (tanpa menggandakan) dan
+  memperbarui `counters.report`.
+- **Versi aktif sekarang:** `MOCK_SCHEMA_VERSION: 17`
+  (`MOCK_STORAGE_KEY: ishas-mock-v17`, lihat `store/state.ts`). Pemeriksaan
+  state: bila `schemaVersion !== 17`, pulihkan seed.
+- **Rantai migrasi yang dipertahankan kode:** v4→…→v15→v16→v17. Semua
   langkah mempertahankan record/ID; snapshot/temuan lama tidak dihitung ulang.
   - v10→v11: bank live `INS-LIVE` (D-24) — `instrument`, `instrumentChecksum`,
     opsi/bobot per jawaban, snapshot beku, skor %, artefak PDF;
     `instrumentVersions` lama menjadi bacaan legacy.
   - v13→v14 (D-26.f): `SamQuestion.panduan` + `contohBukti` (default kosong).
   - v14→v15 (D-29): `Report.reporterRecommendation` (opsional, maks 500).
+  - v15→v16: pesantren contoh `PSN-0024` (stub).
+  - v16→v17: kelengkapan seed UNIDA Gontor `PSN-0024` (lihat amendemen v17).
 - Migrasi v6→v7 mempertahankan seluruh record/ID; hanya menambah
   `instrumentDocs` (seed 2 Public + 2 Privat ilustrasi). Snapshot/temuan lama
   tidak dihitung ulang.
@@ -293,46 +304,48 @@ Action lama yang dihapus: semua yang menyebut `assignment`/`assessor` (`saveAsse
 ## 5. Seed kaya demo (agar setiap halaman dapat didemo ke dosen)
 
 Komposisi minimum §5 lama telah diperkaya (September 2026) menjadi data demo
-penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v16, D-24 +
-D-26.f + D-29). Angka di bawah dikunci `seed-composition.test.ts`.
+penuh berikut; implementasi di `apps/web/mocks/seed/seed.ts` (schema v17, D-24 +
+D-26.f + D-29 + amendemen seed v17). Angka di bawah dikunci `seed-composition.test.ts`.
 
-- **6 pesantren:** `PSN-0018` PP Al-Hikmah Malang (`Aktif`, terdaftar),
+- **6 pesantren:** `PSN-0024` UNIDA Gontor (`Aktif`, terdaftar, pesantren demo
+  utama, belum punya denah), `PSN-0018` PP Al-Hikmah Malang (`Aktif`, terdaftar),
   `PSN-0019` PP Nurul Iman Batu (`Aktif`, terdaftar), `PSN-0020` PP Darussalam
   Kediri (`Aktif` tetapi **tanpa akun Pesantren aktif** → tidak terdaftar, kasus
   batas D-08/D-09), `PSN-0021` (`Persiapan`, tidak tampil di pemilih),
-  `PSN-0023` (`Nonaktif`, arsip internal D-08), `PSN-0024` UNIDA Gontor
-  (`Aktif` tanpa akun Pesantren → belum terdaftar).
-- **6 akun:** `USR-001` Super Admin, `USR-002` + `USR-005` Validator,
-  `USR-003` + `USR-004` Pesantren (satu per pesantren terdaftar), `USR-006`
-  Pesantren `Menunggu` (belum membuat pesantrennya terdaftar). Kartu login demo
-  tetap 3 peran.
-- **19 laporan:** 14 `lapor-cepat` + 5 `penilaian-mandiri`; status: 2 `Menunggu
-  validasi`, 5 `Terbit` (penilaian mandiri, D-32), 2 `Ditolak` (alasan ≥10), dan
-  10 `Diterima` (termasuk `RPT-0017` arsip `Completed` D-07 yang tidak tampil
+  `PSN-0023` (`Nonaktif`, arsip internal D-08).
+- **7 akun:** `USR-001` Super Admin, `USR-002` + `USR-005` Validator,
+  `USR-003` + `USR-004` + `USR-007` Pesantren (satu per pesantren terdaftar),
+  `USR-006` Pesantren `Menunggu` (belum membuat pesantrennya terdaftar). Kartu
+  login demo 3 peran; kartu Pesantren memakai akun UNIDA `USR-007`.
+- **29 laporan:** 22 `lapor-cepat` + 7 `penilaian-mandiri`; status: 3 `Menunggu
+  validasi`, 7 `Terbit` (penilaian mandiri, D-32), 3 `Ditolak` (alasan ≥10), dan
+  16 `Diterima` (termasuk `RPT-0017` arsip `Completed` D-07 yang tidak tampil
   publik).
-- **9 temuan + 9 rekomendasi:** seluruh 6 kategori K3 + baris `Belum
-  dipetakan`; level risiko `Rendah/Sedang/Tinggi/Ekstrem` (satu `Ekstrem`
-  demo D-15.b); satu temuan tanpa titik; satu temuan `Terverifikasi` di laporan
-  `Proses` (D-05 satu laporan banyak temuan); satu `Dibatalkan` (D-21).
-  Status rekomendasi mencakup `Belum ditindaklanjuti`, `Berjalan`, `Menunggu
-  verifikasi`, `Terverifikasi`, `Dibatalkan` (progres 0–100, PIC, tenggat,
-  bukti bervariasi). Penilaian mandiri tidak lagi menyumbang temuan (D-32).
-- **SAM-iSAFE:** 5 kategori `SAM-KAT-01…05`, 27 soal `SAM-Q-*`, 4 pengamatan
-  `SAM-0001…0004` (`SAM-0004` `Berlangsung` dengan jawaban sebagian), 2 tindak
-  lanjut `SMF-0001/0002`.
-- **Audit + notifikasi:** 18 `audit_events` + 4 `notifications`.
-- **Lokasi:** denah ilustrasi + titik untuk kedua pesantren terdaftar, 4 gedung,
-  12 area (snapshot `INS-v2.0` sebagai sumber indeks + tren 6 periode
-  ilustratif Mar–Agu 2026).
+- **16 temuan + 16 rekomendasi:** seluruh 6 kategori K3 + baris `Belum
+  dipetakan`; level risiko `Rendah/Sedang/Tinggi/Ekstrem` (dua `Ekstrem`:
+  APAR musala PSN-0018 + APAR Masjid UNIDA); satu temuan tanpa titik; satu
+  temuan `Terverifikasi` di laporan `Proses` (D-05 satu laporan banyak temuan);
+  satu `Dibatalkan` (D-21). Status rekomendasi mencakup `Belum ditindaklanjuti`,
+  `Berjalan`, `Menunggu verifikasi`, `Terverifikasi`, `Dibatalkan` (progres
+  0–100, PIC, tenggat, bukti bervariasi). Penilaian mandiri tidak lagi
+  menyumbang temuan (D-32).
+- **SAM-iSAFE:** 5 kategori `SAM-KAT-01…05`, 27 soal `SAM-Q-*`, 6 pengamatan
+  `SAM-0001…0006` (`SAM-0004` dan `SAM-0006` `Berlangsung` dengan jawaban
+  sebagian), 4 tindak lanjut `SMF-0001…0004` (2 untuk UNIDA).
+- **Audit + notifikasi:** 20 `audit_events` + 6 `notifications`.
+- **Lokasi:** denah ilustrasi + titik untuk `PSN-0018`/`PSN-0019`; `PSN-0024`
+  UNIDA Gontor 23 gedung + 23 area kampus tanpa denah (diunggah menyusul).
+  Total 28 gedung + 36 area; snapshot `INS-v2.0` sebagai sumber indeks + tren
+  6 periode ilustratif Mar–Agu 2026 untuk ketiga pesantren terdaftar.
 - **Bank:** `INS-v2.0` (6 kategori K3, 6 dimensi, 59 indikator) →
   bank live `INS-LIVE` turunan (D-24/D-44); `INS-v1.0` diarsipkan untuk reproduksi
   snapshot lama. Katalog di `INSTRUMEN_MANDIRI.md`; mapping lama→baru di
   `KATEGORI_K3.md` §4.
-- **Counter seed:** `counters.report = 20`, `counters.institution = 23` (nomor
+- **Counter seed:** `counters.report = 30`, `counters.institution = 23` (nomor
   berikutnya; `> 0` adalah syarat validator lama).
 
-**Catatan validasi seed:** seed hanya menjamin **dua** pesantren terdaftar
-(`PSN-0018`, `PSN-0019`), bukan tiga, karena `PSN-0020` sengaja tanpa akun
-Pesantren aktif. Pilih skenario seed setelah D-09; lihat `DATA_REQUIREMENTS.md`
-§8. Seed tidak boleh membuat pesantren muncul dengan mengabaikan syarat
-pengelola aktif. Lokasi demo mengikuti kebijakan D-11.
+**Catatan validasi seed:** seed menjamin **tiga** pesantren terdaftar
+(`PSN-0024`, `PSN-0018`, `PSN-0019`) karena `PSN-0020` sengaja tanpa akun
+Pesantren aktif. Lihat `DATA_REQUIREMENTS.md` §8. Seed tidak boleh membuat
+pesantren muncul dengan mengabaikan syarat pengelola aktif. UNIDA (`PSN-0024`)
+belum punya denah hingga pemilik mengunggahnya lewat halaman Lokasi.

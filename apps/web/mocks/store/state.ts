@@ -7,8 +7,8 @@ import { buildBankLiveDariVersi } from "../instrument-bank";
 import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED } from "../sam-isafe";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 16;
-export const MOCK_STORAGE_KEY = "ishas-mock-v16";
+export const MOCK_SCHEMA_VERSION = 17;
+export const MOCK_STORAGE_KEY = "ishas-mock-v17";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -250,6 +250,77 @@ export function migrateV15(value: unknown): unknown {
   return migrated;
 }
 
+// Seed demo: v16 → v17 memperkaya UNIDA Gontor (PSN-0024) menjadi pesantren demo
+// utama: akun Pesantren, gedung/area, laporan/temuan/rekomendasi, penilaian mandiri,
+// SAM-iSAFE, riwayat indeks, audit, dan notifikasi. Rekam yang sudah ada tidak
+// digandakan; institusi diposisikan paling atas.
+export function migrateV16(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 16)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 17;
+
+  const seedInstitution = SEED.institutions.find((item) => item.code === "PSN-0024");
+  if (seedInstitution && Array.isArray(migrated.institutions)) {
+    const others = migrated.institutions.filter((item) => item.code !== "PSN-0024");
+    migrated.institutions = [structuredClone(seedInstitution), ...others];
+  }
+
+  const byId = <T extends { id: string }>(
+    rows: T[] | undefined,
+    seedRows: T[],
+    filter?: (row: T) => boolean,
+  ) => {
+    if (!Array.isArray(rows)) return;
+    const present = new Set(rows.map((row) => row.id));
+    for (const row of seedRows) {
+      if (present.has(row.id)) continue;
+      if (filter && !filter(row)) continue;
+      rows.push(structuredClone(row));
+    }
+  };
+
+  const unidaReportIds = new Set(
+    SEED.reports.filter((report) => report.institutionCode === "PSN-0024").map((report) => report.id),
+  );
+  const unidaSamIds = new Set(
+    SEED.samAssessments
+      .filter((assessment) => assessment.institutionCode === "PSN-0024")
+      .map((assessment) => assessment.id),
+  );
+  const isUnida = (row: { institutionCode?: string }) => row.institutionCode === "PSN-0024";
+
+  byId(migrated.users, SEED.users, (row) => row.institutionCodes.includes("PSN-0024"));
+  byId(migrated.buildings, SEED.buildings, isUnida);
+  byId(migrated.areas, SEED.areas, isUnida);
+  byId(migrated.reports, SEED.reports, isUnida);
+  byId(migrated.findings, SEED.findings, (row) => unidaReportIds.has(row.reportId));
+  byId(migrated.recommendations, SEED.recommendations, (row) => unidaReportIds.has(row.reportId));
+  byId(migrated.samAssessments, SEED.samAssessments, isUnida);
+  byId(migrated.samFollowUps, SEED.samFollowUps, (row) => unidaSamIds.has(row.assessmentId));
+  byId(migrated.auditEvents, SEED.auditEvents, isUnida);
+  byId(migrated.notifications, SEED.notifications, isUnida);
+
+  if (Array.isArray(migrated.selfAssessmentSnapshots)) {
+    const snapshotReports = new Set(migrated.selfAssessmentSnapshots.map((s) => s.reportId));
+    for (const snapshot of SEED.selfAssessmentSnapshots) {
+      if (unidaReportIds.has(snapshot.reportId) && !snapshotReports.has(snapshot.reportId))
+        migrated.selfAssessmentSnapshots.push(structuredClone(snapshot));
+    }
+  }
+
+  if (migrated.selfAssessmentDrafts && !migrated.selfAssessmentDrafts["SELF-PSN-0024"])
+    migrated.selfAssessmentDrafts["SELF-PSN-0024"] = structuredClone(
+      SEED.selfAssessmentDrafts["SELF-PSN-0024"],
+    );
+  if (migrated.indexHistory && !migrated.indexHistory["PSN-0024"])
+    migrated.indexHistory["PSN-0024"] = structuredClone(SEED.indexHistory["PSN-0024"]);
+  if (migrated.counters)
+    migrated.counters.report = Math.max(migrated.counters.report ?? 0, SEED.counters.report);
+
+  return migrated;
+}
+
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
@@ -320,6 +391,7 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v16") ??
       localStorage.getItem("ishas-mock-v15") ??
       localStorage.getItem("ishas-mock-v14") ??
       localStorage.getItem("ishas-mock-v13") ??
@@ -332,13 +404,15 @@ export function loadState(): IshasState {
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV15(
-        migrateV14(
-          migrateV13(
-            migrateV12(
-              migrateV11(
-                migrateV10(
-                  migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+      const parsed: unknown = migrateV16(
+        migrateV15(
+          migrateV14(
+            migrateV13(
+              migrateV12(
+                migrateV11(
+                  migrateV10(
+                    migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+                  ),
                 ),
               ),
             ),

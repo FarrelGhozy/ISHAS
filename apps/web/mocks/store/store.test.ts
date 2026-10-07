@@ -18,7 +18,7 @@ describe("selector", () => {
   test("terdaftar = Aktif DAN pesantren aktif", () => {
     const codes = selectRegisteredInstitutions(getState()).map((i) => i.code);
     // PSN-0020 Aktif tanpa pesantren → tidak terdaftar; PSN-0021 Persiapan → tidak.
-    expect(codes).toEqual(["PSN-0018", "PSN-0019"]);
+    expect(codes).toEqual(["PSN-0024", "PSN-0018", "PSN-0019"]);
   });
 
   test("Diterima dan Terbit menjadi sumber tervalidasi", () => {
@@ -110,8 +110,8 @@ describe("aturan aksi", () => {
   test("reset mengembalikan seed konsisten", () => {
     storeActions.resetMockData();
     const state = getState();
-    expect(state.schemaVersion).toBe(16);
-    expect(selectRegisteredInstitutions(state).length).toBe(2);
+    expect(state.schemaVersion).toBe(17);
+    expect(selectRegisteredInstitutions(state).length).toBe(3);
   });
 });
 
@@ -388,7 +388,7 @@ describe("lapor-cepat V2-03", () => {
     const result = storeActions.submitPublicReport({ name: "Santri Blok B" }, VALID);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.id).toBe("RPT-0020"); // seed kini 19 laporan (RPT-0001–0019)
+    expect(result.id).toBe("RPT-0030"); // seed kini 29 laporan (RPT-0001–0029)
 
     const report = getState().reports.find((r) => r.id === result.id);
     expect(report?.channel).toBe("lapor-cepat");
@@ -621,7 +621,7 @@ describe("regresi review frontend", () => {
     for (const id of ["USR-001", "USR-002", "USR-tidak-ada"]) {
       expect(storeActions.submitPublicReport({ id, name: "uji" }, input).ok).toBe(false);
     }
-    expect(getState().reports.length).toBe(19);
+    expect(getState().reports.length).toBe(29);
   });
 
   test("kegagalan penyimpanan tidak membuat record/audit/notifikasi atau menghabiskan nomor", () => {
@@ -650,7 +650,7 @@ describe("regresi review frontend", () => {
       { name: "uji" },
       { ...input, clientRequestId: "retry-after-quota" },
     );
-    expect(retry).toEqual({ ok: true, id: "RPT-0020" });
+    expect(retry).toEqual({ ok: true, id: "RPT-0030" });
   });
 });
 

@@ -180,11 +180,14 @@ dasar menampilkan alasan penolakan atau detail privat kepada orang yang memasukk
 Seed awal menyebut tiga pesantren Aktif, tetapi hanya dua mempunyai akun Pesantren.
 Dua rancangan yang konsisten bisa dipilih: (a) hanya dua terdaftar, yang ketiga menjadi kasus
 “Aktif tanpa akun Pesantren”; atau (b) tambahkan akun Pesantren untuk pesantren ketiga sehingga ketiganya terdaftar.
-Pemilihan belum diputuskan. Status `Aktif` dan count “terdaftar” jangan disamakan dalam acceptance criteria.
+**Diputuskan 7 Oktober 2026:** varian (b) diambil — `PSN-0024` UNIDA Gontor diberi akun
+Pesantren `USR-007` sehingga tiga pesantren terdaftar (`PSN-0024`, `PSN-0018`, `PSN-0019`);
+kasus batas “Aktif tanpa akun Pesantren” tetap dijaga `PSN-0020`. Status `Aktif` dan count
+“terdaftar” tetap tidak disamakan dalam acceptance criteria.
 
 Untuk setiap pesantren yang akan dipakai demo kirim, perlu akun Pesantren yang dapat dipilih saat login
 serta area yang sesuai kebijakan D-11. Tiga kartu **peran** login tidak otomatis membatasi total akun
-seed menjadi tiga; cara memilih akun Pesantren kedua menunggu D-09.
+seed menjadi tiga; kartu Pesantren memakai akun UNIDA `USR-007` (D-48).
 
 Rencana fixture tambahan untuk review, bukan data yang sudah dibuat:
 

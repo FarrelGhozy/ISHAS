@@ -77,23 +77,24 @@ describe("hitungRekapKategori", () => {
   test("temuan terpetakan ke seluruh kategori + Belum dipetakan (lapor-cepat)", () => {
     const rows = hitungRekapKategori(input);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    // D-32: penilaian mandiri tidak lagi menyumbang temuan. Tersisa lapor-cepat:
-    // Keselamatan: RPT-0019; Tanggap Darurat: RPT-0008 (APAR);
-    // Kesehatan: RPT-0013 + RPT-0015 + RPT-0018; Lingkungan: RPT-0009;
+    // D-32: penilaian mandiri tidak lagi menyumbang temuan. Tersisa lapor-cepat
+    // termasuk UNIDA Gontor (RPT-0022/0023/0024/0028/0029; RPT-0025 Completed):
+    // Keselamatan: RPT-0019 + RPT-0023; Tanggap Darurat: RPT-0008 + RPT-0024×2 + RPT-0029;
+    // Kesehatan: RPT-0013 + RPT-0015 + RPT-0018 + RPT-0022 + RPT-0028; Lingkungan: RPT-0009;
     // Psikososial/Aksesibilitas: (kosong); Belum dipetakan: RPT-0003.
-    expect(byName["Keselamatan dan Keamanan Gedung & Asrama"].jumlahTemuan).toBe(1);
-    expect(byName["Sistem Tanggap Darurat & Antisipasi Kebencanaan"].jumlahTemuan).toBe(1);
-    expect(byName["Kesehatan"].jumlahTemuan).toBe(3);
+    expect(byName["Keselamatan dan Keamanan Gedung & Asrama"].jumlahTemuan).toBe(2);
+    expect(byName["Sistem Tanggap Darurat & Antisipasi Kebencanaan"].jumlahTemuan).toBe(4);
+    expect(byName["Kesehatan"].jumlahTemuan).toBe(5);
     expect(byName["Kesehatan Lingkungan"].jumlahTemuan).toBe(1);
     expect(byName["Psikososial: Bullying & Kesehatan Mental"].jumlahTemuan).toBe(0);
     expect(byName["Fasilitas Disabilitas & Aksesibilitas"].jumlahTemuan).toBe(0);
     expect(byName[KATEGORI_BELUM_DIPETAKAN].jumlahTemuan).toBe(1);
   });
 
-  test("risiko Ekstrem terisi satu (temuan APAR musala) dan konsisten dengan total", () => {
+  test("risiko Ekstrem terisi dua (APAR musala + APAR masjid UNIDA) dan konsisten dengan total", () => {
     const rows = hitungRekapKategori(input);
     const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
-    expect(byName["Sistem Tanggap Darurat & Antisipasi Kebencanaan"].risiko.Ekstrem).toBe(1);
+    expect(byName["Sistem Tanggap Darurat & Antisipasi Kebencanaan"].risiko.Ekstrem).toBe(2);
     for (const row of rows) {
       if (row.name !== "Sistem Tanggap Darurat & Antisipasi Kebencanaan")
         expect(row.risiko.Ekstrem).toBe(0);
@@ -106,8 +107,9 @@ describe("hitungRekapKategori", () => {
   test("sesuai/tidak sesuai hanya dari snapshot Diterima/Terbit", () => {
     const rows = hitungRekapKategori(input);
     const total = rows.reduce((n, r) => n + r.jumlahSesuai + r.jumlahTidakSesuai, 0);
-    // D-44: 5 snapshot penilaian mandiri × 59 indikator = 295 jawaban terklasifikasi.
-    expect(total).toBe(295);
+    // D-44: 7 snapshot penilaian mandiri (5 lama + RPT-0026/0027 UNIDA) ×
+    // 59 indikator = 413 jawaban terklasifikasi.
+    expect(total).toBe(413);
   });
 
   test("Draft tidak memperbesar katalog dan tidak mengganti definisi jawaban historis", () => {

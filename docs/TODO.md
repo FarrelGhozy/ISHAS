@@ -1,5 +1,22 @@
 # TODO — Kontrol Kerja Aktif
 
+## Seed demo UNIDA Gontor lengkap + kartu login Pesantren (D-48) — 7 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik: tambah data dummy lengkap kampus UNIDA Gontor, taruh
+UNIDA paling atas urutan pesantren, dan ganti kartu login demo Pesantren ke
+UNIDA. Denah diunggah pemilik menyusul (seed tanpa denah).
+
+- [x] Catat D-48 + sinkron DATA_MODEL §0/§5 dan DATA_REQUIREMENTS §8.
+- [x] Seed `PSN-0024`: institusi lengkap (paling atas) + akun `USR-007` + 23 gedung + 23 area kampus (duplikat Perumahan Dosen digabung).
+- [x] Seed laporan/temuan/rekomendasi, penilaian mandiri, SAM-iSAFE (`SAM-0005/0006` + `SMF-0003/0004`), riwayat indeks, audit, notifikasi.
+- [x] `demo-accounts.ts`: kartu Pesantren diganti ke UNIDA `USR-007` (bukan menambah).
+- [x] Schema `v16 → v17` + migrasi aditif `migrateV16`; `SEED.schemaVersion = 17`; `backend-state` placeholder ikut v17.
+- [x] Seed `empty` (API) memuat `PSN-0024` UNIDA + akun `USR-007` tanpa data dummy (2 pesantren/4 akun); test integrasi disesuaikan.
+- [x] Sesuaikan test (state, seed-composition, store, dashboard-aggregate, kategori-k3, self-assessment-boundary, instrument-docs) — suite web hijau.
+- [x] Verifikasi: web lint/typecheck/341 test/build; API lint/typecheck/126 test (DB uji `ishas_test`); DB demo di-seed ulang (6 pesantren/7 user/29 laporan/16 temuan/16 rekomendasi/6 SAM/4 follow-up/20 audit/6 notifikasi).
+- [x] Browser: kartu login Pesantren = UNIDA (`PSN-0024`), pemilih publik menampilkan `PSN-0024 — UNIDA Gontor` paling atas, halaman Lokasi 23 area (Perumahan Dosen 1) + "Belum ada denah aktif", ponsel tanpa overflow horizontal.
+- [ ] Review pemilik.
+
 ## Form lapor tanpa Judul; Deskripsi temuan opsional di bawah Kategori (D-47) — 7 Oktober 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik: di `/lapor`, tepat di bawah blok Kategori K3/Aspek

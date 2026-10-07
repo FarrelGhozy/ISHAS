@@ -142,14 +142,14 @@ describe.skipIf(!dbReady)("seed demo", () => {
   test("komposisi kanal & status validasi laporan", async () => {
     const byChannel = (channel: string) =>
       scalar("SELECT COUNT(*) AS c FROM reports WHERE channel = ?", [channel]);
-    expect(await byChannel("lapor-cepat")).toBe(14);
-    expect(await byChannel("penilaian-mandiri")).toBe(5);
+    expect(await byChannel("lapor-cepat")).toBe(22);
+    expect(await byChannel("penilaian-mandiri")).toBe(7);
     const byStatus = (status: string) =>
       scalar("SELECT COUNT(*) AS c FROM reports WHERE validation_status = ?", [status]);
-    expect(await byStatus("Menunggu validasi")).toBe(2);
-    expect(await byStatus("Ditolak")).toBe(2);
-    expect(await byStatus("Diterima")).toBe(10);
-    expect(await byStatus("Terbit")).toBe(5);
+    expect(await byStatus("Menunggu validasi")).toBe(3);
+    expect(await byStatus("Ditolak")).toBe(3);
+    expect(await byStatus("Diterima")).toBe(16);
+    expect(await byStatus("Terbit")).toBe(7);
   });
 
   test("tidak ada relasi yatim antar tabel", async () => {
@@ -207,10 +207,10 @@ describe.skipIf(!dbReady)("seed demo", () => {
 });
 
 describe.skipIf(!dbReady)("seed empty (inti)", () => {
-  test("3 akun inti + 1 pesantren aktif, data display kosong", async () => {
+  test("4 akun inti + 2 pesantren aktif, data display kosong", async () => {
     await seedEmpty();
-    expect(await countRows("institutions")).toBe(1);
-    expect(await countRows("users")).toBe(3);
+    expect(await countRows("institutions")).toBe(2);
+    expect(await countRows("users")).toBe(4);
     expect(await countRows("reports")).toBe(0);
     expect(await countRows("findings")).toBe(0);
     expect(await countRows("recommendations")).toBe(0);
@@ -221,18 +221,19 @@ describe.skipIf(!dbReady)("seed empty (inti)", () => {
   });
 
   test("tiap peran inti aktif + pesantren terdaftar + bank checksum ck-", async () => {
+    const aktifPerPeran: Record<string, number> = { admin: 1, validator: 1, pesantren: 2 };
     for (const role of ["admin", "validator", "pesantren"]) {
       const [rows] = await pool.query<RowDataPacket[]>(
         "SELECT COUNT(*) AS c FROM users WHERE role = ? AND status = 'Aktif'",
         [role],
       );
-      expect(Number(rows[0]?.c)).toBe(1);
+      expect(Number(rows[0]?.c)).toBe(aktifPerPeran[role]);
     }
     const [registered] = await pool.query<RowDataPacket[]>(
       "SELECT COUNT(*) AS c FROM institutions i JOIN users u ON u.institution_code = i.code " +
         "WHERE i.status = 'Aktif' AND u.role = 'pesantren' AND u.status = 'Aktif'",
     );
-    expect(Number(registered[0]?.c)).toBe(1);
+    expect(Number(registered[0]?.c)).toBe(2);
     const [meta] = await pool.query<RowDataPacket[]>(
       "SELECT checksum FROM instrument_meta WHERE id = 'INS-LIVE'",
     );
@@ -243,7 +244,7 @@ describe.skipIf(!dbReady)("seed empty (inti)", () => {
     const [rows] = await pool.query<RowDataPacket[]>(
       "SELECT COUNT(*) AS c FROM users WHERE password_hash IS NOT NULL",
     );
-    expect(Number(rows[0]?.c)).toBe(3);
+    expect(Number(rows[0]?.c)).toBe(4);
   });
 
   test("sequences awal", async () => {

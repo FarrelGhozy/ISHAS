@@ -29,7 +29,7 @@ async function settle(): Promise<void> {
 describe("emptyIshasState", () => {
   test("semua koleksi kosong dan instrument tanpa dimensi", () => {
     const state = emptyIshasState();
-    expect(state.schemaVersion).toBe(16);
+    expect(state.schemaVersion).toBe(17);
     expect(state.institutions).toEqual([]);
     expect(state.reports).toEqual([]);
     expect(state.notifications).toEqual([]);

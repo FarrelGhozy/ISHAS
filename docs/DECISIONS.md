@@ -1432,3 +1432,37 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   menoleransi key `title` warisan.
 - Dokumen terdampak: FLOWS §2, WIREFRAMES §2, DATA_MODEL §Report,
   BACKEND_API_CONTRACT §0.b/§3, BACKEND_DATA_MODEL §reports (komentar).
+
+## D-48 — Seed demo UNIDA Gontor lengkap + kartu login Pesantren — DISETUJUI 7 Oktober 2026
+
+- Arahan pemilik: tambah data dummy lengkap kampus UNIDA (Universitas Darussalam
+  Gontor), tempatkan UNIDA paling atas urutan pesantren, ganti kartu login demo
+  Pesantren dari PP Al-Hikmah Malang ke UNIDA, dan sertakan seed fitur SAM-iSAFE
+  UNIDA. Denah kampus diunggah pemilik sendiri menyusul.
+- **D-48.a — Pesantren baru terdaftar:** `PSN-0024` UNIDA Gontor (Kabupaten
+  Ponorogo) menjadi pesantren `Aktif` dengan akun Pesantren `USR-007` sehingga
+  terdaftar publik; posisinya paling atas pada array `institutions`.
+- **D-48.b — Data dummy lengkap:** 23 gedung + 23 area kampus (duplikat
+  "Perumahan Dosen" digabung), laporan lintas status, temuan/rekomendasi,
+  penilaian mandiri, SAM-iSAFE, riwayat indeks, audit, dan notifikasi — setara
+  `PSN-0018`/`PSN-0019`. Nama penanggung jawab memakai nama PJ ISHAS
+  (`Eko Prasetio Widhi, M.Kom.`); fakta kampus (lokasi/fasilitas) bersifat
+  ilustratif, bukan data ilmiah final.
+- **D-48.c — Tanpa denah:** `PSN-0024` belum punya `campusPlans` maupun
+  `activeCampusPlanVersionId`; pemilik mengunggah denah lewat halaman Lokasi.
+  Titik temuan `null` sampai denah tersedia.
+- **D-48.d — Kartu login demo:** kartu peran Pesantren memakai akun UNIDA
+  `USR-007` (`unida@ishas.demo`). Akun `USR-003` (PSN-0018) tetap ada di seed
+  untuk pengujian/scope, hanya tidak ditampilkan sebagai kartu login.
+- **D-48.e — Schema:** naik `v16 → v17` dengan migrasi aditif (menambah rekam
+  UNIDA yang belum ada tanpa menggandakan, tidak menghapus record/ID).
+- **D-48.f — Urutan backend:** seed demo memberi `created_at` institusi sesuai
+  urutan `SEED.institutions`, dan state backend membaca
+  `ORDER BY created_at, code`, agar pesantren demo utama (UNIDA) tetap paling
+  atas pada mode backend (PK `code` akan menaruhnya paling akhir).
+- **D-48.g — Seed `empty`:** mode `empty` (tanpa data dummy) juga memuat
+  `PSN-0024` UNIDA Gontor beserta akun `USR-007` agar pesantren demo utama dan
+  kartu login konsisten di mode backend; seluruh data display tetap kosong
+  (2 pesantren/4 akun, bank instrumen penuh).
+- Dokumen terdampak: DATA_MODEL §0/§5, DATA_REQUIREMENTS §8, seed web + API,
+  `demo-accounts.ts`, `store/state.ts`, test seed/state/dashboard.

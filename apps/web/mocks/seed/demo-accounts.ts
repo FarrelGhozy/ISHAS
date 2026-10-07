@@ -1,5 +1,6 @@
-// Akun demo persis — docs ROLES.md §2–§4. Akun Pesantren kedua (USR-004) ada di seed
-// untuk demo scope isolation; cara memilihnya saat login menunggu D-09 (TANPA pemilih peran).
+// Akun demo persis — docs ROLES.md §2–§4. Kartu Pesantren memakai akun UNIDA
+// Gontor (USR-007, PSN-0024) sesuai D-48; akun Pesantren lain (USR-003/USR-004)
+// tetap di seed untuk demo scope isolation dan pengujian.
 // Dilarang menyimpan/meminta kata sandi: login demo memakai kartu akun (persis V1).
 
 import type { RoleId, RoleLabel } from "~/mocks/types";
@@ -37,13 +38,13 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     description: "Mengelola instrumen dan penilaian.",
   },
   {
-    id: "USR-003",
-    name: "Ust. K.H. Mustofa Kamal",
-    email: "pesantren@ishas.demo",
-    initials: "MK",
+    id: "USR-007",
+    name: "Eko Prasetio Widhi, M.Kom.",
+    email: "unida@ishas.demo",
+    initials: "EP",
     role: "Pesantren",
     roleId: "pesantren",
-    scope: "PSN-0018 · PP Al-Hikmah Malang",
+    scope: "PSN-0024 · UNIDA Gontor",
     description: "Memvalidasi laporan dan mengelola tindak lanjut.",
   },
 ];

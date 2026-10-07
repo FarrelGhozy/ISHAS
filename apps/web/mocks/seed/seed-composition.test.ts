@@ -10,10 +10,10 @@ import {
 } from "../store/selectors";
 
 describe("komposisi seed demo", () => {
-  test("19 laporan, 6 pesantren, 6 pengguna", () => {
-    expect(SEED.reports).toHaveLength(19);
+  test("29 laporan, 6 pesantren, 7 pengguna", () => {
+    expect(SEED.reports).toHaveLength(29);
     expect(SEED.institutions).toHaveLength(6);
-    expect(SEED.users).toHaveLength(6);
+    expect(SEED.users).toHaveLength(7);
   });
 
   test("RPT-0017 contoh arsip Completed", () => {
@@ -41,6 +41,7 @@ describe("komposisi seed demo", () => {
   test("USR-006 Menunggu belum membuat terdaftar", () => {
     expect(SEED.users.find((item) => item.id === "USR-006")?.status).toBe("Menunggu");
     expect(selectRegisteredInstitutions(SEED).map((item) => item.code)).toEqual([
+      "PSN-0024",
       "PSN-0018",
       "PSN-0019",
     ]);

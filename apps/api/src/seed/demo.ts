@@ -44,10 +44,21 @@ async function seedCampusBlobs(): Promise<void> {
 export async function seedDemo(): Promise<void> {
   await truncateAll();
 
+  // `created_at` eksplisit mengikuti urutan SEED agar pemilih publik menampilkan
+  // pesantren demo utama (UNIDA Gontor, PSN-0024) paling atas (bukan urutan kode).
   await insertRows(
     "institutions",
-    ["code", "name", "city", "address", "manager", "status", "active_campus_plan_id"],
-    SEED.institutions.map((i) => [
+    [
+      "code",
+      "name",
+      "city",
+      "address",
+      "manager",
+      "status",
+      "active_campus_plan_id",
+      "created_at",
+    ],
+    SEED.institutions.map((i, index) => [
       i.code,
       i.name,
       i.location,
@@ -55,6 +66,7 @@ export async function seedDemo(): Promise<void> {
       i.manager,
       i.status,
       i.activeCampusPlanVersionId ?? null,
+      new Date(Date.parse("2026-01-01T00:00:00.000Z") + index * 1000),
     ]),
   );
 

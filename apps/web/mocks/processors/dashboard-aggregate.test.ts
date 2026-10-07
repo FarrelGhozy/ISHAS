@@ -149,22 +149,22 @@ describe("panel temuan dan tindak lanjut", () => {
 
   test("temuan aktif terurut Ekstrem → Tinggi → Sedang → Rendah dan membatasi jumlah", () => {
     const prioritas = pilihTemuanPrioritas(findings, 4);
-    expect(prioritas.map((f) => f.level)).toEqual(["Ekstrem", "Tinggi", "Sedang", "Sedang"]);
+    expect(prioritas.map((f) => f.level)).toEqual(["Ekstrem", "Ekstrem", "Tinggi", "Tinggi"]);
     expect(prioritas.every((f) => f.status !== "Terverifikasi" && f.status !== "Dibatalkan")).toBe(
       true,
     );
   });
 
   test("risiko tinggi menghitung temuan aktif level Tinggi", () => {
-    expect(hitungRisikoTinggi(findings)).toBe(1);
+    expect(hitungRisikoTinggi(findings)).toBe(2);
   });
 
   test("ringkasan tindak lanjut: rata-rata progres + count + dibatalkan", () => {
     const ringkas = ringkasTindakLanjut(recs);
-    expect(ringkas.pekerjaan).toBe(9);
-    expect(ringkas.terverifikasi).toBe(2);
+    expect(ringkas.pekerjaan).toBe(16);
+    expect(ringkas.terverifikasi).toBe(3);
     expect(ringkas.dibatalkan).toBe(1);
-    expect(ringkas.rataProgress).toBe(41); // total progres 370 / 9 rekomendasi
+    expect(ringkas.rataProgress).toBe(36); // total progres 575 / 16 rekomendasi
   });
 
   test("distribusi tindak lanjut memuat lima status termasuk Dibatalkan", () => {
@@ -317,12 +317,12 @@ describe("insight dashboard publik", () => {
 
     expect(result.overview.pesantrenTercakup).toBe(2);
     expect(result.overview.penggunaAktif).toBe(5);
-    expect(result.overview.laporanTervalidasi).toBe(14);
+    expect(result.overview.laporanTervalidasi).toBe(22);
     expect(result.distribution.kanal).toEqual([
-      { label: "Lapor cepat", value: 9 },
-      { label: "Penilaian mandiri", value: 5 },
+      { label: "Lapor cepat", value: 15 },
+      { label: "Penilaian mandiri", value: 7 },
     ]);
-    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(14);
+    expect(result.distribution.aktivitas.reduce((sum, item) => sum + item.value, 0)).toBe(22);
   });
 
   test("filter pesantren mempersempit seluruh angka insight", () => {

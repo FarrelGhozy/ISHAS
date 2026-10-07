@@ -1,7 +1,8 @@
-// Seed "inti" (mode `empty`): akun inti untuk inisial awal + satu pesantren
-// terdaftar + bank instrumen penilaian mandiri penuh (6 dimensi/59 indikator,
-// D-44). Seluruh data display (laporan, temuan, rekomendasi, SAM, denah, dokumen,
-// audit, notifikasi) sengaja KOSONG. Lihat BACKEND_DATA_MODEL §10.
+// Seed "inti" (mode `empty`): akun inti untuk inisial awal + dua pesantren
+// terdaftar (PP Al-Hikmah Malang + UNIDA Gontor, D-48) + bank instrumen penilaian
+// mandiri penuh (6 dimensi/59 indikator, D-44). Seluruh data display (laporan,
+// temuan, rekomendasi, SAM, denah, dokumen, audit, notifikasi) sengaja KOSONG.
+// Lihat BACKEND_DATA_MODEL §10.
 
 import { K3_CATEGORIES } from "../../../web/mocks/kategori-k3";
 import { BANK_ID, buildBankLiveDariVersi } from "../../../web/mocks/instrument-bank";
@@ -33,11 +34,21 @@ export async function seedEmpty(): Promise<void> {
     K3_CATEGORIES.flatMap((c) => c.aspects.map((a, index) => [a.id, a.categoryId, a.name, index + 1])),
   );
 
-  // Satu pesantren terdaftar agar akun Pesantren inti punya scope yang sah.
+  // Dua pesantren terdaftar (UNIDA paling atas via `created_at`, D-48) agar akun
+  // Pesantren inti punya scope yang sah. Tanpa data dummy.
   await insertRows(
     "institutions",
-    ["code", "name", "city", "address", "manager", "status"],
+    ["code", "name", "city", "address", "manager", "status", "created_at"],
     [
+      [
+        "PSN-0024",
+        "UNIDA Gontor",
+        "Kabupaten Ponorogo",
+        "Jl. Raya Siman Km. 5, Siman, Kabupaten Ponorogo, Jawa Timur 63471",
+        "Eko Prasetio Widhi, M.Kom.",
+        "Aktif",
+        new Date(Date.parse("2026-01-01T00:00:00.000Z")),
+      ],
       [
         "PSN-0018",
         "PP Al-Hikmah Malang",
@@ -45,11 +56,13 @@ export async function seedEmpty(): Promise<void> {
         "Jl. Raya Ketawang, Gondanglegi, Kabupaten Malang",
         "Ust. K.H. Mustofa Kamal",
         "Aktif",
+        new Date(Date.parse("2026-01-01T00:00:01.000Z")),
       ],
     ],
   );
 
-  // Tiga akun inti (sama dengan kartu login demo) + sandi awal prototipe.
+  // Akun inti (admin/validator + satu Pesantren per pesantren terdaftar) + sandi
+  // awal prototipe. `USR-007` (UNIDA) selaras kartu login demo D-48.
   const passwordHash = await hashPassword(seedDefaultPassword);
   await insertRows(
     "users",
@@ -63,6 +76,15 @@ export async function seedEmpty(): Promise<void> {
         "pesantren@ishas.demo",
         "pesantren",
         "PSN-0018",
+        "Aktif",
+        passwordHash,
+      ],
+      [
+        "USR-007",
+        "Eko Prasetio Widhi, M.Kom.",
+        "unida@ishas.demo",
+        "pesantren",
+        "PSN-0024",
         "Aktif",
         passwordHash,
       ],

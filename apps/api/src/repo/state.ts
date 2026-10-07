@@ -311,7 +311,7 @@ export async function loadIshasState(): Promise<IshasState> {
     indexRows,
     sequenceRows,
   ] = await Promise.all([
-    rows("SELECT * FROM institutions"),
+    rows("SELECT * FROM institutions ORDER BY created_at, code"),
     rows("SELECT * FROM users"),
     rows("SELECT * FROM reports"),
     rows("SELECT * FROM self_assessment_snapshots"),
