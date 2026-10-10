@@ -36,3 +36,6 @@ docs/NOTA_*
 
 # Seed demo lokal privat (email + sandi khusus komputer ini)
 apps/api/src/seed/demo.local.ts
+
+# Override Docker Compose khusus komputer ini (mis. pakai MySQL lokal)
+docker-compose.override.yml
