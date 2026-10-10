@@ -37,7 +37,7 @@ describe("validateLapor", () => {
 
   test("pesantren tak terdaftar → pesan persis dokumen", () => {
     const errors = validateLapor({ ...BASE, institutionCode: "PSN-9999" }, CTX);
-    expect(errors.institutionCode).toBe("Pilih pesantren terdaftar.");
+    expect(errors.institutionCode).toBe("Pilih institusi terdaftar.");
   });
 
   test("pesantren tanpa area → pelapor wajib menulis lokasi", () => {
@@ -47,7 +47,7 @@ describe("validateLapor", () => {
 
   test("area milik pesantren lain → ditolak", () => {
     const errors = validateLapor({ ...BASE, areaId: "AREA-005" }, CTX);
-    expect(errors.areaId).toBe("Lokasi/area tidak sah untuk pesantren ini.");
+    expect(errors.areaId).toBe("Lokasi/area tidak sah untuk institusi ini.");
   });
 
   test("D-47: deskripsi temuan opsional — kosong/pendek tetap sah; kontak panjang ditolak", () => {

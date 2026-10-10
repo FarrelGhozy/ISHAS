@@ -119,7 +119,7 @@ export function LaporForm(props: Props) {
 
       <div>
         <label htmlFor="lapor-pesantren" className={LABEL}>
-          Pesantren*
+          Institusi*
         </label>
         <select
           id="lapor-pesantren"
@@ -133,7 +133,7 @@ export function LaporForm(props: Props) {
           onChange={(e) => props.onChange("institutionCode", e.target.value)}
           onBlur={() => props.onBlur("institutionCode")}
         >
-          <option value="">Pilih pesantren</option>
+          <option value="">Pilih institusi</option>
           {registered.map((i) => (
             <option key={i.code} value={i.code}>
               {i.code} — {i.name}
@@ -385,7 +385,7 @@ export function LaporForm(props: Props) {
 
       {!readOnly && submitDisabled ? (
         <p className="text-sm text-secondary-text">
-          Lengkapi nama (minimal 2 karakter), pesantren, dan area/lokasi untuk mengirim.
+          Lengkapi nama (minimal 2 karakter), institusi, dan area/lokasi untuk mengirim.
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-2 pt-1">

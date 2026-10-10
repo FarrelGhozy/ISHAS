@@ -183,8 +183,8 @@ function LaporPageContent() {
           <h1 className="text-xl font-extrabold text-heading">Laporkan temuan bahaya</h1>
         </header>
         <EmptyState
-          title="Belum ada pesantren terdaftar"
-          description="Pendaftaran dilakukan oleh Super Admin. Pelaporan dinonaktifkan sampai ada pesantren terdaftar."
+          title="Belum ada institusi terdaftar"
+          description="Pendaftaran dilakukan oleh Super Admin. Pelaporan dinonaktifkan sampai ada institusi terdaftar."
           action={
             <Link className="secondary-button" to="/">
               Kembali ke dashboard
@@ -231,7 +231,7 @@ function LaporPageContent() {
         };
         if (!currentSaved || !saveLaporDraft(value || null, next)) {
           setFormError(
-            "Draft belum dapat disimpan. Periksa penyimpanan browser sebelum berpindah pesantren.",
+            "Draft belum dapat disimpan. Periksa penyimpanan browser sebelum berpindah institusi.",
           );
           return;
         }
@@ -341,7 +341,7 @@ function LaporPageContent() {
           role="alert"
           className="rounded-[7px] border border-line bg-white px-3 py-2 text-xs font-semibold text-[#b91c1c]"
         >
-          Pesantren tidak tersedia untuk pelaporan. Pilih pesantren terdaftar di bawah ini.
+          Institusi tidak tersedia untuk pelaporan. Pilih institusi terdaftar di bawah ini.
         </div>
       ) : null}
 

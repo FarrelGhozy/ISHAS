@@ -82,7 +82,7 @@ export function SelfAssessmentEvidencePicker({
       />
       {!institutionCode ? (
         <p className="mt-2 text-xs text-secondary-text">
-          Pilih pesantren sebelum mengunggah bukti.
+          Pilih institusi sebelum mengunggah bukti.
         </p>
       ) : null}
       {busy ? (

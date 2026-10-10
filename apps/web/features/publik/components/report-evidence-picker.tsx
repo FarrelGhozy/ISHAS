@@ -83,7 +83,7 @@ export function ReportEvidencePicker({
       />
       {!institutionCode ? (
         <p className="mt-2 text-sm text-secondary-text">
-          Pilih pesantren sebelum mengunggah bukti.
+          Pilih institusi sebelum mengunggah bukti.
         </p>
       ) : null}
       {busy ? (

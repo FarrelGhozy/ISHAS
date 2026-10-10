@@ -370,7 +370,7 @@ export function PenilaianMandiriPage() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="kicker">Penilaian mandiri</p>
-          <h1 className="text-2xl font-extrabold text-heading">Periksa kondisi K3L pesantren</h1>
+          <h1 className="text-2xl font-extrabold text-heading">Periksa kondisi K3L institusi</h1>
           <p className="mt-1 max-w-2xl text-sm text-secondary-text">
             Jawab sesuai kondisi yang Anda lihat. Satu penilai menghasilkan satu laporan PDF.
             Data tersimpan otomatis di perangkat ini dan baru dikirim setelah seluruh isian lengkap.
@@ -386,7 +386,7 @@ export function PenilaianMandiriPage() {
           role="alert"
           className="rounded-lg border border-line bg-white p-3 text-sm font-semibold text-[#b91c1c]"
         >
-          Pesantren tidak tersedia untuk pelaporan. Pilih pesantren terdaftar di bawah ini.
+          Institusi tidak tersedia untuk pelaporan. Pilih institusi terdaftar di bawah ini.
         </p>
       ) : null}
 
@@ -401,19 +401,19 @@ export function PenilaianMandiriPage() {
             </h2>
           </div>
           <p className="ml-9 text-xs text-secondary-text">
-            Satu penilai menghasilkan satu laporan. Pilih pesantren agar daftar
+            Satu penilai menghasilkan satu laporan. Pilih institusi agar daftar
             lokasi dan draft yang sesuai dapat dimuat.
           </p>
         </div>
         <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
           <label className="text-sm font-bold text-heading">
-            Pesantren <span className="text-primary">*</span>
+            Institusi <span className="text-primary">*</span>
             <select
               className={fieldClass}
               value={institutionCode}
               onChange={(event) => selectInstitution(event.target.value)}
             >
-              <option value="">Pilih pesantren</option>
+              <option value="">Pilih institusi</option>
               {selectRegisteredInstitutions(state).map((item) => (
                 <option key={item.code} value={item.code}>
                   {item.name}
@@ -626,7 +626,7 @@ export function PenilaianMandiriPage() {
                           disabled={!institutionCode}
                         >
                           <option value="">
-                            {institutionCode ? "Pilih area" : "Pilih pesantren dahulu"}
+                            {institutionCode ? "Pilih area" : "Pilih institusi dahulu"}
                           </option>
                           {areas.map((area) => (
                             <option key={area.id} value={area.id}>

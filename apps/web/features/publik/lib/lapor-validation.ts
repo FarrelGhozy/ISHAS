@@ -54,7 +54,7 @@ export function validateLapor(
   else if (nama.length > 100) errors.reporterName = "Nama maksimal 100 karakter.";
 
   if (!values.institutionCode || !context.registeredCodes.includes(values.institutionCode)) {
-    errors.institutionCode = "Pilih pesantren terdaftar.";
+    errors.institutionCode = "Pilih institusi terdaftar.";
   }
 
   if (!errors.institutionCode) {
@@ -63,7 +63,7 @@ export function validateLapor(
         ? "Tulis lokasi karena daftar area belum tersedia."
         : "Pilih area atau tulis lokasi secara manual.";
     } else if (values.areaId && !context.areaIdsOfSelected.includes(values.areaId)) {
-      errors.areaId = "Lokasi/area tidak sah untuk pesantren ini.";
+      errors.areaId = "Lokasi/area tidak sah untuk institusi ini.";
     }
   }
 
