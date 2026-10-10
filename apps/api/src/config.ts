@@ -58,6 +58,12 @@ export function demoAuthEnabled(): boolean {
 // Sandi awal akun seed / akun baru; hanya prototipe, wajib diganti lewat /auth/password.
 export const seedDefaultPassword = process.env.SEED_DEFAULT_PASSWORD ?? "ishas-demo";
 
+// Seed demo lokal privat (`apps/api/src/seed/demo.local.ts`, tidak ikut commit).
+// Mati secara bawaan agar test dan mesin lain memakai seed demo standar.
+export function seedLocalEnabled(): boolean {
+  return boolEnv("SEED_LOCAL_ENABLED", false);
+}
+
 // Batas percobaan login per IP+email dalam `windowMs`.
 export const loginRateLimit = {
   max: intEnv("LOGIN_RATE_LIMIT", 5),

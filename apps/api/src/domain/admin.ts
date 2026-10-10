@@ -11,7 +11,7 @@ import {
   updateInstitutionStatus,
   updateUserRow,
 } from "../repo/admin";
-import { seedDemo } from "../seed/demo";
+import { seedDemoPreferLocal } from "../seed/local";
 import { clearStorageDir } from "../storage";
 import { hashPassword } from "../auth/password";
 import { seedDefaultPassword } from "../config";
@@ -293,9 +293,10 @@ export async function resetUserPassword(
 }
 
 // Reset demo: bersihkan storage lalu tanam ulang seed (cermin `resetMockData`).
+// Bila `SEED_LOCAL_ENABLED=true`, seed lokal privat dipakai agar sandi tetap.
 export async function resetDemo(): Promise<AdminActionResult> {
   await clearStorageDir();
-  await seedDemo();
+  await seedDemoPreferLocal();
   return { ok: true };
 }
 

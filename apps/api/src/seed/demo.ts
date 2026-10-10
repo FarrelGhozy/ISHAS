@@ -5,6 +5,7 @@ import { copyFile, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SEED } from "../../../web/mocks/seed/seed";
+import type { IshasState } from "../../../web/mocks/types";
 import { K3_CATEGORIES } from "../../../web/mocks/kategori-k3";
 import { STORAGE_DIR } from "../storage";
 import { hashPassword } from "../auth/password";
@@ -29,9 +30,9 @@ const bundledCampusImage = join(
 
 // Salin ilustrasi denah bundel ke storage agar `GET /api/v1/files/:assetId`
 // dapat menyajikannya (paritas tampilan demo mock ↔ backend).
-async function seedCampusBlobs(): Promise<void> {
+async function seedCampusBlobs(seed: IshasState): Promise<void> {
   const seen = new Set<string>();
-  for (const plan of SEED.campusPlans) {
+  for (const plan of seed.campusPlans) {
     const stored = campusStoredPath(plan.id);
     if (seen.has(stored)) continue;
     seen.add(stored);
@@ -41,7 +42,10 @@ async function seedCampusBlobs(): Promise<void> {
   }
 }
 
-export async function seedDemo(): Promise<void> {
+export async function seedDemo(
+  seed: IshasState = SEED,
+  password: string = seedDefaultPassword,
+): Promise<void> {
   await truncateAll();
 
   // `created_at` eksplisit mengikuti urutan SEED agar pemilih publik menampilkan
@@ -58,7 +62,7 @@ export async function seedDemo(): Promise<void> {
       "active_campus_plan_id",
       "created_at",
     ],
-    SEED.institutions.map((i, index) => [
+    seed.institutions.map((i, index) => [
       i.code,
       i.name,
       i.location,
@@ -72,11 +76,11 @@ export async function seedDemo(): Promise<void> {
 
   // Fase 6: setiap akun demo dapat sandi awal prototipe (dokumentasi di
   // BACKEND_DATA_MODEL §10); wajib diganti lewat /auth/password.
-  const passwordHash = await hashPassword(seedDefaultPassword);
+  const passwordHash = await hashPassword(password);
   await insertRows(
     "users",
     ["id", "name", "email", "role", "institution_code", "status", "last_active_at", "password_hash"],
-    SEED.users.map((u) => [
+    seed.users.map((u) => [
       u.id,
       u.name,
       u.email,
@@ -101,8 +105,8 @@ export async function seedDemo(): Promise<void> {
 
   // file_assets: denah (satu per campus plan, id disintesis unik + blob disalin
   // ke storage) + dokumen indikator (metadata; blob disiapkan saat migrasi).
-  await seedCampusBlobs();
-  const campusAssetRows: SqlValue[][] = SEED.campusPlans.map((plan) => [
+  await seedCampusBlobs(seed);
+  const campusAssetRows: SqlValue[][] = seed.campusPlans.map((plan) => [
     campusAssetId(plan.id),
     "campus-plan",
     plan.institutionCode,
@@ -117,7 +121,7 @@ export async function seedDemo(): Promise<void> {
     "Public",
     plan.uploadedBy,
   ]);
-  const docAssetRows: SqlValue[][] = SEED.instrumentDocs.map((doc) => [
+  const docAssetRows: SqlValue[][] = seed.instrumentDocs.map((doc) => [
     doc.assetId,
     "instrument-doc",
     null,
@@ -153,13 +157,13 @@ export async function seedDemo(): Promise<void> {
   );
 
   await insertRows("instrument_meta", ["id", "label", "checksum"], [
-    ["INS-LIVE", SEED.instrument.label, SEED.instrument.checksum],
+    ["INS-LIVE", seed.instrument.label, seed.instrument.checksum],
   ]);
 
   const bankDimRows: SqlValue[][] = [];
   const bankIndRows: SqlValue[][] = [];
   const bankOptRows: SqlValue[][] = [];
-  SEED.instrument.dimensions.forEach((dim, di) => {
+  seed.instrument.dimensions.forEach((dim, di) => {
     bankDimRows.push([dim.id, dim.name, dim.categoryId ?? null, json(dim.aspects), di + 1]);
     dim.indicators.forEach((ind, ii) => {
       bankIndRows.push([
@@ -215,11 +219,11 @@ export async function seedDemo(): Promise<void> {
   await insertRows(
     "instrument_versions",
     ["id", "label", "status", "published_at"],
-    SEED.instrumentVersions.map((v) => [v.id, v.label, v.status, toDateTime(v.publishedAt)]),
+    seed.instrumentVersions.map((v) => [v.id, v.label, v.status, toDateTime(v.publishedAt)]),
   );
   const vDimRows: SqlValue[][] = [];
   const vIndRows: SqlValue[][] = [];
-  SEED.instrumentVersions.forEach((version) => {
+  seed.instrumentVersions.forEach((version) => {
     version.dimensions.forEach((dim, di) => {
       vDimRows.push([
         version.id,
@@ -279,7 +283,7 @@ export async function seedDemo(): Promise<void> {
   await insertRows(
     "buildings",
     ["id", "institution_code", "code", "name", "floors"],
-    SEED.buildings.map((b) => [b.id, b.institutionCode, b.code, b.name, json(b.floors)]),
+    seed.buildings.map((b) => [b.id, b.institutionCode, b.code, b.name, json(b.floors)]),
   );
   await insertRows(
     "areas",
@@ -295,7 +299,7 @@ export async function seedDemo(): Promise<void> {
       "width",
       "height",
     ],
-    SEED.areas.map((a) => [
+    seed.areas.map((a) => [
       a.id,
       a.institutionCode,
       a.buildingId,
@@ -321,7 +325,7 @@ export async function seedDemo(): Promise<void> {
       "uploaded_at",
       "illustration",
     ],
-    SEED.campusPlans.map((plan) => [
+    seed.campusPlans.map((plan) => [
       plan.id,
       plan.institutionCode,
       plan.revision,
@@ -380,7 +384,7 @@ export async function seedDemo(): Promise<void> {
       "submitted_at",
       "updated_at",
     ],
-    SEED.reports.map((r) => {
+    seed.reports.map((r) => {
       const created = toDateTime(r.createdAt) ?? now();
       return [
         r.id,
@@ -441,7 +445,7 @@ export async function seedDemo(): Promise<void> {
       "by_dimension",
       "submitted_at",
     ],
-    SEED.selfAssessmentSnapshots.map((s) => {
+    seed.selfAssessmentSnapshots.map((s) => {
       // D-35: snapshot warisan (jawaban saja) dibekukan saat seed agar jalur
       // beku agregat publik hidup pada mode backend (angka = jalur warisan mock).
       const beku =
@@ -451,7 +455,7 @@ export async function seedDemo(): Promise<void> {
               scorePercent: s.scorePercent,
               byDimension: s.byDimension ?? {},
             }
-          : bekukanSnapshotWarisan(SEED.instrumentVersions, s);
+          : bekukanSnapshotWarisan(seed.instrumentVersions, s);
       return [
         s.reportId,
         s.instrumentVersionId,
@@ -479,7 +483,7 @@ export async function seedDemo(): Promise<void> {
       "submitted_report_id",
       "updated_at",
     ],
-    Object.values(SEED.selfAssessmentDrafts).map((d) => [
+    Object.values(seed.selfAssessmentDrafts).map((d) => [
       d.id,
       d.institutionCode,
       d.reporterUserId ?? null,
@@ -528,7 +532,7 @@ export async function seedDemo(): Promise<void> {
       "plan_version",
       "residual_risk",
     ],
-    SEED.findings.map((f) => [
+    seed.findings.map((f) => [
       f.id,
       f.reportId,
       f.areaId || null,
@@ -587,7 +591,7 @@ export async function seedDemo(): Promise<void> {
       "verified_at",
       "updated_at",
     ],
-    SEED.recommendations.map((rec) => [
+    seed.recommendations.map((rec) => [
       rec.id,
       rec.reportId,
       rec.priority,
@@ -629,7 +633,7 @@ export async function seedDemo(): Promise<void> {
       "updated_by",
       "updated_at",
     ],
-    SEED.instrumentDocs.map((doc) => [
+    seed.instrumentDocs.map((doc) => [
       doc.id,
       doc.indicatorId,
       doc.indicatorCode ?? null,
@@ -650,12 +654,12 @@ export async function seedDemo(): Promise<void> {
   await insertRows(
     "sam_categories",
     ["id", "name", "description", "sort_order", "is_active"],
-    SEED.samCategories.map((c) => [c.id, c.name, c.description, c.sortOrder, c.isActive]),
+    seed.samCategories.map((c) => [c.id, c.name, c.description, c.sortOrder, c.isActive]),
   );
   await insertRows(
     "sam_questions",
     ["id", "category_id", "text", "panduan", "contoh_bukti", "sort_order", "is_active"],
-    SEED.samQuestions.map((q) => [
+    seed.samQuestions.map((q) => [
       q.id,
       q.categoryId,
       q.text,
@@ -691,7 +695,7 @@ export async function seedDemo(): Promise<void> {
       "completed_at",
       "created_at",
     ],
-    SEED.samAssessments.map((a) => [
+    seed.samAssessments.map((a) => [
       a.id,
       a.institutionCode,
       a.areaId ?? null,
@@ -733,7 +737,7 @@ export async function seedDemo(): Promise<void> {
       "done_at",
       "cancel_reason",
     ],
-    SEED.samFollowUps.map((f) => [
+    seed.samFollowUps.map((f) => [
       f.id,
       f.assessmentId,
       f.questionId,
@@ -764,7 +768,7 @@ export async function seedDemo(): Promise<void> {
       "note",
       "at",
     ],
-    SEED.auditEvents.map((ev) => [
+    seed.auditEvents.map((ev) => [
       ev.id,
       ev.objectType,
       ev.objectId,
@@ -790,7 +794,7 @@ export async function seedDemo(): Promise<void> {
       "is_read",
       "at",
     ],
-    SEED.notifications.map((n) => [
+    seed.notifications.map((n) => [
       n.id,
       n.recipientAccountId ?? null,
       n.institutionCode ?? null,
@@ -803,7 +807,7 @@ export async function seedDemo(): Promise<void> {
   );
 
   const indexRows: SqlValue[][] = [];
-  for (const [code, points] of Object.entries(SEED.indexHistory)) {
+  for (const [code, points] of Object.entries(seed.indexHistory)) {
     points.forEach((point, index) => {
       indexRows.push([code, point.period, point.index, index + 1]);
     });
@@ -820,9 +824,9 @@ export async function seedDemo(): Promise<void> {
       return Number.isFinite(parsed) ? Math.max(max, parsed) : max;
     }, 0);
   await insertRows("sequences", ["seq_name", "value"], [
-    ["report", SEED.counters.report],
-    ["institution", SEED.counters.institution],
-    ["assessment", maxNumeric(SEED.samAssessments.map((a) => a.id)) + 1],
-    ["follow_up", maxNumeric(SEED.samFollowUps.map((f) => f.id)) + 1],
+    ["report", seed.counters.report],
+    ["institution", seed.counters.institution],
+    ["assessment", maxNumeric(seed.samAssessments.map((a) => a.id)) + 1],
+    ["follow_up", maxNumeric(seed.samFollowUps.map((f) => f.id)) + 1],
   ]);
 }

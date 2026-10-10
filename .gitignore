@@ -33,3 +33,6 @@ docs/NOTA_*
 
 # Artefak sesi Playwright MCP (screenshot/snapshot/log)
 .playwright-mcp/
+
+# Seed demo lokal privat (email + sandi khusus komputer ini)
+apps/api/src/seed/demo.local.ts
