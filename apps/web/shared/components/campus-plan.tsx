@@ -236,7 +236,7 @@ export function LocationPicker({
         </p>
       )}
       <label className="block text-sm font-bold text-heading">
-        Keterangan lantai (opsional)
+        Keterangan lokasi (opsional)
         <input
           maxLength={80}
           className="mt-1 min-h-11 w-full rounded border border-line-soft px-3 font-normal"
