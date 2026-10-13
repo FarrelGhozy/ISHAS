@@ -1,5 +1,21 @@
 # TODO — Kontrol Kerja Aktif
 
+## Revisi: hentikan request backend saat mode mock (D-49.a) — 13 Oktober 2026 — `IN PROGRESS`
+
+Temuan uji browser D-49 (arahan pemilik: perbaiki langsung bila ada yang perlu):
+di mode mock, hook `usePublicState`/`usePesantrenState`/`useValidatorState`/
+`useAdminState` tetap berlangganan store backend sehingga `subscribe` pertama
+otomatis menembak `GET /public|pesantren|validator|admin/state` (konsol 403
+untuk peran yang ditolak RBAC). Perilaku data benar (mock dipakai), tetapi
+request-nya sia-sia dan mengotori konsol. Cakupan: `shared/api/backend-state.ts`
+saja (jaga auto-fetch saat subscribe dengan `USE_BACKEND`); tanpa mengubah
+kontrak hook, hak akses, atau perilaku mode backend. Status stage lain tidak berubah.
+
+- [x] Catat revisi `IN PROGRESS` dengan cakupan jelas sebelum mengubah kode.
+- [x] Kode + test regresi (subscribe tanpa refresh tidak memanggil fetch).
+- [x] Verifikasi (13 Okt 2026): web lint + typecheck bersih, 377 test hijau (+1 regresi D-49.a); browser mock `:3009` 0 error konsol (sebelumnya 2× 403); keyboard: Tab pertama → skip link → Enter ke `#main-content`, tombol Mulai via Enter, radio Ya/Tidak via panah, Tab ke catatan tanpa jebakan.
+- [ ] Review pemilik.
+
 ## Inspeksi K3L Perkantoran Validator (D-49) — 13 Oktober 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik (`ok kerjakan`): fitur baru sejajar SAM-iSAFE pada
@@ -8,9 +24,10 @@ langsung lengkap (bank + foto + tindak lanjut + tren + cetak + review).
 Validator-only; skor biner Ya=1/Tidak=0; frontend-only dulu (backend menyusul).
 
 - [x] Catat D-49 + sinkron ROLES/ROUTES/FLOWS/DATA_MODEL/WIREFRAMES + stage `STAGE_INSPEKSI_KANTOR.md`.
-- [ ] Kode: `mocks/office-inspection.ts` + tipe + schema v17→v18 + migrasi + store + seed + draft pointer + repository + halaman/komponen + route + nav + guard.
-- [ ] Test: helper skor/temuan/tren + bank CRUD + alur store + render guard.
-- [ ] Verifikasi: web lint/typecheck/test/build + visual desktop/tablet/ponsel + alur klik.
+- [x] Kode: `mocks/office-inspection.ts` + tipe + schema v17→v18 + migrasi + store + seed + draft pointer + repository + halaman/komponen + route + nav + guard.
+- [x] Test: helper skor/temuan/tren + bank CRUD + alur store + render guard.
+- [x] Verifikasi: web lint/typecheck/376 test/build + api lint/typecheck/126 test (DB `ishas_test`) + migrate/seed MySQL lokal; commit `38dd15d`.
+- [x] Cek visual + alur klik browser (mode mock `:3009`, 13 Okt 2026): riwayat/detail/bank/baru tanpa overflow-X di 1440/768/390 (tren memakai `overflow-x-auto` yang disengaja); alur baru→isi 20/20 (18 Ya + 2 Tidak + suhu 27)→selesai `KTR-0003` 90% Risiko Rendah→tindak lanjut 1→review Ditinjau→bank (tolak nama <3, tambah/hapus `KTR-KAT-06` kembali 5 kategori); guard Pesantren → `/akses-ditolak`; konsol hanya 403 state peran lain; 43 test modul office hijau.
 - [ ] Review pemilik.
 
 ## Seed demo UNIDA Gontor lengkap + kartu login Pesantren (D-48) — 7 Oktober 2026 — `IN PROGRESS`

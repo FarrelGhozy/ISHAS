@@ -4,7 +4,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { IshasState } from "~/mocks/types";
-import { apiRequest } from "./http-client";
+import { USE_BACKEND, apiRequest } from "./http-client";
 
 export type BackendStatus = "idle" | "loading" | "ready" | "error";
 
@@ -82,7 +82,9 @@ export function createBackendState(path: string): BackendStateStore {
   function subscribe(listener: () => void): () => void {
     listeners.add(listener);
     // Muat sekali saat komponen pertama berlangganan; `refresh()` memaksa ulang.
-    if (snapshot.status === "idle") fetchState();
+    // Mode mock tidak menembak server sama sekali (D-49.a): hook tetap
+    // berlangganan tetapi mengabaikan snapshot dan memakai state mock.
+    if (snapshot.status === "idle" && USE_BACKEND) fetchState();
     return () => {
       listeners.delete(listener);
     };

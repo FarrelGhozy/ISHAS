@@ -80,4 +80,15 @@ describe("createBackendState", () => {
     await settle();
     expect(spy.count()).toBe(1);
   });
+
+  test("mode mock: berlangganan saja tidak menembak server (D-49.a)", async () => {
+    // `bun test` berjalan tanpa `VITE_USE_BACKEND=true` sehingga mewakili mode mock.
+    const spy = stubFetch({ ok: true, data: emptyIshasState() });
+    const store = createBackendState("/validator/state");
+    const lepas = store.subscribe(() => {});
+    await settle();
+    expect(spy.count()).toBe(0);
+    expect(store.getSnapshot().status).toBe("idle");
+    lepas();
+  });
 });

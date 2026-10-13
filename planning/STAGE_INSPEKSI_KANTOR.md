@@ -25,8 +25,11 @@ tidak berubah sepihak.
 ## Checklist
 
 - [x] Catat D-49 + stage IN PROGRESS sebelum mengubah kode.
-- [ ] Sinkron docs + kode + migrasi + seed + test.
-- [ ] Verifikasi teknis: lint + typecheck + test + build.
-- [ ] Cek visual 3 viewport + keyboard + alur klik browser
-      (riwayat → baru → detail → bank).
+- [x] Sinkron docs + kode + migrasi + seed + test (commit `38dd15d`).
+- [x] Verifikasi teknis: web lint/typecheck/376 test/build + api lint/typecheck/126 test (DB `ishas_test`) + migrate/seed MySQL lokal.
+- [x] Cek visual 3 viewport + alur klik browser (mode mock `:3009`, 13 Okt 2026):
+      riwayat/detail/bank/baru tanpa overflow-X di 1440/768/390;
+      baru→isi 20/20→selesai `KTR-0003` 90%→tindak lanjut→review→bank CRUD;
+      guard Pesantren → `/akses-ditolak`. Data uji hanya di localStorage
+      browser, tidak mengubah seed repo. Keyboard lolos (catat di D-49.a).
 - [ ] Review pemilik; DONE hanya setelah disetujui.
