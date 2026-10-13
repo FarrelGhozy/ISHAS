@@ -119,9 +119,23 @@ bidang publik mengikuti D-02 (ringkasan saja + nama validator/PIC — matriks di
    + toggle non-terdaftar audit + ekspor CSV/JSON whitelist + impor
    validasi→pratinjau→terapkan sebagai `Menunggu validasi`.
 
- Catatan D-25: label `Audit publikasi` menghilangkan tabrakan dengan
- `Validasi laporan` milik Pesantren. `Divalidasi oleh` = akun Pesantren,
- bukan peran Validator (`DATA_REQUIREMENTS.md` §9).
+  Catatan D-25: label `Audit publikasi` menghilangkan tabrakan dengan
+  `Validasi laporan` milik Pesantren. `Divalidasi oleh` = akun Pesantren,
+  bukan peran Validator (`DATA_REQUIREMENTS.md` §9).
+
+- Validator (D-49): `/validator/inspeksi-kantor` = riwayat + dashboard
+  (tren batang vertikal + rata-rata per kategori, pola SAM) + tombol
+  `Pengamatan baru` + `Bank data`. `/baru` = info pengamatan
+  (pesantren* + unit kerja Satker/Fakultas/Prodi* + area/lokasi manual +
+  tanggal* + waktu + jenis + pengamat* + keterangan) lalu checklist
+  `Ya/Tidak` per kategori (kartu pilihan, progress, navigasi kategori,
+  catatan + foto + suhu item 16) + bar bawah (progres + Hapus draft +
+  Simpan draft + Selesaikan). `/:id` = hero skor + metadata + skor per
+  kategori (accordion jawaban + bukti) + temuan & tindak lanjut + review
+  + audit + tombol cetak. `/bank` = tambah kategori + cari/filter +
+  kartu kategori (ubah/hapus, soal: tambah/ubah/hapus/pindah/urut/aktif,
+  panduan + contoh bukti, penanda duplikat) + riwayat perubahan bank.
+  Khusus Validator; tanpa publik/Pesantren.
 
 ## 6.a. `/pesantren/dashboard` Dashboard Pesantren (D-34)
 

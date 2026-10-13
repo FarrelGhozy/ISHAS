@@ -13,6 +13,7 @@ import type {
   HandlingStatus,
   InstrumentAnswerType,
   InstrumentOption,
+  OfficeFollowUpStatus,
   Priority,
   RiskLevel,
   SamFollowUpStatus,
@@ -483,6 +484,124 @@ export const repository = {
     return USE_BACKEND
       ? httpRepository.cancelSamFollowUp(actor, followUpId, reason)
       : storeActions.cancelSamFollowUp({ id: actor.id }, followUpId, reason);
+  },
+  // --- Inspeksi K3L Perkantoran (D-49): mock-only, backend fase kantor menyusul ---
+  async addOfficeCategory(
+    actor: ReportActor,
+    input: { name: string; description?: string },
+  ): Promise<ActionResult> {
+    return storeActions.addOfficeCategory({ id: actor.id }, input);
+  },
+  async updateOfficeCategory(
+    actor: ReportActor,
+    categoryId: string,
+    patch: { name?: string; description?: string },
+  ): Promise<ActionResult> {
+    return storeActions.updateOfficeCategory({ id: actor.id }, categoryId, patch);
+  },
+  async deleteOfficeCategory(actor: ReportActor, categoryId: string): Promise<ActionResult> {
+    return storeActions.deleteOfficeCategory({ id: actor.id }, categoryId);
+  },
+  async addOfficeQuestion(
+    actor: ReportActor,
+    input: { categoryId: string; text: string; panduan?: string; contohBukti?: string },
+  ): Promise<ActionResult> {
+    return storeActions.addOfficeQuestion({ id: actor.id }, input);
+  },
+  async updateOfficeQuestion(
+    actor: ReportActor,
+    questionId: string,
+    patch: { text?: string; panduan?: string; contohBukti?: string; categoryId?: string },
+  ): Promise<ActionResult> {
+    return storeActions.updateOfficeQuestion({ id: actor.id }, questionId, patch);
+  },
+  async deleteOfficeQuestion(actor: ReportActor, questionId: string): Promise<ActionResult> {
+    return storeActions.deleteOfficeQuestion({ id: actor.id }, questionId);
+  },
+  async moveOfficeQuestion(
+    actor: ReportActor,
+    questionId: string,
+    direction: "naik" | "turun",
+  ): Promise<ActionResult> {
+    return storeActions.moveOfficeQuestion({ id: actor.id }, questionId, direction);
+  },
+  async setOfficeQuestionActive(
+    actor: ReportActor,
+    questionId: string,
+    isActive: boolean,
+  ): Promise<ActionResult> {
+    return storeActions.setOfficeQuestionActive({ id: actor.id }, questionId, isActive);
+  },
+  async createOfficeAssessment(
+    actor: ReportActor,
+    input: {
+      institutionCode: string;
+      unitKerja: string;
+      areaId?: string;
+      manualLocation?: string;
+      observedAt: string;
+      observedTime?: string;
+      kind: string;
+      observerName: string;
+      note?: string;
+    },
+  ): Promise<ActionResult> {
+    return storeActions.createOfficeAssessment({ id: actor.id }, input);
+  },
+  async saveOfficeAnswer(
+    actor: ReportActor,
+    input: {
+      assessmentId: string;
+      questionId: string;
+      value: string;
+      note?: string;
+      suhuRuang?: number;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+    },
+  ): Promise<ActionResult> {
+    return storeActions.saveOfficeAnswer({ id: actor.id }, input);
+  },
+  async deleteOfficeDraft(actor: ReportActor, assessmentId: string): Promise<ActionResult> {
+    return storeActions.deleteOfficeDraft({ id: actor.id }, assessmentId);
+  },
+  async completeOfficeAssessment(actor: ReportActor, assessmentId: string): Promise<ActionResult> {
+    return storeActions.completeOfficeAssessment({ id: actor.id }, assessmentId);
+  },
+  async reviewOfficeAssessment(
+    actor: ReportActor,
+    assessmentId: string,
+    note?: string,
+  ): Promise<ActionResult> {
+    return storeActions.reviewOfficeAssessment({ id: actor.id }, assessmentId, note);
+  },
+  async createOfficeFollowUp(
+    actor: ReportActor,
+    input: { assessmentId: string; questionId: string; pic: string; dueDate: string; note?: string },
+  ): Promise<ActionResult> {
+    return storeActions.createOfficeFollowUp({ id: actor.id }, input);
+  },
+  async updateOfficeFollowUp(
+    actor: ReportActor,
+    followUpId: string,
+    input: { status?: OfficeFollowUpStatus; pic?: string; dueDate?: string; note?: string },
+  ): Promise<ActionResult> {
+    return storeActions.updateOfficeFollowUp({ id: actor.id }, followUpId, input);
+  },
+  async cancelOfficeFollowUp(
+    actor: ReportActor,
+    followUpId: string,
+    reason: string,
+  ): Promise<ActionResult> {
+    return storeActions.cancelOfficeFollowUp({ id: actor.id }, followUpId, reason);
+  },
+  async uploadOfficeEvidence(
+    actor: ReportActor,
+    institutionCode: string,
+    file: File,
+  ): Promise<ActionResult> {
+    const prepared = await compressImageFile(file);
+    return mockRepository.uploadOfficeEvidence(actor, institutionCode, prepared);
   },
   async uploadSamEvidence(
     actor: ReportActor,

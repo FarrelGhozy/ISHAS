@@ -25,9 +25,10 @@
 // - SAM: 3 Selesai (1 Ditinjau) + 1 Berlangsung (demo filter + progres).
 // - Publik internal D-08: RPT-0019 milik PSN-0023 Nonaktif (tidak tampil publik).
 //
-import type { Instrument, IshasState, SamAnswer, SamAssessment } from "../types";
+import type { Instrument, IshasState, OfficeAnswer, OfficeAssessment, SamAnswer, SamAssessment } from "../types";
 import { buildBankLiveDariVersi } from "../instrument-bank";
 import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED, samCompute } from "../sam-isafe";
+import { OFFICE_CATEGORIES_SEED, OFFICE_QUESTIONS_SEED, officeCompute } from "../office-inspection";
 import {
   buildInstrumentV2Dimensions,
   buildSelfAssessmentAnswers,
@@ -43,11 +44,15 @@ const T = {
 const V2_DIMENSIONS = buildInstrumentV2Dimensions();
 
 export const SEED: IshasState = {
-  schemaVersion: 17,
+  schemaVersion: 18,
   samCategories: structuredClone(SAM_CATEGORIES_SEED),
   samQuestions: structuredClone(SAM_QUESTIONS_SEED),
   samAssessments: [],
   samFollowUps: [],
+  officeCategories: structuredClone(OFFICE_CATEGORIES_SEED),
+  officeQuestions: structuredClone(OFFICE_QUESTIONS_SEED),
+  officeAssessments: [],
+  officeFollowUps: [],
   // D-24: bank live diisi setelah objek (diturunkan dari INS-v2.0, tanpa duplikasi).
   instrument: {} as Instrument,
   campusPlans: [
@@ -2893,6 +2898,144 @@ SEED.samFollowUps = [
     createdAt: "2026-09-08T09:15:00.000Z",
     updatedAt: "2026-09-27T14:00:00.000Z",
     doneAt: "2026-09-27T14:00:00.000Z",
+  },
+];
+
+// D-49: demo pengamatan Inspeksi K3L Perkantoran — satu Selesai (Ditinjau,
+// tiga temuan + dua tindak lanjut) + satu Berlangsung, agar halaman langsung terisi.
+function officeDemoAssessment(
+  id: string,
+  institutionCode: string,
+  observedAt: string,
+  observerName: string,
+  observerAccountId: string,
+  values: ("Ya" | "Tidak")[],
+  notes: Record<string, string>,
+  extra?: Partial<OfficeAssessment>,
+): OfficeAssessment {
+  const answers: Record<string, OfficeAnswer> = {};
+  OFFICE_QUESTIONS_SEED.forEach((item, index) => {
+    answers[item.id] = { value: values[index] ?? "Ya", note: notes[item.id] ?? "" };
+  });
+  answers["KTR-Q-016"] = { ...answers["KTR-Q-016"], suhuRuang: 26 };
+  const hitung = officeCompute({ answers }, OFFICE_QUESTIONS_SEED);
+  return {
+    id,
+    institutionCode,
+    unitKerja: "Fakultas Sains dan Teknologi",
+    manualLocation: "Ruang Tata Usaha Lt. 2",
+    observedAt,
+    observedTime: "09:00",
+    kind: "Inspeksi Rutin",
+    observerName,
+    observerAccountId,
+    status: "Selesai",
+    answers,
+    totalScore: hitung.total,
+    maxScore: hitung.max,
+    percent: hitung.percent,
+    riskLevel: hitung.risk,
+    createdAt: `${observedAt}T09:00:00.000Z`,
+    completedAt: `${observedAt}T11:00:00.000Z`,
+    ...extra,
+  };
+}
+SEED.officeAssessments = [
+  officeDemoAssessment(
+    "KTR-0001",
+    "PSN-0024",
+    "2026-10-02",
+    "M. Ridwan",
+    "USR-002",
+    [
+      "Ya",
+      "Ya",
+      "Ya",
+      "Tidak",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Tidak",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Ya",
+      "Tidak",
+      "Ya",
+    ],
+    {
+      "KTR-Q-004": "Kabel ekstensi melintang di jalur jalan ruang TU.",
+      "KTR-Q-012": "Satu APAR koridor indikator tidak hijau.",
+      "KTR-Q-019": "Nomor kontak darurat belum ditempel di papan area kerja.",
+    },
+    {
+      reviewedBy: "Sari Dewi",
+      reviewedById: "USR-005",
+      reviewedAt: "2026-10-03T09:00:00.000Z",
+      reviewNote: "Hasil diperiksa; temuan kabel dan APAR diteruskan ke tindak lanjut.",
+    },
+  ),
+];
+const ktr02Answers: Record<string, OfficeAnswer> = {};
+const ktr02Values: ("Ya" | "Tidak")[] = ["Ya", "Ya", "Ya", "Ya", "Tidak", "Ya", "Ya", "Ya"];
+OFFICE_QUESTIONS_SEED.slice(0, 8).forEach((item, index) => {
+  ktr02Answers[item.id] = {
+    value: ktr02Values[index] ?? "Ya",
+    note: index === 4 ? "Tumpukan arsip berpotensi jatuh, perlu rak tambahan." : "",
+  };
+});
+const ktr02Hitung = officeCompute({ answers: ktr02Answers }, OFFICE_QUESTIONS_SEED);
+SEED.officeAssessments.push({
+  id: "KTR-0002",
+  institutionCode: "PSN-0018",
+  unitKerja: "Bagian Tata Usaha Pesantren",
+  manualLocation: "Ruang Kantor Lt. 1",
+  observedAt: "2026-10-05",
+  observedTime: "10:00",
+  kind: "Inspeksi Rutin",
+  observerName: "Sari Dewi",
+  observerAccountId: "USR-005",
+  status: "Berlangsung",
+  answers: ktr02Answers,
+  totalScore: ktr02Hitung.total,
+  maxScore: ktr02Hitung.max,
+  percent: ktr02Hitung.percent,
+  riskLevel: ktr02Hitung.risk,
+  createdAt: "2026-10-05T10:00:00.000Z",
+});
+SEED.officeFollowUps = [
+  {
+    id: "KTF-0001",
+    assessmentId: "KTR-0001",
+    questionId: "KTR-Q-004",
+    title: "Kabel listrik tertata rapi dan tidak melintang di jalur jalan.",
+    note: "Rapikan kabel ekstensi ke cable tray dinding.",
+    pic: "Bagian Sarana Prasarana",
+    dueDate: "2026-10-15",
+    status: "Berjalan",
+    createdBy: "USR-002",
+    createdAt: "2026-10-03T09:10:00.000Z",
+    updatedAt: "2026-10-06T09:00:00.000Z",
+  },
+  {
+    id: "KTF-0002",
+    assessmentId: "KTR-0001",
+    questionId: "KTR-Q-012",
+    title: "Indikator tekanan APAR baik/hijau.",
+    note: "Isi ulang APAR koridor dan pasang kartu inspeksi.",
+    pic: "Petugas K3L",
+    dueDate: "2026-10-10",
+    status: "Selesai",
+    createdBy: "USR-002",
+    createdAt: "2026-10-03T09:15:00.000Z",
+    updatedAt: "2026-10-09T14:00:00.000Z",
+    doneAt: "2026-10-09T14:00:00.000Z",
   },
 ];
 

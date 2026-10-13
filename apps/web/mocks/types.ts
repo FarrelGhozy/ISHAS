@@ -387,6 +387,10 @@ export type IshasState = {
   samQuestions: SamQuestion[]; // D-26: bank pertanyaan SAM-iSAFE
   samAssessments: SamAssessment[]; // D-26: pengamatan Validator
   samFollowUps: SamFollowUp[]; // D-26.e: tindak lanjut temuan SAM-iSAFE
+  officeCategories: OfficeCategory[]; // D-49: bank kategori inspeksi kantor
+  officeQuestions: OfficeQuestion[]; // D-49: bank pertanyaan inspeksi kantor
+  officeAssessments: OfficeAssessment[]; // D-49: pengamatan inspeksi kantor
+  officeFollowUps: OfficeFollowUp[]; // D-49: tindak lanjut temuan inspeksi kantor
   auditEvents: AuditEvent[];
   notifications: Notification[];
   // Riwayat indeks ilustratif per pesantren (periode lampau). Titik periode berjalan
@@ -468,8 +472,82 @@ export type SamAssessment = {
   reviewNote?: string;
 };
 
-export type PlanPoint = { x: number; y: number };
-export type LocationSnapshot = {
+// D-49: Inspeksi K3L Perkantoran khusus Validator — bank dinamis + pengamatan.
+// Jawaban biner Ya (sesuai) / Tidak (temuan); maksimum dinamis = COUNT(aktif) x 1.
+export type OfficeAssessmentStatus = "Berlangsung" | "Selesai";
+export type OfficeRiskLevel = "Risiko Rendah" | "Risiko Sedang" | "Risiko Tinggi";
+export type OfficeAnswerValue = "Ya" | "Tidak";
+export type OfficeCategory = {
+  id: string; // 'KTR-KAT-A' stabil
+  name: string;
+  description: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+export type OfficeQuestion = {
+  id: string; // 'KTR-Q-001' stabil
+  categoryId: string;
+  text: string;
+  panduan: string; // cara mengamati, bisa diubah Validator
+  contohBukti: string; // contoh bukti foto, bisa diubah Validator
+  sortOrder: number;
+  isActive: boolean;
+};
+export type OfficeAnswer = {
+  value: OfficeAnswerValue;
+  note: string;
+  suhuRuang?: number; // D-49.d: hanya item 16, opsional
+  evidenceName?: string; // nama foto bukti (blob privat IndexedDB)
+  evidenceAssetId?: string; // ID blob bukti privat perangkat-lokal
+};
+// D-49.e: tindak lanjut temuan inspeksi kantor (jawaban Tidak), dikelola Validator.
+export type OfficeFollowUpStatus =
+  | "Belum ditindaklanjuti"
+  | "Berjalan"
+  | "Selesai"
+  | "Dibatalkan";
+export type OfficeFollowUp = {
+  id: string; // 'KTF-0001' berurutan
+  assessmentId: string; // FK OfficeAssessment.id
+  questionId: string; // FK OfficeQuestion.id (temuan sumber)
+  title: string; // turunan teks pertanyaan
+  note?: string;
+  pic: string; // penanggung jawab
+  dueDate: string; // tanggal ISO, tidak sebelum tanggal pengamatan
+  status: OfficeFollowUpStatus;
+  createdBy?: string; // FK User.id
+  createdAt: string;
+  updatedAt: string;
+  doneAt?: string;
+  cancelReason?: string; // wajib min 10 bila Dibatalkan
+};
+export type OfficeAssessment = {
+  id: string; // 'KTR-0001' berurutan
+  institutionCode: string;
+  unitKerja: string; // Satker/Fakultas/Prodi
+  areaId?: string;
+  manualLocation?: string;
+  observedAt: string; // tanggal ISO
+  observedTime?: string; // 'HH:MM'
+  kind: string; // Rutin/Khusus/Pasca Insiden/Evaluasi
+  observerName: string;
+  note?: string;
+  observerAccountId?: string;
+  status: OfficeAssessmentStatus;
+  answers: Record<string, OfficeAnswer>;
+  totalScore: number;
+  maxScore: number;
+  percent: number;
+  riskLevel: OfficeRiskLevel;
+  createdAt: string;
+  completedAt?: string;
+  reviewedBy?: string; // nama Validator pereview
+  reviewedById?: string; // FK User.id pereview
+  reviewedAt?: string;
+  reviewNote?: string;
+};
+
+export type PlanPoint = { x: number; y: number };export type LocationSnapshot = {
   areaId?: string;
   locationText: string;
   floorNote: string;

@@ -87,6 +87,24 @@ describe("komposisi seed demo", () => {
     }
   });
 
+  test("KTR-0001 Selesai Ditinjau dengan 3 temuan + 2 tindak lanjut", () => {
+    const item = SEED.officeAssessments.find((entry) => entry.id === "KTR-0001");
+    expect(item?.status).toBe("Selesai");
+    expect(item?.reviewedBy).toBeTruthy();
+    expect(item?.totalScore).toBe(17);
+    expect(item?.maxScore).toBe(20);
+    const tindak = SEED.officeFollowUps.filter((entry) => entry.assessmentId === "KTR-0001");
+    expect(tindak.map((entry) => entry.id).sort()).toEqual(["KTF-0001", "KTF-0002"]);
+  });
+
+  test("KTR-0002 Berlangsung dengan jawaban sebagian", () => {
+    const item = SEED.officeAssessments.find((entry) => entry.id === "KTR-0002");
+    expect(item?.status).toBe("Berlangsung");
+    const terjawab = Object.keys(item?.answers ?? {}).length;
+    expect(terjawab).toBeGreaterThan(0);
+    expect(terjawab).toBeLessThan(SEED.officeQuestions.length);
+  });
+
   test("draft demo memakai checksum bank saat seed (D-24)", () => {
     const draft = SEED.selfAssessmentDrafts["SELF-PSN-0018"];
     expect(SEED.instrument.checksum).toBeTruthy();

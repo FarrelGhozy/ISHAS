@@ -40,7 +40,7 @@ test("state entri instrumen null tidak melempar dan pulih ke seed", () => {
   expect(loadState()).toEqual(SEED);
 });
 
-test("state v6 tanpa instrumentDocs dimigrasi ke v16 berisi seed docs", () => {
+test("state v6 tanpa instrumentDocs dimigrasi ke v18 berisi seed docs", () => {
   const v6 = structuredClone(SEED) as unknown as Record<string, unknown>;
   delete v6["instrumentDocs"];
   v6["schemaVersion"] = 6;
@@ -53,12 +53,12 @@ test("state v6 tanpa instrumentDocs dimigrasi ke v16 berisi seed docs", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(loaded.instrumentDocs).toEqual(SEED.instrumentDocs);
   expect(loaded.instrument.dimensions.length).toBeGreaterThan(0);
 });
 
-test("state v5 valid dimigrasi ke v16 tanpa kehilangan record", () => {
+test("state v5 valid dimigrasi ke v18 tanpa kehilangan record", () => {
   const v5 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 5 });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
@@ -69,11 +69,11 @@ test("state v5 valid dimigrasi ke v16 tanpa kehilangan record", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(loaded.reports.length).toBe(SEED.reports.length);
 });
 
-test("state v8 tanpa usulan dimigrasi ke v16 dengan default Belum ditentukan", () => {
+test("state v8 tanpa usulan dimigrasi ke v18 dengan default Belum ditentukan", () => {
   const v8 = structuredClone(SEED) as unknown as Record<string, unknown>;
   v8["schemaVersion"] = 8;
   for (const report of (v8["reports"] as Record<string, unknown>[])) {
@@ -89,7 +89,7 @@ test("state v8 tanpa usulan dimigrasi ke v16 dengan default Belum ditentukan", (
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(
     loaded.reports.every(
       (report) =>
@@ -99,7 +99,7 @@ test("state v8 tanpa usulan dimigrasi ke v16 dengan default Belum ditentukan", (
   ).toBe(true);
 });
 
-test("state v9 valid dimigrasi ke v16 tanpa kehilangan record/ID", () => {
+test("state v9 valid dimigrasi ke v18 tanpa kehilangan record/ID", () => {
   const v9 = JSON.stringify({ ...structuredClone(SEED), schemaVersion: 9 });
   Object.defineProperty(globalThis, "localStorage", {
     configurable: true,
@@ -110,7 +110,7 @@ test("state v9 valid dimigrasi ke v16 tanpa kehilangan record/ID", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(loaded.reports.length).toBe(SEED.reports.length);
   expect(loaded.recommendations.length).toBe(SEED.recommendations.length);
   expect(loaded.recommendations.map((item) => item.id)).toEqual(
@@ -118,7 +118,7 @@ test("state v9 valid dimigrasi ke v16 tanpa kehilangan record/ID", () => {
   );
 });
 
-test("state v12 tanpa samFollowUps dimigrasi ke v17 tanpa kehilangan record", () => {
+test("state v12 tanpa samFollowUps dimigrasi ke v18 tanpa kehilangan record", () => {
   const v12 = structuredClone(SEED) as unknown as Record<string, unknown>;
   v12["schemaVersion"] = 12;
   delete v12["samFollowUps"];
@@ -131,7 +131,7 @@ test("state v12 tanpa samFollowUps dimigrasi ke v17 tanpa kehilangan record", ()
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   // v16→v17 menambahkan tindak lanjut SAM-iSAFE UNIDA (SAM-0005) yang belum ada.
   expect(loaded.samFollowUps.map((item) => item.id)).toEqual(["SMF-0003", "SMF-0004"]);
   expect(loaded.samAssessments.length).toBe(SEED.samAssessments.length);
@@ -150,14 +150,14 @@ test("state v10 tanpa bank dibangunkan bank live dari versi aktif warisan", () =
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(loaded.instrument.id).toBe("INS-LIVE");
   expect(
     loaded.instrument.dimensions.flatMap((d) => d.indicators).length,
   ).toBe(59);
 });
 
-test("state v15 dimigrasi ke v17 menambah pesantren demo UNIDA Gontor", () => {
+test("state v15 dimigrasi ke v18 menambah pesantren demo UNIDA Gontor", () => {
   const v15 = structuredClone(SEED) as unknown as Record<string, unknown>;
   v15["schemaVersion"] = 15;
   (v15["institutions"] as Record<string, unknown>[]) = (
@@ -172,7 +172,7 @@ test("state v15 dimigrasi ke v17 menambah pesantren demo UNIDA Gontor", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   const unida = loaded.institutions.filter((item) => item.code === "PSN-0024");
   expect(unida).toHaveLength(1);
   expect(unida[0].name).toBe("UNIDA Gontor");
@@ -191,11 +191,11 @@ test("state v15 yang sudah memuat PSN-0024 tidak menggandakan", () => {
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(loaded.institutions.filter((item) => item.code === "PSN-0024")).toHaveLength(1);
 });
 
-test("state v16 dimigrasi ke v17 memperkaya UNIDA tanpa menggandakan rekam", () => {
+test("state v16 dimigrasi ke v18 memperkaya UNIDA tanpa menggandakan rekam", () => {
   const v16 = structuredClone(SEED) as unknown as Record<string, unknown>;
   v16["schemaVersion"] = 16;
   const users = v16["users"] as Record<string, unknown>[];
@@ -213,14 +213,14 @@ test("state v16 dimigrasi ke v17 memperkaya UNIDA tanpa menggandakan rekam", () 
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(loaded.users.filter((item) => item.id === "USR-007")).toHaveLength(1);
   expect(
     loaded.reports.filter((item) => item.institutionCode === "PSN-0024").length,
   ).toBe(SEED.reports.filter((item) => item.institutionCode === "PSN-0024").length);
 });
 
-test("state v14 dimigrasi ke v16 menormalisasi usulan rekomendasi (D-29)", () => {
+test("state v14 dimigrasi ke v18 menormalisasi usulan rekomendasi (D-29)", () => {
   const v14 = structuredClone(SEED) as unknown as Record<string, unknown>;
   v14["schemaVersion"] = 14;
   const reports = v14["reports"] as Record<string, unknown>[];
@@ -236,8 +236,31 @@ test("state v14 dimigrasi ke v16 menormalisasi usulan rekomendasi (D-29)", () =>
     },
   });
   const loaded = loadState();
-  expect(loaded.schemaVersion).toBe(17);
+  expect(loaded.schemaVersion).toBe(18);
   expect(loaded.reports[0].reporterRecommendation).toBeUndefined();
   expect(loaded.reports[1].reporterRecommendation).toBeUndefined();
   expect(loaded.reports[2].reporterRecommendation).toBe("Amankan area lalu perbaiki segera.");
+});
+
+test("state v17 dimigrasi ke v18 menambah bank kantor tanpa menghapus data (D-49)", () => {
+  const v17 = structuredClone(SEED) as unknown as Record<string, unknown>;
+  v17["schemaVersion"] = 17;
+  delete v17["officeCategories"];
+  delete v17["officeQuestions"];
+  delete v17["officeAssessments"];
+  delete v17["officeFollowUps"];
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem() {
+        return JSON.stringify(v17);
+      },
+    },
+  });
+  const loaded = loadState();
+  expect(loaded.schemaVersion).toBe(18);
+  expect(loaded.officeCategories).toEqual(SEED.officeCategories);
+  expect(loaded.officeQuestions).toEqual(SEED.officeQuestions);
+  expect(loaded.officeAssessments).toEqual([]);
+  expect(loaded.reports.length).toBe(SEED.reports.length);
 });

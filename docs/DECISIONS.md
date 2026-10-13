@@ -1466,3 +1466,45 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   (2 pesantren/4 akun, bank instrumen penuh).
 - Dokumen terdampak: DATA_MODEL §0/§5, DATA_REQUIREMENTS §8, seed web + API,
   `demo-accounts.ts`, `store/state.ts`, test seed/state/dashboard.
+
+## D-49 — Inspeksi K3L Perkantoran khusus Validator (di bawah SAM-iSAFE) — IN PROGRESS 13 Oktober 2026
+
+- Arahan pemilik (`ok kerjakan`): fitur baru sejajar SAM-iSAFE pada ruang
+  Validator, menunya di bawah SAM-iSAFE, isinya formulir inspeksi K3L
+  perkantoran 20 item (`FORM/UNIDA/MUTU-...`, 5 bagian A–E). Fase pertama
+  langsung lengkap (bank + foto + tindak lanjut + tren + cetak + review),
+  bukan bertahap fase 1→2.
+- **D-49.a — Validator-only:** seperti D-26 fase 1 — hanya ruang Validator,
+  tidak tampil publik/Pesantren. Pengecualian D-03 terbatas seperti D-26.d:
+  Validator boleh membuat/mengisi inspeksi kantor saat login; larangan kirim
+  lapor-cepat/penilaian-mandiri saat login tetap berlaku.
+- **D-49.b — Bank dinamis `KTR-*`:** kategori + pertanyaan adalah bank data
+  (`officeCategories/officeQuestions`), terpisah dari `SAM-KAT-*` dan
+  `KAT-*`. Validator boleh tambah/ubah/hapus kategori dan tambah/ubah/hapus/
+  pindah kategori/geser urutan/aktif-nonaktif pertanyaan. Hapus kategori
+  ditolak bila masih berisi pertanyaan; hapus pertanyaan ditolak bila sudah
+  dipakai pengamatan (sarankan nonaktifkan agar riwayat Selesai utuh).
+  Tiap pertanyaan punya `panduan` + `contohBukti` opsional yang bisa diubah.
+- **D-49.c — Skor biner (asumsi prototipe):** `Ya = 1` (sesuai),
+  `Tidak = 0` (temuan). Maksimum dinamis `COUNT(aktif) × 1`;
+  persen = `total/max × 100` satu desimal. Ambang ikut SAM:
+  `≥80 Risiko Rendah, 60–79 Risiko Sedang, <60 Risiko Tinggi`.
+  Asumsi prototipe, bukan ketentuan ilmiah final.
+- **D-49.d — Header formulir:** `Satker/Fakultas/Prodi` → teks bebas
+  `unitKerja` (wajib) + `institutionCode` pesantren terdaftar (wajib, pola
+  SAM); `No Ruang` → `areaId` + `manualLocation` (aturan D-11);
+  `Tanggal/Waktu` → `observedAt` (kalender valid `YYYY-MM-DD`) +
+  `observedTime`; `Temuan/Keterangan` per baris → `note` per jawaban
+  (dianjurkan bila `Tidak`); suhu ruang item 16 → field opsional
+  `suhuRuang` pada jawaban itu; `Diperiksa/Petugas` → `observerName` +
+  `observerAccountId`. Nomor `FORM/UNIDA/...` hanya label referensi sumber
+  pada cetakan, bukan nomor resmi.
+- **D-49.e — Lengkap langsung:** foto bukti per jawaban (pola `/lapor`,
+  blob privat IndexedDB, dianjurkan bila `Tidak`), tindak lanjut per temuan
+  (PIC + tenggat wajib, status 4, batal min 10), grafik tren + rata-rata per
+  kategori, cetak browser, review `Ditinjau`, jejak audit, draft lanjut
+  setelah reload (pointer per Validator). Temuan = jawaban `Tidak`.
+- **D-49.f — Frontend-only dulu:** backend menyusul sebagai fase lanjutan;
+  tidak mengubah kontrak Fase 1–6. Schema mock `v17 → v18` aditif.
+- Dokumen terdampak: ROLES §4, ROUTES §2, FLOWS §baru, DATA_MODEL schema v18,
+  WIREFRAMES §validator, TEST_PLAN, TODO, stage `STAGE_INSPEKSI_KANTOR.md`.

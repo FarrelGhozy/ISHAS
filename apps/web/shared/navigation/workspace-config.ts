@@ -13,8 +13,7 @@ import {
   Settings,
   ShieldCheck,
   Users,
-} from "lucide-react";
-import type { RoleId } from "~/mocks/types";
+} from "lucide-react";import type { RoleId } from "~/mocks/types";
 
 export type NavItem = {
   label: string;
@@ -34,6 +33,7 @@ export const ROLE_NAVIGATION: Record<RoleId, NavItem[]> = {
   validator: [
     { label: "Dashboard validator", path: "/validator/dashboard", icon: Activity },
     { label: "SAM-iSAFE", path: "/validator/sam-isafe", icon: ShieldCheck },
+    { label: "Inspeksi Kantor", path: "/validator/inspeksi-kantor", icon: Building2 },
     { label: "Instrumen", path: "/validator/instrumen", icon: ListChecks },
     { label: "Dokumen instrumen", path: "/validator/dokumen-instrumen", icon: BookOpen },
     { label: "Scoring", path: "/validator/scoring", icon: Database },

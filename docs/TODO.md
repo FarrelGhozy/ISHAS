@@ -1,5 +1,18 @@
 # TODO — Kontrol Kerja Aktif
 
+## Inspeksi K3L Perkantoran Validator (D-49) — 13 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik (`ok kerjakan`): fitur baru sejajar SAM-iSAFE pada
+ruang Validator (menu di bawah SAM-iSAFE), formulir 20 item 5 bagian A–E,
+langsung lengkap (bank + foto + tindak lanjut + tren + cetak + review).
+Validator-only; skor biner Ya=1/Tidak=0; frontend-only dulu (backend menyusul).
+
+- [x] Catat D-49 + sinkron ROLES/ROUTES/FLOWS/DATA_MODEL/WIREFRAMES + stage `STAGE_INSPEKSI_KANTOR.md`.
+- [ ] Kode: `mocks/office-inspection.ts` + tipe + schema v17→v18 + migrasi + store + seed + draft pointer + repository + halaman/komponen + route + nav + guard.
+- [ ] Test: helper skor/temuan/tren + bank CRUD + alur store + render guard.
+- [ ] Verifikasi: web lint/typecheck/test/build + visual desktop/tablet/ponsel + alur klik.
+- [ ] Review pemilik.
+
 ## Seed demo UNIDA Gontor lengkap + kartu login Pesantren (D-48) — 7 Oktober 2026 — `IN PROGRESS`
 
 Arahan langsung pemilik: tambah data dummy lengkap kampus UNIDA Gontor, taruh

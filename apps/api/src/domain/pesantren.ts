@@ -62,6 +62,10 @@ export function buildPesantrenState(state: IshasState, institutionCode: string) 
     samQuestions: [],
     samAssessments: [],
     samFollowUps: [],
+    officeCategories: [],
+    officeQuestions: [],
+    officeAssessments: [],
+    officeFollowUps: [],
     auditEvents: state.auditEvents.filter((e) =>
       e.institutionCode ? institutionCodes.has(e.institutionCode) : false,
     ),

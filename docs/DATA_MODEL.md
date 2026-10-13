@@ -62,10 +62,17 @@ tetap menunggu penelitian.
   paling atas; belum ada denah (diunggah pemilik menyusul). Migrasi v16→v17
   hanya menambah rekam UNIDA yang belum ada (tanpa menggandakan) dan
   memperbarui `counters.report`.
-- **Versi aktif sekarang:** `MOCK_SCHEMA_VERSION: 17`
-  (`MOCK_STORAGE_KEY: ishas-mock-v17`, lihat `store/state.ts`). Pemeriksaan
-  state: bila `schemaVersion !== 17`, pulihkan seed.
-- **Rantai migrasi yang dipertahankan kode:** v4→…→v15→v16→v17. Semua
+
+- **Amendemen inspeksi kantor v18 (13 Oktober 2026, D-49):** schema `v18`
+  (`MOCK_STORAGE_KEY: ishas-mock-v18`): bank + pengamatan Inspeksi K3L
+  Perkantoran khusus Validator (`officeCategories/officeQuestions/
+  officeAssessments/officeFollowUps`, ID `KTR-KAT-*`/`KTR-Q-*`/`KTR-*/KTF-*`).
+  Jawaban biner `Ya/Tidak`; temuan = `Tidak`. Migrasi v17→v18 hanya menambah
+  field/bank baru (tanpa menyentuh data lama, tanpa menggandakan).
+- **Versi aktif sekarang:** `MOCK_SCHEMA_VERSION: 18`
+  (`MOCK_STORAGE_KEY: ishas-mock-v18`, lihat `store/state.ts`). Pemeriksaan
+  state: bila `schemaVersion !== 18`, pulihkan seed.
+- **Rantai migrasi yang dipertahankan kode:** v4→…→v15→v16→v17→v18. Semua
   langkah mempertahankan record/ID; snapshot/temuan lama tidak dihitung ulang.
   - v10→v11: bank live `INS-LIVE` (D-24) — `instrument`, `instrumentChecksum`,
     opsi/bobot per jawaban, snapshot beku, skor %, artefak PDF;
@@ -265,6 +272,68 @@ type CampusPlanVersion = {
 // AUD-DEMO-001, NOT-001 — semuanya stabil, tidak memakai nama sebagai kunci.
 ```
 
+### 2.a. Inspeksi K3L Perkantoran (D-49, schema v18)
+
+```ts
+type OfficeAnswerValue = 'Ya' | 'Tidak'; // Ya = sesuai (1), Tidak = temuan (0)
+type OfficeAssessmentStatus = 'Berlangsung' | 'Selesai';
+type OfficeRiskLevel = 'Risiko Rendah' | 'Risiko Sedang' | 'Risiko Tinggi';
+type OfficeCategory = {
+  id: string; // 'KTR-KAT-A' stabil
+  name: string; // 'A. Housekeeping'
+  description: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+type OfficeQuestion = {
+  id: string; // 'KTR-Q-001' stabil
+  categoryId: string;
+  text: string;
+  panduan: string;
+  contohBukti: string;
+  sortOrder: number;
+  isActive: boolean;
+};
+type OfficeAnswer = {
+  value: OfficeAnswerValue;
+  note: string;
+  suhuRuang?: number; // hanya item 16, opsional
+  evidenceName?: string; // blob privat IndexedDB perangkat-lokal
+  evidenceAssetId?: string;
+};
+type OfficeFollowUpStatus =
+  | 'Belum ditindaklanjuti' | 'Berjalan' | 'Selesai' | 'Dibatalkan';
+type OfficeFollowUp = {
+  id: string; // 'KTF-0001' berurutan
+  assessmentId: string; // FK OfficeAssessment.id
+  questionId: string; // FK OfficeQuestion.id
+  title: string; pic: string; dueDate: string;
+  status: OfficeFollowUpStatus;
+  note?: string; createdBy?: string;
+  createdAt: string; updatedAt: string; doneAt?: string;
+  cancelReason?: string; // wajib min 10 bila Dibatalkan
+};
+type OfficeAssessment = {
+  id: string; // 'KTR-0001' berurutan
+  institutionCode: string;
+  unitKerja: string; // Satker/Fakultas/Prodi
+  areaId?: string; manualLocation?: string;
+  observedAt: string; observedTime?: string;
+  kind: string; observerName: string; note?: string;
+  observerAccountId?: string;
+  status: OfficeAssessmentStatus;
+  answers: Record<string, OfficeAnswer>;
+  totalScore: number; maxScore: number;
+  percent: number; riskLevel: OfficeRiskLevel;
+  createdAt: string; completedAt?: string;
+  reviewedBy?: string; reviewedById?: string;
+  reviewedAt?: string; reviewNote?: string;
+};
+// Skor: Ya = 1, Tidak = 0; max = COUNT(aktif) × 1;
+// persen = total/max × 100 (satu desimal); ambang 80/60 (asumsi prototipe).
+// Temuan = jawaban Tidak. Nomor FORM/UNIDA/... hanya label cetakan.
+```
+
 ## 3. Aturan tampil — bidang publik mengikuti D-02 (dijawab 8 September 2026)
 
 D-02: publik melihat **ringkasan saja** + **nama validator/PIC** + **foto bukti
@@ -332,6 +401,9 @@ D-26.f + D-29 + amendemen seed v17). Angka di bawah dikunci `seed-composition.te
 - **SAM-iSAFE:** 5 kategori `SAM-KAT-01…05`, 27 soal `SAM-Q-*`, 6 pengamatan
   `SAM-0001…0006` (`SAM-0004` dan `SAM-0006` `Berlangsung` dengan jawaban
   sebagian), 4 tindak lanjut `SMF-0001…0004` (2 untuk UNIDA).
+- **Inspeksi kantor (D-49):** 5 kategori `KTR-KAT-A…E`, 20 soal `KTR-Q-001…020`,
+  2 pengamatan `KTR-0001` (`Selesai`, UNIDA) + `KTR-0002` (`Berlangsung`),
+  2 tindak lanjut `KTF-0001/0002`.
 - **Audit + notifikasi:** 20 `audit_events` + 6 `notifications`.
 - **Lokasi:** denah ilustrasi + titik untuk `PSN-0018`/`PSN-0019`; `PSN-0024`
   UNIDA Gontor 23 gedung + 23 area kampus tanpa denah (diunggah menyusul).

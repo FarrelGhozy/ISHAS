@@ -5,10 +5,11 @@
 import { SEED } from "../seed/seed";
 import { buildBankLiveDariVersi } from "../instrument-bank";
 import { SAM_CATEGORIES_SEED, SAM_QUESTIONS_SEED } from "../sam-isafe";
+import { OFFICE_CATEGORIES_SEED, OFFICE_QUESTIONS_SEED } from "../office-inspection";
 import type { IshasState } from "../types";
 
-export const MOCK_SCHEMA_VERSION = 17;
-export const MOCK_STORAGE_KEY = "ishas-mock-v17";
+export const MOCK_SCHEMA_VERSION = 18;
+export const MOCK_STORAGE_KEY = "ishas-mock-v18";
 
 // Preserve v4 records, but never promote legacy area/floor coordinates to observations.
 export function migrateV4(value: unknown): unknown {
@@ -321,6 +322,22 @@ export function migrateV16(value: unknown): unknown {
   return migrated;
 }
 
+// D-49: v17 → v18 menambah bank + pengamatan Inspeksi K3L Perkantoran
+// tanpa menyentuh data lama. Rekam yang sudah ada tidak digandakan.
+export function migrateV17(value: unknown): unknown {
+  if (!value || typeof value !== "object" || (value as IshasState).schemaVersion !== 17)
+    return value;
+  const migrated = structuredClone(value) as IshasState;
+  migrated.schemaVersion = 18;
+  if (!Array.isArray(migrated.officeCategories))
+    migrated.officeCategories = structuredClone(OFFICE_CATEGORIES_SEED);
+  if (!Array.isArray(migrated.officeQuestions))
+    migrated.officeQuestions = structuredClone(OFFICE_QUESTIONS_SEED);
+  if (!Array.isArray(migrated.officeAssessments)) migrated.officeAssessments = [];
+  if (!Array.isArray(migrated.officeFollowUps)) migrated.officeFollowUps = [];
+  return migrated;
+}
+
 function isValidState(value: unknown): value is IshasState {
   if (typeof value !== "object" || value === null) return false;
   const state = value as IshasState;
@@ -365,6 +382,10 @@ function isValidState(value: unknown): value is IshasState {
     Array.isArray(state.samQuestions) &&
     Array.isArray(state.samAssessments) &&
     Array.isArray(state.samFollowUps) &&
+    Array.isArray(state.officeCategories) &&
+    Array.isArray(state.officeQuestions) &&
+    Array.isArray(state.officeAssessments) &&
+    Array.isArray(state.officeFollowUps) &&
     bankValid &&
     state.users.every((u) => u && typeof u.id === "string" && Array.isArray(u.institutionCodes)) &&
     state.instrumentVersions.every(
@@ -391,6 +412,7 @@ export function loadState(): IshasState {
   try {
     const raw =
       localStorage.getItem(MOCK_STORAGE_KEY) ??
+      localStorage.getItem("ishas-mock-v17") ??
       localStorage.getItem("ishas-mock-v16") ??
       localStorage.getItem("ishas-mock-v15") ??
       localStorage.getItem("ishas-mock-v14") ??
@@ -404,14 +426,16 @@ export function loadState(): IshasState {
       localStorage.getItem("ishas-mock-v5") ??
       localStorage.getItem("ishas-mock-v4");
     if (raw) {
-      const parsed: unknown = migrateV16(
-        migrateV15(
-          migrateV14(
-            migrateV13(
-              migrateV12(
-                migrateV11(
-                  migrateV10(
-                    migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+      const parsed: unknown = migrateV17(
+        migrateV16(
+          migrateV15(
+            migrateV14(
+              migrateV13(
+                migrateV12(
+                  migrateV11(
+                    migrateV10(
+                      migrateV9(migrateV8(migrateV7(migrateV6(migrateV5(migrateV4(JSON.parse(raw))))))),
+                    ),
                   ),
                 ),
               ),

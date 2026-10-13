@@ -584,6 +584,11 @@ export async function loadIshasState(): Promise<IshasState> {
     samQuestions,
     samAssessments,
     samFollowUps,
+    // D-49: backend fase kantor menyusul; proyeksi kosong agar tipe kompilasi.
+    officeCategories: [],
+    officeQuestions: [],
+    officeAssessments: [],
+    officeFollowUps: [],
     auditEvents,
     notifications,
     indexHistory,

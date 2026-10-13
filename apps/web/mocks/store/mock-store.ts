@@ -43,8 +43,14 @@ import {
   skorLaporanBeku,
 } from "../instrument-bank";
 import { SAM_KINDS, isValidSamDate, samActiveQuestions, samCompute } from "../sam-isafe";
+import {
+  OFFICE_KINDS,
+  isValidOfficeDate,
+  officeActiveQuestions,
+  officeCompute,
+} from "../office-inspection";
 import { isEvidenceAssetId } from "../adapters/report-evidence";
-import type { SamFollowUpStatus } from "../types";
+import type { OfficeFollowUpStatus, SamFollowUpStatus } from "../types";
 
 type Listener = () => void;
 
@@ -3049,6 +3055,753 @@ export const storeActions = {
         objectType: "SamQuestion",
         objectId: questionId,
         action: isActive ? "Mengaktifkan pertanyaan SAM-iSAFE" : "Menonaktifkan pertanyaan",
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-49: Inspeksi K3L Perkantoran khusus Validator (semua akun Validator aktif).
+  // Bank dinamis + pengamatan biner Ya/Tidak dengan skor maksimum dinamis.
+  createOfficeAssessment(
+    actor: { id?: string },
+    input: {
+      institutionCode: string;
+      unitKerja: string;
+      areaId?: string;
+      manualLocation?: string;
+      observedAt: string;
+      observedTime?: string;
+      kind: string;
+      observerName: string;
+      note?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat pengamatan." };
+    }
+    // D-49.a: hanya pesantren terdaftar (Aktif + punya akun Pesantren aktif).
+    if (
+      !input.institutionCode ||
+      !selectRegisteredInstitutions(currentState).some(
+        (item) => item.code === input.institutionCode,
+      )
+    ) {
+      return { ok: false, error: "Pilih pesantren terdaftar." };
+    }
+    const unitKerja = input.unitKerja?.trim() ?? "";
+    if (unitKerja.length < 2) {
+      return { ok: false, error: "Satker/Fakultas/Prodi minimal 2 karakter." };
+    }
+    if (unitKerja.length > 120) {
+      return { ok: false, error: "Satker/Fakultas/Prodi maksimal 120 karakter." };
+    }
+    const areaOk =
+      !input.areaId ||
+      currentState.areas.some(
+        (area) => area.id === input.areaId && area.institutionCode === input.institutionCode,
+      );
+    if (!areaOk) return { ok: false, error: "Area tidak sesuai pesantren." };
+    if (!input.manualLocation?.trim() && !input.areaId) {
+      return { ok: false, error: "Lokasi wajib diisi (area atau deskripsi manual)." };
+    }
+    if (!input.observedAt) return { ok: false, error: "Tanggal inspeksi wajib diisi." };
+    if (!isValidOfficeDate(input.observedAt)) {
+      return { ok: false, error: "Tanggal inspeksi tidak valid." };
+    }
+    if (!OFFICE_KINDS.includes(input.kind)) {
+      return { ok: false, error: "Jenis inspeksi tidak dikenal." };
+    }
+    if (input.observerName.trim().length < 2) {
+      return { ok: false, error: "Nama pemeriksa minimal 2 karakter." };
+    }
+    let id = "";
+    setState((draft) => {
+      const used = new Set(
+        draft.officeAssessments.map((item) => Number(item.id.replace("KTR-", "")) || 0),
+      );
+      let n = draft.officeAssessments.length + 1;
+      while (used.has(n)) n += 1;
+      id = `KTR-${String(n).padStart(4, "0")}`;
+      const stampedAt = nowIso();
+      draft.officeAssessments.unshift({
+        id,
+        institutionCode: input.institutionCode,
+        unitKerja,
+        areaId: input.areaId || undefined,
+        manualLocation: input.manualLocation?.trim() || undefined,
+        observedAt: input.observedAt,
+        observedTime: input.observedTime || undefined,
+        kind: input.kind,
+        observerName: input.observerName.trim(),
+        note: input.note?.trim() || undefined,
+        observerAccountId: account.id,
+        status: "Berlangsung",
+        answers: {},
+        totalScore: 0,
+        maxScore: officeActiveQuestions(draft.officeQuestions).length,
+        percent: 0,
+        riskLevel: "Risiko Tinggi",
+        createdAt: stampedAt,
+      });
+      audit(draft, account, {
+        objectType: "OfficeAssessment",
+        objectId: id,
+        institutionCode: input.institutionCode,
+        action: "Membuat pengamatan inspeksi kantor",
+      });
+    });
+    return { ok: true, id };
+  },
+
+  saveOfficeAnswer(
+    actor: { id?: string },
+    input: {
+      assessmentId: string;
+      questionId: string;
+      value: string;
+      note?: string;
+      suhuRuang?: number;
+      evidenceName?: string;
+      evidenceAssetId?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengisi." };
+    }
+    if (input.value !== "Ya" && input.value !== "Tidak") {
+      return { ok: false, error: "Jawaban harus Ya atau Tidak." };
+    }
+    const target = currentState.officeAssessments.find((item) => item.id === input.assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status === "Selesai") {
+      return { ok: false, error: "Pengamatan selesai tidak dapat diubah." };
+    }
+    const question = currentState.officeQuestions.find((item) => item.id === input.questionId);
+    if (!question || !question.isActive) {
+      return { ok: false, error: "Pertanyaan tidak aktif." };
+    }
+    // Bukti opsional; bila terisi, ID aset + nama wajib sah.
+    const evidenceName = input.evidenceName?.trim() ?? "";
+    const evidenceAssetId = input.evidenceAssetId?.trim() ?? "";
+    if (evidenceAssetId || evidenceName) {
+      if (!isEvidenceAssetId(evidenceAssetId)) {
+        return { ok: false, error: "Lampiran bukti tidak sah. Pilih gambar kembali." };
+      }
+      if (!evidenceName) {
+        return { ok: false, error: "Nama bukti wajib mengikuti berkas yang diunggah." };
+      }
+    }
+    if (
+      input.suhuRuang !== undefined &&
+      (!Number.isFinite(input.suhuRuang) || input.suhuRuang < -10 || input.suhuRuang > 50)
+    ) {
+      return { ok: false, error: "Suhu ruang tidak valid." };
+    }
+    setState((draft) => {
+      const item = draft.officeAssessments.find((entry) => entry.id === input.assessmentId)!;
+      item.answers[input.questionId] = {
+        value: input.value as "Ya" | "Tidak",
+        note: input.note?.trim() ?? "",
+        suhuRuang: input.suhuRuang,
+        evidenceName: evidenceName || undefined,
+        evidenceAssetId: evidenceAssetId || undefined,
+      };
+      const hitung = officeCompute(item, draft.officeQuestions);
+      item.totalScore = hitung.total;
+      item.maxScore = hitung.max;
+      item.percent = hitung.percent;
+      item.riskLevel = hitung.risk;
+    });
+    return { ok: true };
+  },
+
+  // D-49.e: hapus draft pengamatan (Berlangsung saja, teraudit).
+  deleteOfficeDraft(actor: { id?: string }, assessmentId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus draft." };
+    }
+    const target = currentState.officeAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status === "Selesai") {
+      return { ok: false, error: "Pengamatan selesai tidak dapat dihapus." };
+    }
+    setState((draft) => {
+      draft.officeAssessments = draft.officeAssessments.filter(
+        (entry) => entry.id !== assessmentId,
+      );
+      draft.officeFollowUps = draft.officeFollowUps.filter(
+        (entry) => entry.assessmentId !== assessmentId,
+      );
+      audit(draft, account, {
+        objectType: "OfficeAssessment",
+        objectId: assessmentId,
+        institutionCode: target.institutionCode,
+        action: "Menghapus draft inspeksi kantor",
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-49.e: buat tindak lanjut dari temuan (jawaban Tidak).
+  createOfficeFollowUp(
+    actor: { id?: string },
+    input: {
+      assessmentId: string;
+      questionId: string;
+      pic: string;
+      dueDate: string;
+      note?: string;
+    },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membuat tindak lanjut." };
+    }
+    const assessment = currentState.officeAssessments.find(
+      (item) => item.id === input.assessmentId,
+    );
+    if (!assessment) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    const question = currentState.officeQuestions.find((item) => item.id === input.questionId);
+    if (!question) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const answer = assessment.answers[input.questionId];
+    if (!answer || answer.value !== "Tidak") {
+      return { ok: false, error: "Tindak lanjut hanya untuk temuan (jawaban Tidak)." };
+    }
+    if (
+      currentState.officeFollowUps.some(
+        (item) =>
+          item.assessmentId === input.assessmentId &&
+          item.questionId === input.questionId &&
+          item.status !== "Dibatalkan",
+      )
+    ) {
+      return { ok: false, error: "Temuan ini sudah mempunyai tindak lanjut aktif." };
+    }
+    const pic = input.pic.trim();
+    if (pic.length < 2) return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    if (!input.dueDate) return { ok: false, error: "Tenggat wajib diisi." };
+    if (!isValidOfficeDate(input.dueDate)) {
+      return { ok: false, error: "Tenggat tidak valid." };
+    }
+    if (input.dueDate < assessment.observedAt) {
+      return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
+    }
+    let id = "";
+    setState((draft) => {
+      const used = new Set(
+        draft.officeFollowUps.map((item) => Number(item.id.replace("KTF-", "")) || 0),
+      );
+      let n = draft.officeFollowUps.length + 1;
+      while (used.has(n)) n += 1;
+      id = `KTF-${String(n).padStart(4, "0")}`;
+      const stampedAt = nowIso();
+      draft.officeFollowUps.push({
+        id,
+        assessmentId: input.assessmentId,
+        questionId: input.questionId,
+        title: question.text,
+        note: input.note?.trim() || undefined,
+        pic,
+        dueDate: input.dueDate,
+        status: "Belum ditindaklanjuti",
+        createdBy: account.id,
+        createdAt: stampedAt,
+        updatedAt: stampedAt,
+      });
+      audit(draft, account, {
+        objectType: "OfficeFollowUp",
+        objectId: id,
+        institutionCode: assessment.institutionCode,
+        action: "Membuat tindak lanjut inspeksi kantor",
+        note: `${assessment.id} · ${pic}`,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  // D-49.e: ubah status/PIC/tenggat/catatan tindak lanjut.
+  updateOfficeFollowUp(
+    actor: { id?: string },
+    followUpId: string,
+    input: { status?: OfficeFollowUpStatus; pic?: string; dueDate?: string; note?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah tindak lanjut." };
+    }
+    const target = currentState.officeFollowUps.find((item) => item.id === followUpId);
+    if (!target) return { ok: false, error: "Tindak lanjut tidak ditemukan." };
+    if (target.status === "Dibatalkan") {
+      return { ok: false, error: "Tindak lanjut yang dibatalkan tidak dapat diubah." };
+    }
+    if (input.status && !["Belum ditindaklanjuti", "Berjalan", "Selesai"].includes(input.status)) {
+      return { ok: false, error: "Status tidak sah. Pembatalan memakai aksi Batal." };
+    }
+    if (input.pic !== undefined && input.pic.trim().length < 2) {
+      return { ok: false, error: "Penanggung jawab minimal 2 karakter." };
+    }
+    if (input.dueDate) {
+      if (!isValidOfficeDate(input.dueDate)) {
+        return { ok: false, error: "Tenggat tidak valid." };
+      }
+      const assessment = currentState.officeAssessments.find(
+        (item) => item.id === target.assessmentId,
+      );
+      if (assessment && input.dueDate < assessment.observedAt) {
+        return { ok: false, error: "Tenggat tidak boleh sebelum tanggal pengamatan." };
+      }
+    }
+    setState((draft) => {
+      const item = draft.officeFollowUps.find((entry) => entry.id === followUpId)!;
+      if (input.status) {
+        item.status = input.status;
+        item.doneAt = input.status === "Selesai" ? nowIso() : undefined;
+      }
+      if (input.pic !== undefined) item.pic = input.pic.trim();
+      if (input.dueDate) item.dueDate = input.dueDate;
+      if (input.note !== undefined) item.note = input.note.trim() || undefined;
+      item.updatedAt = nowIso();
+      audit(draft, account, {
+        objectType: "OfficeFollowUp",
+        objectId: followUpId,
+        action: "Mengubah tindak lanjut inspeksi kantor",
+        note: input.status ?? "Perbarui rencana",
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-49.e: batalkan tindak lanjut dengan alasan min 10 karakter.
+  cancelOfficeFollowUp(actor: { id?: string }, followUpId: string, reason: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat membatalkan." };
+    }
+    const target = currentState.officeFollowUps.find((item) => item.id === followUpId);
+    if (!target) return { ok: false, error: "Tindak lanjut tidak ditemukan." };
+    if (target.status === "Selesai" || target.status === "Dibatalkan") {
+      return { ok: false, error: "Tindak lanjut selesai/batal tidak dapat dibatalkan." };
+    }
+    if (reason.trim().length < 10) {
+      return { ok: false, error: "Alasan pembatalan minimal 10 karakter." };
+    }
+    setState((draft) => {
+      const item = draft.officeFollowUps.find((entry) => entry.id === followUpId)!;
+      item.status = "Dibatalkan";
+      item.cancelReason = reason.trim();
+      item.updatedAt = nowIso();
+      audit(draft, account, {
+        objectType: "OfficeFollowUp",
+        objectId: followUpId,
+        action: "Membatalkan tindak lanjut inspeksi kantor",
+        note: reason.trim(),
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-49.e: tandai pengamatan Selesai sebagai Ditinjau (review supervisor).
+  reviewOfficeAssessment(actor: { id?: string }, assessmentId: string, note?: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mereview." };
+    }
+    const target = currentState.officeAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    if (target.status !== "Selesai") {
+      return { ok: false, error: "Hanya pengamatan Selesai yang dapat ditinjau." };
+    }
+    setState((draft) => {
+      const item = draft.officeAssessments.find((entry) => entry.id === assessmentId)!;
+      item.reviewedBy = account.name;
+      item.reviewedById = account.id;
+      item.reviewedAt = nowIso();
+      item.reviewNote = note?.trim() || undefined;
+      audit(draft, account, {
+        objectType: "OfficeAssessment",
+        objectId: assessmentId,
+        institutionCode: item.institutionCode,
+        action: "Meninjau inspeksi kantor",
+        note: note?.trim() || undefined,
+      });
+    });
+    return { ok: true };
+  },
+
+  completeOfficeAssessment(actor: { id?: string }, assessmentId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menyelesaikan." };
+    }
+    const target = currentState.officeAssessments.find((item) => item.id === assessmentId);
+    if (!target) return { ok: false, error: "Pengamatan tidak ditemukan." };
+    const kurang = officeActiveQuestions(currentState.officeQuestions).filter(
+      (item) => !target.answers[item.id],
+    );
+    if (kurang.length > 0) {
+      return { ok: false, error: `Masih ada ${kurang.length} pertanyaan belum dinilai.` };
+    }
+    setState((draft) => {
+      const item = draft.officeAssessments.find((entry) => entry.id === assessmentId)!;
+      const hitung = officeCompute(item, draft.officeQuestions);
+      item.totalScore = hitung.total;
+      item.maxScore = hitung.max;
+      item.percent = hitung.percent;
+      item.riskLevel = hitung.risk;
+      item.status = "Selesai";
+      item.completedAt = nowIso();
+      audit(draft, account, {
+        objectType: "OfficeAssessment",
+        objectId: item.id,
+        institutionCode: item.institutionCode,
+        action: "Menyelesaikan inspeksi kantor",
+        note: `${hitung.total}/${hitung.max} (${hitung.percent}%)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  addOfficeCategory(actor: { id?: string }, input: { name: string; description?: string }): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah kategori." };
+    }
+    const name = input.name.trim();
+    if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    if (
+      currentState.officeCategories.some((item) => item.name.toLowerCase() === name.toLowerCase())
+    ) {
+      return { ok: false, error: "Nama kategori sudah digunakan." };
+    }
+    const description = input.description?.trim() ?? "";
+    if (description.length > 280) {
+      return { ok: false, error: "Deskripsi maksimal 280 karakter." };
+    }
+    let id = "";
+    setState((draft) => {
+      const used = new Set(
+        draft.officeCategories.map((item) => Number(item.id.replace("KTR-KAT-", "")) || 0),
+      );
+      let order = Math.max(0, ...draft.officeCategories.map((item) => item.sortOrder)) + 1;
+      let n = order;
+      while (used.has(n)) n += 1;
+      id = `KTR-KAT-${String(n).padStart(2, "0")}`;
+      draft.officeCategories.push({
+        id,
+        name,
+        description,
+        sortOrder: order,
+        isActive: true,
+      });
+      audit(draft, account, {
+        objectType: "OfficeCategory",
+        objectId: id,
+        action: "Menambah kategori inspeksi kantor",
+        note: name,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  // D-49.b: ubah nama/deskripsi kategori bank inspeksi kantor.
+  updateOfficeCategory(
+    actor: { id?: string },
+    categoryId: string,
+    patch: { name?: string; description?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah kategori." };
+    }
+    const target = currentState.officeCategories.find((item) => item.id === categoryId);
+    if (!target) return { ok: false, error: "Kategori tidak ditemukan." };
+    const name = patch.name?.trim() ?? target.name;
+    if (name.length < 3) return { ok: false, error: "Nama kategori minimal 3 karakter." };
+    if (
+      currentState.officeCategories.some(
+        (item) => item.id !== categoryId && item.name.toLowerCase() === name.toLowerCase(),
+      )
+    ) {
+      return { ok: false, error: "Nama kategori sudah digunakan." };
+    }
+    const description = patch.description?.trim() ?? target.description;
+    if (description.length > 280) {
+      return { ok: false, error: "Deskripsi maksimal 280 karakter." };
+    }
+    setState((draft) => {
+      const live = draft.officeCategories.find((item) => item.id === categoryId)!;
+      live.name = name;
+      live.description = description;
+      audit(draft, account, {
+        objectType: "OfficeCategory",
+        objectId: categoryId,
+        action: "Mengubah kategori inspeksi kantor",
+        note: name,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-49.b: hapus kategori hanya bila kosong (tanpa pertanyaan).
+  deleteOfficeCategory(actor: { id?: string }, categoryId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus kategori." };
+    }
+    const target = currentState.officeCategories.find((item) => item.id === categoryId);
+    if (!target) return { ok: false, error: "Kategori tidak ditemukan." };
+    if (currentState.officeCategories.length <= 1) {
+      return { ok: false, error: "Kategori terakhir tidak dapat dihapus." };
+    }
+    const isi = currentState.officeQuestions.filter((item) => item.categoryId === categoryId);
+    if (isi.length > 0) {
+      return {
+        ok: false,
+        error: `Kategori masih berisi ${isi.length} pertanyaan. Pindahkan atau hapus dulu.`,
+      };
+    }
+    setState((draft) => {
+      draft.officeCategories = draft.officeCategories.filter((item) => item.id !== categoryId);
+      audit(draft, account, {
+        objectType: "OfficeCategory",
+        objectId: categoryId,
+        action: "Menghapus kategori inspeksi kantor",
+        note: `${target.name} (pengamatan baru memakai bank sisa)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  addOfficeQuestion(
+    actor: { id?: string },
+    input: { categoryId: string; text: string; panduan?: string; contohBukti?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menambah pertanyaan." };
+    }
+    const category = currentState.officeCategories.find((item) => item.id === input.categoryId);
+    if (!category) return { ok: false, error: "Kategori tidak ditemukan." };
+    const text = input.text.trim();
+    if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    const panduan = input.panduan?.trim() ?? "";
+    const contohBukti = input.contohBukti?.trim() ?? "";
+    if (panduan.length > 500) {
+      return { ok: false, error: "Panduan maksimal 500 karakter." };
+    }
+    if (contohBukti.length > 280) {
+      return { ok: false, error: "Contoh bukti maksimal 280 karakter." };
+    }
+    let id = "";
+    setState((draft) => {
+      const order =
+        Math.max(
+          0,
+          ...draft.officeQuestions
+            .filter((item) => item.categoryId === input.categoryId)
+            .map((item) => item.sortOrder),
+        ) + 1;
+      const used = new Set(
+        draft.officeQuestions.map((item) => Number(item.id.replace("KTR-Q-", "")) || 0),
+      );
+      let n = draft.officeQuestions.length + 1;
+      while (used.has(n)) n += 1;
+      id = `KTR-Q-${String(n).padStart(3, "0")}`;
+      draft.officeQuestions.push({
+        id,
+        categoryId: input.categoryId,
+        text,
+        panduan,
+        contohBukti,
+        sortOrder: order,
+        isActive: true,
+      });
+      audit(draft, account, {
+        objectType: "OfficeQuestion",
+        objectId: id,
+        action: "Menambah pertanyaan inspeksi kantor",
+        note: category.name,
+      });
+    });
+    return { ok: true, id };
+  },
+
+  // D-49.b: ubah teks/panduan/contoh bukti + pindah kategori.
+  updateOfficeQuestion(
+    actor: { id?: string },
+    questionId: string,
+    patch: { text?: string; panduan?: string; contohBukti?: string; categoryId?: string },
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah pertanyaan." };
+    }
+    const target = currentState.officeQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const text = patch.text?.trim() ?? target.text;
+    if (text.length < 10) return { ok: false, error: "Teks pertanyaan minimal 10 karakter." };
+    const panduan = patch.panduan?.trim() ?? target.panduan ?? "";
+    const contohBukti = patch.contohBukti?.trim() ?? target.contohBukti ?? "";
+    if (panduan.length > 500) {
+      return { ok: false, error: "Panduan maksimal 500 karakter." };
+    }
+    if (contohBukti.length > 280) {
+      return { ok: false, error: "Contoh bukti maksimal 280 karakter." };
+    }
+    const categoryId = patch.categoryId ?? target.categoryId;
+    const category = currentState.officeCategories.find((item) => item.id === categoryId);
+    if (!category) return { ok: false, error: "Kategori tujuan tidak ditemukan." };
+    setState((draft) => {
+      const live = draft.officeQuestions.find((item) => item.id === questionId)!;
+      live.text = text;
+      live.panduan = panduan;
+      live.contohBukti = contohBukti;
+      if (categoryId !== live.categoryId) {
+        const order =
+          Math.max(
+            0,
+            ...draft.officeQuestions
+              .filter((item) => item.categoryId === categoryId)
+              .map((item) => item.sortOrder),
+          ) + 1;
+        live.categoryId = categoryId;
+        live.sortOrder = order;
+      }
+      audit(draft, account, {
+        objectType: "OfficeQuestion",
+        objectId: questionId,
+        action: "Mengubah pertanyaan inspeksi kantor",
+        note: `${category.name} (pengamatan baru memakai teks baru)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-49.b: hapus soal hanya bila belum pernah dipakai pengamatan.
+  deleteOfficeQuestion(actor: { id?: string }, questionId: string): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat menghapus pertanyaan." };
+    }
+    const target = currentState.officeQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const dipakai = currentState.officeAssessments.filter(
+      (item) => item.answers[questionId] !== undefined,
+    ).length;
+    if (dipakai > 0) {
+      return {
+        ok: false,
+        error: `Sudah dipakai ${dipakai} pengamatan. Nonaktifkan saja agar riwayat utuh.`,
+      };
+    }
+    setState((draft) => {
+      draft.officeQuestions = draft.officeQuestions.filter((item) => item.id !== questionId);
+      // Rapatkan urutan dalam kategori yang ditinggalkan.
+      const sisa = draft.officeQuestions
+        .filter((item) => item.categoryId === target.categoryId)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      sisa.forEach((item, index) => {
+        item.sortOrder = index + 1;
+      });
+      audit(draft, account, {
+        objectType: "OfficeQuestion",
+        objectId: questionId,
+        action: "Menghapus pertanyaan inspeksi kantor",
+        note: `${target.id} (belum pernah dipakai pengamatan)`,
+      });
+    });
+    return { ok: true };
+  },
+
+  // D-49.b: geser urutan soal dalam kategorinya.
+  moveOfficeQuestion(
+    actor: { id?: string },
+    questionId: string,
+    direction: "naik" | "turun",
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengurutkan pertanyaan." };
+    }
+    const target = currentState.officeQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    const group = currentState.officeQuestions
+      .filter((item) => item.categoryId === target.categoryId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const posisi = group.findIndex((item) => item.id === questionId);
+    const tukar = direction === "naik" ? posisi - 1 : posisi + 1;
+    if (tukar < 0 || tukar >= group.length) {
+      return { ok: false, error: "Sudah di ujung urutan." };
+    }
+    const lawan = group[tukar].id;
+    setState((draft) => {
+      const a = draft.officeQuestions.find((item) => item.id === questionId)!;
+      const b = draft.officeQuestions.find((item) => item.id === lawan)!;
+      const temp = a.sortOrder;
+      a.sortOrder = b.sortOrder;
+      b.sortOrder = temp;
+      audit(draft, account, {
+        objectType: "OfficeQuestion",
+        objectId: questionId,
+        action: "Mengurutkan pertanyaan inspeksi kantor",
+        note: `${direction} dalam ${target.categoryId}`,
+      });
+    });
+    return { ok: true };
+  },
+
+  setOfficeQuestionActive(
+    actor: { id?: string },
+    questionId: string,
+    isActive: boolean,
+  ): ActionResult {
+    const account = actor.id
+      ? currentState.users.find((user) => user.id === actor.id)
+      : undefined;
+    if (!account || account.status !== "Aktif" || account.roleId !== "validator") {
+      return { ok: false, error: "Hanya akun Validator aktif yang dapat mengubah pertanyaan." };
+    }
+    const target = currentState.officeQuestions.find((item) => item.id === questionId);
+    if (!target) return { ok: false, error: "Pertanyaan tidak ditemukan." };
+    setState((draft) => {
+      draft.officeQuestions.find((item) => item.id === questionId)!.isActive = isActive;
+      audit(draft, account, {
+        objectType: "OfficeQuestion",
+        objectId: questionId,
+        action: isActive ? "Mengaktifkan pertanyaan inspeksi kantor" : "Menonaktifkan pertanyaan",
       });
     });
     return { ok: true };

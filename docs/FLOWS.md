@@ -214,5 +214,34 @@ whitelist D-02, impor kanal `penilaian-mandiri` → `Terbit`).
    kategori/status → untuk `Public`: **Lihat** (tab baru) + **Unduh**; untuk
    `Privat`: hanya nama + status terkunci, tanpa kedua tombol.
    → Sistem: adapter memeriksa `visibility` sebelum menyajikan blob; blob
-   privat tidak pernah disajikan ke publik (D-02). Filter pesantren tidak
-   memfilter dokumen (global).
+    privat tidak pernah disajikan ke publik (D-02). Filter pesantren tidak
+    memfilter dokumen (global).
+
+## 9. Inspeksi K3L Perkantoran (Aktor: Validator, D-49)
+
+**Prasyarat:** login sebagai Validator aktif. Khusus Validator; tidak tampil
+publik/Pesantren. Bank `KTR-*` terpisah dari SAM dan kategori K3 sistem.
+
+1. Buka `/validator/inspeksi-kantor` → riwayat pengamatan (filter risiko +
+status + cari) + dashboard (tren persen antar pengamatan Selesai + rata-rata
+per kategori, ilustratif) → **Pengamatan baru** atau **Bank data**.
+2. Bank (`/validator/inspeksi-kantor/bank`): tambah/ubah/hapus kategori
+(hapus ditolak bila masih berisi pertanyaan); tambah/ubah/hapus pertanyaan
+(hapus ditolak bila sudah dipakai pengamatan — nonaktifkan saja),
+pindah kategori, geser urutan, aktif/nonaktif, ubah `panduan`/`contohBukti`.
+Perubahan langsung aktif untuk pengamatan baru; riwayat Selesai tidak berubah.
+3. Pengamatan baru (`/validator/inspeksi-kantor/baru`): isi info
+(pesantren terdaftar* + `unitKerja` Satker/Fakultas/Prodi* + area/lokasi
+manual + tanggal* + waktu + jenis + pengamat* + keterangan) → jawab 20 item
+`Ya/Tidak` + catatan (dianjurkan bila `Tidak`) + foto bukti per jawaban
+(pola `/lapor`, blob privat; dianjurkan bila `Tidak`) + suhu ruang pada
+item 16 (opsional). Draft `Berlangsung` dilanjutkan setelah reload via
+penunjuk per Validator; hapus draft hanya via tombol Hapus draft.
+4. **Selesaikan** (aktif hanya bila seluruh item aktif terjawab) → status
+`Selesai` + skor biner (`Ya=1`, persen, risiko D-49.c, asumsi prototipe).
+Pengamatan Selesai tidak dapat diubah/diisi lagi, dapat ditandai `Ditinjau`
+(nama + waktu + catatan teraudit), dapat dicetak browser, memuat jejak audit.
+5. Tiap temuan (`Tidak`) dapat dibuatkan tindak lanjut (PIC + tenggat wajib;
+tenggat ≥ tanggal pengamatan) dengan status
+`Belum ditindaklanjuti → Berjalan → Selesai`, plus `Dibatalkan` beralasan
+min 10 karakter. Dikelola Validator di halaman detail pengamatan.
