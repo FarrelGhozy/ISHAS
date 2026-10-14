@@ -32,6 +32,13 @@ import {
 } from "../lib/penilaian-draft";
 import { paramPesantrenTidakSah, pilihInstitusiAwal } from "../lib/param-pesantren";
 import { deviceDraftId } from "../lib/self-draft-id";
+import {
+  COOLDOWN_MANDIRI_MS,
+  KEY_COOLDOWN_MANDIRI,
+  formatSisa,
+  simpanCooldown,
+  sisaCooldown,
+} from "../lib/anti-spam";
 
 type Indicator = InstrumentIndicator;
 
@@ -71,6 +78,11 @@ export function PenilaianMandiriPage() {
   const [draftChecksum, setDraftChecksum] = useState(initialDraft?.instrumentChecksum ?? "");
   const [notice, setNotice] = useState("");
   const [submittedId, setSubmittedId] = useState("");
+  // D-50: pernyataan tanggung jawab wajib + cooldown 60 detik per perangkat.
+  const [setuju, setSetuju] = useState(false);
+  const [sisaDetik, setSisaDetik] = useState(() =>
+    sisaCooldown(KEY_COOLDOWN_MANDIRI, COOLDOWN_MANDIRI_MS),
+  );
   const blocked = user !== null && !canSubmitReport(user.roleId);
   // D-24: satu bank live sumber soal; tanpa versi.
   const instrument = state.instrument;
@@ -156,7 +168,9 @@ export function PenilaianMandiriPage() {
     completedCount === indicators.length &&
     !draftStale &&
     !mapError &&
-    !uploadBusy;
+    !uploadBusy &&
+    setuju &&
+    sisaDetik <= 0;
 
   // Autosave tanpa menunggu nama (nama divalidasi saat kirim) agar jawaban
   // tidak hilang bila reload sebelum identitas diisi. Tulis hanya bila isi
@@ -178,28 +192,32 @@ export function PenilaianMandiriPage() {
       activeIndex: active,
     };
     if (draftPenilaianSama(storedDraft, payload)) return;
+    // D-50: tunda tulis ±1,5 detik agar ketikan cepat tidak membanjiri server.
     let cancelled = false;
-    void (async () => {
-      try {
-        const result = await repository.saveSelfAssessmentDraft({
-          id: draftId,
-          institutionCode,
-          instrumentVersionId: "INS-LIVE",
-          updatedAt: new Date().toISOString(),
-          ...payload,
-        });
-        if (cancelled) return;
-        if (!result.ok) setNotice(result.error);
-        else setTersimpanPada(new Date().toLocaleTimeString("id-ID"));
-      } catch (error) {
-        if (!cancelled)
-          setNotice(
-            error instanceof Error ? error.message : "Draft belum tersimpan. Jangan tutup halaman.",
-          );
-      }
-    })();
+    const timer = setTimeout(() => {
+      void (async () => {
+        try {
+          const result = await repository.saveSelfAssessmentDraft({
+            id: draftId,
+            institutionCode,
+            instrumentVersionId: "INS-LIVE",
+            updatedAt: new Date().toISOString(),
+            ...payload,
+          });
+          if (cancelled) return;
+          if (!result.ok) setNotice(result.error);
+          else setTersimpanPada(new Date().toLocaleTimeString("id-ID"));
+        } catch (error) {
+          if (!cancelled)
+            setNotice(
+              error instanceof Error ? error.message : "Draft belum tersimpan. Jangan tutup halaman.",
+            );
+        }
+      })();
+    }, 1500);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [
     institutionCode,
@@ -215,6 +233,15 @@ export function PenilaianMandiriPage() {
     blocked,
     draftLoading,
   ]);
+
+  // D-50: hitung mundur cooldown tiap detik.
+  useEffect(() => {
+    if (sisaDetik <= 0 || submittedId) return;
+    const timer = setTimeout(() => {
+      setSisaDetik(sisaCooldown(KEY_COOLDOWN_MANDIRI, COOLDOWN_MANDIRI_MS));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [sisaDetik, submittedId]);
 
   if (blocked)
     return (
@@ -248,6 +275,8 @@ export function PenilaianMandiriPage() {
             setActive(0);
             setNotice("");
             setTersimpanPada("");
+            setSetuju(false);
+            setSisaDetik(sisaCooldown(KEY_COOLDOWN_MANDIRI, COOLDOWN_MANDIRI_MS));
           }}
         >
           Isi penilaian baru
@@ -320,6 +349,17 @@ export function PenilaianMandiriPage() {
     setNotice("");
   };
   const submit = async () => {
+    // D-50: cooldown dulu (tanpa request), lalu checkbox, baru kelengkapan.
+    const sisa = sisaCooldown(KEY_COOLDOWN_MANDIRI, COOLDOWN_MANDIRI_MS);
+    if (sisa > 0) {
+      setSisaDetik(sisa);
+      setNotice(`Batasi spam: kirim lagi dalam ${formatSisa(sisa)}.`);
+      return;
+    }
+    if (!setuju) {
+      setNotice("Centang pernyataan tanggung jawab untuk mengirim.");
+      return;
+    }
     if (mapError) {
       setNotice(mapError);
       return;
@@ -358,8 +398,13 @@ export function PenilaianMandiriPage() {
         return;
       }
       const result = await repository.submitSelfAssessment(actor, draftId);
-      if (result.ok) setSubmittedId(result.id ?? "Nomor penilaian dibuat");
-      else setNotice(result.error ?? "Penilaian belum dapat dikirim. Coba lagi.");
+      if (result.ok) {
+        // D-50: catat waktu kirim agar kiriman berikutnya tertahan 60 detik.
+        simpanCooldown(KEY_COOLDOWN_MANDIRI);
+        setSisaDetik(sisaCooldown(KEY_COOLDOWN_MANDIRI, COOLDOWN_MANDIRI_MS));
+        setSetuju(false);
+        setSubmittedId(result.id ?? "Nomor penilaian dibuat");
+      } else setNotice(result.error ?? "Penilaian belum dapat dikirim. Coba lagi.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Penilaian belum tersimpan. Coba lagi.");
     }
@@ -777,7 +822,13 @@ export function PenilaianMandiriPage() {
                 <p className="mt-1 text-xs text-secondary-text">
                   {valid
                     ? "Semua data lengkap. Setelah dikirim, jawaban tidak dapat diubah dan hasil langsung terbit."
-                    : `${answeredCount} terjawab · ${completedCount} lengkap · ${indicators.length - completedCount} perlu diselesaikan`}
+                    : !setuju &&
+                        identityComplete &&
+                        completedCount === indicators.length &&
+                        !draftStale &&
+                        !mapError
+                      ? "Centang pernyataan tanggung jawab di bawah untuk mengirim."
+                      : `${answeredCount} terjawab · ${completedCount} lengkap · ${indicators.length - completedCount} perlu diselesaikan`}
                 </p>
               </div>
               <button
@@ -786,9 +837,32 @@ export function PenilaianMandiriPage() {
                 disabled={!valid}
                 onClick={submit}
               >
-                Kirim penilaian
+                {sisaDetik > 0 ? `Kirim lagi ${formatSisa(sisaDetik)}` : "Kirim penilaian"}
               </button>
             </div>
+            <label
+              htmlFor="mandiri-setuju"
+              className="mt-4 flex cursor-pointer items-start gap-2 text-sm text-heading"
+            >
+              <input
+                id="mandiri-setuju"
+                type="checkbox"
+                className="mt-1 size-4 shrink-0 accent-primary"
+                checked={setuju}
+                onChange={(event) => {
+                  setSetuju(event.target.checked);
+                  setNotice("");
+                }}
+              />
+              <span>
+                Saya bertanggung jawab atas kebenaran penilaian ini.
+              </span>
+            </label>
+            {sisaDetik > 0 ? (
+              <p role="status" className="mt-2 text-xs font-semibold text-secondary-text">
+                Batasi spam: kirim lagi dalam {formatSisa(sisaDetik)}.
+              </p>
+            ) : null}
             {notice ? (
               <p
                 role="alert"

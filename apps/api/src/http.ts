@@ -47,6 +47,10 @@ const FORBIDDEN = [
   "hanya publik tanpa login",
   "akun sendiri",
 ];
+const TOO_MANY = [
+  "terlalu sering",
+  "terlalu banyak percobaan",
+];
 const CONFLICT = [
   "hanya laporan menunggu validasi",
   "instrumen berubah",
@@ -65,6 +69,7 @@ const PAYLOAD_TOO_LARGE = [
 
 export function httpStatusForError(message: string): number {
   const lower = message.toLowerCase();
+  if (TOO_MANY.some((p) => lower.includes(p))) return 429;
   if (UNAUTHORIZED.some((p) => lower.includes(p))) return 401;
   if (NOT_FOUND.some((p) => lower.includes(p))) return 404;
   if (FORBIDDEN.some((p) => lower.includes(p))) return 403;

@@ -153,6 +153,9 @@ function findBankIndicator(
 // Idempotency kirim-ganda (V2-03): requestId yang sama mengembalikan id yang sama
 // tanpa membuat record kedua. Disimpan di memori (sesi halaman); draft dibersihkan
 // setelah sukses sehingga kiriman baru selalu memakai requestId baru.
+// D-50: mode mock tidak memakai cooldown server — penahan spam di mode mock
+// adalah cooldown per perangkat di UI (`features/publik/lib/anti-spam.ts`);
+// rate limit per IP hanya hidup di backend (`apps/api`).
 const seenReportRequests = new Map<string, string>();
 
 export const storeActions = {

@@ -9,9 +9,12 @@ Semua validasi di bawah adalah port 1:1; angka mengacu ke baris mock.
   `{ok:false, error:"pesan bahasa Indonesia"}` (cermin `ActionResult`).
 - Kode HTTP: `200` baca/tulis ok, `201` buat, `400` validasi, `401` tanpa sesi,
   `403` peran/scope salah, `404` tidak ada, `409` konflik (draft basi, hapus
-  dipakai, lock denah), `413` file kebesaran, `429` kirim ganda/spam.
+  dipakai, lock denah), `413` file kebesaran, `429` rate limit / spam (D-50).
 - Idempotensi kirim: header `X-Request-Id` (cermin `clientRequestId`,
   `seenReportRequests` cap 500). Kirim ulang ID sama → kembalikan ID lama.
+- Rate limit publik D-50 (per IP, in-memory): lapor-cepat 3x/10 menit,
+  submit mandiri 2x/1 jam, draft 30x/10 menit per draf, upload bukti publik
+  10x/10 menit. Lewat batas → `429` dengan pesan Indonesia persis.
 - Pagination daftar: `?page&limit` (default 20, maks 100); sort default
   `submitted_at DESC` kecuali ditentukan.
 - Auth: cookie sesi `ishas_session` (fase 6, §16); header `X-Demo-Account: USR-xxx`
@@ -42,7 +45,7 @@ frontend tetap hijau; kode HTTP mengikuti tabel 0.b.
 | "Laporan tidak ditemukan." | 404 |
 | "Hanya laporan Menunggu validasi yang dapat diterima.", draft basi (checksum beda), lock denah `expectedActiveId` salah, hapus denah sedang dipakai | 409 |
 | Ukuran/tipe berkas melebihi batas (5 MB/10 MB/20 MP) | 413 |
-| Kirim ganda cepat / spam login | 429 |
+| Rate limit: "Terlalu sering mengirim laporan ...", "Terlalu sering mengirim penilaian ...", "Terlalu sering menyimpan draft ...", "Terlalu sering mengunggah gambar ...", spam login | 429 |
 
 ## 1. Matriks otorisasi (server wajib menegakkan)
 

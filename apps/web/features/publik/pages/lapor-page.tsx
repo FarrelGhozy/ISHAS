@@ -28,6 +28,13 @@ import {
 } from "../lib/lapor-validation";
 import { clearLaporDraft, isLaporEmpty, loadLaporDraft, saveLaporDraft } from "../lib/lapor-draft";
 import { paramPesantrenTidakSah, pilihInstitusiAwal } from "../lib/param-pesantren";
+import {
+  COOLDOWN_LAPOR_MS,
+  KEY_COOLDOWN_LAPOR,
+  formatSisa,
+  simpanCooldown,
+  sisaCooldown,
+} from "../lib/anti-spam";
 
 const FOCUS_ORDER: (keyof LaporValues)[] = [
   "reporterName",
@@ -109,6 +116,12 @@ function LaporPageContent() {
   const [formError, setFormError] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [successId, setSuccessId] = useState<string | null>(null);
+  // D-50: pernyataan tanggung jawab wajib + cooldown 60 detik per perangkat.
+  const [setuju, setSetuju] = useState(false);
+  const [setujuError, setSetujuError] = useState<string | null>(null);
+  const [sisaDetik, setSisaDetik] = useState(() =>
+    sisaCooldown(KEY_COOLDOWN_LAPOR, COOLDOWN_LAPOR_MS),
+  );
 
   const submitLock = useRef(false);
   const [draftSaved, setDraftSaved] = useState(true);
@@ -175,6 +188,15 @@ function LaporPageContent() {
     setDraftSaved(scoped && mirror);
   }, [values, blocked, successId]);
 
+  // D-50: hitung mundur cooldown tiap detik agar tombol tahu kapan boleh kirim.
+  useEffect(() => {
+    if (sisaDetik <= 0 || successId) return;
+    const timer = setTimeout(() => {
+      setSisaDetik(sisaCooldown(KEY_COOLDOWN_LAPOR, COOLDOWN_LAPOR_MS));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [sisaDetik, successId]);
+
   if (registered.length === 0) {
     return (
       <section className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -206,6 +228,9 @@ function LaporPageContent() {
           setAttempted(false);
           setTouched({});
           setFormError(null);
+          setSetuju(false);
+          setSetujuError(null);
+          setSisaDetik(sisaCooldown(KEY_COOLDOWN_LAPOR, COOLDOWN_LAPOR_MS));
           setValues({
             ...EMPTY_LAPOR_VALUES,
             institutionCode: values.institutionCode,
@@ -253,6 +278,17 @@ function LaporPageContent() {
 
   async function handleSubmit() {
     if (submitLock.current || blocked || evidenceUploading || !evidenceReady) return;
+    // D-50: cooldown dulu (tanpa request), lalu checkbox, baru validasi field.
+    const sisa = sisaCooldown(KEY_COOLDOWN_LAPOR, COOLDOWN_LAPOR_MS);
+    if (sisa > 0) {
+      setSisaDetik(sisa);
+      setFormError(`Batasi spam: kirim lagi dalam ${formatSisa(sisa)}.`);
+      return;
+    }
+    if (!setuju) {
+      setSetujuError("Centang pernyataan tanggung jawab untuk mengirim.");
+      return;
+    }
     if (mapError) {
       setFormError(mapError);
       return;
@@ -309,6 +345,10 @@ function LaporPageContent() {
     if (result.ok && result.id) {
       clearLaporDraft(values.institutionCode);
       clearLaporDraft(null);
+      // D-50: catat waktu kirim agar kiriman berikutnya tertahan 60 detik.
+      simpanCooldown(KEY_COOLDOWN_LAPOR);
+      setSisaDetik(sisaCooldown(KEY_COOLDOWN_LAPOR, COOLDOWN_LAPOR_MS));
+      setSetuju(false);
       setSuccessId(result.id);
     } else if (!result.ok) {
       submitLock.current = false;
@@ -323,7 +363,13 @@ function LaporPageContent() {
   }
 
   const canSubmit =
-    isLaporValid(errors) && !blocked && !mapError && !evidenceUploading && evidenceReady;
+    isLaporValid(errors) &&
+    !blocked &&
+    !mapError &&
+    !evidenceUploading &&
+    evidenceReady &&
+    setuju &&
+    sisaDetik <= 0;
 
   return (
     <section className="mx-auto flex max-w-2xl flex-col gap-4">
@@ -363,6 +409,11 @@ function LaporPageContent() {
           {draftSaved
             ? "Draft tersimpan di perangkat ini. Gambar bukti tersimpan terpisah di browser yang sama."
             : "Draft belum tersimpan. Jangan tutup halaman; periksa ruang dan izin penyimpanan browser."}
+        </p>
+      ) : null}
+      {!blocked && sisaDetik > 0 ? (
+        <p role="status" className="text-sm font-semibold text-secondary-text">
+          Batasi spam: kirim lagi dalam {formatSisa(sisaDetik)}.
         </p>
       ) : null}
       {selectedHasNoAreas ? (
@@ -424,6 +475,12 @@ function LaporPageContent() {
         confirmCancel={confirmCancel}
         isPrefilledManager={isPrefilledManager}
         formError={formError}
+        setuju={setuju}
+        setujuError={setujuError}
+        onSetuju={(nilai) => {
+          setSetuju(nilai);
+          if (nilai) setSetujuError(null);
+        }}
         onChange={handleChange}
         onBlur={(field) => setTouched((t) => ({ ...t, [field]: true }))}
         onSubmit={handleSubmit}

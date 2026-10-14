@@ -15,6 +15,8 @@ import {
 import type { IshasState } from "../../../web/mocks/types";
 import type { Route, RouteContext } from "../router";
 import { actionResponse, fail, httpStatusForError, ok } from "../http";
+import { clientIp } from "../auth/client-ip";
+import { cekDraft, cekLapor, cekMandiri, cekUpload } from "../domain/anti-spam";
 import { requireRole } from "../actor";
 import { buildPublicState, projectPublicRecommendation, projectPublicReport } from "../domain/public-state";
 import { resolveSender, submitLaporCepat, validateEvidence, validateLapor } from "../domain/lapor";
@@ -290,6 +292,9 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       method: "POST",
       pattern: "/api/v1/reports/lapor-cepat",
       handler: withState(async ({ state, actor, request }) => {
+        // D-50: tahan spam sebelum validasi berat.
+        const spam = cekLapor(clientIp(request));
+        if (!spam.ok) return fail(spam.error, 429);
         const input = await readJson<Parameters<typeof validateLapor>[1]>(request);
         // Kontrak §0/§3: idempotensi lewat header X-Request-Id; body
         // clientRequestId tetap didukung (cermin mock).
@@ -308,6 +313,9 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       method: "POST",
       pattern: "/api/v1/uploads/report-evidence",
       handler: withState(async ({ state, actor, request }) => {
+        // D-50: upload anon dibatasi agar storage tidak dibanjiri.
+        const spam = cekUpload(clientIp(request));
+        if (!spam.ok) return fail(spam.error, 429);
         const { file, fields } = await formField(request);
         if (!file) return fail("Pilih gambar PNG, JPEG atau WebP.", 400);
         const result = await uploadEvidence(
@@ -348,6 +356,9 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       handler: withState(async ({ state, actor, request }) => {
         const input = await readJson<DraftInput>(request);
         if (!input.id) return fail("Draft tidak ditemukan.", 404);
+        // D-50: autosave dibatasi per draf agar ketikan cepat tidak membanjiri DB.
+        const spam = cekDraft(clientIp(request), input.id);
+        if (!spam.ok) return fail(spam.error, 429);
         const result = await saveDraft(state, {
           ...input,
           reporterUserId: actor?.id,
@@ -378,6 +389,9 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       method: "POST",
       pattern: "/api/v1/self-assessments/submit",
       handler: withState(async ({ state, actor, request }) => {
+        // D-50: submit mandiri ketat karena langsung Terbit ke dashboard.
+        const spam = cekMandiri(clientIp(request));
+        if (!spam.ok) return fail(spam.error, 429);
         const body = await readJson<{
           draftId: string;
           reporterName?: string;
@@ -395,6 +409,9 @@ export function buildRoutes(deps: RouteDeps): Route[] {
       method: "POST",
       pattern: "/api/v1/uploads/self-evidence",
       handler: withState(async ({ state, actor, request }) => {
+        // D-50: sama seperti bukti lapor — upload anon dibatasi per IP.
+        const spam = cekUpload(clientIp(request));
+        if (!spam.ok) return fail(spam.error, 429);
         const { file, fields } = await formField(request);
         if (!file) return fail("Pilih gambar PNG, JPEG atau WebP.", 400);
         const result = await uploadEvidence(

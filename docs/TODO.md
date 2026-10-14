@@ -1,5 +1,21 @@
 # TODO — Kontrol Kerja Aktif
 
+## Rate limit + cooldown anti-spam publik (D-50) — 14 Oktober 2026 — `IN PROGRESS`
+
+Arahan langsung pemilik (`ok kerjakan`): pastikan ada rate limit agar bebas
+spam, terutama dashboard utama `/`. Cakupan: docs (D-50 + kontrak §0/§3/§8 +
+FLOWS §2/§3 + WIREFRAMES §2/§3) + `apps/api` (config, limiter per IP, guard
+5 endpoint publik, test 429) + `apps/web` (helper cooldown 60 dtk, checkbox
+tanggung jawab wajib, debounce autosave + test; mode mock mengandalkan
+cooldown UI, tanpa cooldown server agar test store lama tetap hijau).
+Tanpa CAPTCHA; tanpa migrasi schema; status stage lain tidak berubah sepihak.
+
+- [x] Catat D-50 + revisi `IN PROGRESS` dengan cakupan jelas sebelum mengubah kode.
+- [x] Sinkron docs kontrak (D-50, API §0/§3/§8, FLOWS §2/§3, WIREFRAMES §2/§3, `.env.example`) + kode backend (config, `client-ip`, `anti-spam`, guard 5 endpoint, 429) + test (12 unit + 1 integrasi 429; `beforeEach` reset di 4 describe tulis agar suite lama deterministik).
+- [x] Kode frontend (helper cooldown, checkbox wajib `/lapor` + mandiri, debounce autosave 1,5 dtk) + test (4 anti-spam + 3 render form). Mode mock mengandalkan cooldown UI; tanpa cooldown server agar test store lama hijau.
+- [x] Verifikasi (14 Okt 2026): web lint/typecheck bersih, 384 test hijau (+7), build lulus; API lint/typecheck bersih, 139 test hijau (+13, DB `ishas_test` via container sementara yang sudah dibersihkan); browser mock `:3011` kirim lapor → `RPT-0030` → kirim ulang tertahan `Batasi spam 0:37`, 390px tanpa overflow-X, 0 error konsol.
+- [ ] Review pemilik.
+
 ## Revisi: hentikan request backend saat mode mock (D-49.a) — 13 Oktober 2026 — `IN PROGRESS`
 
 Temuan uji browser D-49 (arahan pemilik: perbaiki langsung bila ada yang perlu):

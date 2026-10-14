@@ -70,6 +70,28 @@ export const loginRateLimit = {
   windowMs: intEnv("LOGIN_RATE_WINDOW_MS", 60_000),
 };
 
+// Batas kirim publik anti-spam D-50 (per IP, in-memory).
+// Lapor longgar, submit mandiri ketat karena langsung Terbit ke dashboard.
+export const laporRateLimit = {
+  max: intEnv("LAPOR_RATE_LIMIT", 3),
+  windowMs: intEnv("LAPOR_RATE_WINDOW_MS", 10 * 60_000),
+};
+
+export const mandiriRateLimit = {
+  max: intEnv("MANDIRI_RATE_LIMIT", 2),
+  windowMs: intEnv("MANDIRI_RATE_WINDOW_MS", 60 * 60_000),
+};
+
+export const draftRateLimit = {
+  max: intEnv("DRAFT_RATE_LIMIT", 30),
+  windowMs: intEnv("DRAFT_RATE_WINDOW_MS", 10 * 60_000),
+};
+
+export const uploadRateLimit = {
+  max: intEnv("UPLOAD_RATE_LIMIT", 10),
+  windowMs: intEnv("UPLOAD_RATE_WINDOW_MS", 10 * 60_000),
+};
+
 // --- Hosting (Cloudflare Tunnel / reverse proxy) ---
 
 // Origin yang diizinkan untuk CORS (dipisah koma), mis.

@@ -57,7 +57,9 @@ tetap tersimpan internal sesuai scope; jangan menghapusnya otomatis.
  | Lokasi/area | Wajib, dropdown area milik pesantren terpilih (format "Gedung · Lantai · Area"). Jika area belum ada → pesan "Belum ada area terdaftar; hubungi akun Pesantren." |
  | Foto/bukti | Opsional, satu PNG/JPEG/WebP maksimum 5 MB/20 megapiksel. Dikompres di perangkat (sisi terpanjang maks 1600 px, JPEG kualitas 0,8 — D-33) → periksa dekode → simpan blob lokal → pratinjau → ID lampiran pada draft/laporan. Bukti privat, hanya akun Pesantren pemilik scope. Backend belum tersedia. |
  | Kontak | Opsional, maks 100 karakter (untuk klarifikasi). |
-3. Tekan **Kirim laporan** → validasi inline per field → sukses: tampilkan layar konfirmasi berisi **nomor laporan** (`RPT-XXXX`), status `Menunggu validasi`, dan penjelasan "Laporan Anda belum tampil di dashboard; menunggu validasi akun Pesantren." + tombol kembali.
+ | Pernyataan | Wajib centang `Saya bertanggung jawab atas kebenaran laporan ini.` (D-50). Draft boleh simpan tanpa centang; kirim ditolak inline bila belum centang. |
+3. Tekan **Kirim laporan** → validasi inline per field + cek cooldown 60 detik per perangkat (D-50: kirim ulang menampilkan `Kirim lagi dalam 0:XX`) → sukses: tampilkan layar konfirmasi berisi **nomor laporan** (`RPT-XXXX`), status `Menunggu validasi`, dan penjelasan "Laporan Anda belum tampil di dashboard; menunggu validasi akun Pesantren." + tombol kembali.
+  → Batas server D-50: lapor-cepat 3x/10 menit per IP, upload bukti 10x/10 menit per IP → `429` berbahasa Indonesia.
  → Sistem: `validationStatus: Menunggu validasi`, `handlingStatus: Menunggu validasi`, `severity/priority: Belum ditentukan`; audit `Mengirim laporan publik`; notifikasi ke akun Pesantren terkait (`/pesantren/validasi-laporan`).
 4. Laporan TIDAK tampil di dashboard/hasil/peta/rekomendasi/laporan pimpinan pada tahap ini — tanpa kecuali.
 
@@ -98,9 +100,12 @@ baru. Pelapor TIDAK dapat memilih versi (tidak ada versi).
 4. **Simpan draft** otomatis per perubahan tanpa menunggu nama (nama + pesantren
 wajib baru saat kirim); pesantren terakhir diingat per perangkat sehingga reload
 tanpa param tetap memuat draft yang benar; tulis hanya bila isi berubah (anti
-loop save-render-save); lanjutkan dari indikator terakhir via `activeIndex`.
+loop save-render-save) + debounce ±1,5 detik agar ketikan cepat tidak
+membanjiri server (D-50); lanjutkan dari indikator terakhir via `activeIndex`.
+Batas server: draft 30x/10 menit per IP+draf → `429`.
 5. **Tinjau** → ringkasan 4 kelompok: jawaban wajib, bukti wajib, catatan N/A, lokasi → klik item bermasalah melompat ke indikatornya.
-6. **Kirim penilaian** (aktif hanya bila 4 kelompok lengkap) → dialog konfirmasi "Setelah dikirim tidak dapat diubah; hasil langsung terbit di halaman publik." → Ya.
+6. **Kirim penilaian** (aktif hanya bila 4 kelompok lengkap + checkbox tanggung jawab D-50 dicentang + cooldown 60 detik lewat) → dialog konfirmasi "Setelah dikirim tidak dapat diubah; hasil langsung terbit di halaman publik." → Ya.
+  → Batas server D-50: submit mandiri 2x/1 jam per IP (lebih ketat karena langsung `Terbit` ke dashboard) → `429`.
  → Sistem: simpan snapshot beku (copy soal + opsi + bobot + jawaban +
  bukti + lokasi + `scorePercent` + `byDimension`), hubungkan ke satu `Report`
  kanal `penilaian-mandiri` (`scorePercent` + `pdfGeneratedAt`) berstatus

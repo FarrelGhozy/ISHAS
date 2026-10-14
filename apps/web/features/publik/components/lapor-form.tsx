@@ -29,6 +29,9 @@ type Props = {
   confirmCancel: boolean;
   isPrefilledManager: boolean;
   formError: string | null;
+  setuju: boolean;
+  setujuError: string | null;
+  onSetuju: (nilai: boolean) => void;
   onChange: (field: keyof LaporValues, value: string) => void;
   onBlur: (field: keyof LaporValues) => void;
   onSubmit: () => void;
@@ -383,9 +386,32 @@ export function LaporForm(props: Props) {
         {errors.contact ? <FieldError id="lapor-kontak-error" message={errors.contact} /> : null}
       </div>
 
+      <div>
+        <label
+          htmlFor="lapor-setuju"
+          className="flex cursor-pointer items-start gap-2 text-sm text-heading"
+        >
+          <input
+            id="lapor-setuju"
+            type="checkbox"
+            className="mt-1 size-4 shrink-0 accent-primary"
+            checked={props.setuju}
+            disabled={readOnly}
+            onChange={(e) => props.onSetuju(e.target.checked)}
+          />
+          <span>
+            Saya bertanggung jawab atas kebenaran laporan ini.*
+          </span>
+        </label>
+        {props.setujuError ? (
+          <FieldError id="lapor-setuju-error" message={props.setujuError} />
+        ) : null}
+      </div>
+
       {!readOnly && submitDisabled ? (
         <p className="text-sm text-secondary-text">
-          Lengkapi nama (minimal 2 karakter), institusi, dan area/lokasi untuk mengirim.
+          Lengkapi nama (minimal 2 karakter), institusi, area/lokasi, dan centang
+          pernyataan tanggung jawab untuk mengirim.
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-2 pt-1">

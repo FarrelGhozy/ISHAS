@@ -2,7 +2,7 @@
 // bukan database uji): skema, komposisi seed demo/empty, invarian relasi, alur HTTP.
 // Jalankan dengan DB uji terpisah (mis. `DB_NAME=ishas_test bun run migrate && DB_NAME=ishas_test bun test`)
 // karena seed melakukan TRUNCATE — dilarang menyentuh DB pengembangan.
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import type { RowDataPacket } from "mysql2/promise";
 import { SEED } from "../../web/mocks/seed/seed";
 import { K3_CATEGORIES } from "../../web/mocks/kategori-k3";
@@ -16,6 +16,7 @@ import { seedEmpty } from "../src/seed/empty";
 import { ALL_TABLES, countRows } from "../src/seed/helpers";
 import { seedDefaultPassword } from "../src/config";
 import { loginLimiter } from "../src/domain/auth";
+import { resetAntiSpamLimiters } from "../src/domain/anti-spam";
 import { nextSequence, withTransaction } from "../src/repo/writes";
 
 const dbName = process.env.DB_NAME ?? "ishas";
@@ -277,6 +278,12 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     await seedDemo();
   });
 
+  // D-50: limiter publik in-memory dipakai bersama antar-test → reset tiap
+  // test agar kuota spam tidak bocor (bukan pelonggaran ekspektasi).
+  beforeEach(() => {
+    resetAntiSpamLimiters();
+  });
+
   test("GET /public/state: hanya Diterima + tanpa identitas pelapor", async () => {
     const response = await call("/api/v1/public/state");
     expect(response.status).toBe(200);
@@ -427,6 +434,31 @@ describe.skipIf(!dbReady)("Fase 1 HTTP (lapor + mandiri + publik)", () => {
     );
     expect(second.status).toBe(201);
     expect(((await second.json()) as { data: { id: string } }).data.id).toBe(firstId);
+  });
+
+  test("D-50: lapor ke-4 dalam 10 menit → 429 (pesan persis)", async () => {
+    const area = SEED.areas.find((a) => a.institutionCode === "PSN-0018")!;
+    const base = {
+      institutionCode: "PSN-0018",
+      reporterName: "Ahmad",
+      description: "Uji batas spam laporan cepat.",
+      areaId: area.id,
+    };
+    for (let i = 0; i < 3; i += 1) {
+      const response = await call(
+        "/api/v1/reports/lapor-cepat",
+        json({ ...base, clientRequestId: `it-spam-${i}` }, { method: "POST" }),
+      );
+      expect(response.status).toBe(201);
+    }
+    const blocked = await call(
+      "/api/v1/reports/lapor-cepat",
+      json({ ...base, clientRequestId: "it-spam-3" }, { method: "POST" }),
+    );
+    expect(blocked.status).toBe(429);
+    expect(((await blocked.json()) as { error: string }).error).toBe(
+      "Terlalu sering mengirim laporan. Coba lagi dalam beberapa menit.",
+    );
   });
 
   test("denah seed: GET /files publik menyajikan blob image/png", async () => {
@@ -716,6 +748,11 @@ describe.skipIf(!dbReady)("Fase 2 HTTP (validasi + lifecycle + lokasi + tindak l
 
   beforeAll(async () => {
     await seedDemo();
+  });
+
+  // D-50: dua test di bawah POST lapor-cepat → reset kuota tiap test.
+  beforeEach(() => {
+    resetAntiSpamLimiters();
   });
 
   test("accept: sesi dulu, lalu scope — anonim 401, peran salah 403", async () => {
@@ -1911,6 +1948,11 @@ describe.skipIf(!dbReady)("Fase 5 HTTP (admin + notifikasi + storage + migrasi)"
     await seedDemo();
   });
 
+  // D-50: test storage mengunggah berkas → reset kuota upload tiap test.
+  beforeEach(() => {
+    resetAntiSpamLimiters();
+  });
+
   test("admin: RBAC + tambah pesantren + ubah status", async () => {
     const denied = await call("/api/v1/admin/institutions", {
       method: "POST",
@@ -2378,6 +2420,11 @@ describe.skipIf(!dbReady)("Fase 2 tulis: isolasi scope antar-pesantren", () => {
 
   beforeAll(async () => {
     await seedDemo();
+  });
+
+  // D-50: test membuat laporan → reset kuota tiap test.
+  beforeEach(() => {
+    resetAntiSpamLimiters();
   });
 
   test("akun Pesantren lain tidak dapat menulis laporan/temuan/rekomendasi scope A", async () => {

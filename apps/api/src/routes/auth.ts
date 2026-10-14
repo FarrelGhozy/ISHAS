@@ -11,6 +11,7 @@ import {
   sessionTokenFrom,
 } from "../auth/cookie";
 import { changePassword, demoLogin, login, logout } from "../domain/auth";
+import { clientIp } from "../auth/client-ip";
 
 async function readJson<T>(request: Request): Promise<T> {
   try {
@@ -18,12 +19,6 @@ async function readJson<T>(request: Request): Promise<T> {
   } catch {
     return {} as T;
   }
-}
-
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "lokal";
-  return request.headers.get("x-real-ip") ?? "lokal";
 }
 
 export function buildAuthRoutes(): Route[] {

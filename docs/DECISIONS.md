@@ -1508,3 +1508,28 @@ Hasil uji: [STAGE_RISK_MAP.md](../planning/STAGE_RISK_MAP.md).
   tidak mengubah kontrak Fase 1–6. Schema mock `v17 → v18` aditif.
 - Dokumen terdampak: ROLES §4, ROUTES §2, FLOWS §baru, DATA_MODEL schema v18,
   WIREFRAMES §validator, TEST_PLAN, TODO, stage `STAGE_INSPEKSI_KANTOR.md`.
+
+## D-50 — Rate limit + cooldown anti-spam publik (lindungi dashboard utama) — DISETUJUI 14 Oktober 2026
+
+- Arahan pemilik: pastikan ada rate limit agar bebas spam, terutama bagian
+  dashboard utama `/` yang harus bersih dari kiriman sampah.
+- **D-50.a — Batas backend per IP (in-memory, reuse `RateLimiter`):**
+  `POST /reports/lapor-cepat` 3x/10 menit, `POST /self-assessments/submit`
+  2x/1 jam (lebih ketat karena langsung `Terbit` ke dashboard — D-32),
+  `POST /self-assessments/drafts` 30x/10 menit per IP+draf, upload bukti
+  publik (`report-evidence`/`self-evidence`) 10x/10 menit. Lewat batas → `429`
+  dengan pesan Indonesia persis (ditegakkan di backend; mode mock mengandalkan
+  cooldown UI). Tanpa perubahan schema; limit hilang saat restart (prototipe
+  satu proses, produksi perlu store bersama).
+- **D-50.b — Cooldown UI 60 detik per perangkat:** `localStorage`
+  (`ishas-lapor-cooldown`, `ishas-mandiri-cooldown`) menahan kirim ulang +
+  hitung mundur `Kirim lagi dalam 0:XX`. Backend tetap sumber kebenaran
+  (cooldown UI hanya UX).
+- **D-50.c — Checkbox tanggung jawab wajib:** `/lapor` (dan registrasi
+  penilaian mandiri) wajib centang `Saya bertanggung jawab atas kebenaran
+  laporan ini.` sebelum kirim; draft boleh simpan tanpa centang.
+  Mengangkat usulan `SUGGESTIONS.md §3` menjadi keputusan.
+- **D-50.d — Tanpa CAPTCHA:** tidak ada dependensi luar pada tahap ini.
+- Dokumen terdampak: BACKEND_API_CONTRACT §0/§3/§8, FLOWS §2/§3,
+  WIREFRAMES §2/§3, TODO. Scope lintas Stage 03/08 + backend Fase 1;
+  status stage lain tidak berubah sepihak.
